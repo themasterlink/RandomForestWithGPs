@@ -1,1 +1,1 @@
-# RandomForestWithGPs
+# Random Forest With Gaussian Proccess
