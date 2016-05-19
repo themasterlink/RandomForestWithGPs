@@ -11,6 +11,9 @@
 #include <Eigen/Dense>
 #include <math.h>
 
+namespace Kernel {
+
+//analytical solution not sure if needed here ...
 void getSeKernelFor(const Eigen::MatrixXd& xA, const Eigen::MatrixXd& xB, Eigen::MatrixXd& result, const double sigma = 1.0, const double l = 0.1){
 	result = Eigen::MatrixXd(xA.rows(), xB.rows());
 	const double sigmaSquared = sigma * sigma;
@@ -24,7 +27,36 @@ void getSeKernelFor(const Eigen::MatrixXd& xA, const Eigen::MatrixXd& xB, Eigen:
 	}
 }
 
+Eigen::MatrixXd meanFun(const Eigen::MatrixXd& x){
+	Eigen::MatrixXd mat;
+	mat.Zero(x.rows(), 1);
+	return mat;
+}
+
+struct MuSigma {
+	Eigen::MatrixXd mu;
+	Eigen::MatrixXd sigma;
+};
 
 
+// X = data
+// f = resulting value
+// xStar = new points
+MuSigma predict(const Eigen::MatrixXd& X, const Eigen::MatrixXd& f, const Eigen::MatrixXd& XStar, const double noiseSigma = 0){
+	Eigen::MatrixXd K, Kinv, Kstar, Kstarstar, KstarTransposed;
+	getSeKernelFor(X, X, K, 5, 0.1);
+	K = noiseSigma * K;
+	Kinv = K.inverse();
+	getSeKernelFor(X, XStar, Kstar, 5., 0.1);
+	getSeKernelFor(XStar, XStar, Kstarstar, 5., 0.1);
+	MuSigma ret;
+	KstarTransposed = Kstar.transpose();
+	//ret.mu = meanFun(XStar) + KstarTransposed.dot(Kinv);// .dot(f - meanFun(X));
+	//ret.sigma = Kstarstar - KstarTransposed.dot(Kinv); //.dot(Kstar);
+	return ret;
+}
+
+
+} // close of namespace
 
 #endif /* KERNELCALC_H_ */

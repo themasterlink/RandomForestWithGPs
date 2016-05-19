@@ -12,7 +12,7 @@
 
 int main(){
 	Eigen::MatrixXd xA(10,1);
-	Eigen::VectorXd col;
+	Eigen::VectorXd col; // input data
 	xA(0,0) = 0;
 	xA(1,0) = 0.1;
 	xA(2,0) = 0.2;
@@ -24,7 +24,7 @@ int main(){
 	xA(8,0) =  1.9;
 	xA(9,0) =  2.0;
 	Eigen::MatrixXd res;
-	getSeKernelFor(xA, xA, res, 5.0, 0.2);
+	Kernel::getSeKernelFor(xA, xA, res, 5.0, 0.2);
 
 	std::cout << "res: " << res << std::endl;
 	Eigen::MatrixXd inv = res.inverse();
