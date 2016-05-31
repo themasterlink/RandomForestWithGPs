@@ -9,7 +9,7 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include "kernelCalc.h"
-
+#include "RandomForests/DecisionTree.h"
 int main(){
 	Eigen::MatrixXd xA(10,1);
 	Eigen::VectorXd col; // input data
@@ -30,6 +30,10 @@ int main(){
 	Eigen::MatrixXd inv = res.inverse();
 	std::cout << "inv: " << inv << std::endl;
 
+	DecisionTree tree(4);
+	Data data;
+	Labels labels;
+	tree.train(data, labels);
 	return 0;
 }
 
