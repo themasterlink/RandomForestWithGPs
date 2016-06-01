@@ -28,9 +28,15 @@ inline std::string number2String(const T& in){
 	}while(0); \
 
 #define printError(message) \
-	std::cout << "Error in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl; \
+	std::cout << "Error in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl \
 
+template <class T> const T& min (const T& a, const T& b) {
+  return !(b<a)?a:b;     // or: return !comp(b,a)?a:b; for version (2)
+}
 
+template <class T> const T& max (const T& a, const T& b) {
+  return !(b>a)?a:b;     // or: return !comp(b,a)?a:b; for version (2)
+}
 
 
 #endif /* UTILITY_UTIL_H_ */

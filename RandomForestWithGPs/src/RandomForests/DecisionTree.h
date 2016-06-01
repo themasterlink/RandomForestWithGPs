@@ -16,7 +16,7 @@ public:
 
 	virtual ~DecisionTree();
 
-	void train(const Data& data, const Labels& labels);
+	void train(const Data& data, const Labels& labels, const int amountOfUsedDims, const Eigen::Vector2i minMaxUsedData);
 
 
 private:
@@ -26,7 +26,14 @@ private:
 	const int m_maxNodeNr; // = pow(2, m_maxDepth +1) - 1
 	// max number of nodes, which have children
 	const int m_maxInternalNodeNr; // = pow(2, m_maxDepth) - 1
-
+	// contains the split values for the nodes:
+	// the order of the nodes is like that:
+	// !!!! first element is not used !!!!
+	// 			1
+	// 		2		3
+	//  4	   5  6 	7
+	// 8 9 	10 11 12 13  14 15
+	std::vector<double> m_splitValues;
 
 };
 
