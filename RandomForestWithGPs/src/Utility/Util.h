@@ -10,6 +10,10 @@
 
 
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include "StopWatch.h"
 
 template<typename T>
 inline std::string number2String(const T& in){
@@ -29,6 +33,9 @@ inline std::string number2String(const T& in){
 
 #define printError(message) \
 	std::cout << "Error in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl \
+
+#define printLine() \
+		std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << std::endl \
 
 template <class T> const T& min (const T& a, const T& b) {
   return !(b<a)?a:b;     // or: return !comp(b,a)?a:b; for version (2)
