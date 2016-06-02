@@ -10,13 +10,12 @@ import matplotlib.pyplot as plt
 print("Start")
 
 
-file1 = open("../testData/testInput.txt", "r")
-file2 = open("../testData/trainedResult.txt", "r")
+file1 = open("../testData/testInput2.txt", "r")
+file2 = open("../testData/trainedResult2.txt", "r")
 txt = file1.read()
 txt2 = file2.read()
 lines = txt.split("\n")
 lines2 = txt2.split("\n")
-
 plt.figure(0)
 var = 0
 

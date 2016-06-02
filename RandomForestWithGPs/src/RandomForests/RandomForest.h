@@ -9,6 +9,23 @@
 #define RANDOMFORESTS_RANDOMFOREST_H_
 
 #include "DecisionTree.h"
+#include <boost/thread.hpp> // Boost threads
+
+
+class TreeCounter{
+private:
+	boost::mutex mutex;
+    int counter;
+public:
+    void addToCounter(const int val){
+    	mutex.lock(); counter += val; mutex.unlock();
+    }
+
+    int getCounter(){
+    	return counter;
+    }
+    TreeCounter(): counter(0){};
+};
 
 class RandomForest {
 public:
@@ -27,9 +44,11 @@ private:
 
 	const int m_amountOfClasses;
 
+	int m_counterIncreaseValue;
+
 	std::vector<DecisionTree> m_trees;
 
-	void trainInParallel(const Data& data, const Labels& labels, const int amountOfUsedDims, const Eigen::Vector2i minMaxUsedData, const int start, const int end);
+	void trainInParallel(const Data& data, const Labels& labels, const int amountOfUsedDims, const Eigen::Vector2i minMaxUsedData, const int start, const int end, TreeCounter* counter);
 
 
 };

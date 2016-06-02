@@ -54,26 +54,24 @@ int main(){
 
 	Data data;
 	Labels labels;
-	DataReader::readTrainingFromFile(data, labels, "../testData/testInput.txt");
+	DataReader::readTrainingFromFile(data, labels, "../testData/testInput2.txt");
 
-	RandomForest forest(12,1000,2);
+	RandomForest forest(7,5000,2);
 
 	//DecisionTree tree(6, 2);
 
 	Eigen::Vector2i minMaxUsedData;
-	minMaxUsedData << (int) (0.75 * data.size()), (int) data.size();
-	forest.train(data, labels, 1, minMaxUsedData);
-	//tree.train(data, labels, 2, minMaxUsedData);
-	std::cout << "Finish training" << std::endl;
+	minMaxUsedData << (int) ( data.size()), (int) data.size();
+	forest.train(data, labels, 2, minMaxUsedData);
 
 	Data testData;
 	Labels testLabels;
-	DataReader::readTestFromFile(testData, testLabels, "../testData/testOutput.txt");
+	DataReader::readTrainingFromFile(testData, testLabels, "../testData/testInput3.txt");
 	int wrong = 0;
 	for(int i = 0; i < testData.size(); ++i){
 		int label = forest.predict(testData[i]);
-		std::cout << "Label for : " << i << ", " << label << " = " << testLabels[i] << std::endl;
 		if(label != testLabels[i]){
+			//std::cout << "Label wrong for : " << i << ", " << label << " = " << testLabels[i] << std::endl;
 			++wrong;
 		}
 	}
@@ -94,7 +92,7 @@ int main(){
 		}
 	}
 
-	write("../testData/trainedResult.txt", forest, 80, min, max);
+	write("../testData/trainedResult2.txt", forest, 80, min, max);
 
 	std::cout << "End Reached" << std::endl;
 	return 0;
