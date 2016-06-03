@@ -56,12 +56,10 @@ int main(){
 	Labels labels;
 	DataReader::readTrainingFromFile(data, labels, "../testData/testInput2.txt");
 
-	RandomForest forest(7,5000,2);
-
-	//DecisionTree tree(6, 2);
+	RandomForest forest(7,500,2);
 
 	Eigen::Vector2i minMaxUsedData;
-	minMaxUsedData << (int) ( data.size()), (int) data.size();
+	minMaxUsedData << (int) (0.2 * data.size()), (int) (0.6 * data.size());
 	forest.train(data, labels, 2, minMaxUsedData);
 
 	Data testData;

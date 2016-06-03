@@ -26,24 +26,12 @@ m_labelsOfWinningClassesInLeaves(pow(2, maxDepth)){
 DecisionTree::~DecisionTree() {
 }
 
-void DecisionTree::train(const Data& data, const Labels& labels, const int amountOfUsedDims, const Eigen::Vector2i minMaxUsedData){
-	if(data.size() != labels.size()){
-		printError("Label and data size are not equal!"); return;
-	}else if(data.size() < 2){
-		printError("There must be at least two points!"); return;
-	}else if(data[0].rows() < 2){
-		printError("There should be at least 2 dimensions in the data");
-	}else if(amountOfUsedDims > data[0].rows()){
-		printError("Amount of dims can't be bigger than the dimension size!"); return;
-	}
+void DecisionTree::train(const Data& data, const Labels& labels, const int amountOfUsedDims, RandomNumberGeneratorForDT& generator){
+
 
 	// order is the same as in data, value specifies the node in which it is saved at the moment
 	std::vector<int> nodesContent = std::vector<int>(data.size(), 1); // 1 = root node
 
-	std::default_random_engine generator;
-	std::uniform_int_distribution<int> uniformDist_Dimension(0,data[0].rows() - 1); // 0 ... (dimension of data - 1)
-	std::uniform_int_distribution<int> uniformDist_usedData(minMaxUsedData[0], minMaxUsedData[1]); // TODO add check!
-	std::uniform_int_distribution<int> uniformDist_Data(0, data.size() - 1); // 0 ... (dimension of data - 1)
 
 	std::vector<int> usedDims(amountOfUsedDims);
 	if(amountOfUsedDims == m_amountOfClasses){
@@ -54,7 +42,7 @@ void DecisionTree::train(const Data& data, const Labels& labels, const int amoun
 		for(int i = 0; i < amountOfUsedDims; ++i){
 			bool doAgain = false;
 			do{
-				const int randNr = uniformDist_Data(generator);  // generates number in the range 0...data.rows() - 1;
+				const int randNr = generator.getRandDim();  // generates number in the range 0...data.rows() - 1;
 				for(int j = 0; j < i; ++j){
 					if(randNr == usedDims[j]){
 						doAgain = true; break;
@@ -73,13 +61,13 @@ void DecisionTree::train(const Data& data, const Labels& labels, const int amoun
 		}
 		// calc split value for each node
 		// choose dimension for split
-		const int randDim = uniformDist_Dimension(generator);  // generates number in the range 0...amountOfUsedDims - 1
+		const int randDim = generator.getRandDim();  // generates number in the range 0...amountOfUsedDims - 1
 
-		const int amountOfUsedData = uniformDist_usedData(generator);
+		const int amountOfUsedData = generator.getRandAmountOfUsedData();
 		int maxScoreElement = -1;
 		double actScore = -1000; // TODO check magic number
 		for(int j = 0; j < amountOfUsedData; ++j){ // amount of checks for a specified split
-			const int randElementId = uniformDist_Data(generator);
+			const int randElementId = generator.getRandNextDataEle();
 			const double score = trySplitFor(iActNode, randElementId, randDim, data, labels, nodesContent);
 			if(score > actScore){
 				actScore = score;

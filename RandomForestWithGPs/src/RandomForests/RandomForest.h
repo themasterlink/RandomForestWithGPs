@@ -10,6 +10,7 @@
 
 #include "DecisionTree.h"
 #include <boost/thread.hpp> // Boost threads
+#include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 
 
 class TreeCounter{
@@ -48,9 +49,9 @@ private:
 
 	std::vector<DecisionTree> m_trees;
 
-	void trainInParallel(const Data& data, const Labels& labels, const int amountOfUsedDims, const Eigen::Vector2i minMaxUsedData, const int start, const int end, TreeCounter* counter);
+	void trainInParallel(const Data& data, const Labels& labels, const int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const int start, const int end, TreeCounter* counter);
 
-
+	void predictInParallel(const DataElement& point, std::vector<int>& values, const int start, const int end) const;
 };
 
 #endif /* RANDOMFORESTS_RANDOMFOREST_H_ */

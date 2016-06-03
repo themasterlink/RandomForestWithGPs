@@ -9,6 +9,7 @@
 #define RANDOMFORESTS_DECISIONTREE_H_
 
 #include "Data.h"
+#include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 
 class DecisionTree {
 public:
@@ -16,7 +17,7 @@ public:
 
 	virtual ~DecisionTree();
 
-	void train(const Data& data, const Labels& labels, const int amountOfUsedDims, const Eigen::Vector2i minMaxUsedData);
+	void train(const Data& data, const Labels& labels, const int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
 
 	double trySplitFor(const int actNode, const int usedNode, const int usedDim, const Data& data, const Labels& labels, const std::vector<int>& nodesContent);
 
@@ -46,6 +47,7 @@ private:
 
 	std::vector<int> m_labelsOfWinningClassesInLeaves;
 
+	static base_generator_type m_rng;
 
 };
 
