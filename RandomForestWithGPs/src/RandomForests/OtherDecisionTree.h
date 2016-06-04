@@ -11,15 +11,18 @@
 #include "Data.h"
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 
-class OtherDecisionTree {
+class OtherDecisionTree{
 public:
 	OtherDecisionTree(const int maxDepth, const int amountOfClasses);
 
 	virtual ~OtherDecisionTree();
 
-	void train(const Data& data, const Labels& labels, const int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
+	void train(const Data& data, const Labels& labels, const int amountOfUsedDims,
+			RandomNumberGeneratorForDT& generator);
 
-	double trySplitFor(const int actNode, const int usedNode, const int usedDim, const Data& data, const Labels& labels, const std::vector<int>& dataInNode, std::vector<int>& leftHisto, std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator);
+	double trySplitFor(const int actNode, const int usedNode, const int usedDim, const Data& data,
+			const Labels& labels, const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
+			std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator);
 
 	int predict(const DataElement& point) const;
 
@@ -46,8 +49,6 @@ private:
 	std::vector<bool> m_isUsed;
 
 	std::vector<int> m_labelsOfWinningClassesInLeaves;
-
-	static base_generator_type m_rng;
 
 };
 

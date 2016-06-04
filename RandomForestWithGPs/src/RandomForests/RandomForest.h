@@ -12,31 +12,32 @@
 #include <boost/thread.hpp> // Boost threads
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 
-
 class TreeCounter{
 private:
 	boost::mutex mutex;
-    int counter;
-public:
-    void addToCounter(const int val){
-    	mutex.lock(); counter += val; mutex.unlock();
-    }
+	int counter;
+	public:
+	void addToCounter(const int val){
+		mutex.lock();
+		counter += val;
+		mutex.unlock();
+	}
 
-    int getCounter(){
-    	return counter;
-    }
-    TreeCounter(): counter(0){};
+	int getCounter(){
+		return counter;
+	}
+	TreeCounter(): counter(0){};
 };
 
-class RandomForest {
+class RandomForest{
 public:
 	RandomForest(const int maxDepth, const int amountOfTrees, const int amountOfUsedClasses);
 	virtual ~RandomForest();
 
-	void train(const Data& data, const Labels& labels, const int amountOfUsedDims, const Eigen::Vector2i minMaxUsedData);
+	void train(const Data& data, const Labels& labels, const int amountOfUsedDims,
+			const Eigen::Vector2i minMaxUsedData);
 
 	int predict(const DataElement& point) const;
-
 
 private:
 	const int m_maxDepth;
@@ -49,9 +50,12 @@ private:
 
 	std::vector<DecisionTree> m_trees;
 
-	void trainInParallel(const Data& data, const Labels& labels, const int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const int start, const int end, TreeCounter* counter);
+	void trainInParallel(const Data& data, const Labels& labels, const int amountOfUsedDims,
+			RandomNumberGeneratorForDT& generator, const int start, const int end,
+			TreeCounter* counter);
 
-	void predictInParallel(const DataElement& point, std::vector<int>& values, const int start, const int end) const;
+	void predictInParallel(const DataElement& point, std::vector<int>& values, const int start,
+			const int end) const;
 };
 
 #endif /* RANDOMFORESTS_RANDOMFOREST_H_ */

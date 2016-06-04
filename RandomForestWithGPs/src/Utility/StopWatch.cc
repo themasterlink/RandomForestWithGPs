@@ -7,11 +7,11 @@
 
 #include "StopWatch.h"
 
-StopWatch::StopWatch() {
-	m_start = m_stop =  boost::posix_time::microsec_clock::local_time();
+StopWatch::StopWatch(){
+	m_start = m_stop = boost::posix_time::microsec_clock::local_time();
 }
 
-StopWatch::~StopWatch() {
+StopWatch::~StopWatch(){
 }
 
 void StopWatch::startTime(){

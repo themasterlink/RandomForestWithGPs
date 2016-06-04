@@ -13,20 +13,25 @@
 
 #define MIN_NR_TO_SPLIT 2
 
-OtherDecisionTree::OtherDecisionTree(const int maxDepth, const int amountOfClasses) :
-m_maxDepth(maxDepth), m_maxNodeNr(pow(2, maxDepth + 1) - 1),
-m_maxInternalNodeNr(pow(2, maxDepth) - 1),
-m_amountOfClasses(amountOfClasses),
-m_splitValues(m_maxInternalNodeNr + 1),  // + 1 -> no use of the first element
-m_splitDim(m_maxInternalNodeNr + 1),
-m_isUsed(m_maxNodeNr + 1, false),
-m_labelsOfWinningClassesInLeaves(pow(2, maxDepth)){
+OtherDecisionTree::OtherDecisionTree(const int maxDepth,
+	const int amountOfClasses)
+		: m_maxDepth(maxDepth),
+			m_maxNodeNr(pow(2, maxDepth + 1) - 1),
+			m_maxInternalNodeNr(pow(2, maxDepth) - 1),
+			m_amountOfClasses(amountOfClasses),
+			m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
+			m_splitDim(m_maxInternalNodeNr + 1),
+			m_isUsed(m_maxNodeNr + 1, false),
+			m_labelsOfWinningClassesInLeaves(pow(2, maxDepth)){
 }
 
-OtherDecisionTree::~OtherDecisionTree() {
+OtherDecisionTree::~OtherDecisionTree(){
 }
 
-void OtherDecisionTree::train(const Data& data, const Labels& labels, const int amountOfUsedDims, RandomNumberGeneratorForDT& generator){
+void OtherDecisionTree::train(const Data& data,
+	const Labels& labels,
+	const int amountOfUsedDims,
+	RandomNumberGeneratorForDT& generator){
 
 	std::vector<int> usedDims(amountOfUsedDims);
 	if(amountOfUsedDims == m_amountOfClasses){
@@ -37,10 +42,11 @@ void OtherDecisionTree::train(const Data& data, const Labels& labels, const int 
 		for(int i = 0; i < amountOfUsedDims; ++i){
 			bool doAgain = false;
 			do{
-				const int randNr = generator.getRandDim();  // generates number in the range 0...data.rows() - 1;
+				const int randNr = generator.getRandDim(); // generates number in the range 0...data.rows() - 1;
 				for(int j = 0; j < i; ++j){
 					if(randNr == usedDims[j]){
-						doAgain = true; break;
+						doAgain = true;
+						break;
 					}
 				}
 				if(!doAgain){
@@ -59,14 +65,15 @@ void OtherDecisionTree::train(const Data& data, const Labels& labels, const int 
 		// calc actual nodes
 		// calc split value for each node
 		// choose dimension for split
-		const int randDim = usedDims[generator.getRandDim()];  // generates number in the range 0...amountOfUsedDims - 1
+		const int randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
 
 		const int amountOfUsedData = generator.getRandAmountOfUsedData();
 		int maxScoreElement = -1;
 		double actScore = -1000; // TODO check magic number
 		for(int j = 0; j < amountOfUsedData; ++j){ // amount of checks for a specified split
 			const int randElementId = generator.getRandNextDataEle();
-			const double score = trySplitFor(iActNode, randElementId, randDim, data, labels, dataPosition[iActNode], leftHisto, rightHisto, generator);
+			const double score = trySplitFor(iActNode, randElementId, randDim, data, labels,
+					dataPosition[iActNode], leftHisto, rightHisto, generator);
 			if(score > actScore){
 				actScore = score;
 				maxScoreElement = randElementId;
@@ -93,7 +100,8 @@ void OtherDecisionTree::train(const Data& data, const Labels& labels, const int 
 		}else{
 			dataPosition[leftPos].reserve(dataPosition[iActNode].size());
 			dataPosition[rightPos].reserve(dataPosition[iActNode].size());
-			for(std::vector<int>::const_iterator it = dataPosition[iActNode].cbegin(); it != dataPosition[iActNode].cend(); ++it){
+			for(std::vector<int>::const_iterator it = dataPosition[iActNode].cbegin();
+					it != dataPosition[iActNode].cend(); ++it){
 				if(data[*it][randDim] >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
 					dataPosition[rightPos].push_back(*it);
 					++foundDataRight;
@@ -104,9 +112,9 @@ void OtherDecisionTree::train(const Data& data, const Labels& labels, const int 
 			}
 		}
 		/*std::cout << "i: " << iActNode << std::endl;
-		std::cout << "length: " << dataPosition[iActNode].size() << std::endl;
-		std::cout << "Found data left  " << foundDataLeft << std::endl;
-		std::cout << "Found data right " << foundDataRight << std::endl;*/
+		 std::cout << "length: " << dataPosition[iActNode].size() << std::endl;
+		 std::cout << "Found data left  " << foundDataLeft << std::endl;
+		 std::cout << "Found data right " << foundDataRight << std::endl;*/
 		if(foundDataLeft == 0 || foundDataRight == 0){
 			// split is not needed
 			dataPosition[leftPos].clear();
@@ -126,7 +134,8 @@ void OtherDecisionTree::train(const Data& data, const Labels& labels, const int 
 		while(!m_isUsed[actNode]){
 			actNode /= 2;
 		}
-		for(std::vector<int>::const_iterator it = dataPosition[actNode].cbegin(); it != dataPosition[actNode].cend(); ++it){
+		for(std::vector<int>::const_iterator it = dataPosition[actNode].cbegin();
+				it != dataPosition[actNode].cend(); ++it){
 			++histo[labels[*it]];
 		}
 		int maxEle = 0, labelWithHighestOcc = 0;
@@ -140,14 +149,17 @@ void OtherDecisionTree::train(const Data& data, const Labels& labels, const int 
 	}
 }
 
-double OtherDecisionTree::trySplitFor(const int actNode, const int usedNode,
-		const int usedDim, const Data& data, const Labels& labels,
+double OtherDecisionTree::trySplitFor(const int actNode,
+		const int usedNode, const int usedDim,
+		const Data& data, const Labels& labels,
 		const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
-		std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator) {
+		std::vector<int>& rightHisto,
+		RandomNumberGeneratorForDT& generator){
 	const double usedValue = data[usedNode][usedDim];
 	double leftAmount = 0, rightAmount = 0;
 	if(dataInNode.size() < 100){ // under 100 take each value
-		for(std::vector<int>::const_iterator it = dataInNode.cbegin(); it != dataInNode.cend(); ++it){
+		for(std::vector<int>::const_iterator it = dataInNode.cbegin(); it != dataInNode.cend();
+				++it){
 			if(usedValue < data[*it][usedDim]){ // TODO check < or <=
 				++leftAmount;
 				++leftHisto[labels[*it]];
@@ -158,7 +170,7 @@ double OtherDecisionTree::trySplitFor(const int actNode, const int usedNode,
 		}
 	}else{
 		const int stepSize = dataInNode.size() / 100;
-		generator.setRandFromRange(1,stepSize);
+		generator.setRandFromRange(1, stepSize);
 		for(int i = 0; i < dataInNode.size(); i += generator.getRandFromRange()){
 			const int val = dataInNode[i];
 			if(usedValue < data[val][usedDim]){ // TODO check < or <=
@@ -182,7 +194,7 @@ double OtherDecisionTree::trySplitFor(const int actNode, const int usedNode,
 				leftCost -= leftClassProb * log(leftClassProb);
 			}
 			if(leftClassProb < 1.0){
-				rightCost -= (1.-leftClassProb) * log((1.-leftClassProb));
+				rightCost -= (1. - leftClassProb) * log((1. - leftClassProb));
 			}
 		}
 		leftHisto[i] = 0;
@@ -197,7 +209,7 @@ int OtherDecisionTree::predict(const DataElement& point) const{
 	while(iActNode <= m_maxInternalNodeNr){
 		bool right = m_splitValues[iActNode] < point[m_splitDim[iActNode]];
 		iActNode *= 2; // get to next level
-		if(right){// point is on right side of split
+		if(right){ // point is on right side of split
 			++iActNode; // go to right node
 		}
 		if(!m_isUsed[iActNode]){

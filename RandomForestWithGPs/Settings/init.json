@@ -1,0 +1,18 @@
+{
+    "Forest": {
+        "amountOfTrees": 200,
+        "Trees": {
+            "height": 2
+        }
+    },
+    "Training": {
+        "path": "..\/testData\/testInput2.txt"
+    },
+    "Test": {
+        "path": "..\/testData\/testInput3.txt"
+    },
+    "Write2D": {
+        "path": "..\/testData\/trainedResult2.txt",
+        "doWriting": "true"
+    }
+}

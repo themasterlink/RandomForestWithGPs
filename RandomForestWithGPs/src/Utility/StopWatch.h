@@ -10,8 +10,7 @@
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 
-
-class StopWatch {
+class StopWatch{
 public:
 	StopWatch();
 	virtual ~StopWatch();
@@ -25,7 +24,6 @@ private:
 
 	typedef boost::posix_time::ptime Time;
 	typedef boost::posix_time::time_duration TimeDuration;
-
 
 	Time m_start, m_stop;
 };
