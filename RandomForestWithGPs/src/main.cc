@@ -10,19 +10,27 @@
 #include <Eigen/Dense>
 #include "kernelCalc.h"
 #include "RandomForests/RandomForest.h"
+#include "RandomForests/OtherRandomForest.h"
 
 // just for testing
-void write(const std::string& fileName, const RandomForest& forest, const double amountOfPointsOnOneAxis, const Eigen::Vector2d& min, const Eigen::Vector2d& max){
+void write(const std::string& fileName, const OtherRandomForest& forest, const double amountOfPointsOnOneAxis, const Eigen::Vector2d& min, const Eigen::Vector2d& max){
 	Eigen::Vector2d stepSize = (1./amountOfPointsOnOneAxis) * (max - min);
 	std::ofstream file;
 	file.open(fileName);
-	for(double x = min[0]; x < max[0]; x += stepSize[0]){
+	Data points; points.reserve(amountOfPointsOnOneAxis*(amountOfPointsOnOneAxis+1));
+	int amount = 0;
+	for(double x = max[0]; x >= min[0] ; x -= stepSize[0]){
 		for(double y = min[1]; y < max[1]; y += stepSize[1]){
 			DataElement ele(2);
 			ele << x,y;
-			const int label = forest.predict(ele);
-			file << x << "," << y << "," << label << std::endl;
+			points.push_back(ele);
+			++amount;
 		}
+	}
+	Labels labels;
+	forest.predictData(points, labels);
+	for(int i = 0; i < amount; ++i){
+		file << points[i][0] << " " << points[i][1] << " " << labels[i] << "\n";
 	}
 	file.close();
 }
@@ -31,6 +39,7 @@ void write(const std::string& fileName, const RandomForest& forest, const double
 int main(){
 
 	std::cout << "Start" << std::endl;
+
 	/*
 	Eigen::MatrixXd xA(10,1);
 	Eigen::VectorXd col; // input data
@@ -56,16 +65,35 @@ int main(){
 	Labels labels;
 	DataReader::readTrainingFromFile(data, labels, "../testData/testInput2.txt");
 
-	RandomForest forest(7,500,2);
-
 	Eigen::Vector2i minMaxUsedData;
 	minMaxUsedData << (int) (0.2 * data.size()), (int) (0.6 * data.size());
-	forest.train(data, labels, 2, minMaxUsedData);
+
 
 	Data testData;
 	Labels testLabels;
 	DataReader::readTrainingFromFile(testData, testLabels, "../testData/testInput3.txt");
+
+	std::cout << "Finished reading" << std::endl;
+
+	OtherRandomForest otherForest(7,1000,2);
+	otherForest.train(data, labels, 2, minMaxUsedData);
+
+
+	Labels guessedLabels;
+	otherForest.predictData(testData, guessedLabels);
+
 	int wrong = 0;
+	for(int i = 0; i < testData.size(); ++i){
+		if(guessedLabels[i] != testLabels[i]){
+			++wrong;
+		}
+	}
+	std::cout << "Other: Amount of test size: " << testData.size() << std::endl;
+	std::cout << "Other: Amount of wrong: " << wrong / (double) testData.size() << std::endl;
+
+	/*RandomForest forest(9,500,2);
+	//forest.train(data, labels, 2, minMaxUsedData);
+	wrong = 0;
 	for(int i = 0; i < testData.size(); ++i){
 		int label = forest.predict(testData[i]);
 		if(label != testLabels[i]){
@@ -75,6 +103,7 @@ int main(){
 	}
 	std::cout << "Amount of test size: " << testData.size() << std::endl;
  	std::cout << "Amount of wrong: " << wrong / (double) testData.size() << std::endl;
+	 */
 
 	Eigen::Vector2d min, max;
 	min[0] = min[1] = 1000000;
@@ -90,8 +119,9 @@ int main(){
 		}
 	}
 
-	write("../testData/trainedResult2.txt", forest, 80, min, max);
-
+	StopWatch sw;
+	write("../testData/trainedResult2.txt", otherForest, 200, min, max);
+	std::cout << "Time for write: " << sw.elapsedSeconds() << std::endl;
 	std::cout << "End Reached" << std::endl;
 	return 0;
 }

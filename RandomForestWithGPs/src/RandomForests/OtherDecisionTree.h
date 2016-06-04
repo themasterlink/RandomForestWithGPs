@@ -1,25 +1,25 @@
 /*
- * DecisionTree.h
+ * OtherDecisionTree.h
  *
- *  Created on: 31.05.2016
+ *  Created on: 03.06.2016
  *      Author: Max
  */
 
-#ifndef RANDOMFORESTS_DECISIONTREE_H_
-#define RANDOMFORESTS_DECISIONTREE_H_
+#ifndef OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_
+#define OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_
 
 #include "Data.h"
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 
-class DecisionTree {
+class OtherDecisionTree {
 public:
-	DecisionTree(const int maxDepth, const int amountOfClasses);
+	OtherDecisionTree(const int maxDepth, const int amountOfClasses);
 
-	virtual ~DecisionTree();
+	virtual ~OtherDecisionTree();
 
 	void train(const Data& data, const Labels& labels, const int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
 
-	double trySplitFor(const int actNode, const int usedNode, const int usedDim, const Data& data, const Labels& labels, const std::vector<int>& nodesContent, std::vector<int>& leftHisto, std::vector<int>& rightHisto);
+	double trySplitFor(const int actNode, const int usedNode, const int usedDim, const Data& data, const Labels& labels, const std::vector<int>& dataInNode, std::vector<int>& leftHisto, std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator);
 
 	int predict(const DataElement& point) const;
 
@@ -51,4 +51,4 @@ private:
 
 };
 
-#endif /* RANDOMFORESTS_DECISIONTREE_H_ */
+#endif /* OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_ */

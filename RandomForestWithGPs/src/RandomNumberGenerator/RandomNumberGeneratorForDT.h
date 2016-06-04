@@ -25,12 +25,18 @@ public:
 	int getRandAmountOfUsedData();
 
 	int getRandNextDataEle();
+
+	void setRandFromRange(const int min, const int max);
+
+	int getRandFromRange();
 private:
 	base_generator_type m_generator;
 
 	uniform_distribution_int m_uniformDistDimension;
 	uniform_distribution_int m_uniformDistUsedData;
 	uniform_distribution_int m_uniformDistData;
+
+	uniform_distribution_int m_uniformDistRange;
 
 	variante_generator m_varGenDimension;
 	variante_generator m_varGenUsedData;
@@ -49,6 +55,14 @@ inline int RandomNumberGeneratorForDT::getRandAmountOfUsedData(){
 
 inline int RandomNumberGeneratorForDT::getRandNextDataEle(){
 	return m_varGenData();
+}
+
+inline void RandomNumberGeneratorForDT::setRandFromRange(const int min, const int max){
+	m_uniformDistRange.param(boost::random::uniform_int_distribution<int>::param_type(min,max));
+}
+
+inline int RandomNumberGeneratorForDT::getRandFromRange(){
+	return m_uniformDistRange(m_generator);
 }
 
 #endif /* RANDOMNUMBERGENERATORFORDT_RANDOMNUMBERGENERATORFORDT_H_ */

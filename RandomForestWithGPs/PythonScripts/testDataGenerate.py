@@ -12,13 +12,13 @@ print("Start")
 
 train = ""
 
-for i in range(0,100000):
+for i in range(0,1000):
     x = random.uniform(-1.0, 1.0)
     y = random.uniform(-1.0, 1.0)
     if((y + 0.25) > x * x):
-        train = train + str(x) + "," + str(y) + "," + str(+1) + "\n"
+        train += str(x) + "," + str(y) + "," + str(+1) + "\n"
     else:
-        train = train + str(x) + "," + str(y) + "," + str(0) + "\n"
+        train += str(x) + "," + str(y) + "," + str(0) + "\n"
 
 f = open("../testData/testInput2.txt", "w")
 f.write(train)
@@ -30,9 +30,9 @@ for i in range(0,1000):
     x = random.uniform(-1.0, 1.0)
     y = random.uniform(-1.0, 1.0)
     if((y + 0.25) > x * x):
-        test1 = test1 + str(x) + "," + str(y) + "," + str(+1) + "\n"
+        test1 += str(x) + "," + str(y) + "," + str(+1) + "\n"
     else:
-        test1 = test1 + str(x) + "," + str(y) + "," + str(0) + "\n"
+        test1 += str(x) + "," + str(y) + "," + str(0) + "\n"
 
 f = open("../testData/testInput3.txt", 'w')
 f.write(test1)
