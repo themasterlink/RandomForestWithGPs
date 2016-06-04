@@ -2,17 +2,23 @@
     "Forest": {
         "amountOfTrees": 200,
         "Trees": {
-            "height": 2
+            "height": 4
         }
     },
     "Training": {
-        "path": "..\/testData\/testInput2.txt"
+        "path": "..\/testData\/trainInput.txt",
+        "amount": 10000,
+        "dim": 2
     },
     "Test": {
-        "path": "..\/testData\/testInput3.txt"
+        "path": "..\/testData\/testInput3.txt",
+        "amount": 1000
     },
     "Write2D": {
-        "path": "..\/testData\/trainedResult2.txt",
-        "doWriting": "true"
+        "testPath": "..\/testData\/visuTestResult.txt",
+        "gridPath": "..\/testData\/visuGridResult.txt",
+        "doWriting": "true",
+        "printX": 0,
+        "printY": 1
     }
 }

@@ -8,11 +8,15 @@ from math import hypot
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
-print("Start")
+import json
+from pprint import pprint
+
+with open("../Settings/init.json") as data_file:
+    data = json.load(data_file)
 
 def plotPoints(fileName):
     y,x,temp = np.loadtxt(fileName).T #Transposed for easier unpacking
-    nrows, ncols = 201, 200
+    nrows, ncols = 200, 201
     grid = np.fliplr(temp.reshape((nrows, ncols)).T)
 
     plt.imshow(grid, extent=(x.min(), x.max(), y.max(), y.min()),
@@ -20,30 +24,23 @@ def plotPoints(fileName):
 
 plt.figure(0)
 
-plotPoints("../testData/trainedResult2.txt")
+plotPoints(data["Write2D"]["gridPath"])
 
-
-
-file1 = open("../testData/testInput2.txt", "r")
+file1 = open(data["Write2D"]["testPath"], "r")
 txt = file1.read()
 lines = []
 lines = txt.split("\n")
-#lines2 = txt2.split("\n")
 
 var = 0
 
 i = 0
 for line in lines: # input
     if len(line) > 3:
-        ele = line.split(",")
+        ele = line.split(" ")
         if float(ele[2]) == 1 :
             plt.plot([float(ele[0])], [float(ele[1])], 'ro')
         else:
             plt.plot([float(ele[0])], [float(ele[1])], 'bo')
 
-
-
-
-#plt.axis([-600,800,-1400,0])
 plt.show()
 plt.close()

@@ -8,7 +8,7 @@
 #ifndef RANDOMFORESTS_DECISIONTREE_H_
 #define RANDOMFORESTS_DECISIONTREE_H_
 
-#include "Data.h"
+#include "../Data/Data.h"
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 
 class DecisionTree{

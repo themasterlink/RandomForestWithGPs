@@ -12,32 +12,11 @@
 #include "RandomForests/RandomForest.h"
 #include "RandomForests/OtherRandomForest.h"
 #include "Utility/Settings.h"
+#include "Data/DataReader.h"
+#include "Data/DataWriterForVisu.h"
 
 // just for testing
-void write(const std::string& fileName, const OtherRandomForest& forest,
-		const double amountOfPointsOnOneAxis, const Eigen::Vector2d& min,
-		const Eigen::Vector2d& max){
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
-	std::ofstream file;
-	file.open(fileName);
-	Data points;
-	points.reserve(amountOfPointsOnOneAxis * (amountOfPointsOnOneAxis + 1));
-	int amount = 0;
-	for(double x = max[0]; x >= min[0]; x -= stepSize[0]){
-		for(double y = min[1]; y < max[1]; y += stepSize[1]){
-			DataElement ele(2);
-			ele << x, y;
-			points.push_back(ele);
-			++amount;
-		}
-	}
-	Labels labels;
-	forest.predictData(points, labels);
-	for(int i = 0; i < amount; ++i){
-		file << points[i][0] << " " << points[i][1] << " " << labels[i] << "\n";
-	}
-	file.close();
-}
+
 
 int main(){
 
@@ -49,7 +28,7 @@ int main(){
 	Labels labels;
 	std::string path;
 	Settings::getValue("Training.path", path);
-	DataReader::readTrainingFromFile(data, labels, path);
+	DataReader::readFromFile(data, labels, path);
 
 	Eigen::Vector2i minMaxUsedData;
 	minMaxUsedData << (int) (0.2 * data.size()), (int) (0.6 * data.size());
@@ -57,7 +36,7 @@ int main(){
 	Data testData;
 	Labels testLabels;
 	Settings::getValue("Test.path", path);
-	DataReader::readTrainingFromFile(testData, testLabels, path);
+	DataReader::readFromFile(testData, testLabels, path);
 
 	std::cout << "Finished reading" << std::endl;
 	int dim = 2;
@@ -100,27 +79,21 @@ int main(){
 	 std::cout << "Amount of wrong: " << wrong / (double) testData.size() << std::endl;
 	 */
 
-	Eigen::Vector2d min, max;
-	min[0] = min[1] = 1000000;
-	max[0] = max[1] = -1000000;
-	for(int i = 0; i < data.size(); ++i){
-		for(int j = 0; j < data[i].rows(); ++j){
-			if(min[j] > data[i][j]){
-				min[j] = data[i][j];
-			}
-			if(max[j] < data[i][j]){
-				max[j] = data[i][j];
-			}
-		}
-	}
+
 	bool doWriting;
+	int printX, printY;
 	Settings::getValue("Write2D.doWriting", doWriting, false);
+	Settings::getValue("Write2D.printX", printX, 0);
+	Settings::getValue("Write2D.printY", printY, 1);
 	if(doWriting){
-		Settings::getValue("Write2D.path", path);
+		Settings::getValue("Write2D.gridPath", path);
 		StopWatch sw;
-		write(path, otherForest, 200, min, max);
+		DataWriterForVisu::generateGrid(path, otherForest, 200, data, printX, printY);
+		Settings::getValue("Write2D.testPath", path);
+		DataWriterForVisu::writeData(path, testData, testLabels, printX, printY);
 		std::cout << "Time for write: " << sw.elapsedSeconds() << std::endl;
 		std::cout << "End Reached" << std::endl;
+		system("../PythonScripts/plotData.py");
 	}
 	return 0;
 }

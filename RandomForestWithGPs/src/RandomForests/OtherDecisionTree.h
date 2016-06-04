@@ -8,7 +8,7 @@
 #ifndef OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_
 #define OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_
 
-#include "Data.h"
+#include "../Data/Data.h"
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 
 class OtherDecisionTree{
