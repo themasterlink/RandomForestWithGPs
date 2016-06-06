@@ -20,7 +20,7 @@ RandomForestWriter::~RandomForestWriter()
 }
 
 
-void RandomForestWriter::writeToFile(const std::string& filePath, const OtherRandomForest& forest){
+void RandomForestWriter::writeToFile(const std::string& filePath, const RandomForest& forest){
 	if(filePath.length() == 0){
 		printError("File path is empty!");
 		return;
@@ -28,11 +28,11 @@ void RandomForestWriter::writeToFile(const std::string& filePath, const OtherRan
 		printError("Number of trees is zero -> writing not possible!");
 		return;
 	}
-	const std::vector<OtherDecisionTree>& trees = forest.getTrees();
+	const RandomForest::DecisionTreesContainer& trees = forest.getTrees();
 	std::fstream file(filePath,std::ios::out|std::ios::binary);
 	if(file.is_open()){
 		file << (int) trees.size() << "\n";
-		for(std::vector<OtherDecisionTree>::const_iterator it = trees.cbegin(); it != trees.cend(); ++it){
+		for(RandomForest::DecisionTreesContainer::const_iterator it = trees.cbegin(); it != trees.cend(); ++it){
 			DecisionTreeData data;
 			it->writeToData(data);
 			file << data.height  << "\n";
@@ -50,29 +50,43 @@ void RandomForestWriter::writeToFile(const std::string& filePath, const OtherRan
 	}
 }
 
-void RandomForestWriter::readFromFile(const std::string& filePath, OtherRandomForest& forest){
+void RandomForestWriter::readFromFile(const std::string& filePath, RandomForest& forest){
 	if(filePath.length() == 0){
 		printError("File path is empty!");
-		return;
-	}else if(forest.getNrOfTrees() != 0){
-		printError("Number of trees is not zero -> reading not done!");
 		return;
 	}
 	std::fstream file(filePath,std::ios::binary| std::ios::in);
 	if(file.is_open()){
 		int treeSize;
 		file >> treeSize;
-		forest.init(treeSize);
-		for(int i = 0; i < treeSize; ++i){
-			DecisionTreeData data;
-			file >> data.height;
-			file >> data.nrOfInternalNodes;
-			file >> data.nrOfLeaves;
-			file >> data.amountOfClasses;
-			Utility::readVecFromStream(file, data.splitValues);
-			Utility::readVecFromStream(file, data.dimValues);
-			Utility::readVecFromStream(file, data.labelsOfWinningClassInLeaves);
-			forest.generateTreeBasedOnData(data, i);
+		if(forest.getNrOfTrees() > 0){
+			RandomForest temp(0,0,0);
+			temp.init(treeSize);
+			for(int i = 0; i < treeSize; ++i){
+				DecisionTreeData data;
+				file >> data.height;
+				file >> data.nrOfInternalNodes;
+				file >> data.nrOfLeaves;
+				file >> data.amountOfClasses;
+				Utility::readVecFromStream(file, data.splitValues);
+				Utility::readVecFromStream(file, data.dimValues);
+				Utility::readVecFromStream(file, data.labelsOfWinningClassInLeaves);
+				temp.generateTreeBasedOnData(data, i);
+			}
+			forest.addForest(temp);
+		}else{
+			forest.init(treeSize);
+			for(int i = 0; i < treeSize; ++i){
+				DecisionTreeData data;
+				file >> data.height;
+				file >> data.nrOfInternalNodes;
+				file >> data.nrOfLeaves;
+				file >> data.amountOfClasses;
+				Utility::readVecFromStream(file, data.splitValues);
+				Utility::readVecFromStream(file, data.dimValues);
+				Utility::readVecFromStream(file, data.labelsOfWinningClassInLeaves);
+				forest.generateTreeBasedOnData(data, i);
+			}
 		}
 		file.close();
 	}else{

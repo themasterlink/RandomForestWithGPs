@@ -39,7 +39,7 @@ void DataWriterForVisu::writeData(const std::string& fileName, const Data& data,
 	}
 }
 
-void DataWriterForVisu::generateGrid(const std::string& fileName, const OtherRandomForest& forest,
+void DataWriterForVisu::generateGrid(const std::string& fileName, const RandomForest& forest,
 		const double amountOfPointsOnOneAxis, const Data& data,
 		const int x, const int y){
 	if(data.size() == 0){

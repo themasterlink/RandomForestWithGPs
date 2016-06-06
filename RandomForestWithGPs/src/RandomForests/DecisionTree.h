@@ -1,31 +1,38 @@
 /*
- * DecisionTree.h
+ * OtherDecisionTree.h
  *
- *  Created on: 31.05.2016
+ *  Created on: 03.06.2016
  *      Author: Max
  */
 
-#ifndef RANDOMFORESTS_DECISIONTREE_H_
-#define RANDOMFORESTS_DECISIONTREE_H_
+#ifndef OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_
+#define OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_
 
 #include "../Data/Data.h"
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
+#include "DecisionTreeData.h"
 
 class DecisionTree{
 public:
 	DecisionTree(const int maxDepth, const int amountOfClasses);
 
+	// copy construct
+	DecisionTree(const DecisionTree& tree);
+
 	virtual ~DecisionTree();
 
-	void train(const Data& data, const Labels& labels,
-		const int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
+	void train(const Data& data, const Labels& labels, const int amountOfUsedDims,
+			RandomNumberGeneratorForDT& generator);
 
-	double trySplitFor(const int actNode, const int usedNode, const int usedDim,
-		const Data& data, const Labels& labels,
-		const std::vector<int>& nodesContent, std::vector<int>& leftHisto,
-		std::vector<int>& rightHisto);
+	double trySplitFor(const int actNode, const int usedNode, const int usedDim, const Data& data,
+			const Labels& labels, const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
+			std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator);
 
 	int predict(const DataElement& point) const;
+
+	void writeToData(DecisionTreeData& data) const;
+
+	void initFromData(const DecisionTreeData& data);
 
 private:
 	// max depth allowed in this tree
@@ -53,4 +60,4 @@ private:
 
 };
 
-#endif /* RANDOMFORESTS_DECISIONTREE_H_ */
+#endif /* OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_ */

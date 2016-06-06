@@ -8,14 +8,14 @@
 #ifndef RANDOMFORESTS_RANDOMFORESTWRITER_H_
 #define RANDOMFORESTS_RANDOMFORESTWRITER_H_
 
-#include "OtherRandomForest.h"
 #include "../Utility/Util.h"
+#include "RandomForest.h"
 
 class RandomForestWriter{
 public:
-	static void writeToFile(const std::string& filePath, const OtherRandomForest& forest);
+	static void writeToFile(const std::string& filePath, const RandomForest& forest);
 
-	static void readFromFile(const std::string& filePath, OtherRandomForest& forest);
+	static void readFromFile(const std::string& filePath, RandomForest& forest);
 
 private:
 	RandomForestWriter();

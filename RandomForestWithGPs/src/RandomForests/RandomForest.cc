@@ -1,22 +1,36 @@
 /*
- * RandomForest.cc
+ * OtherRandomForest.cc
  *
  *  Created on: 01.06.2016
  *      Author: Max
  */
 
-#include "RandomForest.h"
 #include <thread>
+#include "RandomForest.h"
 
-RandomForest::RandomForest(const int maxDepth, const int amountOfTrees, const int amountOfClasses)
-		:m_maxDepth(maxDepth),
-			m_amountOfTrees(amountOfTrees),
+RandomForest::RandomForest(const int maxDepth, const int amountOfTrees,
+		const int amountOfClasses)
+		:	m_amountOfTrees(amountOfTrees),
 			m_amountOfClasses(amountOfClasses),
 			m_counterIncreaseValue(2),
 			m_trees(amountOfTrees, DecisionTree(maxDepth, amountOfClasses)){
 }
 
 RandomForest::~RandomForest(){
+}
+
+void RandomForest::init(const int amountOfTrees){
+	*(const_cast<int*>(&m_amountOfTrees)) = amountOfTrees; // change of const value
+	m_trees = DecisionTreesContainer(amountOfTrees, DecisionTree(0, 0));
+}
+
+void RandomForest::generateTreeBasedOnData(const DecisionTreeData& data, const int element){
+	*(const_cast<int*>(&m_amountOfClasses)) = data.amountOfClasses;
+	if(m_trees.size() > element){
+		m_trees[element].initFromData(data);
+	}else{
+		printError("The element is bigger than the size: " << element);
+	}
 }
 
 void RandomForest::train(const Data& data, const Labels& labels, const int amountOfUsedDims,
@@ -49,21 +63,31 @@ void RandomForest::train(const Data& data, const Labels& labels, const int amoun
 		const int end = ((i + 1) / (double) nrOfParallel) * m_amountOfTrees;
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::trainInParallel, this, data, labels, amountOfUsedDims, generators[i], start, end, &counter)));
 	}
-	while(true){
-		usleep(0.2 * 1e3);
-		std::cout << "\r                                                                  \r";
+	while(counter.getCounter() < m_amountOfTrees){
+		// just the update for the amount of training left:
+		usleep(0.2 * 1e6);
 		const int c = counter.getCounter();
-		std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %"
-				<< ",\testimated rest time: "
-				<< ((double) (m_amountOfTrees - c)) * (sw.elapsedSeconds() / (double) c) << " sec";
-		flush(std::cout);
-		if(counter.getCounter() >= m_amountOfTrees){
-			break;
+		if(c != 0){
+			std::cout
+					<< "\r                                                                                                   \r";
+			const double time = ((double) (m_amountOfTrees - c)) * (sw.elapsedSeconds() / (double) c);
+			if(time < 60){
+				std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %"
+						<< ",\testimated rest time: " << time << " sec";
+			}else if(time < 3600){
+				std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %"
+						<< ",\testimated rest time: " << (int) time / 60 << " min and "
+						<< fmod(time, 60) << " sec";
+			}else{
+				std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %"
+						<< ",\testimated rest time: " << (int) time / 3600 << " hours and "
+						<< fmod((int) time / 60, 60) << " min and " << fmod(time, 60) << " sec";
+			}
+			flush(std::cout);
 		}
 	}
 	group.join_all(); // wait until all are finished!
-	std::cout << "\rFinish training in : " << sw.elapsedSeconds()
-			<< " sec                                                                 " << std::endl;
+	std::cout << "\rFinish training in : " << sw.elapsedSeconds() << " sec                                                                 " << std::endl;
 }
 
 void RandomForest::trainInParallel(const Data& data, const Labels& labels,
@@ -78,39 +102,41 @@ void RandomForest::trainInParallel(const Data& data, const Labels& labels,
 }
 
 int RandomForest::predict(const DataElement& point) const{
+	std::vector<int> values(m_amountOfClasses, 0);
+	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend();
+			++it){
+		++values[it->predict(point)];
+	}
+	//std::cout << "First: " << values[0] << ", second: " << values[1] << std::endl;
+	return std::distance(values.cbegin(), std::max_element(values.cbegin(), values.cend()));
+}
+
+void RandomForest::predictData(const Data& points, Labels& labels) const{
+	labels.resize(points.size());
 	const int nrOfParallel = std::thread::hardware_concurrency();
-	if(!(m_amountOfTrees < nrOfParallel || true)){
-		// do not use -> has a bug!
-		boost::thread_group group;
-		std::vector<std::vector<int> > vectors(nrOfParallel,
-				std::vector<int>(m_amountOfClasses, 0));
-		for(int i = 0; i < nrOfParallel; ++i){
-			const int start = (i / (double) nrOfParallel) * m_amountOfTrees;
-			const int end = ((i + 1) / (double) nrOfParallel) * m_amountOfTrees;
-			group.add_thread(new boost::thread(boost::bind(&RandomForest::predictInParallel, this, point, vectors[i], start, end)));
-		}
-		group.join_all(); // wait until all are finished!
-		for(int i = 1; i < nrOfParallel; ++i){
-			for(int j = 0; j < m_amountOfClasses; ++j){
-				vectors[0][j] += vectors[i][j];
-			}
-		}
-		return std::distance(vectors[0].cbegin(),
-				std::max_element(vectors[0].cbegin(), vectors[0].cend()));
-	}else{ // no parallel execution:
-		std::vector<int> values(m_amountOfClasses, 0);
-		for(std::vector<DecisionTree>::const_iterator it = m_trees.cbegin(); it != m_trees.cend();
-				++it){
-			++values[it->predict(point)];
-		}
-		//std::cout << "First: " << values[0] << ", second: " << values[1] << std::endl;
-		return std::distance(values.cbegin(), std::max_element(values.cbegin(), values.cend()));
+	boost::thread_group group;
+	for(int i = 0; i < nrOfParallel; ++i){
+		const int start = (i / (double) nrOfParallel) * points.size();
+		const int end = ((i + 1) / (double) nrOfParallel) * points.size();
+		group.add_thread(new boost::thread(boost::bind(&RandomForest::predictDataInParallel, this, points, &labels, start, end)));
+	}
+	group.join_all(); // wait until all are finished!
+}
+
+void RandomForest::predictDataInParallel(const Data& points, Labels* labels, const int start,
+		const int end) const{
+	for(int i = start; i < end; ++i){
+		(*labels)[i] = predict(points[i]);
 	}
 }
 
-void RandomForest::predictInParallel(const DataElement& point, std::vector<int>& values,
-		const int start, const int end) const{
-	for(int i = start; i < end; ++i){
-		++values[m_trees[i].predict(point)];
+void RandomForest::addForest(const RandomForest& forest){
+	if(forest.getNrOfTrees() == 0){
+		printError("Can't add a empty forest!");
+	}
+	m_trees.reserve(forest.getTrees().size() + m_trees.size());
+	for(DecisionTreesContainer::const_iterator it = forest.getTrees().cbegin(); it != forest.getTrees().cend(); ++it){
+		m_trees.push_back(*it);
 	}
 }
+

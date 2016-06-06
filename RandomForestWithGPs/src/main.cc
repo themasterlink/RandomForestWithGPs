@@ -9,11 +9,10 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include "kernelCalc.h"
-#include "RandomForests/RandomForest.h"
-#include "RandomForests/OtherRandomForest.h"
 #include "Utility/Settings.h"
 #include "Data/DataReader.h"
 #include "Data/DataWriterForVisu.h"
+#include "RandomForests/RandomForest.h"
 #include "RandomForests/RandomForestWriter.h"
 
 // just for testing
@@ -64,7 +63,7 @@ int main(){
 	Settings::getValue("Forest.amountOfTrees", amountOfTrees, 1000);
 	std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
 
-	OtherRandomForest otherForest(height, amountOfTrees, dim);
+	RandomForest otherForest(height, amountOfTrees, dim);
 	otherForest.train(data, labels, dim, minMaxUsedData);
 
 	Labels guessedLabels;
@@ -101,7 +100,7 @@ int main(){
 		Settings::getValue("WriteBinarySaveOfTrees.path", path);
 		RandomForestWriter::writeToFile(path, otherForest);
 	}
-	OtherRandomForest newForest(0,0,0);
+	RandomForest newForest(0,0,0);
 	RandomForestWriter::readFromFile("../testData/trees2.binary", newForest);
 	Labels guessedLabels2;
 	newForest.addForest(otherForest);
