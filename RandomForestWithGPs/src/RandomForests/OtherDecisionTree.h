@@ -10,10 +10,14 @@
 
 #include "../Data/Data.h"
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
+#include "DecisionTreeData.h"
 
 class OtherDecisionTree{
 public:
 	OtherDecisionTree(const int maxDepth, const int amountOfClasses);
+
+	// copy construct
+	OtherDecisionTree(const OtherDecisionTree& tree);
 
 	virtual ~OtherDecisionTree();
 
@@ -25,6 +29,10 @@ public:
 			std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator);
 
 	int predict(const DataElement& point) const;
+
+	void writeToData(DecisionTreeData& data) const;
+
+	void initFromData(const DecisionTreeData& data);
 
 private:
 	// max depth allowed in this tree

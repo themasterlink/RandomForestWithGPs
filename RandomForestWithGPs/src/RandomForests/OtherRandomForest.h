@@ -11,6 +11,7 @@
 #include "OtherDecisionTree.h"
 #include <boost/thread.hpp> // Boost threads
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
+#include "DecisionTreeData.h"
 
 class OtherTreeCounter{
 private:
@@ -34,12 +35,24 @@ public:
 	OtherRandomForest(const int maxDepth, const int amountOfTrees, const int amountOfUsedClasses);
 	virtual ~OtherRandomForest();
 
+	void addForest(const OtherRandomForest& forest);
+
 	void train(const Data& data, const Labels& labels, const int amountOfUsedDims,
 			const Eigen::Vector2i minMaxUsedData);
+
+	void init(const int amountOfTrees);
+
+	void generateTreeBasedOnData(const DecisionTreeData& data, const int element);
 
 	int predict(const DataElement& point) const;
 
 	void predictData(const Data& points, Labels& labels) const;
+
+	int getNrOfTrees() const { return m_trees.size(); };
+
+	const std::vector<OtherDecisionTree>& getTrees() const{ return m_trees; };
+
+	std::vector<OtherDecisionTree>& getTrees(){ return m_trees; };
 
 private:
 	const int m_maxDepth;

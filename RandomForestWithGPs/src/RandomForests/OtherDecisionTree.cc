@@ -22,7 +22,18 @@ OtherDecisionTree::OtherDecisionTree(const int maxDepth,
 			m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
 			m_splitDim(m_maxInternalNodeNr + 1),
 			m_isUsed(m_maxNodeNr + 1, false),
-			m_labelsOfWinningClassesInLeaves(pow(2, maxDepth)){
+			m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), -1){
+}
+
+OtherDecisionTree::OtherDecisionTree(const OtherDecisionTree& tree):
+		m_maxDepth(tree.m_maxDepth),
+		m_maxNodeNr(tree.m_maxNodeNr),
+		m_maxInternalNodeNr(tree.m_maxInternalNodeNr),
+		m_amountOfClasses(tree.m_amountOfClasses){
+	m_splitValues = tree.m_splitValues;
+	m_splitDim = tree.m_splitDim;
+	m_isUsed = tree.m_isUsed;
+	m_labelsOfWinningClassesInLeaves = tree.m_labelsOfWinningClassesInLeaves;
 }
 
 OtherDecisionTree::~OtherDecisionTree(){
@@ -220,4 +231,38 @@ int OtherDecisionTree::predict(const DataElement& point) const{
 		}
 	}
 	return m_labelsOfWinningClassesInLeaves[iActNode - pow(2, m_maxDepth)];
+}
+
+
+void OtherDecisionTree::writeToData(DecisionTreeData& data) const{
+	data.height = m_maxDepth;
+	data.nrOfLeaves = m_labelsOfWinningClassesInLeaves.size();
+	data.nrOfInternalNodes = m_maxInternalNodeNr; // size of splitDim and splitValues
+	data.amountOfClasses = m_amountOfClasses;
+	data.splitValues = m_splitValues;
+	data.dimValues = m_splitDim;
+	data.labelsOfWinningClassInLeaves = m_labelsOfWinningClassesInLeaves;
+}
+
+
+void OtherDecisionTree::initFromData(const DecisionTreeData& data){
+	*(const_cast<int*>(&m_maxDepth)) = data.height; // change of const value
+	*(const_cast<int*>(&m_maxNodeNr)) = pow(2, m_maxDepth + 1) - 1;
+	*(const_cast<int*>(&m_maxInternalNodeNr)) = data.nrOfInternalNodes;
+	*(const_cast<int*>(&m_amountOfClasses)) = data.amountOfClasses;
+	m_splitValues = data.splitValues;
+	m_splitDim = data.dimValues;
+	m_labelsOfWinningClassesInLeaves = data.labelsOfWinningClassInLeaves;
+	m_isUsed.resize(m_maxNodeNr + 1);
+	for(int i = 0; i < m_maxInternalNodeNr + 1; ++i){ // for internal nodes
+		if(m_splitDim[i] == -1){
+			m_isUsed[i] = false;
+		}else{
+			m_isUsed[i] = true;
+		}
+	}
+	for(int i = 0; i < m_labelsOfWinningClassesInLeaves.size(); ++i){ // for leaves
+		m_isUsed[m_maxInternalNodeNr + i + 1] = false; // set all to false
+	}
+
 }

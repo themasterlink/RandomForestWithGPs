@@ -14,6 +14,7 @@
 #include "Utility/Settings.h"
 #include "Data/DataReader.h"
 #include "Data/DataWriterForVisu.h"
+#include "RandomForests/RandomForestWriter.h"
 
 // just for testing
 
@@ -30,8 +31,21 @@ int main(){
 	Settings::getValue("Training.path", path);
 	DataReader::readFromFile(data, labels, path);
 
+	bool useFixedValuesForMinMaxUsedData;
+	Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
 	Eigen::Vector2i minMaxUsedData;
-	minMaxUsedData << (int) (0.2 * data.size()), (int) (0.6 * data.size());
+	if(useFixedValuesForMinMaxUsedData){
+		int minVal = 0, maxVal = 0;
+		Settings::getValue("MinMaxUsedData.minValue", minVal);
+		Settings::getValue("MinMaxUsedData.maxValue", maxVal);
+		minMaxUsedData << minVal, maxVal;
+	}else{
+		double minVal = 0, maxVal = 0;
+		Settings::getValue("MinMaxUsedData.minValueFraction", minVal);
+		Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
+		minMaxUsedData << (int) (minVal * data.size()),  (int) (maxVal * data.size());
+	}
+	std::cout << "Min used of data: " << minMaxUsedData[0] << ", max: " << minMaxUsedData[1] << std::endl;
 
 	Data testData;
 	Labels testLabels;
@@ -81,6 +95,29 @@ int main(){
 
 
 	bool doWriting;
+	Settings::getValue("WriteBinarySaveOfTrees.doWriting", doWriting, false);
+	if(doWriting){
+		std::string path;
+		Settings::getValue("WriteBinarySaveOfTrees.path", path);
+		RandomForestWriter::writeToFile(path, otherForest);
+	}
+	OtherRandomForest newForest(0,0,0);
+	RandomForestWriter::readFromFile("../testData/trees2.binary", newForest);
+	Labels guessedLabels2;
+	newForest.addForest(otherForest);
+	newForest.predictData(testData, guessedLabels2);
+
+	wrong = 0;
+	for(int i = 0; i < testData.size(); ++i){
+		if(guessedLabels2[i] != testLabels[i]){
+			++wrong;
+		}
+	}
+	std::cout << "Amount of trees: " << newForest.getNrOfTrees() << std::endl;
+	std::cout << "Read: Amount of test size: " << testData.size() << std::endl;
+	std::cout << "Read: Amount of wrong: " << wrong / (double) testData.size() << std::endl;
+
+
 	int printX, printY;
 	Settings::getValue("Write2D.doWriting", doWriting, false);
 	Settings::getValue("Write2D.printX", printX, 0);
@@ -95,6 +132,9 @@ int main(){
 		std::cout << "End Reached" << std::endl;
 		system("../PythonScripts/plotData.py");
 	}
+
+
+
 	return 0;
 }
 

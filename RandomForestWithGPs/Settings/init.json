@@ -1,8 +1,8 @@
 {
     "Forest": {
-        "amountOfTrees": 200,
+        "amountOfTrees": 500,
         "Trees": {
-            "height": 4
+            "height": 3
         }
     },
     "Training": {
@@ -14,11 +14,22 @@
         "path": "..\/testData\/testInput3.txt",
         "amount": 1000
     },
+    "WriteBinarySaveOfTrees": {
+    	"doWriting": "true",
+        "path": "..\/testData\/trees.binary"
+    },
     "Write2D": {
         "testPath": "..\/testData\/visuTestResult.txt",
         "gridPath": "..\/testData\/visuGridResult.txt",
         "doWriting": "true",
         "printX": 0,
         "printY": 1
+    },
+    "MinMaxUsedData": {
+    	"useFixedValuesForMinMaxUsedData": "true", 
+    	"minValue": 50,
+    	"maxValue": 200,
+    	"minValueFraction": 0.2,
+    	"maxValueFraction": 0.6
     }
 }

@@ -20,6 +20,21 @@ OtherRandomForest::OtherRandomForest(const int maxDepth, const int amountOfTrees
 OtherRandomForest::~OtherRandomForest(){
 }
 
+void OtherRandomForest::init(const int amountOfTrees){
+	*(const_cast<int*>(&m_amountOfTrees)) = amountOfTrees; // change of const value
+	m_trees = std::vector<OtherDecisionTree>(amountOfTrees, OtherDecisionTree(0, 0));
+}
+
+void OtherRandomForest::generateTreeBasedOnData(const DecisionTreeData& data, const int element){
+	*(const_cast<int*>(&m_maxDepth)) = data.height;// change of const value
+	*(const_cast<int*>(&m_amountOfClasses)) = data.amountOfClasses;
+	if(m_trees.size() > element){
+		m_trees[element].initFromData(data);
+	}else{
+		printError("The element is bigger than the size: " << element);
+	}
+}
+
 void OtherRandomForest::train(const Data& data, const Labels& labels, const int amountOfUsedDims,
 		const Eigen::Vector2i minMaxUsedData){
 	if(data.size() != labels.size()){
@@ -56,8 +71,7 @@ void OtherRandomForest::train(const Data& data, const Labels& labels, const int 
 		if(c != 0){
 			std::cout
 					<< "\r                                                                                                   \r";
-			const double time = ((double) (m_amountOfTrees - c))
-					* (sw.elapsedSeconds() / (double) c);
+			const double time = ((double) (m_amountOfTrees - c)) * (sw.elapsedSeconds() / (double) c);
 			if(time < 60){
 				std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %"
 						<< ",\testimated rest time: " << time << " sec";
@@ -120,3 +134,14 @@ void OtherRandomForest::predictDataInParallel(const Data& points, Labels* labels
 		(*labels)[i] = predict(points[i]);
 	}
 }
+
+void OtherRandomForest::addForest(const OtherRandomForest& forest){
+	if(forest.getNrOfTrees() == 0){
+		printError("Can't add a empty forest!");
+	}
+	m_trees.reserve(forest.getTrees().size() + m_trees.size());
+	for(std::vector<OtherDecisionTree>::const_iterator it = forest.getTrees().cbegin(); it != forest.getTrees().cend(); ++it){
+		m_trees.push_back(*it);
+	}
+}
+

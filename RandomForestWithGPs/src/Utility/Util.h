@@ -10,6 +10,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <fstream>
+#include <istream>
 #include <string>
 #include <vector>
 #include "StopWatch.h"
@@ -48,4 +50,27 @@ template<class T> const T& max(const T& a, const T& b){
 	return !(b > a) ? a : b;     // or: return !comp(b,a)?a:b; for version (2)
 }
 
+namespace Utility {
+
+// reading and writing of binary
+template<class T>
+void writeVecToStream(std::ostream &output, std::vector<T> const &input) {
+	long size = input.size();
+    output << size << "\n";
+    std::copy(input.begin(), input.end(), std::ostream_iterator<T>(output, "\n"));
+}
+
+template<class T>
+void readVecFromStream(std::istream &input, std::vector<T>& output) {
+    long size;
+
+    input >> size;
+    output.resize(size);
+    std::copy_n(
+    		std::istream_iterator<T>(input),
+			size,
+			output.begin());
+}
+
+}
 #endif /* UTILITY_UTIL_H_ */
