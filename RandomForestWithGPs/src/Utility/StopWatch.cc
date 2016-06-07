@@ -29,3 +29,13 @@ double StopWatch::elapsedMiliSeconds(){
 	return (boost::posix_time::microsec_clock::local_time() - m_start).total_milliseconds();
 }
 
+TimeFrame StopWatch::elapsedAsTimeFrame(){
+	return TimeFrame(elapsedSeconds());
+}
+
+std::string StopWatch::elapsedAsPrettyTime(){
+	std::stringstream ss;
+	ss << TimeFrame(elapsedSeconds());
+	return ss.str();
+}
+

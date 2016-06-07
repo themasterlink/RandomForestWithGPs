@@ -8,10 +8,10 @@
 #ifndef UTILITY_SETTINGS_H_
 #define UTILITY_SETTINGS_H_
 
+#include "Util.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/thread.hpp> // Boost mutex
-#include "Util.h"
 
 class Settings{
 

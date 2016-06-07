@@ -68,21 +68,11 @@ void RandomForest::train(const Data& data, const Labels& labels, const int amoun
 		usleep(0.2 * 1e6);
 		const int c = counter.getCounter();
 		if(c != 0){
-			std::cout
-					<< "\r                                                                                                   \r";
-			const double time = ((double) (m_amountOfTrees - c)) * (sw.elapsedSeconds() / (double) c);
-			if(time < 60){
-				std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %"
-						<< ",\testimated rest time: " << time << " sec";
-			}else if(time < 3600){
-				std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %"
-						<< ",\testimated rest time: " << (int) time / 60 << " min and "
-						<< fmod(time, 60) << " sec";
-			}else{
-				std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %"
-						<< ",\testimated rest time: " << (int) time / 3600 << " hours and "
-						<< fmod((int) time / 60, 60) << " min and " << fmod(time, 60) << " sec";
-			}
+			std::cout << "\r                                                                                                   \r";
+			TimeFrame time = sw.elapsedAsTimeFrame();
+			const double fac = ((double) (m_amountOfTrees - c)) / (double) c;
+			time *= fac;
+			std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %" << ",\testimated rest time: " << time;
 			flush(std::cout);
 		}
 	}

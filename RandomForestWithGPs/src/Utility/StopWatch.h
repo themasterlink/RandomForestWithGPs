@@ -9,6 +9,7 @@
 #define UTILITY_STOPWATCH_H_
 
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include "TimeFrame.h"
 
 class StopWatch{
 public:
@@ -19,6 +20,10 @@ public:
 	void stopTime();
 	double elapsedSeconds();
 	double elapsedMiliSeconds();
+
+	TimeFrame elapsedAsTimeFrame();
+
+	std::string elapsedAsPrettyTime();
 
 private:
 
