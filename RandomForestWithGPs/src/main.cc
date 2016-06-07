@@ -63,11 +63,11 @@ int main(){
 	Settings::getValue("Forest.amountOfTrees", amountOfTrees, 1000);
 	std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
 
-	RandomForest otherForest(height, amountOfTrees, dim);
-	otherForest.train(data, labels, dim, minMaxUsedData);
+	RandomForest forest(height, amountOfTrees, dim);
+	forest.train(data, labels, dim, minMaxUsedData);
 
 	Labels guessedLabels;
-	otherForest.predictData(testData, guessedLabels);
+	forest.predictData(testData, guessedLabels);
 
 	int wrong = 0;
 	for(int i = 0; i < testData.size(); ++i){
@@ -78,19 +78,6 @@ int main(){
 	std::cout << "Other: Amount of test size: " << testData.size() << std::endl;
 	std::cout << "Other: Amount of wrong: " << wrong / (double) testData.size() << std::endl;
 
-	/*RandomForest forest(9,500,2);
-	 //forest.train(data, labels, 2, minMaxUsedData);
-	 wrong = 0;
-	 for(int i = 0; i < testData.size(); ++i){
-	 int label = forest.predict(testData[i]);
-	 if(label != testLabels[i]){
-	 //std::cout << "Label wrong for : " << i << ", " << label << " = " << testLabels[i] << std::endl;
-	 ++wrong;
-	 }
-	 }
-	 std::cout << "Amount of test size: " << testData.size() << std::endl;
-	 std::cout << "Amount of wrong: " << wrong / (double) testData.size() << std::endl;
-	 */
 
 
 	bool doWriting;
@@ -98,12 +85,12 @@ int main(){
 	if(doWriting){
 		std::string path;
 		Settings::getValue("WriteBinarySaveOfTrees.path", path);
-		RandomForestWriter::writeToFile(path, otherForest);
+		RandomForestWriter::writeToFile(path, forest);
 	}
 	RandomForest newForest(0,0,0);
 	RandomForestWriter::readFromFile("../testData/trees2.binary", newForest);
 	Labels guessedLabels2;
-	newForest.addForest(otherForest);
+	newForest.addForest(forest);
 	newForest.predictData(testData, guessedLabels2);
 
 	wrong = 0;
@@ -124,7 +111,7 @@ int main(){
 	if(doWriting){
 		Settings::getValue("Write2D.gridPath", path);
 		StopWatch sw;
-		DataWriterForVisu::generateGrid(path, otherForest, 200, data, printX, printY);
+		DataWriterForVisu::generateGrid(path, forest, 200, data, printX, printY);
 		Settings::getValue("Write2D.testPath", path);
 		DataWriterForVisu::writeData(path, testData, testLabels, printX, printY);
 		std::cout << "Time for write: " << sw.elapsedSeconds() << std::endl;
