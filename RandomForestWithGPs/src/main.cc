@@ -44,7 +44,7 @@ int main(){
 		Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
 		minMaxUsedData << (int) (minVal * data.size()),  (int) (maxVal * data.size());
 	}
-	std::cout << "Min used of data: " << minMaxUsedData[0] << ", max: " << minMaxUsedData[1] << std::endl;
+	std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";
 
 	Data testData;
 	Labels testLabels;
@@ -112,7 +112,7 @@ int main(){
 			++wrong;
 		}
 	}
-	std::cout << "Amount of trees: " << newForest.getNrOfTrees() << std::endl;
+	std::cout << "Amount of combined trees: " << newForest.getNrOfTrees() << std::endl;
 	std::cout << "Read: Amount of test size: " << testData.size() << std::endl;
 	std::cout << "Read: Amount of wrong: " << wrong / (double) testData.size() << std::endl;
 

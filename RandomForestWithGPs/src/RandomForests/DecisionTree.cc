@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <limits>
 #include "DecisionTree.h"
+#include <boost/thread.hpp> // Boost threads
 
 #define MIN_NR_TO_SPLIT 2
 
@@ -20,8 +21,7 @@ DecisionTree::DecisionTree(const int maxDepth,
 			m_maxInternalNodeNr(pow(2, maxDepth) - 1),
 			m_amountOfClasses(amountOfClasses),
 			m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
-			m_splitDim(m_maxInternalNodeNr + 1),
-			m_isUsed(m_maxNodeNr + 1, false),
+			m_splitDim(m_maxInternalNodeNr + 1, NODE_IS_NOT_USED),
 			m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), -1){
 }
 
@@ -32,7 +32,6 @@ DecisionTree::DecisionTree(const DecisionTree& tree):
 		m_amountOfClasses(tree.m_amountOfClasses){
 	m_splitValues = tree.m_splitValues;
 	m_splitDim = tree.m_splitDim;
-	m_isUsed = tree.m_isUsed;
 	m_labelsOfWinningClassesInLeaves = tree.m_labelsOfWinningClassesInLeaves;
 }
 
@@ -66,12 +65,12 @@ void DecisionTree::train(const Data& data,
 			}while(doAgain);
 		}
 	}
-	m_isUsed[1] = true; // init root
+	m_splitDim[1] = NODE_CAN_BE_USED; // init the root value
 	std::vector<int> leftHisto(m_amountOfClasses), rightHisto(m_amountOfClasses);
 	std::vector<std::vector<int> > dataPosition(m_maxNodeNr + 1, std::vector<int>());
 	for(int iActNode = 1; iActNode < m_maxInternalNodeNr + 1; ++iActNode){ // first element is not used!
-		if(!m_isUsed[iActNode]){ // checks if node contains data or not
-			continue;
+		if(m_splitDim[iActNode] == NODE_IS_NOT_USED){ // checks if node contains data or not
+			continue; // if node is not used, go to next node, if node can be used process it
 		}
 		// calc actual nodes
 		// calc split value for each node
@@ -130,23 +129,29 @@ void DecisionTree::train(const Data& data,
 			// split is not needed
 			dataPosition[leftPos].clear();
 			dataPosition[rightPos].clear();
+			m_splitDim[iActNode] = NODE_IS_NOT_USED; // do not split here
 		}else{
 			dataPosition[iActNode].clear();
 			// set the use flag for children:
-			m_isUsed[leftPos] = foundDataLeft > 0;
-			m_isUsed[rightPos] = foundDataRight > 0;
+			if(rightPos < m_maxInternalNodeNr + 1){ // if right is leave, than left is too -> just control one
+				m_splitDim[leftPos] = foundDataLeft > 0 ? NODE_CAN_BE_USED : NODE_IS_NOT_USED;
+				m_splitDim[rightPos] = foundDataRight > 0 ? NODE_CAN_BE_USED : NODE_IS_NOT_USED;
+			}
 		}
 	}
 	const int leafAmount = pow(2, m_maxDepth);
 	const int offset = leafAmount; // pow(2, maxDepth - 1)
 	for(int i = 0; i < leafAmount; ++i){
 		std::vector<int> histo(m_amountOfClasses, 0);
-		int actNode = i + offset;
-		while(!m_isUsed[actNode]){
-			actNode /= 2;
+		int lastValue = i + offset;
+		int actNode = lastValue / 2;
+		while(m_splitDim[actNode] == NODE_IS_NOT_USED){
+			lastValue = actNode; // save correct child
+			actNode /= 2; // if node is not take parent and try again
 		}
-		for(std::vector<int>::const_iterator it = dataPosition[actNode].cbegin();
-				it != dataPosition[actNode].cend(); ++it){
+
+		for(std::vector<int>::const_iterator it = dataPosition[lastValue].cbegin();
+				it != dataPosition[lastValue].cend(); ++it){
 			++histo[labels[*it]];
 		}
 		int maxEle = 0, labelWithHighestOcc = 0;
@@ -158,6 +163,7 @@ void DecisionTree::train(const Data& data,
 		}
 		m_labelsOfWinningClassesInLeaves[i] = labelWithHighestOcc;
 	}
+
 }
 
 double DecisionTree::trySplitFor(const int actNode,
@@ -217,20 +223,26 @@ double DecisionTree::trySplitFor(const int actNode,
 
 int DecisionTree::predict(const DataElement& point) const{
 	int iActNode = 1; // start in root
-	while(iActNode <= m_maxInternalNodeNr){
-		bool right = m_splitValues[iActNode] < point[m_splitDim[iActNode]];
-		iActNode *= 2; // get to next level
-		if(right){ // point is on right side of split
-			++iActNode; // go to right node
-		}
-		if(!m_isUsed[iActNode]){
-			while(iActNode <= m_maxInternalNodeNr){
-				iActNode *= 2;
+	if(m_splitDim[1] != NODE_IS_NOT_USED){
+		while(iActNode <= m_maxInternalNodeNr){
+			const bool right = m_splitValues[iActNode] < point[m_splitDim[iActNode]];
+			iActNode *= 2; // get to next level
+			if(right){ // point is on right side of split
+				++iActNode; // go to right node
 			}
-			break;
+			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
+				// if there is a node which isn't used on the way down to the leave
+				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+					iActNode *= 2;
+				}
+				break;
+			}
 		}
+		return m_labelsOfWinningClassesInLeaves[iActNode - pow(2, m_maxDepth)];
+	}else{
+		printError("A tree must be trained before it can predict anything!");
+		return -1;
 	}
-	return m_labelsOfWinningClassesInLeaves[iActNode - pow(2, m_maxDepth)];
 }
 
 
@@ -253,16 +265,4 @@ void DecisionTree::initFromData(const DecisionTreeData& data){
 	m_splitValues = data.splitValues;
 	m_splitDim = data.dimValues;
 	m_labelsOfWinningClassesInLeaves = data.labelsOfWinningClassInLeaves;
-	m_isUsed.resize(m_maxNodeNr + 1);
-	for(int i = 0; i < m_maxInternalNodeNr + 1; ++i){ // for internal nodes
-		if(m_splitDim[i] == -1){
-			m_isUsed[i] = false;
-		}else{
-			m_isUsed[i] = true;
-		}
-	}
-	for(int i = 0; i < m_labelsOfWinningClassesInLeaves.size(); ++i){ // for leaves
-		m_isUsed[m_maxInternalNodeNr + i + 1] = false; // set all to false
-	}
-
 }

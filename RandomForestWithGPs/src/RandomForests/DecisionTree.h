@@ -14,6 +14,11 @@
 
 class DecisionTree{
 public:
+	enum NodeType{
+		NODE_IS_NOT_USED = -1,
+		NODE_CAN_BE_USED = -2,
+	};
+
 	DecisionTree(const int maxDepth, const int amountOfClasses);
 
 	// copy construct
@@ -53,8 +58,6 @@ private:
 	std::vector<double> m_splitValues;
 	// order is like with split values
 	std::vector<int> m_splitDim;
-	// order is like with split values, is this node used -> (does it contain any values)
-	std::vector<bool> m_isUsed;
 
 	std::vector<int> m_labelsOfWinningClassesInLeaves;
 
