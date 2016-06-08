@@ -45,8 +45,6 @@ void TimeFrame::setWithSeconds(const double seconds){
 	}
 }
 
-
-
 std::ostream& operator<<(std::ostream& stream, const TimeFrame& time){
 	if(time.m_hours > 0 && time.m_minutes > 0){
 		stream << time.m_hours << " h, " << time.m_minutes << " min and " << time.m_seconds << " sec";

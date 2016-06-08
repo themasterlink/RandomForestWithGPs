@@ -49,16 +49,14 @@ void RandomForest::train(const Data& data, const Labels& labels, const int amoun
 	}
 
 	StopWatch sw;
-	const int nrOfParallel = std::thread::hardware_concurrency();
+	const int nrOfParallel = 1; //std::thread::hardware_concurrency();
 	boost::thread_group group;
 	TreeCounter counter;
 	m_counterIncreaseValue = std::max(2, m_amountOfTrees / nrOfParallel / 100);
 	std::vector<RandomNumberGeneratorForDT> generators;
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int seed = i;
-		generators.push_back(
-				RandomNumberGeneratorForDT(data[0].rows(), minMaxUsedData[0], minMaxUsedData[1],
-						data.size(), seed));
+		generators.push_back(RandomNumberGeneratorForDT(data[0].rows(), minMaxUsedData[0], minMaxUsedData[1], data.size(), seed));
 		const int start = (i / (double) nrOfParallel) * m_amountOfTrees;
 		const int end = ((i + 1) / (double) nrOfParallel) * m_amountOfTrees;
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::trainInParallel, this, data, labels, amountOfUsedDims, generators[i], start, end, &counter)));
@@ -70,7 +68,7 @@ void RandomForest::train(const Data& data, const Labels& labels, const int amoun
 		if(c != 0){
 			std::cout << "\r                                                                                                   \r";
 			TimeFrame time = sw.elapsedAsTimeFrame();
-			const double fac = ((double) (m_amountOfTrees - c)) / (double) c;
+			const double fac = (double) (m_amountOfTrees - c) / (double) c;
 			time *= fac;
 			std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %" << ",\testimated rest time: " << time;
 			flush(std::cout);
@@ -83,10 +81,12 @@ void RandomForest::train(const Data& data, const Labels& labels, const int amoun
 void RandomForest::trainInParallel(const Data& data, const Labels& labels,
 		const int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const int start,
 		const int end, TreeCounter* counter){
+	int iCounter = 0;
 	for(int i = start; i < end; ++i){
 		m_trees[i].train(data, labels, amountOfUsedDims, generator);
 		if(i % m_counterIncreaseValue == 0 && counter != NULL){
 			counter->addToCounter(m_counterIncreaseValue); // is a thread safe add
+			iCounter += m_counterIncreaseValue;
 		}
 	}
 }

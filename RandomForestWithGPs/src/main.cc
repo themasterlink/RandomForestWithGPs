@@ -14,14 +14,133 @@
 #include "Data/DataWriterForVisu.h"
 #include "RandomForests/RandomForest.h"
 #include "RandomForests/RandomForestWriter.h"
+#include <cmath>
+#include <Eigen/Cholesky>
 
 // just for testing
+
+typedef Eigen::DiagonalWrapper<const Eigen::MatrixXd> DiagMatrixXd;
+
+
+void covariance(const Eigen::MatrixXd& data, const Eigen::MatrixXd& dataMat){
+	Eigen::MatrixXd centered = dataMat.rowwise() - dataMat.colwise().mean();
+	Eigen::MatrixXd cov = centered.adjoint() * centered;
+}
+
+void calcPhiBasedOnF(const Eigen::VectorXd& f, Eigen::VectorXd& pi, const int amountOfClasses, const int dataPoints){
+	const int amountOfEle = dataPoints * amountOfClasses;
+	if(f.rows() != amountOfEle){
+		printError("Amount of rows in f is wrong!");
+	}
+	pi = Eigen::VectorXd::Zero(amountOfEle);
+	for(int i = 0; i < amountOfClasses; ++i){
+		double normalizer = 0.;
+		for(int j = 0; j < amountOfClasses; ++j){
+			normalizer += exp((double) f[i * amountOfClasses + j]);
+		}
+		normalizer = 1.0 / normalizer;
+		for(int j = 0; j < dataPoints; ++j){
+			const int iActEle = i * dataPoints + j;
+			pi[iActEle] = normalizer * exp((double) f[iActEle]);
+		}
+	}
+
+}
+
+
+void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::MatrixXd& covariance, const Eigen::VectorXd& y){
+	const int amountOfEle = dataPoints * amountOfClasses;
+	const Eigen::MatrixXd eye(Eigen::MatrixXd::Identity(dataPoints,dataPoints));
+	std::fstream f2("t1.txt", std::ios::out);
+
+	Eigen::MatrixXd R(Eigen::MatrixXd::Zero(amountOfEle, dataPoints));			// R
+	for(int j = 0; j < dataPoints; ++j){
+		for(int i = 0; i < amountOfClasses; ++i){
+			R(i*dataPoints + j,j) = 1;
+		}
+	}
+	Eigen::VectorXd f = Eigen::VectorXd::Zero(amountOfEle); 					// f
+	Eigen::VectorXd pi; 														// pi
+	calcPhiBasedOnF(f, pi, amountOfClasses, dataPoints);
+	Eigen::VectorXd sqrtPi(pi);													// sqrtPi
+	for(int i = 0; i < sqrtPi.rows(); ++i){
+		sqrtPi[i] = sqrt((double) sqrtPi[i]);
+	}
+	const Eigen::MatrixXd D(pi.asDiagonal().toDenseMatrix());					// D
+	Eigen::DiagonalWrapper<const Eigen::MatrixXd> DSqrt(sqrtPi.asDiagonal()); 	// DSqrt
+	std::vector<DiagMatrixXd*> DSqrt_c(amountOfClasses, NULL);					//	DSqrt_c
+	std::vector<Eigen::MatrixXd> E_c(amountOfClasses);							// E_c
+
+	std::vector<Eigen::MatrixXd> K_c;											// K_c
+	for(int i = 0; i < amountOfClasses; ++i){ // calc the covariance matrix for each f_c
+		const Eigen::MatrixXd centered = f.rowwise() - f.colwise().mean();
+		K_c.push_back(centered.adjoint() * centered);
+	}
+
+	// TODO find way to construct bigPi in a nice an efficient way ...
+	Eigen::MatrixXd bigPi(amountOfEle, dataPoints);
+	for(int i = 0; i < amountOfClasses - 1; i+=2){
+		bigPi << pi.segment(i*dataPoints, dataPoints).asDiagonal().toDenseMatrix(),
+				pi.segment((i+1)*dataPoints, dataPoints).asDiagonal().toDenseMatrix();
+	}
+
+	Eigen::MatrixXd E_sum;
+	Eigen::VectorXd z(amountOfClasses);
+	std::vector<DiagMatrixXd*>::iterator it = DSqrt_c.begin();
+	for(int i = 0; i < amountOfClasses; ++i){
+		delete(*it); // free last iteration, in init it is null
+		it = DSqrt_c.insert(it, new DiagMatrixXd(sqrtPi.segment(i*dataPoints, dataPoints).asDiagonal()));
+		printLine();
+		Eigen::MatrixXd C = ((**it) * K_c[i] * (**it)) + eye;
+		printLine();
+		Eigen::MatrixXd L = Eigen::LLT<Eigen::MatrixXd>(C).matrixL();
+		printLine();
+		Eigen::MatrixXd nenner = (L * (*it)->inverse()).inverse();
+		E_c[i] = ((**it) * L.transpose()) * nenner;
+		printLine();
+		for(int j = 0; j < dataPoints; ++j){
+			z[i] += log((double) L(j,j));
+		}
+		printLine();
+		if(i == 0){
+			E_sum = E_c[i];
+		}else{
+			E_sum += E_c[i];
+		}
+		printLine();
+		++it;
+	}
+
+	Eigen::MatrixXd M = Eigen::LLT<Eigen::MatrixXd>(E_sum).matrixL();
+
+	Eigen::VectorXd b = (D - (bigPi * bigPi.transpose())) * f + y - pi;
+
+	Eigen::VectorXd c(amountOfEle);
+	for(int i = 0; i < amountOfClasses; ++i){
+		Eigen::VectorXd k = E_c[i] * K_c[i] * b.segment(i*dataPoints, dataPoints);
+		for(int j = 0; j < dataPoints; ++j){
+			c[i*amountOfClasses + j] = k[j];
+		}
+	}
+	Eigen::MatrixXd E(amountOfEle, amountOfEle);
+	for(int i = 0; i < amountOfClasses; ++i){
+		for(int j = 0; j < dataPoints; ++j){
+			for(int k = 0; k < dataPoints; ++k){
+				E(i*dataPoints + j, i*dataPoints + k) = E_c[i](j,k);
+			}
+		}
+	}
+
+	Eigen::VectorXd a = b - c + ( E * R * M.transpose()) * (M * (R.transpose() * c).inverse()).inverse();
+
+	printLine();
+	f2.close();
+}
 
 
 int main(){
 
 	std::cout << "Start" << std::endl;
-
 	// read in Settings
 	Settings::init("../Settings/init.json");
 	Data data;
@@ -30,6 +149,37 @@ int main(){
 	Settings::getValue("Training.path", path);
 	DataReader::readFromFile(data, labels, path);
 
+	const int dataPoints = data.size();
+	Eigen::MatrixXd dataMat;
+
+	dataMat.conservativeResize(data[0].rows(), data.size());
+	int i = 0;
+	for(Data::iterator it = data.begin(); it != data.end(); ++it){
+		dataMat.col(i++) = *it;
+	}
+	const int amountOfClass = 2;
+	std::vector<Data> dataPerClass(amountOfClass);
+	for(int i = 0; i < data.size(); ++i){
+		dataPerClass[labels[i]].push_back(data[i]);
+	}
+	Eigen::VectorXd y(Eigen::VectorXd::Zero(data.size() * amountOfClass));
+	for(int i = 0; i < labels.size(); ++i){
+		y[i * amountOfClass + labels[i]] = 1;
+	}
+	std::fstream f("t.txt", std::ios::out);
+	f << "dataMat:\n" << dataMat << std::endl;
+	Eigen::MatrixXd cov;
+	covariance(dataMat, cov);
+
+	f << std::endl;
+	f << std::endl;
+	f << std::endl;
+	f << cov << std::endl;
+	f.close();
+	magicFunc(amountOfClass,dataPoints, cov, y);
+
+	std::cout << "finish" << std::endl;
+	return 0;
 	bool useFixedValuesForMinMaxUsedData;
 	Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
 	Eigen::Vector2i minMaxUsedData;

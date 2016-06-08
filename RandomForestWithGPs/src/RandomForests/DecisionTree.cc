@@ -130,6 +130,10 @@ void DecisionTree::train(const Data& data,
 			dataPosition[leftPos].clear();
 			dataPosition[rightPos].clear();
 			m_splitDim[iActNode] = NODE_IS_NOT_USED; // do not split here
+			if(iActNode == 1){
+				m_splitDim[iActNode] = NODE_CAN_BE_USED; // there should be a split
+				// todo maybe avoid endless loop
+			}
 		}else{
 			dataPosition[iActNode].clear();
 			// set the use flag for children:
@@ -145,7 +149,7 @@ void DecisionTree::train(const Data& data,
 		std::vector<int> histo(m_amountOfClasses, 0);
 		int lastValue = i + offset;
 		int actNode = lastValue / 2;
-		while(m_splitDim[actNode] == NODE_IS_NOT_USED){
+		while(m_splitDim[actNode] == NODE_IS_NOT_USED && actNode > 1){
 			lastValue = actNode; // save correct child
 			actNode /= 2; // if node is not take parent and try again
 		}

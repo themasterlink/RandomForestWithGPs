@@ -14,20 +14,21 @@
 #include "DecisionTreeData.h"
 
 class TreeCounter{
-private:
-	boost::mutex mutex;
-	int counter;
-	public:
+public:
+	TreeCounter() : counter(0){};
+
 	void addToCounter(const int val){
 		mutex.lock();
 		counter += val;
 		mutex.unlock();
 	}
 
-	int getCounter(){
+	int getCounter() const{
 		return counter;
 	}
-	TreeCounter() : counter(0){};
+private:
+	boost::mutex mutex;
+	int counter;
 };
 
 class RandomForest{
