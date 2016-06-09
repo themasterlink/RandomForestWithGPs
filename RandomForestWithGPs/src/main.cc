@@ -54,7 +54,7 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 	std::fstream f2("t1.txt", std::ios::out);
 
 	Eigen::MatrixXd R(Eigen::MatrixXd::Zero(amountOfEle, dataPoints));			// R
-	for(int j = 0; j < dataPoints; ++j){
+	for(int j = 0; j < dataPoints; ++j){ // todo find faster way
 		for(int i = 0; i < amountOfClasses; ++i){
 			R(i*dataPoints + j,j) = 1;
 		}
@@ -72,8 +72,14 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 	std::vector<Eigen::MatrixXd> E_c(amountOfClasses);							// E_c
 
 	std::vector<Eigen::MatrixXd> K_c;											// K_c
+	Eigen::MatrixXd F(amountOfClasses, dataPoints);
+	for(int i = 0; i < dataPoints; ++i){ // todo find better way
+		for(int j = 0; j < amountOfClasses; ++j){
+			F(j,i) = (double) f(i*amountOfClasses + j);
+		}
+	}
 	for(int i = 0; i < amountOfClasses; ++i){ // calc the covariance matrix for each f_c
-		const Eigen::MatrixXd centered = f.rowwise() - f.colwise().mean();
+		const Eigen::MatrixXd centered = F.colwise() - F.rowwise().mean();
 		K_c.push_back(centered.adjoint() * centered);
 	}
 
@@ -86,17 +92,24 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 
 	Eigen::MatrixXd E_sum;
 	Eigen::VectorXd z(amountOfClasses);
-	std::vector<DiagMatrixXd*>::iterator it = DSqrt_c.begin();
+	//std::vector<DiagMatrixXd*>::iterator it = DSqrt_c.begin();
 	for(int i = 0; i < amountOfClasses; ++i){
-		delete(*it); // free last iteration, in init it is null
-		it = DSqrt_c.insert(it, new DiagMatrixXd(sqrtPi.segment(i*dataPoints, dataPoints).asDiagonal()));
-		printLine();
-		Eigen::MatrixXd C = ((**it) * K_c[i] * (**it)) + eye;
+		//delete(*it); // free last iteration, in init it is null
+		//it = DSqrt_c.insert(it, sqrtPi.segment(i*dataPoints, dataPoints).asDiagonal());
+		//DiagMatrixXd* pDSqrt_c= *it;
+		//if(pDSqrt_c == NULL){
+		//	printError("NULL");
+		//}
+		const DiagMatrixXd DSqrt_c(sqrtPi.segment(i*dataPoints, dataPoints));
+		std::cout << "Len: " << sqrtPi.segment(i*dataPoints, dataPoints).rows() << std::endl;
+		std::cout << "K_c: " << K_c[i].rows() << ", " << K_c[i].cols() << std::endl;
+		std::cout << "DSqrt_c: " << DSqrt_c.rows() << ", " << DSqrt_c.cols() << std::endl;
+		Eigen::MatrixXd C = (DSqrt_c * (K_c[i] * DSqrt_c)) + eye;
 		printLine();
 		Eigen::MatrixXd L = Eigen::LLT<Eigen::MatrixXd>(C).matrixL();
 		printLine();
-		Eigen::MatrixXd nenner = (L * (*it)->inverse()).inverse();
-		E_c[i] = ((**it) * L.transpose()) * nenner;
+		Eigen::MatrixXd nenner = (L.inverse() * DSqrt_c);
+		E_c[i] = (DSqrt_c * L.transpose()).inverse() * nenner;
 		printLine();
 		for(int j = 0; j < dataPoints; ++j){
 			z[i] += log((double) L(j,j));
@@ -107,8 +120,6 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 		}else{
 			E_sum += E_c[i];
 		}
-		printLine();
-		++it;
 	}
 
 	Eigen::MatrixXd M = Eigen::LLT<Eigen::MatrixXd>(E_sum).matrixL();
@@ -117,9 +128,9 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 
 	Eigen::VectorXd c(amountOfEle);
 	for(int i = 0; i < amountOfClasses; ++i){
-		Eigen::VectorXd k = E_c[i] * K_c[i] * b.segment(i*dataPoints, dataPoints);
-		for(int j = 0; j < dataPoints; ++j){
-			c[i*amountOfClasses + j] = k[j];
+		const Eigen::VectorXd k = E_c[i] * K_c[i] * b.segment(i*dataPoints, dataPoints);
+		for(int j = 0; j < dataPoints; ++j){ // todo rewrite -> faster
+			c[i*dataPoints + j] = k[j];
 		}
 	}
 	Eigen::MatrixXd E(amountOfEle, amountOfEle);
@@ -130,11 +141,29 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 			}
 		}
 	}
-
-	Eigen::VectorXd a = b - c + ( E * R * M.transpose()) * (M * (R.transpose() * c).inverse()).inverse();
-
 	printLine();
 	f2.close();
+	printLine();
+	Eigen::MatrixXd res = (M.inverse() * (R.transpose() * c));
+	printLine();
+	f2 << R;
+	f2 << "\n\n\n\n\n\n\n\n\n\n\n\n";
+	f2 << c;
+	f2 << "\n\n\n\n\n\n\n\n\n\n\n\n";
+	f2 << M;
+	std::cout << "size of E: " << E.rows() << ", " << E.cols() << std::endl;
+	std::cout << "size of R: " << R.rows() << ", " << R.cols() << std::endl;
+	std::cout << "size of M: " << M.rows() << ", " << M.cols() << std::endl;
+	printLine();
+	const Eigen::VectorXd a = b - c + E * R * (M.transpose()).inverse() * res;
+
+	for(int i = 0; i < amountOfClasses; ++i){
+		const Eigen::VectorXd k = K_c[i] * a.segment(i*dataPoints, dataPoints);
+		for(int j = 0; j < dataPoints; ++j){ // todo rewrite -> faster
+			f[i*dataPoints + j] = k[j];
+		}
+	}
+	printLine();
 }
 
 
@@ -175,6 +204,7 @@ int main(){
 	f << std::endl;
 	f << std::endl;
 	f << cov << std::endl;
+	f << y << std::endl;
 	f.close();
 	magicFunc(amountOfClass,dataPoints, cov, y);
 
