@@ -51,119 +51,124 @@ void calcPhiBasedOnF(const Eigen::VectorXd& f, Eigen::VectorXd& pi, const int am
 void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::MatrixXd& covariance, const Eigen::VectorXd& y){
 	const int amountOfEle = dataPoints * amountOfClasses;
 	const Eigen::MatrixXd eye(Eigen::MatrixXd::Identity(dataPoints,dataPoints));
-	std::fstream f2("t1.txt", std::ios::out);
-
 	Eigen::MatrixXd R(Eigen::MatrixXd::Zero(amountOfEle, dataPoints));			// R
 	for(int j = 0; j < dataPoints; ++j){ // todo find faster way
 		for(int i = 0; i < amountOfClasses; ++i){
 			R(i*dataPoints + j,j) = 1;
 		}
 	}
-	Eigen::VectorXd f = Eigen::VectorXd::Zero(amountOfEle); 					// f
-	Eigen::VectorXd pi; 														// pi
-	calcPhiBasedOnF(f, pi, amountOfClasses, dataPoints);
-	Eigen::VectorXd sqrtPi(pi);													// sqrtPi
-	for(int i = 0; i < sqrtPi.rows(); ++i){
-		sqrtPi[i] = sqrt((double) sqrtPi[i]);
-	}
-	const Eigen::MatrixXd D(pi.asDiagonal().toDenseMatrix());					// D
-	Eigen::DiagonalWrapper<const Eigen::MatrixXd> DSqrt(sqrtPi.asDiagonal()); 	// DSqrt
-	std::vector<DiagMatrixXd*> DSqrt_c(amountOfClasses, NULL);					//	DSqrt_c
-	std::vector<Eigen::MatrixXd> E_c(amountOfClasses);							// E_c
-
-	std::vector<Eigen::MatrixXd> K_c;											// K_c
-	Eigen::MatrixXd F(amountOfClasses, dataPoints);
-	for(int i = 0; i < dataPoints; ++i){ // todo find better way
-		for(int j = 0; j < amountOfClasses; ++j){
-			F(j,i) = (double) f(i*amountOfClasses + j);
+	Eigen::VectorXd f = Eigen::VectorXd::Zero(amountOfEle); 						// f
+	bool converged = false;
+	while(!converged){
+		std::fstream f2("t2.txt", std::ios::out);
+		Eigen::VectorXd lastF = f;													// lastF
+		Eigen::VectorXd pi; 														// pi
+		calcPhiBasedOnF(f, pi, amountOfClasses, dataPoints);
+		Eigen::VectorXd sqrtPi(pi);													// sqrtPi
+		for(int i = 0; i < sqrtPi.rows(); ++i){
+			sqrtPi[i] = sqrt((double) sqrtPi[i]);
 		}
-	}
-	for(int i = 0; i < amountOfClasses; ++i){ // calc the covariance matrix for each f_c
-		const Eigen::MatrixXd centered = F.colwise() - F.rowwise().mean();
-		K_c.push_back(centered.adjoint() * centered);
-	}
+		const Eigen::MatrixXd D(pi.asDiagonal().toDenseMatrix());					// D
+		//Eigen::DiagonalWrapper<const Eigen::MatrixXd> DSqrt(sqrtPi.asDiagonal()); 	// DSqrt
+		//std::vector<DiagMatrixXd*> DSqrt_c(amountOfClasses, NULL);					//	DSqrt_c
+		std::vector<Eigen::MatrixXd> E_c(amountOfClasses);							// E_c
 
-	// TODO find way to construct bigPi in a nice an efficient way ...
-	Eigen::MatrixXd bigPi(amountOfEle, dataPoints);
-	for(int i = 0; i < amountOfClasses - 1; i+=2){
-		bigPi << pi.segment(i*dataPoints, dataPoints).asDiagonal().toDenseMatrix(),
-				pi.segment((i+1)*dataPoints, dataPoints).asDiagonal().toDenseMatrix();
-	}
-
-	Eigen::MatrixXd E_sum;
-	Eigen::VectorXd z(amountOfClasses);
-	//std::vector<DiagMatrixXd*>::iterator it = DSqrt_c.begin();
-	for(int i = 0; i < amountOfClasses; ++i){
-		//delete(*it); // free last iteration, in init it is null
-		//it = DSqrt_c.insert(it, sqrtPi.segment(i*dataPoints, dataPoints).asDiagonal());
-		//DiagMatrixXd* pDSqrt_c= *it;
-		//if(pDSqrt_c == NULL){
-		//	printError("NULL");
-		//}
-		const DiagMatrixXd DSqrt_c(sqrtPi.segment(i*dataPoints, dataPoints));
-		std::cout << "Len: " << sqrtPi.segment(i*dataPoints, dataPoints).rows() << std::endl;
-		std::cout << "K_c: " << K_c[i].rows() << ", " << K_c[i].cols() << std::endl;
-		std::cout << "DSqrt_c: " << DSqrt_c.rows() << ", " << DSqrt_c.cols() << std::endl;
-		Eigen::MatrixXd C = (DSqrt_c * (K_c[i] * DSqrt_c)) + eye;
-		printLine();
-		Eigen::MatrixXd L = Eigen::LLT<Eigen::MatrixXd>(C).matrixL();
-		printLine();
-		Eigen::MatrixXd nenner = (L.inverse() * DSqrt_c);
-		E_c[i] = (DSqrt_c * L.transpose()).inverse() * nenner;
-		printLine();
-		for(int j = 0; j < dataPoints; ++j){
-			z[i] += log((double) L(j,j));
-		}
-		printLine();
-		if(i == 0){
-			E_sum = E_c[i];
-		}else{
-			E_sum += E_c[i];
-		}
-	}
-
-	Eigen::MatrixXd M = Eigen::LLT<Eigen::MatrixXd>(E_sum).matrixL();
-
-	Eigen::VectorXd b = (D - (bigPi * bigPi.transpose())) * f + y - pi;
-
-	Eigen::VectorXd c(amountOfEle);
-	for(int i = 0; i < amountOfClasses; ++i){
-		const Eigen::VectorXd k = E_c[i] * K_c[i] * b.segment(i*dataPoints, dataPoints);
-		for(int j = 0; j < dataPoints; ++j){ // todo rewrite -> faster
-			c[i*dataPoints + j] = k[j];
-		}
-	}
-	Eigen::MatrixXd E(amountOfEle, amountOfEle);
-	for(int i = 0; i < amountOfClasses; ++i){
-		for(int j = 0; j < dataPoints; ++j){
-			for(int k = 0; k < dataPoints; ++k){
-				E(i*dataPoints + j, i*dataPoints + k) = E_c[i](j,k);
+		std::vector<Eigen::MatrixXd> K_c;											// K_c
+		Eigen::MatrixXd F(amountOfClasses, dataPoints); 							// F just to calc covariances
+		for(int i = 0; i < dataPoints; ++i){ // todo find better way
+			for(int j = 0; j < amountOfClasses; ++j){
+				F(j,i) = (double) f(i*amountOfClasses + j);
 			}
 		}
-	}
-	printLine();
-	f2.close();
-	printLine();
-	Eigen::MatrixXd res = (M.inverse() * (R.transpose() * c));
-	printLine();
-	f2 << R;
-	f2 << "\n\n\n\n\n\n\n\n\n\n\n\n";
-	f2 << c;
-	f2 << "\n\n\n\n\n\n\n\n\n\n\n\n";
-	f2 << M;
-	std::cout << "size of E: " << E.rows() << ", " << E.cols() << std::endl;
-	std::cout << "size of R: " << R.rows() << ", " << R.cols() << std::endl;
-	std::cout << "size of M: " << M.rows() << ", " << M.cols() << std::endl;
-	printLine();
-	const Eigen::VectorXd a = b - c + E * R * (M.transpose()).inverse() * res;
-
-	for(int i = 0; i < amountOfClasses; ++i){
-		const Eigen::VectorXd k = K_c[i] * a.segment(i*dataPoints, dataPoints);
-		for(int j = 0; j < dataPoints; ++j){ // todo rewrite -> faster
-			f[i*dataPoints + j] = k[j];
+		for(int i = 0; i < amountOfClasses; ++i){ // calc the covariance matrix for each f_c
+			const Eigen::MatrixXd centered = F.colwise() - F.rowwise().mean();
+			K_c.push_back(centered.adjoint() * centered);
 		}
+
+		// TODO find way to construct bigPi in a nice an efficient way ...
+		Eigen::MatrixXd bigPi(amountOfEle, dataPoints);
+		for(int i = 0; i < amountOfClasses - 1; i+=2){
+			bigPi << pi.segment(i*dataPoints, dataPoints).asDiagonal().toDenseMatrix(),
+					pi.segment((i+1)*dataPoints, dataPoints).asDiagonal().toDenseMatrix();
+		}
+
+		Eigen::MatrixXd E_sum;
+		Eigen::VectorXd z(amountOfClasses);
+		//std::vector<DiagMatrixXd*>::iterator it = DSqrt_c.begin();
+		for(int i = 0; i < amountOfClasses; ++i){
+			//delete(*it); // free last iteration, in init it is null
+			//it = DSqrt_c.insert(it, sqrtPi.segment(i*dataPoints, dataPoints).asDiagonal());
+			//DiagMatrixXd* pDSqrt_c= *it;
+			//if(pDSqrt_c == NULL){
+			//	printError("NULL");
+			//}
+			const DiagMatrixXd DSqrt_c(sqrtPi.segment(i*dataPoints, dataPoints));
+			std::cout << "Len: " << sqrtPi.segment(i*dataPoints, dataPoints).rows() << std::endl;
+			std::cout << "K_c: " << K_c[i].rows() << ", " << K_c[i].cols() << std::endl;
+			std::cout << "DSqrt_c: " << DSqrt_c.rows() << ", " << DSqrt_c.cols() << std::endl;
+			Eigen::MatrixXd C = (DSqrt_c * (K_c[i] * DSqrt_c)) + eye;
+			Eigen::MatrixXd L = Eigen::LLT<Eigen::MatrixXd>(C).matrixL();
+			Eigen::MatrixXd nenner = L.triangularView<Eigen::Lower>().solve(DSqrt_c.toDenseMatrix());
+			E_c[i] = DSqrt_c * L.transpose().triangularView<Eigen::Upper>().solve(nenner);
+			for(int j = 0; j < dataPoints; ++j){
+				z[i] += log((double) L(j,j));
+			}
+			if(i == 0){
+				E_sum = E_c[i];
+			}else{
+				E_sum += E_c[i];
+			}
+		}
+
+		Eigen::MatrixXd M = Eigen::LLT<Eigen::MatrixXd>(E_sum).matrixL();
+
+		Eigen::VectorXd b = (D - (bigPi * bigPi.transpose())) * f + y - pi;							// b
+
+		Eigen::VectorXd c(amountOfEle);																// c
+		for(int i = 0; i < amountOfClasses; ++i){
+			const Eigen::VectorXd k = E_c[i] * K_c[i] * b.segment(i*dataPoints, dataPoints);
+			for(int j = 0; j < dataPoints; ++j){ // todo rewrite -> faster
+				c[i*dataPoints + j] = k[j];
+			}
+		}
+		Eigen::MatrixXd E(amountOfEle, amountOfEle);
+		for(int i = 0; i < amountOfClasses; ++i){
+			for(int j = 0; j < dataPoints; ++j){
+				for(int k = 0; k < dataPoints; ++k){
+					E(i*dataPoints + j, i*dataPoints + k) = E_c[i](j,k);
+				}
+			}
+		}
+		Eigen::MatrixXd res = M.triangularView<Eigen::Lower>().solve(R.transpose() * c); 			// M^-1 * (R^T* c)
+		f2 << b << "\n\n\n\n\n";
+		f2 << E_c[0]<< "\n\n\n\n\n";
+		f2 << E_c[1]<< "\n\n\n\n\n";
+		f2 << M << "\n\n\n\n\n";
+		f2 << M.triangularView<Eigen::Lower>().toDenseMatrix() << "\n\n\n\n\n";
+		f2 << M.transpose().triangularView<Eigen::Upper>().toDenseMatrix() << "\n\n\n\n\n";
+		f2 << (M.transpose().triangularView<Eigen::Upper>().solve(res)) << "\n\n\n\n\n";
+
+		f2.close();
+		std::cout << "b: " << b.transpose() << std::endl;
+		std::cout << "\n\n";
+		std::cout << "c: " << c.transpose() << std::endl;
+		std::cout << "\n\n";
+		const Eigen::VectorXd a = b - c + E * R * (M.transpose().triangularView<Eigen::Upper>().solve(res)); // b-c + E * R * ((M^T)^-1 * (res))
+		std::cout << "a: " << a.transpose() << std::endl;
+		std::cout << "\n\n";
+		std::cout << "before f: " << f.transpose() << std::endl;
+		for(int i = 0; i < amountOfClasses; ++i){
+			const Eigen::VectorXd k = K_c[i] * a.segment(i*dataPoints, dataPoints);
+			for(int j = 0; j < dataPoints; ++j){ // todo rewrite -> faster
+				f[i*dataPoints + j] = k[j];
+			}
+		}
+		std::cout << "\n\n";
+		std::cout << "after f: " << f.transpose() << std::endl;
+		std::cout << "new mean: " << (f-lastF).mean() << std::endl;
+		converged = (f-lastF).mean() < 0.01;
+		getchar();
 	}
-	printLine();
 }
 
 
