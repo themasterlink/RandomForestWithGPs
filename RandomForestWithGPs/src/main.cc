@@ -51,23 +51,26 @@ void calcPhiBasedOnF(const Eigen::VectorXd& f, Eigen::VectorXd& pi, const int am
 void magicFunc(const int amountOfClasses, const int dataPoints, const std::vector<Eigen::MatrixXd>& K_c, const Eigen::VectorXd& y){
 	const int amountOfEle = dataPoints * amountOfClasses;
 	const Eigen::MatrixXd eye(Eigen::MatrixXd::Identity(dataPoints,dataPoints));
-	Eigen::MatrixXd R(Eigen::MatrixXd::Zero(amountOfEle, dataPoints));			// R
+	Eigen::MatrixXd R(Eigen::MatrixXd::Zero(amountOfEle, dataPoints));			// R <-- compute R (just a giant stacked identy matrix)
 	for(int j = 0; j < dataPoints; ++j){ // todo find faster way
 		for(int i = 0; i < amountOfClasses; ++i){
 			R(i*dataPoints + j,j) = 1;
 		}
 	}
-	Eigen::VectorXd f = Eigen::VectorXd::Zero(amountOfEle); 						// f
+	Eigen::VectorXd f = Eigen::VectorXd::Zero(amountOfEle); 						// f <-- init with zeros
+	// R and f were check! -> should be right
 	bool converged = false;
 	while(!converged){
 		std::fstream f2("t2.txt", std::ios::out);
-		Eigen::VectorXd lastF = f;													// lastF
+		Eigen::VectorXd lastF = f;													// lastF <- save f for converge controll
 		Eigen::VectorXd pi; 														// pi
 		calcPhiBasedOnF(f, pi, amountOfClasses, dataPoints);
+		// pi was checked! -> should be right
 		Eigen::VectorXd sqrtPi(pi);													// sqrtPi
-		for(int i = 0; i < sqrtPi.rows(); ++i){
+		for(int i = 0; i < amountOfEle; ++i){
 			sqrtPi[i] = sqrt((double) sqrtPi[i]);
 		}
+		// sqrtPi was checked! -> should be right
 		const Eigen::MatrixXd D(pi.asDiagonal().toDenseMatrix());					// D
 		//Eigen::DiagonalWrapper<const Eigen::MatrixXd> DSqrt(sqrtPi.asDiagonal()); 	// DSqrt
 		//std::vector<DiagMatrixXd*> DSqrt_c(amountOfClasses, NULL);					//	DSqrt_c
@@ -88,10 +91,11 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const std::vecto
 */
 		// TODO find way to construct bigPi in a nice an efficient way ...
 		Eigen::MatrixXd bigPi(amountOfEle, dataPoints);
-		for(int i = 0; i < amountOfClasses - 1; i+=2){
+		for(int i = 0; i < amountOfClasses / 2; i+=2){
 			bigPi << pi.segment(i*dataPoints, dataPoints).asDiagonal().toDenseMatrix(),
 					pi.segment((i+1)*dataPoints, dataPoints).asDiagonal().toDenseMatrix();
 		}
+		// bigPi was checked! -> should be right (checked only for classAmount = 2) (check for C > 2 && C is uneven
 
 		Eigen::MatrixXd E_sum;
 		Eigen::VectorXd z(amountOfClasses);
@@ -104,15 +108,20 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const std::vecto
 			//	printError("NULL");
 			//}
 			const DiagMatrixXd DSqrt_c(sqrtPi.segment(i*dataPoints, dataPoints));
-			std::cout << "Len: " << sqrtPi.segment(i*dataPoints, dataPoints).rows() << std::endl;
-			std::cout << "K_c: " << K_c[i].rows() << ", " << K_c[i].cols() << std::endl;
-			std::cout << "DSqrt_c: " << DSqrt_c.rows() << ", " << DSqrt_c.cols() << std::endl;
-			Eigen::MatrixXd C = (DSqrt_c * (K_c[i] * DSqrt_c)) + eye;
-			f2 << C << "\n\n\n\n\n";
+			// DSqrt_c was checked! -> should be right
+			Eigen::MatrixXd C = (DSqrt_c * K_c[i] * DSqrt_c) + eye;
+			// C was checked -> might be right (didn't try to calc it)
 			Eigen::MatrixXd L = Eigen::LLT<Eigen::MatrixXd>(C).matrixL();
+			f2 << "C:\n" << C << std::endl;
+			f2 << "\n\n";
+			f2 << "L*L^T:\n" << L * L.transpose() << std::endl;
+			f2 << "\n\n";
+			f2 << "L:\n" << L << std::endl;
+			f2 << "\n\n";
 			Eigen::MatrixXd nenner = L.triangularView<Eigen::Lower>().solve(DSqrt_c.toDenseMatrix());
-			std::cout << "nenner: " << nenner << std::endl;
-			E_c[i] = L.transpose().triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(DSqrt_c.toDenseMatrix()) * nenner;
+			f2 << "nenner:\n" << nenner << std::endl;
+			f2 << "\n\n";
+			E_c[i] = DSqrt_c * L.transpose().triangularView<Eigen::Upper>().solve(nenner);
 			for(int j = 0; j < dataPoints; ++j){
 				z[i] += log((double) L(j,j));
 			}
@@ -165,7 +174,7 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const std::vecto
 		for(int i = 0; i < amountOfClasses; ++i){
 
 			const Eigen::VectorXd k = K_c[i] * a.segment(i*dataPoints, dataPoints);
-			std::cout << "k: " << k << std::endl;
+			std::cout << "k: " << k.transpose() << std::endl;
 			for(int j = 0; j < dataPoints; ++j){ // todo rewrite -> faster
 				f[i*dataPoints + j] = k[j];
 			}
