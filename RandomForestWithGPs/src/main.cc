@@ -22,9 +22,9 @@
 typedef Eigen::DiagonalWrapper<const Eigen::MatrixXd> DiagMatrixXd;
 
 
-void covariance(const Eigen::MatrixXd& data, const Eigen::MatrixXd& dataMat){
+void calcCovariance(Eigen::MatrixXd& cov, const Eigen::MatrixXd& dataMat){
 	Eigen::MatrixXd centered = dataMat.rowwise() - dataMat.colwise().mean();
-	Eigen::MatrixXd cov = centered.adjoint() * centered;
+	cov = centered.adjoint() * centered;
 }
 
 void calcPhiBasedOnF(const Eigen::VectorXd& f, Eigen::VectorXd& pi, const int amountOfClasses, const int dataPoints){
@@ -48,7 +48,7 @@ void calcPhiBasedOnF(const Eigen::VectorXd& f, Eigen::VectorXd& pi, const int am
 }
 
 
-void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::MatrixXd& covariance, const Eigen::VectorXd& y){
+void magicFunc(const int amountOfClasses, const int dataPoints, const std::vector<Eigen::MatrixXd>& K_c, const Eigen::VectorXd& y){
 	const int amountOfEle = dataPoints * amountOfClasses;
 	const Eigen::MatrixXd eye(Eigen::MatrixXd::Identity(dataPoints,dataPoints));
 	Eigen::MatrixXd R(Eigen::MatrixXd::Zero(amountOfEle, dataPoints));			// R
@@ -73,18 +73,19 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 		//std::vector<DiagMatrixXd*> DSqrt_c(amountOfClasses, NULL);					//	DSqrt_c
 		std::vector<Eigen::MatrixXd> E_c(amountOfClasses);							// E_c
 
-		std::vector<Eigen::MatrixXd> K_c;											// K_c
-		Eigen::MatrixXd F(amountOfClasses, dataPoints); 							// F just to calc covariances
+		//std::vector<Eigen::MatrixXd> K_c;											// K_c
+		/*Eigen::MatrixXd F(amountOfClasses, dataPoints); 							// F just to calc covariances
 		for(int i = 0; i < dataPoints; ++i){ // todo find better way
 			for(int j = 0; j < amountOfClasses; ++j){
 				F(j,i) = (double) f(i*amountOfClasses + j);
 			}
 		}
+
 		for(int i = 0; i < amountOfClasses; ++i){ // calc the covariance matrix for each f_c
 			const Eigen::MatrixXd centered = F.colwise() - F.rowwise().mean();
 			K_c.push_back(centered.adjoint() * centered);
 		}
-
+*/
 		// TODO find way to construct bigPi in a nice an efficient way ...
 		Eigen::MatrixXd bigPi(amountOfEle, dataPoints);
 		for(int i = 0; i < amountOfClasses - 1; i+=2){
@@ -107,9 +108,11 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 			std::cout << "K_c: " << K_c[i].rows() << ", " << K_c[i].cols() << std::endl;
 			std::cout << "DSqrt_c: " << DSqrt_c.rows() << ", " << DSqrt_c.cols() << std::endl;
 			Eigen::MatrixXd C = (DSqrt_c * (K_c[i] * DSqrt_c)) + eye;
+			f2 << C << "\n\n\n\n\n";
 			Eigen::MatrixXd L = Eigen::LLT<Eigen::MatrixXd>(C).matrixL();
 			Eigen::MatrixXd nenner = L.triangularView<Eigen::Lower>().solve(DSqrt_c.toDenseMatrix());
-			E_c[i] = DSqrt_c * L.transpose().triangularView<Eigen::Upper>().solve(nenner);
+			std::cout << "nenner: " << nenner << std::endl;
+			E_c[i] = L.transpose().triangularView<Eigen::Upper>().solve<Eigen::OnTheRight>(DSqrt_c.toDenseMatrix()) * nenner;
 			for(int j = 0; j < dataPoints; ++j){
 				z[i] += log((double) L(j,j));
 			}
@@ -140,13 +143,15 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 			}
 		}
 		Eigen::MatrixXd res = M.triangularView<Eigen::Lower>().solve(R.transpose() * c); 			// M^-1 * (R^T* c)
-		f2 << b << "\n\n\n\n\n";
+		f2 << b.transpose() << "\n\n\n\n\n";
 		f2 << E_c[0]<< "\n\n\n\n\n";
 		f2 << E_c[1]<< "\n\n\n\n\n";
 		f2 << M << "\n\n\n\n\n";
 		f2 << M.triangularView<Eigen::Lower>().toDenseMatrix() << "\n\n\n\n\n";
 		f2 << M.transpose().triangularView<Eigen::Upper>().toDenseMatrix() << "\n\n\n\n\n";
 		f2 << (M.transpose().triangularView<Eigen::Upper>().solve(res)) << "\n\n\n\n\n";
+		f2 << K_c[0]<< "\n\n\n\n\n";
+		f2 << K_c[1]<< "\n\n\n\n\n";
 
 		f2.close();
 		std::cout << "b: " << b.transpose() << std::endl;
@@ -158,7 +163,9 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 		std::cout << "\n\n";
 		std::cout << "before f: " << f.transpose() << std::endl;
 		for(int i = 0; i < amountOfClasses; ++i){
+
 			const Eigen::VectorXd k = K_c[i] * a.segment(i*dataPoints, dataPoints);
+			std::cout << "k: " << k << std::endl;
 			for(int j = 0; j < dataPoints; ++j){ // todo rewrite -> faster
 				f[i*dataPoints + j] = k[j];
 			}
@@ -166,7 +173,7 @@ void magicFunc(const int amountOfClasses, const int dataPoints, const Eigen::Mat
 		std::cout << "\n\n";
 		std::cout << "after f: " << f.transpose() << std::endl;
 		std::cout << "new mean: " << (f-lastF).mean() << std::endl;
-		converged = (f-lastF).mean() < 0.01;
+		converged = false; // fabs((f-lastF).mean()) < 0.0001;
 		getchar();
 	}
 }
@@ -196,20 +203,44 @@ int main(){
 	for(int i = 0; i < data.size(); ++i){
 		dataPerClass[labels[i]].push_back(data[i]);
 	}
-	Eigen::VectorXd y(Eigen::VectorXd::Zero(data.size() * amountOfClass));
+	Eigen::VectorXd y(Eigen::VectorXd::Zero(dataPoints * amountOfClass));
 	for(int i = 0; i < labels.size(); ++i){
-		y[i * amountOfClass + labels[i]] = 1;
+		y[labels[i] * dataPoints + i] = 1;
 	}
 	std::fstream f("t.txt", std::ios::out);
-	f << "dataMat:\n" << dataMat << std::endl;
-	Eigen::MatrixXd cov;
-	covariance(dataMat, cov);
+	//f << "dataMat:\n" << dataMat << std::endl;
+	std::vector<Eigen::MatrixXd> cov;
+
+	Eigen::MatrixXd covariance;
+	calcCovariance(covariance, dataMat);
+	f << "covariance: \n" << covariance << std::endl;
+	f << "labels: \n";
+	for(int i = 0; i < labels.size(); ++i){
+		f << "           " << labels[i];
+	}
+	f << std::endl;
+	for(int i = 0; i < amountOfClass; ++i){ // calc the covariance matrix for each f_c
+		Eigen::MatrixXd cov_c = covariance; //  * y.segment(i*dataPoints, dataPoints).transpose();
+		for(int j = 0; j < dataPoints; ++j){
+			if(i == labels[j]){
+				for(int k = 0; k < dataPoints; ++k){
+					cov_c(j,k) = 0;
+					cov_c(k,j) = 0;
+				}
+			}
+		}
+		f << "cov_c: \n" << cov_c << std::endl;
+		cov.push_back(cov_c);
+	}
+
+
+
 
 	f << std::endl;
 	f << std::endl;
 	f << std::endl;
-	f << cov << std::endl;
-	f << y << std::endl;
+	//f << cov << std::endl;
+	f << y.transpose() << std::endl;
 	f.close();
 	magicFunc(amountOfClass,dataPoints, cov, y);
 
