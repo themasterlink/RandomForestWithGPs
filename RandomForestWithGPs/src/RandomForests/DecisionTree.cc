@@ -35,6 +35,17 @@ DecisionTree::DecisionTree(const DecisionTree& tree):
 	m_labelsOfWinningClassesInLeaves = tree.m_labelsOfWinningClassesInLeaves;
 }
 
+DecisionTree& DecisionTree::operator=(const DecisionTree& tree){
+	*(const_cast<int*>(&m_maxDepth)) = tree.m_maxDepth; // change of const value
+	*(const_cast<int*>(&m_maxNodeNr)) = tree.m_maxNodeNr;
+	*(const_cast<int*>(&m_maxInternalNodeNr)) = tree.m_maxInternalNodeNr;
+	*(const_cast<int*>(&m_amountOfClasses)) = tree.m_amountOfClasses;
+	m_splitValues = tree.m_splitValues;
+	m_splitDim = tree.m_splitDim;
+	m_labelsOfWinningClassesInLeaves = tree.m_labelsOfWinningClassesInLeaves;
+	return *this;
+}
+
 DecisionTree::~DecisionTree(){
 }
 

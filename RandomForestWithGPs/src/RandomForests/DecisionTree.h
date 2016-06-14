@@ -39,6 +39,8 @@ public:
 
 	void initFromData(const DecisionTreeData& data);
 
+	DecisionTree& operator=(const DecisionTree& tree);
+
 private:
 	// max depth allowed in this tree
 	const int m_maxDepth;
