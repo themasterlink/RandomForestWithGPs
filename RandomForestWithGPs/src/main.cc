@@ -15,18 +15,14 @@
 #include "RandomForests/RandomForest.h"
 #include "RandomForests/RandomForestWriter.h"
 #include "GaussianProcess/GaussianProcessMultiClass.h"
+#include "GaussianProcess/GaussianProcessBinaryClass.h"
 
 // just for testing
 
-int main(){
+void executeForMultiClass(const std::string& path){
 
-	std::cout << "Start" << std::endl;
-	// read in Settings
-	Settings::init("../Settings/init.json");
 	Data data;
 	Labels labels;
-	std::string path;
-	Settings::getValue("Training.path", path);
 	DataReader::readFromFile(data, labels, path);
 
 	const int dataPoints = data.size();
@@ -38,10 +34,10 @@ int main(){
 		dataMat.col(i++) = *it;
 	}
 	const int amountOfClass = 2;
-	std::vector<Data> dataPerClass(amountOfClass);
+	/*std::vector<Data> dataPerClass(amountOfClass);
 	for(int i = 0; i < data.size(); ++i){
 		dataPerClass[labels[i]].push_back(data[i]);
-	}
+	}*/
 	Eigen::VectorXd y(Eigen::VectorXd::Zero(dataPoints * amountOfClass));
 	for(int i = 0; i < labels.size(); ++i){
 		y[labels[i] * dataPoints + i] = 1;
@@ -72,9 +68,6 @@ int main(){
 		cov.push_back(cov_c);
 	}
 
-
-
-
 	f << std::endl;
 	f << std::endl;
 	f << std::endl;
@@ -82,9 +75,50 @@ int main(){
 	f << y.transpose() << std::endl;
 	f.close();
 	GaussianProcessMultiClass::magicFunc(amountOfClass,dataPoints, cov, y);
+}
 
+
+void executeForBinaryClass(const std::string& path){
+	Data data;
+	Labels labels;
+	DataReader::readFromFile(data, labels, path);
+	const int dataPoints = data.size();
+	Eigen::VectorXd y(dataPoints);
+	for(int i = 0; i < dataPoints; ++i){
+		y[i] = labels[i] > 0 ? 1 : -1; // just two classes left!
+	}
+
+	Eigen::MatrixXd dataMat;
+	dataMat.conservativeResize(data[0].rows(), data.size());
+	int i = 0;
+	for(Data::iterator it = data.begin(); it != data.end(); ++it){
+		dataMat.col(i++) = *it;
+	}
+
+	std::fstream f("t.txt", std::ios::out);
+
+	Eigen::MatrixXd covariance;
+	GaussianProcessMultiClass::calcCovariance(covariance, dataMat);
+	f << "covariance: \n" << covariance << std::endl;
+	f.close();
+	GaussianProcessBinaryClass gp;
+	gp.train(dataPoints, covariance, y);
+}
+
+int main(){
+
+	std::cout << "Start" << std::endl;
+	// read in Settings
+	Settings::init("../Settings/init.json");
+	std::string path;
+	Settings::getValue("Training.path", path);
+	executeForBinaryClass(path);
 	std::cout << "finish" << std::endl;
 	return 0;
+	Data data;
+	Labels labels;
+	DataReader::readFromFile(data, labels, path);
+
 	bool useFixedValuesForMinMaxUsedData;
 	Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
 	Eigen::Vector2i minMaxUsedData;

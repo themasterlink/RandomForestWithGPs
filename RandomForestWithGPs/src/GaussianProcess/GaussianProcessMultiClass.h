@@ -16,8 +16,11 @@
 
 class GaussianProcessMultiClass{
 public:
+
+	// todo move to a better place!
 	typedef Eigen::DiagonalWrapper<const Eigen::MatrixXd> DiagMatrixXd;
 
+	// todo move to another class -> more general!
 	static void calcCovariance(Eigen::MatrixXd& cov, const Eigen::MatrixXd& dataMat);
 
 	static void calcPhiBasedOnF(const Eigen::VectorXd& f, Eigen::VectorXd& pi, const int amountOfClasses, const int dataPoints);
