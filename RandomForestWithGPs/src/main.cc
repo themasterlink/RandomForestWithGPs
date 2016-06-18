@@ -85,7 +85,7 @@ void executeForBinaryClass(const std::string& path){
 	const int dataPoints = data.size();
 	Eigen::VectorXd y(dataPoints);
 	for(int i = 0; i < dataPoints; ++i){
-		y[i] = labels[i] > 0 ? 1 : -1; // just two classes left!
+		y[i] = labels[i] != 0 ? 1 : -1; // just two classes left!
 	}
 
 	Eigen::MatrixXd dataMat;
@@ -102,7 +102,66 @@ void executeForBinaryClass(const std::string& path){
 	f << "covariance: \n" << covariance << std::endl;
 	f.close();
 	GaussianProcessBinaryClass gp;
+	gp.m_dataMat = dataMat;
 	gp.train(dataPoints, covariance, y);
+
+
+	const int dim = data[0].rows();
+	Eigen::Vector2d dimVec;
+	dimVec << 0,1;
+	Eigen::Vector2d min, max;
+	for(int i = 0; i < 2; ++i){
+		min[i] = 1000000;
+		max[i] = -1000000;
+	}
+	for(Data::const_iterator it = data.cbegin(); it != data.cend(); ++it){
+		for(int i = 0; i < 2; ++i){
+			int j = dimVec[i];
+			if(min[i] > (*it)[j]){
+				min[i] = (*it)[j];
+			}
+			if(max[i] < (*it)[j]){
+				max[i] = (*it)[j];
+			}
+		}
+	}
+	const int amountOfPointsOnOneAxis = 100;
+	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	std::ofstream file;
+	file.open("visu.txt");
+	Data points;
+	points.reserve(amountOfPointsOnOneAxis * (amountOfPointsOnOneAxis + 1));
+	int amount = 0;
+	DoubleLabels dlabels;
+	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
+		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+			DataElement ele(dim);
+			for(int i = 0; i < dim; ++i){
+				if(i == 0){
+					ele[i] = xVal;
+				}else if(i == 1){
+					ele[i] = yVal;
+				}else{
+					ele[i] = 0;
+				}
+			}
+			points.push_back(ele);
+			const double label = gp.predict(ele);
+			dlabels.push_back(label);
+			++amount;
+		}
+	}
+	for(int i = 0; i < amount; ++i){
+		if(i == 0){
+			file << points[i][0] << " " << points[i][1] << " " << 0.0 << "\n";
+		}else if(i == 1){
+			file << points[i][0] << " " << points[i][1] << " " << 1.0 << "\n";
+		}else{
+			file << points[i][0] << " " << points[i][1] << " " << dlabels[i] << "\n";
+		}
+	}
+	file.close();
+
 }
 
 int main(){
@@ -112,6 +171,7 @@ int main(){
 	Settings::init("../Settings/init.json");
 	std::string path;
 	Settings::getValue("Training.path", path);
+	//executeForBinaryClass(path);
 	executeForBinaryClass(path);
 	std::cout << "finish" << std::endl;
 	return 0;
