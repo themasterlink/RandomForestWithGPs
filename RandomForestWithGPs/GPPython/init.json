@@ -1,0 +1,11 @@
+{
+    "Training": {
+        "path": "trainInput.txt"
+    },
+    "GP": {
+        "l": "0.3",
+        "sigmaN": "1.0",
+        "plotRes": "50",
+        "samplingAmount": "5000"
+    }
+}

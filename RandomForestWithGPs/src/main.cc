@@ -125,6 +125,9 @@ void executeForBinaryClass(const std::string& path){
 			}
 		}
 	}
+
+	std::cout << "min: " << min.transpose() << std::endl;
+	std::cout << "max: " << max.transpose() << std::endl;
 	const int amountOfPointsOnOneAxis = 100;
 	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	std::ofstream file;
@@ -136,15 +139,7 @@ void executeForBinaryClass(const std::string& path){
 	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
 		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
 			DataElement ele(dim);
-			for(int i = 0; i < dim; ++i){
-				if(i == 0){
-					ele[i] = xVal;
-				}else if(i == 1){
-					ele[i] = yVal;
-				}else{
-					ele[i] = 0;
-				}
-			}
+			ele << xVal, yVal;
 			points.push_back(ele);
 			const double label = gp.predict(ele);
 			dlabels.push_back(label);

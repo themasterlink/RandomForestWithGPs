@@ -16,7 +16,7 @@ with open("../Settings/init.json") as data_file:
 
 def plotPoints(fileName):
     y,x,temp = np.loadtxt(fileName).T #Transposed for easier unpacking
-    nrows, ncols = 200, 201
+    nrows, ncols = 101, 100
     grid = np.fliplr(temp.reshape((nrows, ncols)).T)
 
     plt.imshow(grid, extent=(x.min(), x.max(), y.max(), y.min()),
@@ -24,9 +24,9 @@ def plotPoints(fileName):
 
 plt.figure(0)
 
-plotPoints(data["Write2D"]["gridPath"])
+plotPoints("visu.txt")
 
-file1 = open(data["Write2D"]["testPath"], "r")
+file1 = open(data["Training"]["path"], "r")
 txt = file1.read()
 lines = []
 lines = txt.split("\n")
@@ -36,7 +36,7 @@ var = 0
 i = 0
 for line in lines: # input
     if len(line) > 3:
-        ele = line.split(" ")
+        ele = line.split(",")
         if float(ele[2]) == 1 :
             plt.plot([float(ele[0])], [float(ele[1])], 'ro')
         else:

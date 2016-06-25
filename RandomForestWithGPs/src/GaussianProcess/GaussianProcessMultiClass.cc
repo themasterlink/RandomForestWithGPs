@@ -7,7 +7,7 @@
 
 #include "GaussianProcessMultiClass.h"
 
-const double GaussianProcessMultiClass::m_sigmaN = 0.99;
+const double GaussianProcessMultiClass::m_sigmaN = 1.0;
 
 GaussianProcessMultiClass::GaussianProcessMultiClass(){
 	// TODO Auto-generated constructor stub
@@ -20,7 +20,7 @@ GaussianProcessMultiClass::~GaussianProcessMultiClass()
 }
 
 double GaussianProcessMultiClass::kernelFunc(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs){
-	const double l = 0.3;
+	const double l = 0.15;
 	const double sigmaF = 1.00;
 	return sigmaF * exp(-0.5 * (1.0/ (l * l)) * (double) ((lhs - rhs).transpose() * (lhs-rhs)));
 }

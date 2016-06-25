@@ -26,6 +26,7 @@ public:
 
 	double predict(const Eigen::VectorXd newPoint);
 
+	void updatePis(const int dataPoints, const Eigen::VectorXd& y, const Eigen::VectorXd& t);
 
 	Eigen::MatrixXd m_dataMat;
 private:

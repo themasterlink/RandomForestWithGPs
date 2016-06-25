@@ -35,6 +35,7 @@ public:
 
 	static void kernelMatrix(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs, Eigen::MatrixXd result);
 
+
 	static const double m_sigmaN;
 private:
 	GaussianProcessMultiClass();
