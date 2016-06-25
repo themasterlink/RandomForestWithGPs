@@ -49,41 +49,16 @@ void GaussianProcessBinaryClass::train(const int dataPoints, const Eigen::Matrix
 	while(!converged){
 		// calc - log p(y_i| f_i) -> -
 		updatePis(dataPoints,y,t);
-		//std::cout << "dP_y_i_on_fi: \n" << dP_y_i_on_fi.transpose() << std::endl;
-		//std::cout << "ddP_y_i_on_fi: \n" << ddP_y_i_on_fi.transpose() << std::endl;
-		//std::cout << "sqrtDDP_y_i_on_fi: \n" << sqrtDDP_y_i_on_fi.transpose() << std::endl;
-
-		DiagMatrixXd W(m_ddLogPi);
-		DiagMatrixXd WSqrt(m_sqrtDDLogPi);
-		const Eigen::MatrixXd C = eye + (WSqrt * K * WSqrt);
-		// get cholesky from C
-		m_lowerOfCholesky = Eigen::LLT<Eigen::MatrixXd>(C).matrixL();
-		Eigen::MatrixXd diff = C - (m_lowerOfCholesky * m_lowerOfCholesky.transpose());
-		std::cout << "norm: " << diff.norm() << std::endl;
-		const Eigen::VectorXd b = W * m_f + m_dLogPi;
-		const Eigen::MatrixXd nenner = m_lowerOfCholesky.triangularView<Eigen::Lower>().solve(WSqrt * K * b); // <=> (L\(WSqrt * K * b)
-		a = b - WSqrt * m_lowerOfCholesky.transpose().triangularView<Eigen::Upper>().solve(nenner);
-		std::cout << "a: \n" << a.transpose() << std::endl;
+		const DiagMatrixXd WSqrt(m_sqrtDDLogPi);
+		m_choleskyLLT.compute(eye + (WSqrt * K * WSqrt));
+		const Eigen::VectorXd b = m_ddLogPi.cwiseProduct(m_f) + m_dLogPi;
+		a = b - m_ddLogPi.cwiseProduct(m_choleskyLLT.solve( m_choleskyLLT.solve(m_ddLogPi.cwiseProduct(K * b)))); // WSqrt * == m_ddLogPi.cwiseProduct(...)
 		const double firstPart = -0.5 * (double) (a.transpose() * m_f);
 		const double prob = 1.0 / (1.0 + exp(-(double) (y.transpose() * m_f)));
-		double offsetVal;
-		if(prob <= 1e-7){
-			offsetVal = 1e-7;
-		}else if(fabs(prob - 1) <= 1e-7){
-			offsetVal = 1-1e-7;
-			std::cout << "step" << std::endl;
-		}else{
-			offsetVal = prob;
-		}
+		const double tol = 1e-7;
+		const double offsetVal = prob > tol && prob < 1 - tol ? prob : (prob < tol ? tol : 1 -tol );
 		const double objective = firstPart + log(offsetVal);
-		if(isnan(objective) || std::numeric_limits<double>::max() < fabs(objective)){
-			std::cout << "Objective is wrong: " << objective << std::endl;
-			m_f = Eigen::VectorXd::Zero(dataPoints); // start again!
-			stepSize = 0.5;
-			j = 0;
-			continue;
-		}
-		if(fabs(objective) < fabs(lastObjective) && j != 0){
+		if(objective > lastObjective && j != 0){
 			// decrease the step size and try again!
 			m_f = (m_f - lastF) * stepSize + lastF;
 			stepSize /= 2.0;
@@ -107,10 +82,11 @@ void GaussianProcessBinaryClass::train(const int dataPoints, const Eigen::Matrix
 		std::cout << "\rError in " << j <<": " << fabs(lastObjective / objective - 1.0) << ", from: " << lastObjective << ", to: " << objective <<  ", log: " << log(offsetVal) << "                    " << std::endl;
 		flush(std::cout);
 
-		converged = fabs(lastObjective / objective - 1.0) < 0.005 && j > 5;
+		converged = fabs(lastObjective / objective - 1.0) < 0.005 && j > 3;
 		lastObjective = objective;
 		//converged = m_f.mean() < 100 && m_f.mean() > 50;//fabs((m_f-lastF).mean()) < 0.0001;
-		++j; lastF = m_f;
+		++j;
+		lastF = m_f;
 	}
 
 
@@ -131,7 +107,7 @@ double GaussianProcessBinaryClass::predict(const Eigen::VectorXd newPoint){
 	Eigen::VectorXd kXStar;
 	GaussianProcessMultiClass::kernelVector(newPoint, m_dataMat, kXStar);
 	const double fStar = (double) (kXStar.transpose() * (m_dLogPi));
-	const Eigen::VectorXd v = m_lowerOfCholesky.triangularView<Eigen::Lower>().solve(WSqrt * kXStar);
+	const Eigen::VectorXd v = m_choleskyLLT.solve(WSqrt * kXStar);
 	const double vFStar = fabs((GaussianProcessMultiClass::m_sigmaN * GaussianProcessMultiClass::m_sigmaN + 1) - v.transpose() * v);
 
 	const int amountOfSamples = 50000;

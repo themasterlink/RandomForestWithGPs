@@ -35,7 +35,7 @@ private:
 	Eigen::VectorXd m_dLogPi;
 	Eigen::VectorXd m_ddLogPi;
 	Eigen::VectorXd m_sqrtDDLogPi;
-	Eigen::MatrixXd m_lowerOfCholesky;
+	Eigen::LDLT<Eigen::MatrixXd> m_choleskyLLT;
 
 };
 
