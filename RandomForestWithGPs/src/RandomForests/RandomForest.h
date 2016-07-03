@@ -57,6 +57,8 @@ public:
 
 	DecisionTreesContainer& getTrees(){ return m_trees; };
 
+	void getLeafNrFor(const Data& data, const Labels& labels, std::vector<int>& leafNrs);
+
 private:
 	const int m_amountOfTrees;
 

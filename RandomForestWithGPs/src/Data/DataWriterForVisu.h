@@ -9,6 +9,7 @@
 #define DATA_DATAWRITERFORVISU_H_
 
 #include "../RandomForests/RandomForest.h"
+#include "../RandomForestGaussianProcess/RandomForestGaussianProcess.h"
 
 class DataWriterForVisu{
 public:
@@ -17,6 +18,10 @@ public:
 
 	static void generateGrid(const std::string& fileName, const RandomForest& forest,
 			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
+
+	static void generateGrid(const std::string& fileName, const RandomForestGaussianProcess& rfgp,
+			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
+
 private:
 	DataWriterForVisu();
 	virtual ~DataWriterForVisu();

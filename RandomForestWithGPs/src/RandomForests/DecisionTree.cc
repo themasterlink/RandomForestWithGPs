@@ -178,7 +178,10 @@ void DecisionTree::train(const Data& data,
 		}
 		m_labelsOfWinningClassesInLeaves[i] = labelWithHighestOcc;
 	}
-
+	if(m_splitDim[1] == NODE_CAN_BE_USED){
+		// try again!
+		train(data,labels,amountOfUsedDims,generator);
+	}
 }
 
 double DecisionTree::trySplitFor(const int actNode,
@@ -238,7 +241,7 @@ double DecisionTree::trySplitFor(const int actNode,
 
 int DecisionTree::predict(const DataElement& point) const{
 	int iActNode = 1; // start in root
-	if(m_splitDim[1] != NODE_IS_NOT_USED){
+	if(m_splitDim[1] != NODE_IS_NOT_USED && m_splitDim[1] != NODE_CAN_BE_USED){
 		while(iActNode <= m_maxInternalNodeNr){
 			const bool right = m_splitValues[iActNode] < point[m_splitDim[iActNode]];
 			iActNode *= 2; // get to next level
@@ -246,6 +249,12 @@ int DecisionTree::predict(const DataElement& point) const{
 				++iActNode; // go to right node
 			}
 			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
+				// if there is a node which isn't used on the way down to the leave
+				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+					iActNode *= 2;
+				}
+				break;
+			}else if(m_splitDim[iActNode] == NODE_CAN_BE_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
@@ -259,7 +268,6 @@ int DecisionTree::predict(const DataElement& point) const{
 		return -1;
 	}
 }
-
 
 void DecisionTree::writeToData(DecisionTreeData& data) const{
 	data.height = m_maxDepth;

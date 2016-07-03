@@ -93,8 +93,7 @@ void RandomForest::trainInParallel(const Data& data, const Labels& labels,
 
 int RandomForest::predict(const DataElement& point) const{
 	std::vector<int> values(m_amountOfClasses, 0);
-	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend();
-			++it){
+	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
 		++values[it->predict(point)];
 	}
 	//std::cout << "First: " << values[0] << ", second: " << values[1] << std::endl;
@@ -103,7 +102,7 @@ int RandomForest::predict(const DataElement& point) const{
 
 void RandomForest::predictData(const Data& points, Labels& labels) const{
 	labels.resize(points.size());
-	const int nrOfParallel = std::thread::hardware_concurrency();
+	const int nrOfParallel = 1; //std::thread::hardware_concurrency();
 	boost::thread_group group;
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int start = (i / (double) nrOfParallel) * points.size();
@@ -119,6 +118,14 @@ void RandomForest::predictDataInParallel(const Data& points, Labels* labels, con
 		(*labels)[i] = predict(points[i]);
 	}
 }
+
+void RandomForest::getLeafNrFor(const Data& data, const Labels& labels, std::vector<int>& leafNrs){
+	leafNrs = std::vector<int>(m_amountOfClasses, 0);
+	for(int i = 0; i < data.size(); ++i){
+		leafNrs[predict(data[i])] += 1;
+	}
+}
+
 
 void RandomForest::addForest(const RandomForest& forest){
 	if(forest.getNrOfTrees() == 0){

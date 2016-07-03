@@ -25,12 +25,18 @@ public:
 
 	std::string elapsedAsPrettyTime();
 
+	void recordActTime();
+
+	std::string elapsedAvgAsPrettyTime();
+
 private:
 
 	typedef boost::posix_time::ptime Time;
 	typedef boost::posix_time::time_duration TimeDuration;
 
 	Time m_start, m_stop;
+	int counter;
+	double avgTime;
 };
 
 #endif /* UTILITY_STOPWATCH_H_ */

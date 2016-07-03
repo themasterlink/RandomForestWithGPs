@@ -42,7 +42,7 @@ class GaussianProccess:
             self.ddPis[i] = -(-self.pis[i] * (1 - self.pis[i])) # - to get minus dd Pi
             self.sqrtDDPis[i] = math.sqrt(self.ddPis[i])
 
-    def train(self):
+    def trainF(self):
         self.f = np.zeros(self.dataPoints)
         self.pis = np.empty(self.dataPoints)
         self.dPis = np.empty(self.dataPoints)
@@ -57,6 +57,41 @@ class GaussianProccess:
             self.W = np.diag(self.ddPis)
             self.WSqrt = np.diag(self.sqrtDDPis)
             C = eye + np.dot(np.dot(self.WSqrt, self.K), self.WSqrt)
+            print("K:\n"+str(self.K))
+            print("inner:\n"+str(C))
+            self.L = scipy.linalg.cho_factor(C, lower = True)
+            self.U = scipy.linalg.cho_factor(C, lower = False)
+            b = np.dot(self.W, self.f) + self.dPis;
+            nenner = scipy.linalg.cho_solve(self.L, (np.dot(self.WSqrt,np.dot(self.K,b))))
+            self.a = b - np.dot(self.WSqrt, scipy.linalg.cho_solve(self.U, nenner))
+            self.f = np.dot(self.K, self.a)
+            prob = 1.0 / (1.0 + math.exp(-np.dot(self.labels,self.f)))
+            objective = -0.5 * np.dot(self.f, self.a) + math.log(max(min(prob,1-1e-7),1e-7));
+            print(objective)
+            if math.fabs(objective / lastObject - 1.0) < 1e-5:
+                converge = True
+            lastObject = objective
+        print("Trained")
+        return
+
+    def train(self):
+        
+        converge = False
+        while(not converge):
+            trainF()
+            logZ = -0.5 * np.dot(self.a, self.f) + (-math.log(1 + math.exp(-np.dot(self.labels, self.f)))) + math.log(L.diagonal().sum())
+            R = np.dot(self.WSqrt, scipy.linalg.cho_solve(self.U, scipy.linalg.cho_solve(self.L, self.WSqrt)))
+            C = scipy.linalg.cho_solve(self.L, np.dot(self.WSqrt, self.K))
+            dddPis = np.empty(self.dataPoints)
+            for i in range(0, self.dataPoints):
+                ddPis = -self.ddPis[i];
+                dddPis[i] = - ddPis * (1-self.pis[i]) - self.pis[i] * (1 - ddPis)
+            s2 = -0.5 * (self.K.diagonal() - np.dot(C.T,C).diagonal).diagonal() * dddPis
+            #for i in range(0,3):
+            #C =
+            self.W = np.diag(self.ddPis)
+            self.WSqrt = np.diag(self.sqrtDDPis)
+            C = eye + np.dot(np.dot(self.WSqrt, self.K), self.WSqrt)
             self.L = scipy.linalg.cho_factor(C, lower = True)
             self.U = scipy.linalg.cho_factor(C, lower = False)
             b = np.dot(self.W, self.f) + self.dPis;
@@ -66,12 +101,12 @@ class GaussianProccess:
             prob = 1.0 / (1.0 + math.exp(-np.dot(self.labels,self.f)))
             objective = -0.5 * np.dot(self.f, a) + math.log(prob if prob > 1e-7 and prob < 1 - 1e-7 else 1e-7 if prob <= 1e-7 else 1 - 1e-7);
             print(objective)
-            if math.fabs(objective / lastObject - 1.0) < 1e-5:
-                converge = True
+                #if math.fabs(objective / lastObject - 1.0) < 1e-5:
+            converge = True
             lastObject = objective
         print("Trained")
         return
-            
+    
     def predict(self, newPoint):
         kXStar = np.empty(self.dataPoints)
         for i in range(0, self.dataPoints):
@@ -79,15 +114,15 @@ class GaussianProccess:
         fStar = np.dot(kXStar, self.dPis)
         v = scipy.linalg.cho_solve(self.L, np.dot(self.WSqrt,kXStar))
         vFStar = math.fabs(self.sigmaNSquared + 1 - np.dot(v,v))
-        start = fStar - vFStar * 3
-        end = fStar + vFStar * 3
+        start = fStar - vFStar * 1.5
+        end = fStar + vFStar * 1.5
         stepSize = (end - start) / float(data["GP"]["samplingAmount"])
         prob = 0.0
         for p in np.arange(start,end,stepSize):
             gaussRand = np.random.normal(fStar, vFStar)
             height = 1.0 / (1.0 + math.exp(p)) * gaussRand
             prob += height * stepSize;
-        return prob if prob >= 0 and prob <= 1 else 0 if prob < 0 else 1
+        return max(min(prob,1), 0)
 
     def plot(self):
         plt.figure(0)
@@ -97,10 +132,13 @@ class GaussianProccess:
         max += (max-min) * 0.2
         stepSize = (max - min) / float(data["GP"]["plotRes"]);
         listGrid = []
+        i = 0
         for x in np.arange(min,max, stepSize):
+            print("Done: " + str(float(i) / float(data["GP"]["plotRes"]) * 100) + "%")
+            i += 1
             newList = []
             for y in np.arange(min,max, stepSize):
-                newPoint = [x,y]
+                newPoint = [y,x]
                 prob = self.predict(newPoint)
                 newList.append(prob)
             listGrid.append(newList)
@@ -115,8 +153,8 @@ class GaussianProccess:
 
     def kernelOf(self, x, y):
         diff = x - y
-        return math.exp(- 1.0 / self.lSquared * diff.dot(diff));
+        return math.exp(- 0.5 / self.lSquared * diff.dot(diff));
 
 gp = GaussianProccess(data["Training"]["path"])
-gp.train()
+gp.trainF()
 gp.plot()

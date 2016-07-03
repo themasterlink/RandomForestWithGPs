@@ -7,7 +7,7 @@
     },
     "Training": {
         "path": "..\/testData\/trainInput.txt",
-        "amount": 6,
+        "amount": 10,
         "dim": 2
     },
     "Test": {

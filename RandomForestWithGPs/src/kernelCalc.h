@@ -11,7 +11,7 @@
 #include <Eigen/Dense>
 #include <math.h>
 
-namespace Kernel {
+namespace Kernel2 {
 
 
 /*

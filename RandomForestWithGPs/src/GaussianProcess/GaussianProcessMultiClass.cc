@@ -7,11 +7,8 @@
 
 #include "GaussianProcessMultiClass.h"
 
-const double GaussianProcessMultiClass::m_sigmaN = 1.0;
-
 GaussianProcessMultiClass::GaussianProcessMultiClass(){
 	// TODO Auto-generated constructor stub
-
 }
 
 GaussianProcessMultiClass::~GaussianProcessMultiClass()
@@ -19,49 +16,6 @@ GaussianProcessMultiClass::~GaussianProcessMultiClass()
 	// TODO Auto-generated destructor stub
 }
 
-double GaussianProcessMultiClass::kernelFunc(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs){
-	const double l = 0.15;
-	const double sigmaF = 1.00;
-	return sigmaF * exp(-0.5 * (1.0/ (l * l)) * (double) ((lhs - rhs).transpose() * (lhs-rhs)));
-}
-
-void GaussianProcessMultiClass::calcCovariance(Eigen::MatrixXd& cov, const Eigen::MatrixXd& dataMat){
-	/*std::fstream file;
-	file.open("cov.txt", std::ios::out);*/
-	const double sigmaNSquared = m_sigmaN * m_sigmaN;
-	cov = Eigen::MatrixXd::Identity(dataMat.cols(), dataMat.cols());
-	for(int i = 0; i < dataMat.cols(); ++i){
-		cov(i,i) = cov.col(i)[i] * sigmaNSquared;
-		for(int j = i + 1; j < dataMat.cols(); ++j){
-			cov(i,j) = (double) kernelFunc(dataMat.col(i), dataMat.col(j));
-			cov(j,i) = cov(i,j);
-		}
-	}
-
-	//std::cout << "cov:\n" << cov << std::endl;
-/*	file << "cov: \n" << cov << std::endl;
-	Eigen::MatrixXd centered = dataMat.rowwise() - dataMat.colwise().mean();
-	cov = centered.adjoint() * centered;
-	file << "cov2: \n" << cov << std::endl;
-	file.close();
-	*/
-}
-
-void GaussianProcessMultiClass::kernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res){
-	res = Eigen::VectorXd(dataMat.cols());
-	for(int i = 0; i < dataMat.cols(); ++i){
-		res[i] = (double) kernelFunc(vector, dataMat.col(i));
-	}
-}
-
-void GaussianProcessMultiClass::kernelMatrix(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs, Eigen::MatrixXd result){
-	result = Eigen::MatrixXd(lhs.rows(), rhs.rows());
-	for(int i = 0; i < lhs.rows(); ++i){
-		for(int j = 0; j < rhs.rows(); ++j){
-			result(i,j) = (double) exp(-0.5 * ((double) (lhs(i) - rhs(i)) * (double) (lhs(i) - rhs(i))));
-		}
-	}
-}
 
 void GaussianProcessMultiClass::calcPhiBasedOnF(const Eigen::VectorXd& f, Eigen::VectorXd& pi, const int amountOfClasses, const int dataPoints){
 	const int amountOfEle = dataPoints * amountOfClasses;

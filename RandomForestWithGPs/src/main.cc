@@ -16,7 +16,8 @@
 #include "RandomForests/RandomForestWriter.h"
 #include "GaussianProcess/GaussianProcessMultiClass.h"
 #include "GaussianProcess/GaussianProcessBinaryClass.h"
-
+#include "RandomForestGaussianProcess/RandomForestGaussianProcess.h"
+#include <unsupported/Eigen/NonLinearOptimization>
 // just for testing
 
 void executeForMultiClass(const std::string& path){
@@ -47,7 +48,9 @@ void executeForMultiClass(const std::string& path){
 	std::vector<Eigen::MatrixXd> cov;
 
 	Eigen::MatrixXd covariance;
-	GaussianProcessMultiClass::calcCovariance(covariance, dataMat);
+	Kernel kernel;
+	kernel.init(dataMat);
+	kernel.calcCovariance(covariance);
 	f << "covariance: \n" << covariance << std::endl;
 	f << "labels: \n";
 	for(int i = 0; i < labels.size(); ++i){
@@ -77,7 +80,6 @@ void executeForMultiClass(const std::string& path){
 	GaussianProcessMultiClass::magicFunc(amountOfClass,dataPoints, cov, y);
 }
 
-
 void executeForBinaryClass(const std::string& path){
 	Data data;
 	Labels labels;
@@ -95,49 +97,61 @@ void executeForBinaryClass(const std::string& path){
 		dataMat.col(i++) = *it;
 	}
 
-	std::fstream f("t.txt", std::ios::out);
-
-	Eigen::MatrixXd covariance;
-	GaussianProcessMultiClass::calcCovariance(covariance, dataMat);
-	f << "covariance: \n" << covariance << std::endl;
-	f.close();
 	GaussianProcessBinaryClass gp;
-	gp.m_dataMat = dataMat;
-	gp.train(dataPoints, covariance, y);
+	gp.init(dataMat, y);
+	gp.train();
+	/*gp.setValues(dataMat, y);
+	Eigen::VectorXd x(3);
+	x(0) = 0.5; // length
+	x(1) = 0.5; // sigmaF
+	x(2) = 0.5; // sigmaN
+	std::cout << "x: " << x << std::endl;
 
+	OptimizeFunctor functor(&gp);
+	Eigen::LevenbergMarquardt<OptimizeFunctor, double> lm(functor);
+	printLine();
+	lm.parameters.ftol = 1e-6;
+	lm.parameters.xtol = 1e-6;
+	lm.parameters.maxfev = 1000; // Max iterations
+	int status = lm.minimize(x);
+	std::cout << "LM status: " << status << std::endl;
+	printLine();
+	getchar();*/
 
 	const int dim = data[0].rows();
 	Eigen::Vector2d dimVec;
 	dimVec << 0,1;
-	Eigen::Vector2d min, max;
-	for(int i = 0; i < 2; ++i){
-		min[i] = 1000000;
-		max[i] = -1000000;
-	}
+	double min = 1000000;
+	double max = -1000000;
 	for(Data::const_iterator it = data.cbegin(); it != data.cend(); ++it){
 		for(int i = 0; i < 2; ++i){
 			int j = dimVec[i];
-			if(min[i] > (*it)[j]){
-				min[i] = (*it)[j];
+			if(min > (*it)[j]){
+				min = (*it)[j];
 			}
-			if(max[i] < (*it)[j]){
-				max[i] = (*it)[j];
+			if(max < (*it)[j]){
+				max = (*it)[j];
 			}
 		}
 	}
-
-	std::cout << "min: " << min.transpose() << std::endl;
-	std::cout << "max: " << max.transpose() << std::endl;
-	const int amountOfPointsOnOneAxis = 100;
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	const double diff = max - min;
+	min -= diff * 0.2;
+	max += diff * 0.2;
+	std::cout << "min: " << min << std::endl;
+	std::cout << "max: " << max << std::endl;
+	const int amountOfPointsOnOneAxis = 50;
+	const double stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	std::ofstream file;
 	file.open("visu.txt");
 	Data points;
 	points.reserve(amountOfPointsOnOneAxis * (amountOfPointsOnOneAxis + 1));
 	int amount = 0;
 	DoubleLabels dlabels;
-	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
-		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+	int k = 0;
+	for(double xVal = max; xVal >= min; xVal -= stepSize){
+		std::cout << "\rDone: " << k++ / (double) amountOfPointsOnOneAxis * 100.0 << "%           ";
+		flush(std::cout);
+		for(double yVal = min; yVal <= max; yVal+= stepSize){
 			DataElement ele(dim);
 			ele << xVal, yVal;
 			points.push_back(ele);
@@ -156,24 +170,35 @@ void executeForBinaryClass(const std::string& path){
 		}
 	}
 	file.close();
-
+	std::cout << "finish" << std::endl;
+	//system("../PythonScripts/plotData2.py");
 }
 
 int main(){
+
 
 	std::cout << "Start" << std::endl;
 	// read in Settings
 	Settings::init("../Settings/init.json");
 	std::string path;
 	Settings::getValue("Training.path", path);
-	//executeForBinaryClass(path);
 	executeForBinaryClass(path);
-	std::cout << "finish" << std::endl;
+	//executeForBinaryClass(path);
 	return 0;
 	Data data;
 	Labels labels;
 	DataReader::readFromFile(data, labels, path);
+	RandomForestGaussianProcess rfGp(data, labels, 4, 500, 2);
 
+	DataWriterForVisu::generateGrid("out.txt", rfGp, 40, data, 0, 1);
+
+	std::cout << "finish" << std::endl;
+	return 0;
+	/*
+	Data data;
+	Labels labels;
+	DataReader::readFromFile(data, labels, path);
+*/
 	bool useFixedValuesForMinMaxUsedData;
 	Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
 	Eigen::Vector2i minMaxUsedData;

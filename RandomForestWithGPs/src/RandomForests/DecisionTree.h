@@ -41,6 +41,8 @@ public:
 
 	DecisionTree& operator=(const DecisionTree& tree);
 
+	int getNrOfLeaves(){return pow(2, m_maxDepth);};
+
 private:
 	// max depth allowed in this tree
 	const int m_maxDepth;

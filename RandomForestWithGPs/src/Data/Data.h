@@ -21,5 +21,7 @@ typedef std::vector<DataElement> Data;
 typedef std::vector<Eigen::VectorXd> ComplexLabels; // could be that the data elements have continous labels
 typedef std::vector<int> SimpleLabels; // could be that the data elements have continous labels
 typedef SimpleLabels Labels;
+typedef std::vector<double> DoubleLabels; // could be that the data elements have continous labels
+typedef Eigen::DiagonalWrapper<const Eigen::MatrixXd> DiagMatrixXd;
 
 #endif /* DATA_DATA_H_ */
