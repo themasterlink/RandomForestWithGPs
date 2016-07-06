@@ -16,6 +16,10 @@ public:
 
 	static void readFromFile(Data& data, Labels& label, const std::string& inputName);
 
+	static void readFromFiles(std::map<std::string, Data >& dataSets, const std::string& folderLocation);
+
+	static void readFromFile(Data& data, const std::string& inputName);
+
 private:
 	DataReader();
 	~DataReader();

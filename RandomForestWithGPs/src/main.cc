@@ -11,6 +11,7 @@
 #include "kernelCalc.h"
 #include "Utility/Settings.h"
 #include "Data/DataReader.h"
+#include "Data/DataConverter.h"
 #include "Data/DataWriterForVisu.h"
 #include "RandomForests/RandomForest.h"
 #include "RandomForests/RandomForestWriter.h"
@@ -81,25 +82,61 @@ void executeForMultiClass(const std::string& path){
 }
 
 void executeForBinaryClass(const std::string& path){
+
 	Data data;
+	Data testData;
 	Labels labels;
-	DataReader::readFromFile(data, labels, path);
-	const int dataPoints = data.size();
-	Eigen::VectorXd y(dataPoints);
-	for(int i = 0; i < dataPoints; ++i){
-		y[i] = labels[i] != 0 ? 1 : -1; // just two classes left!
-	}
+	Labels testLabels;
+	std::map<std::string, Data > datas;
+	DataReader::readFromFiles(datas, "../realData/");
+	int labelCounter = 0;
+	for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
+		const int amountOfElements = itData->second.size();
 
-	Eigen::MatrixXd dataMat;
-	dataMat.conservativeResize(data[0].rows(), data.size());
-	int i = 0;
-	for(Data::iterator it = data.begin(); it != data.end(); ++it){
-		dataMat.col(i++) = *it;
+		for(int i = 0; i < amountOfElements; ++i){
+			if(i < 0.01 * amountOfElements){
+				// train data
+				data.push_back(itData->second[i]);
+				labels.push_back(labelCounter);
+			}else{
+				// test data
+				testData.push_back(itData->second[i]);
+				testLabels.push_back(labelCounter);
+			}
+		}
+		++labelCounter;
 	}
+	std::cout << "Training size: " << data.size() << std::endl;
+	// for binary case:
+	if(datas.size() == 2){
+		const int dataPoints = data.size();
+		Eigen::VectorXd y(dataPoints);
+		for(int i = 0; i < dataPoints; ++i){
+			y[i] = labels[i] != 0 ? 1 : -1; // just two classes left!
+		}
+		Eigen::MatrixXd dataMat;
+		DataConverter::toDataMatrix(data, dataMat);
 
-	GaussianProcessBinaryClass gp;
-	gp.init(dataMat, y);
-	gp.train();
+		GaussianProcessBinaryClass gp;
+		gp.init(dataMat, y);
+		gp.train();
+		int wright = 0;
+		for(int j = 0; j < testData.size(); ++j){
+			double prob = gp.predict(testData[j]);
+			if(prob > 0.5 && testLabels[j] == 0){
+				++wright;
+			}else if(prob < 0.5 && testLabels[j] == 1){
+				++wright;
+			}
+		}
+		std::cout << "Amount of wright: " << (double) wright / testData.size() * 100.0 << "%" << std::endl;
+	}else{
+		printError("Implement me!");
+	}
+	//DataReader::readFromFile(data, labels, path);
+
+
+
 	/*gp.setValues(dataMat, y);
 	Eigen::VectorXd x(3);
 	x(0) = 0.5; // length
@@ -117,7 +154,7 @@ void executeForBinaryClass(const std::string& path){
 	std::cout << "LM status: " << status << std::endl;
 	printLine();
 	getchar();*/
-
+/*
 	const int dim = data[0].rows();
 	Eigen::Vector2d dimVec;
 	dimVec << 0,1;
@@ -172,6 +209,7 @@ void executeForBinaryClass(const std::string& path){
 	file.close();
 	std::cout << "finish" << std::endl;
 	//system("../PythonScripts/plotData2.py");
+	 */
 }
 
 int main(){
@@ -181,7 +219,8 @@ int main(){
 	// read in Settings
 	Settings::init("../Settings/init.json");
 	std::string path;
-	Settings::getValue("Training.path", path);
+	Settings::getValue("RealData.folderPath", path);
+
 	executeForBinaryClass(path);
 	//executeForBinaryClass(path);
 	return 0;

@@ -113,7 +113,7 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 	double logZ2;
 	std::vector<double> dLogZ2;
 	dLogZ2.reserve(3);
-	m_kernel.setHyperParams(0.38, 1.3, 0.95);
+	m_kernel.setHyperParams(0.075994, 2.0588, 1.0);
 	Status status = trainLM(logZ2, dLogZ2);
 	std::cout << "LogZ: " << logZ2 << std::endl;
 	return ALLFINE;
@@ -135,7 +135,7 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 	}
 	file.close();
 	return ALLFINE;*/
-	//std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(6);
+	std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(6);
 	std::vector<double> dLogZ;
 	dLogZ.reserve(3);
 	double logZ;
@@ -166,29 +166,43 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 	std::cout << "\nstart guess len: " << m_kernel.len() << "\t, sigF: " << m_kernel.sigmaF()<< "\t, sigN: " << m_kernel.sigmaN() << std::endl;
 	int counter = 0;
 	bool converged = false;
-	double stepSize = 0.0001 / (m_dataPoints * m_dataPoints) * m_repetitionStepFactor;
-	std::vector<double> vt;
-	vt.reserve(3);
-	vt[0] = vt[1] = vt[2] = 0.0;
+	//double stepSize = 0.0001 / (m_dataPoints * m_dataPoints) * m_repetitionStepFactor;
+	std::vector<double> stepSize;
+	stepSize.reserve(3);
 	double lastSumHypParams = 0;
 	double convergingRate = 1;
 	double lastDLogZ = 0.0;
+
+	std::vector<double> gradient;
+	gradient.reserve(3);
+	gradient[0] = gradient[1] = gradient[2] = 0.0;
+	std::vector<double> ESquared;
+	ESquared.reserve(3);
+	ESquared[0] = ESquared[1] = ESquared[2] = 0;
 	while(!converged){
 		Status status = trainLM(logZ, dLogZ);
 		if(status == NANORINFERROR){
 			return NANORINFERROR;
 		}
-		std::cout << "\r                                                                                                                                 ";
-		std::cout << "\rLogZ: " << logZ << ",\tdLogZ: " << dLogZ[0] << ",\t" << dLogZ[1]
-			<< ",\t" << dLogZ[2] << " \tlen: " << m_kernel.len() << "\t, sigF: " << m_kernel.sigmaF()<< "\t, sigN: " << m_kernel.sigmaN()  << "\tavg time; " << m_sw.elapsedAvgAsPrettyTime() << "\tstepsize: " << stepSize <<"     ";
 		const double dLogZSum = fabs(dLogZ[0]) + fabs(dLogZ[1]); // + fabs(dLogZ[2]);
 		const double sumHyperParams = fabs(m_kernel.len()) + fabs(m_kernel.sigmaF());
 		std::cout << std::endl;
 		//flush(std::cout);
 		for(int j = 0; j < 3; ++j){
-			vt[j] =  dLogZ[j] * stepSize + 0.9 * vt[j];
+			const double lastLearningRate = sqrt(1e-8 + ESquared[j]); // 0,001
+			ESquared[j] = 0.9 * ESquared[j] + 0.1 * dLogZ[j] * dLogZ[j]; // 0,0000000099856
+			const double actLearningRate = sqrt(1e-8 + ESquared[j]);  // 0,0001413704354
+			stepSize[j] = 0.0001 * lastLearningRate / actLearningRate; // 0,001222106928
+			gradient[j] = stepSize[j] * dLogZ[j];
 		}
-		m_kernel.addHyperParams(vt);
+		m_kernel.addHyperParams(gradient);
+		//std::cout << "\r                                                                                                                                 ";
+		std::cout << "gradient: " << gradient[0] << ",\t" << gradient[1] << ",\t" << gradient[2] << std::endl;
+		std::cout << "\rLogZ: " << logZ << ",\tdLogZ: " << dLogZ[0] << ",\t" << dLogZ[1]
+				  << ",\t" << dLogZ[2] << " \tlen: " << m_kernel.len() << "\t, sigF: "
+				  << m_kernel.sigmaF()<< "\t, sigN: " << m_kernel.sigmaN()  << "\tavg time; "
+				  << m_sw.elapsedAvgAsPrettyTime() << "\tstepsize len: " << stepSize[0] << "\tstepsize sigmaF: " << stepSize[1] <<"         " << std::endl;
+
 		if(dLogZSum < 0.1){
 			converged = true;
 		}
@@ -198,8 +212,8 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 			stepSize *= 2;
 		}else if(convergingRate > 0.01){
 			stepSize *= 0.1;
-		}*/
-		/*convergingRate = fabs(lastDLogZ - dLogZSum);
+		}
+		convergingRate = fabs(lastDLogZ - dLogZSum);
 		if(convergingRate < 0.1){ // diff to slow
 			stepSize *= 2;
 		}else if(convergingRate > 0.1){

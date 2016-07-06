@@ -6,6 +6,8 @@
  */
 
 #include "DataReader.h"
+#include <iostream>
+#include "boost/filesystem.hpp"
 
 DataReader::DataReader(){
 }
@@ -34,6 +36,46 @@ void DataReader::readFromFile(Data& data, Labels& label, const std::string& inpu
 		input.close();
 	}else{
 		printError("File was not found: " << inputName);
+	}
+}
+
+void DataReader::readFromFile(Data& data, const std::string& inputName){
+	std::string line;
+	std::ifstream input(inputName);
+	if(input.is_open()){
+		while(std::getline(input, line)){
+			std::vector<std::string> elements;
+			std::stringstream ss(line);
+			std::string item;
+			while(std::getline(ss, item, ',')){
+				elements.push_back(item);
+			}
+			DataElement newEle(elements.size());
+			for(int i = 0; i < elements.size(); ++i){
+				newEle[i] = std::stod(elements[i]);
+			}
+			data.push_back(newEle);
+		}
+		input.close();
+	}else{
+		printError("File was not found: " << inputName);
+	}
+}
+
+void DataReader::readFromFiles(std::map<std::string, Data >& dataSets, const std::string& folderLocation){
+	boost::filesystem::path targetDir(folderLocation);
+	boost::filesystem::directory_iterator end_itr;
+	// cycle through the directory
+	for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
+		if(boost::filesystem::is_directory(itr->path())){
+			std::string temp(itr->path().filename().c_str());
+			const std::string name(temp.substr(1, temp.length() - 2));
+			Data data;
+			std::string filePath(itr->path().c_str());
+			filePath += "/vectors.txt";
+			readFromFile(data, filePath);
+			dataSets.insert( std::pair<std::string, Data >(name, data));
+		}
 	}
 }
 
