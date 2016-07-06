@@ -105,7 +105,7 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::trainLM(double& l
 
 GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int dataPoints,
 		const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
-
+/*
 	Eigen::Vector2d min,max;
 	min << 0,0;
 	max << 2.0,2.0;
@@ -117,7 +117,7 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 	Status status = trainLM(logZ2, dLogZ2);
 	std::cout << "LogZ: " << logZ2 << std::endl;
 	return ALLFINE;
-	/*
+
 	//plot different weights
 	std::ofstream file;
 	file.open("out.txt");
@@ -195,7 +195,7 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 			stepSize[j] = 0.0001 * lastLearningRate / actLearningRate; // 0,001222106928
 			gradient[j] = stepSize[j] * dLogZ[j];
 		}
-		m_kernel.addHyperParams(gradient);
+		m_kernel.subHyperParams(gradient);
 		//std::cout << "\r                                                                                                                                 ";
 		std::cout << "gradient: " << gradient[0] << ",\t" << gradient[1] << ",\t" << gradient[2] << std::endl;
 		std::cout << "\rLogZ: " << logZ << ",\tdLogZ: " << dLogZ[0] << ",\t" << dLogZ[1]
