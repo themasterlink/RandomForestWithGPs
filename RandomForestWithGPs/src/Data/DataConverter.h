@@ -12,7 +12,9 @@
 
 class DataConverter{
 public:
-	static void toDataMatrix(const Data& data, Eigen::MatrixXd& result);
+	static void toDataMatrix(const Data& data, Eigen::MatrixXd& result, const int ele);
+
+	static void toRandDataMatrix(const Data& data, const Labels& labels, Eigen::MatrixXd& result, Eigen::VectorXd& y, const int ele);
 
 private:
 	DataConverter();

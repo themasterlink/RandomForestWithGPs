@@ -47,7 +47,7 @@ void DataReader::readFromFile(Data& data, const std::string& inputName){
 			std::vector<std::string> elements;
 			std::stringstream ss(line);
 			std::string item;
-			while(std::getline(ss, item, ',')){
+			while(std::getline(ss, item, ' ')){
 				elements.push_back(item);
 			}
 			DataElement newEle(elements.size());

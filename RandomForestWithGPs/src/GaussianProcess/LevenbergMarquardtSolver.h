@@ -19,9 +19,6 @@ struct OptimizeFunctor
   int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const{
       if(m_gp != NULL){
   		std::cout << "x: " << x.transpose() << std::endl;
-		GaussianProcessMultiClass::m_length = x(0);
-		GaussianProcessMultiClass::m_sigmaF = x(1);
-		GaussianProcessMultiClass::m_sigmaN = x(2);
 		m_gp->trainLM(m_logZ, m_dLogZ);
 		std::cout << "m_logZ: " << m_logZ << std::endl;
 		std::cout << "m_dLogZ: " << m_dLogZ[0] << ", "<< m_dLogZ[1] << ", "<< m_dLogZ[2]<< std::endl;

@@ -9,6 +9,7 @@
 #define GAUSSIANPROCESS_KERNEL_H_
 
 #include "../Data/Data.h"
+#include "../RandomNumberGenerator/RandomGaussianNr.h"
 
 class Kernel{
 public:
@@ -60,7 +61,12 @@ private:
 	Eigen::MatrixXd m_differences;
 	bool m_init;
 	int m_dataPoints;
+	double m_randLenMean;
+	double m_randLenVar;
 	double m_hyperParams[3]; // order is len, sigmaF, sigmaN
+
+	RandomGaussianNr m_randLen;
+	RandomGaussianNr m_randSigmaF;
 };
 
 inline
@@ -107,8 +113,8 @@ void Kernel::getHyperParams(std::vector<double>& values) const{
 
 inline
 void Kernel::newRandHyperParams(){
-	m_hyperParams[0] = 0.2 * ((double) rand() / (RAND_MAX)) + 0.1;
-	m_hyperParams[1] = 1 * ((double) rand() / (RAND_MAX)) + 0.1;
+	m_hyperParams[0] = m_randLen();
+	m_hyperParams[1] = m_randSigmaF();
 	m_hyperParams[2] = ((double) rand() / (RAND_MAX)) + 0.1;
 }
 

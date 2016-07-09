@@ -29,7 +29,11 @@ public:
 
 	void train();
 
+	void trainWithoutKernelChange(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
+
 	double predict(const DataElement& newPoint) const;
+
+	Kernel m_kernel;
 
 private:
 	Status trainF(const int dataPoints, const Eigen::MatrixXd& K, const Eigen::VectorXd& y);
@@ -54,7 +58,6 @@ private:
 	int m_dataPoints; // amount of data points
 	StopWatch m_sw;
 
-	Kernel m_kernel;
 	bool m_init;
 	bool m_trained;
 };

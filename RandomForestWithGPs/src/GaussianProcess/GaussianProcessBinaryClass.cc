@@ -9,6 +9,7 @@
 #include "GaussianProcessMultiClass.h"
 #include <iomanip>
 #include "../Data/Data.h"
+#include <algorithm>
 
 GaussianProcessBinaryClass::GaussianProcessBinaryClass(): m_repetitionStepFactor(1.0), m_dataPoints(0), m_init(false), m_trained(false){
 }
@@ -34,13 +35,12 @@ void GaussianProcessBinaryClass::updatePis(const int dataPoints, const Eigen::Ve
 	}
 }
 
-
 void GaussianProcessBinaryClass::train(){
 	if(!m_init){
 		printError("Init must be performed before gp can be trained!");
 		return;
 	}
-	std::cout << "Start train wiht: " << m_dataPoints << " points." << std::endl;
+	std::cout << "Start train with " << m_dataPoints << " points, with dim: " << m_dataMat.col(0).rows() << std::endl;
 	Status status = NANORINFERROR;
 	int nanCounter = 0;
 	while(status == NANORINFERROR){
@@ -53,8 +53,8 @@ void GaussianProcessBinaryClass::train(){
 			++nanCounter;
 			m_kernel.init(m_dataMat);
 			m_choleskyLLT.compute(Eigen::MatrixXd::Identity(2,2));
-			getchar();
-
+			m_repetitionStepFactor *= 0.5;
+			//getchar();
 		}
 	}
 	m_trained = true;
@@ -64,6 +64,7 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::trainLM(double& l
 	Eigen::MatrixXd K;
 	const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
 	m_kernel.calcCovariance(K);
+	//std::cout << "K: \n" << K << std::endl;
 	Status status = trainF(m_dataPoints, K, m_y);
 	if(status == NANORINFERROR){
 		return NANORINFERROR;
@@ -101,6 +102,13 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::trainLM(double& l
 		++i;
 	}
 	return ALLFINE;
+}
+
+void GaussianProcessBinaryClass::trainWithoutKernelChange(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
+	init(dataMat, y);
+	Eigen::MatrixXd K;
+	m_kernel.calcCovariance(K);
+	trainF(m_dataPoints, K, y);
 }
 
 GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int dataPoints,
@@ -148,18 +156,21 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 		m_kernel.newRandHyperParams();
 		m_kernel.setHyperParams(m_kernel.len(),m_kernel.sigmaF(),1);
 		Status status = trainLM(logZ, dLogZ);
-		std::cout << "logZ: " << logZ << ", status: " << status << ", bestlogZ: " << bestLogZ << ", " << (bestLogZ > fabs(logZ))<<std::endl;
-		if(bestLogZ < logZ && status != NANORINFERROR){
+		std::cout << "logZ: " << logZ << ", status: " << status << ", bestlogZ: " << bestLogZ << ", " << (bestLogZ > fabs(logZ)) << ", with len: " << m_kernel.len() << ", sigmaF: " << m_kernel.sigmaF() <<std::endl;
+		if(bestLogZ < logZ && status != NANORINFERROR && logZ < 1000){
 			bestLogZ = logZ;
 			m_kernel.getHyperParams(val);
 			std::cout << "\rnew optimal len: " << m_kernel.len() << "\t, sigF: "
 						<< m_kernel.sigmaF() << "\t, sigN: " << m_kernel.sigmaN() << "\tavg time; " << m_sw.elapsedAvgAsPrettyTime() << "          ";
 			flush(std::cout);
+			std::cout << std::endl;
 		}else if(status == NANORINFERROR && bestLogZ == -10000000000){
 			return NANORINFERROR;
 		}
 	}
+	std::cout << std::endl;
 	m_kernel.setHyperParams(val);
+	return ALLFINE;
 	if(bestLogZ == 0){
 		return NANORINFERROR;
 	}
@@ -170,7 +181,6 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 	std::vector<double> stepSize;
 	stepSize.reserve(3);
 	double lastSumHypParams = 0;
-	double convergingRate = 1;
 	double lastDLogZ = 0.0;
 
 	std::vector<double> gradient;
@@ -192,7 +202,8 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 			const double lastLearningRate = sqrt(1e-8 + ESquared[j]); // 0,001
 			ESquared[j] = 0.9 * ESquared[j] + 0.1 * dLogZ[j] * dLogZ[j]; // 0,0000000099856
 			const double actLearningRate = sqrt(1e-8 + ESquared[j]);  // 0,0001413704354
-			stepSize[j] = 0.0001 * lastLearningRate / actLearningRate; // 0,001222106928
+			const double fac = max(0.0,(-counter + 100.0) / 100.0);
+			stepSize[j] = 0.0001; // * fac + (1.0-fac) * m_repetitionStepFactor * lastLearningRate / actLearningRate; // 0,001222106928
 			gradient[j] = stepSize[j] * dLogZ[j];
 		}
 		m_kernel.subHyperParams(gradient);
@@ -203,7 +214,7 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 				  << m_kernel.sigmaF()<< "\t, sigN: " << m_kernel.sigmaN()  << "\tavg time; "
 				  << m_sw.elapsedAvgAsPrettyTime() << "\tstepsize len: " << stepSize[0] << "\tstepsize sigmaF: " << stepSize[1] <<"         " << std::endl;
 
-		if(dLogZSum < 0.1){
+		if(dLogZSum < 0.01){
 			converged = true;
 		}
 
@@ -248,7 +259,6 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::trainF(const int 
 	while(!converged){
 		// calc - log p(y_i| f_i) -> -
 		updatePis(dataPoints,y,t);
-
 		const Eigen::MatrixXd WSqrt( DiagMatrixXd(m_sqrtDDLogPi).toDenseMatrix()); // TODO more efficient
 		//std::cout << "K: \n" << K << std::endl;
 		//std::cout << "inner: \n" << eye + (WSqrt * K * WSqrt) << std::endl;
@@ -258,7 +268,7 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::trainF(const int 
 		const double firstPart = -0.5 * (double) (m_a.transpose() * m_f);
 		const double prob = 1.0 / (1.0 + exp(-(double) (y.transpose() * m_f)));
 		const double tol = 1e-7;
-		const double offsetVal = prob > tol && prob < 1 - tol ? prob : (prob < tol ? tol : 1 -tol );
+		const double offsetVal = prob > tol && prob < 1 - tol ? prob : (prob < tol ? tol : 1 - tol );
 		const double objective = firstPart + log(offsetVal);
 		//std::cout << "\rError in " << j <<": " << fabs(lastObjective / objective - 1.0) << ", from: " << lastObjective << ", to: " << objective <<  ", log: " << log(offsetVal) << "                    " << std::endl;
 		if(isnan(objective)){

@@ -92,13 +92,13 @@ void executeForBinaryClass(const std::string& path){
 	int labelCounter = 0;
 	for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
 		const int amountOfElements = itData->second.size();
-
+		const double fac = 0.05;
 		for(int i = 0; i < amountOfElements; ++i){
-			if(i < 0.01 * amountOfElements){
+			if(i < fac * amountOfElements){
 				// train data
 				data.push_back(itData->second[i]);
 				labels.push_back(labelCounter);
-			}else{
+			}else if(i < (fac) * amountOfElements + 50){
 				// test data
 				testData.push_back(itData->second[i]);
 				testLabels.push_back(labelCounter);
@@ -106,36 +106,59 @@ void executeForBinaryClass(const std::string& path){
 		}
 		++labelCounter;
 	}
+	std::cout << "Data has dim: " << data[0].rows() << std::endl;
 	std::cout << "Training size: " << data.size() << std::endl;
 	// for binary case:
 	if(datas.size() == 2){
-		const int dataPoints = data.size();
-		Eigen::VectorXd y(dataPoints);
-		for(int i = 0; i < dataPoints; ++i){
-			y[i] = labels[i] != 0 ? 1 : -1; // just two classes left!
-		}
-		Eigen::MatrixXd dataMat;
-		DataConverter::toDataMatrix(data, dataMat);
-
 		GaussianProcessBinaryClass gp;
+		const int firstPoints = 35;
+		Eigen::VectorXd y;
+		Eigen::MatrixXd dataMat;
+		DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
+
 		gp.init(dataMat, y);
-		gp.train();
+		//gp.train(); // train the kernel params
+
+		const int dataPoints = data.size();
+		Eigen::VectorXd y2(dataPoints);
+		for(int i = 0; i < dataPoints; ++i){
+			y2[i] = labels[i] != 0 ? 1 : -1; // just two classes left!
+		}
+		const Data& dataRef = data;
+		Eigen::MatrixXd dataMat2;
+
+		DataConverter::toDataMatrix(dataRef, dataMat2, dataRef.size());
+		gp.init(dataMat2, y2);
+		for(int i = 0; i < 100; ++i){
+		//gp.m_kernel.newRandHyperParams();
+		//gp.m_kernel.setHyperParams(gp.m_kernel.len(),gp.m_kernel.sigmaF(),1);
+		gp.train();//WithoutKernelChange(dataMat2, y2); // train only the latent functions
+		std::cout << "Start predicting!" << std::endl;
 		int wright = 0;
-		for(int j = 0; j < testData.size(); ++j){
-			double prob = gp.predict(testData[j]);
-			if(prob > 0.5 && testLabels[j] == 0){
+		int amountOfBelow = 0;
+		int amountOfAbove = 0;
+		for(int j = 0; j < dataRef.size(); ++j){
+			double prob = gp.predict(dataRef[j]);
+			if(prob > 0.5 && labels[j] == 0){
 				++wright;
-			}else if(prob < 0.5 && testLabels[j] == 1){
+			}else if(prob < 0.5 && labels[j] == 1){
 				++wright;
 			}
+			if(prob > 0.5){
+				++amountOfAbove;
+			}else{
+				++amountOfBelow;
+			}
 		}
-		std::cout << "Amount of wright: " << (double) wright / testData.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of wright: " << (double) wright / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of above: " << (double) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "len: " << gp.m_kernel.len() << ", sigmaF: " << gp.m_kernel.sigmaF() <<std::endl;
+		}
 	}else{
 		printError("Implement me!");
 	}
 	//DataReader::readFromFile(data, labels, path);
-
-
 
 	/*gp.setValues(dataMat, y);
 	Eigen::VectorXd x(3);
