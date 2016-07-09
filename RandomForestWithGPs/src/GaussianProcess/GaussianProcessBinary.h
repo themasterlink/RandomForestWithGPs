@@ -5,8 +5,8 @@
  *      Author: Max
  */
 
-#ifndef GAUSSIANPROCESS_GAUSSIANPROCESSBINARYCLASS_H_
-#define GAUSSIANPROCESS_GAUSSIANPROCESSBINARYCLASS_H_
+#ifndef GAUSSIANPROCESS_GAUSSIANPROCESSBINARY_H_
+#define GAUSSIANPROCESS_GAUSSIANPROCESSBINARY_H_
 
 #include "../Utility/Util.h"
 #include <cmath>
@@ -14,7 +14,10 @@
 #include <Eigen/Dense>
 #include "Kernel.h"
 
-class GaussianProcessBinaryClass{
+class BayesOptimizer;
+
+class GaussianProcessBinary{
+friend BayesOptimizer;
 public:
 
 	enum Status {
@@ -22,23 +25,28 @@ public:
 		ALLFINE = 0
 	};
 
-	GaussianProcessBinaryClass();
-	virtual ~GaussianProcessBinaryClass();
+	GaussianProcessBinary();
+	virtual ~GaussianProcessBinary();
 
 	void init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
 
 	void train();
 
-	void trainWithoutKernelChange(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
+	void trainWithoutKernelOptimize();
+
+	void trainWithoutKernelOptimize(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
 
 	double predict(const DataElement& newPoint) const;
 
-	Kernel m_kernel;
+	Kernel& getKernel(){ return m_kernel; };
+
+	double getLenMean() const {return m_kernel.getLenMean();};
 
 private:
-	Status trainF(const int dataPoints, const Eigen::MatrixXd& K, const Eigen::VectorXd& y);
 
 	Status trainLM(double& logZ, std::vector<double>& dLogZ);
+
+	Status trainF(const int dataPoints, const Eigen::MatrixXd& K, const Eigen::VectorXd& y);
 
 	Status train(const int dataPoints, const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
 
@@ -60,6 +68,8 @@ private:
 
 	bool m_init;
 	bool m_trained;
+
+	Kernel m_kernel;
 };
 
-#endif /* GAUSSIANPROCESS_GAUSSIANPROCESSBINARYCLASS_H_ */
+#endif /* GAUSSIANPROCESS_GAUSSIANPROCESSBINARY_H_ */

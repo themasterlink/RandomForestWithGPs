@@ -8,7 +8,7 @@
 #ifndef RANDOMFORESTGAUSSIANPROCESS_RANDOMFORESTGAUSSIANPROCESS_H_
 #define RANDOMFORESTGAUSSIANPROCESS_RANDOMFORESTGAUSSIANPROCESS_H_
 
-#include "../GaussianProcess/GaussianProcessBinaryClass.h"
+#include "../GaussianProcess/GaussianProcessBinary.h"
 #include "../RandomForests/RandomForest.h"
 
 class RandomForestGaussianProcess{
@@ -30,7 +30,7 @@ private:
 	const double m_amountOfUsedClasses;
 	RandomForest m_forest;
 	std::vector<bool> m_isPure;
-	std::vector<std::vector<GaussianProcessBinaryClass> > m_gps;
+	std::vector<std::vector<GaussianProcessBinary> > m_gps;
 };
 
 #endif /* RANDOMFORESTGAUSSIANPROCESS_RANDOMFORESTGAUSSIANPROCESS_H_ */

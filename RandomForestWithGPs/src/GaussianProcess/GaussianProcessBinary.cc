@@ -5,19 +5,20 @@
  *      Author: Max
  */
 
-#include "GaussianProcessBinaryClass.h"
+#include "GaussianProcessBinary.h"
+
 #include "GaussianProcessMultiClass.h"
 #include <iomanip>
 #include "../Data/Data.h"
 #include <algorithm>
 
-GaussianProcessBinaryClass::GaussianProcessBinaryClass(): m_repetitionStepFactor(1.0), m_dataPoints(0), m_init(false), m_trained(false){
+GaussianProcessBinary::GaussianProcessBinary(): m_repetitionStepFactor(1.0), m_dataPoints(0), m_init(false), m_trained(false){
 }
 
-GaussianProcessBinaryClass::~GaussianProcessBinaryClass(){
+GaussianProcessBinary::~GaussianProcessBinary(){
 }
 
-void GaussianProcessBinaryClass::init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
+void GaussianProcessBinary::init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
 	m_dataMat = dataMat;
 	m_y = y;
 	m_dataPoints = m_dataMat.cols();
@@ -26,7 +27,7 @@ void GaussianProcessBinaryClass::init(const Eigen::MatrixXd& dataMat, const Eige
 	m_kernel.init(m_dataMat);
 }
 
-void GaussianProcessBinaryClass::updatePis(const int dataPoints, const Eigen::VectorXd& y, const Eigen::VectorXd& t){
+void GaussianProcessBinary::updatePis(const int dataPoints, const Eigen::VectorXd& y, const Eigen::VectorXd& t){
 	for(int i = 0; i < dataPoints; ++i){
 		m_pi[i] = 1.0 / (1.0 + exp((double) -y[i] * (double) m_f[i]));
 		m_dLogPi[i] = t[i] - m_pi[i];
@@ -35,7 +36,7 @@ void GaussianProcessBinaryClass::updatePis(const int dataPoints, const Eigen::Ve
 	}
 }
 
-void GaussianProcessBinaryClass::train(){
+void GaussianProcessBinary::train(){
 	if(!m_init){
 		printError("Init must be performed before gp can be trained!");
 		return;
@@ -60,7 +61,7 @@ void GaussianProcessBinaryClass::train(){
 	m_trained = true;
 }
 
-GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::trainLM(double& logZ, std::vector<double>& dLogZ){
+GaussianProcessBinary::Status GaussianProcessBinary::trainLM(double& logZ, std::vector<double>& dLogZ){
 	Eigen::MatrixXd K;
 	const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
 	m_kernel.calcCovariance(K);
@@ -104,14 +105,14 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::trainLM(double& l
 	return ALLFINE;
 }
 
-void GaussianProcessBinaryClass::trainWithoutKernelChange(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
+void GaussianProcessBinary::trainWithoutKernelOptimize(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
 	init(dataMat, y);
 	Eigen::MatrixXd K;
 	m_kernel.calcCovariance(K);
 	trainF(m_dataPoints, K, y);
 }
 
-GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int dataPoints,
+GaussianProcessBinary::Status GaussianProcessBinary::train(const int dataPoints,
 		const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
 /*
 	Eigen::Vector2d min,max;
@@ -147,14 +148,14 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 	std::vector<double> dLogZ;
 	dLogZ.reserve(3);
 	double logZ;
-	const int amountOfFirstSamples = 100;
+	const int amountOfFirstSamples = 30;
 	std::vector<double> val;
 	val.reserve(3);
 	val[0] = val[1] = val[2] = 0;
 	double bestLogZ = -10000000000;
 	for(int i = 0; i < amountOfFirstSamples; ++i){
 		m_kernel.newRandHyperParams();
-		m_kernel.setHyperParams(m_kernel.len(),m_kernel.sigmaF(),1);
+		m_kernel.setHyperParams(m_kernel.len(),m_kernel.sigmaF(),0.95);
 		Status status = trainLM(logZ, dLogZ);
 		std::cout << "logZ: " << logZ << ", status: " << status << ", bestlogZ: " << bestLogZ << ", " << (bestLogZ > fabs(logZ)) << ", with len: " << m_kernel.len() << ", sigmaF: " << m_kernel.sigmaF() <<std::endl;
 		if(bestLogZ < logZ && status != NANORINFERROR && logZ < 1000){
@@ -170,7 +171,7 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 	}
 	std::cout << std::endl;
 	m_kernel.setHyperParams(val);
-	return ALLFINE;
+	//return ALLFINE;
 	if(bestLogZ == 0){
 		return NANORINFERROR;
 	}
@@ -203,10 +204,14 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 			ESquared[j] = 0.9 * ESquared[j] + 0.1 * dLogZ[j] * dLogZ[j]; // 0,0000000099856
 			const double actLearningRate = sqrt(1e-8 + ESquared[j]);  // 0,0001413704354
 			const double fac = max(0.0,(-counter + 100.0) / 100.0);
-			stepSize[j] = 0.0001; // * fac + (1.0-fac) * m_repetitionStepFactor * lastLearningRate / actLearningRate; // 0,001222106928
+			if(j == 1){
+				stepSize[j] = 0.00001; // 0,001222106928
+			}else{
+				stepSize[j] = 0.00001 * fac + (1.0-fac) * 0.01 * m_repetitionStepFactor * lastLearningRate / actLearningRate; // 0,001222106928
+			}
 			gradient[j] = stepSize[j] * dLogZ[j];
 		}
-		m_kernel.subHyperParams(gradient);
+		m_kernel.addHyperParams(gradient);
 		//std::cout << "\r                                                                                                                                 ";
 		std::cout << "gradient: " << gradient[0] << ",\t" << gradient[1] << ",\t" << gradient[2] << std::endl;
 		std::cout << "\rLogZ: " << logZ << ",\tdLogZ: " << dLogZ[0] << ",\t" << dLogZ[1]
@@ -214,6 +219,10 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 				  << m_kernel.sigmaF()<< "\t, sigN: " << m_kernel.sigmaN()  << "\tavg time; "
 				  << m_sw.elapsedAvgAsPrettyTime() << "\tstepsize len: " << stepSize[0] << "\tstepsize sigmaF: " << stepSize[1] <<"         " << std::endl;
 
+		if(lastDLogZ * 0.9 > dLogZSum){
+			m_kernel.setHyperParams(val);
+			break;
+		}
 		if(dLogZSum < 0.01){
 			converged = true;
 		}
@@ -238,11 +247,12 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::train(const int d
 		counter++;
 		lastSumHypParams = sumHyperParams;
 		lastDLogZ = dLogZSum;
+		m_kernel.getHyperParams(val);
 	}
 	return ALLFINE;
 }
 
-GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::trainF(const int dataPoints, const Eigen::MatrixXd& K, const Eigen::VectorXd& y){
+GaussianProcessBinary::Status GaussianProcessBinary::trainF(const int dataPoints, const Eigen::MatrixXd& K, const Eigen::VectorXd& y){
 	// find suited f:
 	m_sw.startTime();
 	m_f = Eigen::VectorXd::Zero(dataPoints); 						// f <-- init with zeros
@@ -308,7 +318,7 @@ GaussianProcessBinaryClass::Status GaussianProcessBinaryClass::trainF(const int 
 	return ALLFINE;
 }
 
-double GaussianProcessBinaryClass::predict(const DataElement& newPoint) const{
+double GaussianProcessBinary::predict(const DataElement& newPoint) const{
 	if(!m_init || !m_trained){
 		return -1.0;
 	}

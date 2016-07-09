@@ -49,6 +49,10 @@ public:
 	double sigmaF() const { return m_hyperParams[1];};
 	double sigmaN() const { return m_hyperParams[2];};
 
+	double getLenMean() const {return m_randLenMean;};
+
+	double getLenVar() const {return m_randLenVar;};
+
 private:
 	double kernelFunc(const int row, const int col) const;
 

@@ -16,9 +16,12 @@
 #include "RandomForests/RandomForest.h"
 #include "RandomForests/RandomForestWriter.h"
 #include "GaussianProcess/GaussianProcessMultiClass.h"
-#include "GaussianProcess/GaussianProcessBinaryClass.h"
 #include "RandomForestGaussianProcess/RandomForestGaussianProcess.h"
 #include <unsupported/Eigen/NonLinearOptimization>
+#include "GaussianProcess/BayesOptimizer.h"
+#include <boost/numeric/ublas/assignment.hpp> // <<= op assigment
+
+#include "GaussianProcess/GaussianProcessBinary.h"
 // just for testing
 
 void executeForMultiClass(const std::string& path){
@@ -90,9 +93,9 @@ void executeForBinaryClass(const std::string& path){
 	std::map<std::string, Data > datas;
 	DataReader::readFromFiles(datas, "../realData/");
 	int labelCounter = 0;
+	const int amountOfElements = datas.begin()->second.size();
+	const double fac = 0.015;
 	for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
-		const int amountOfElements = itData->second.size();
-		const double fac = 0.05;
 		for(int i = 0; i < amountOfElements; ++i){
 			if(i < fac * amountOfElements){
 				// train data
@@ -110,13 +113,45 @@ void executeForBinaryClass(const std::string& path){
 	std::cout << "Training size: " << data.size() << std::endl;
 	// for binary case:
 	if(datas.size() == 2){
-		GaussianProcessBinaryClass gp;
+
 		const int firstPoints = 35;
 		Eigen::VectorXd y;
 		Eigen::MatrixXd dataMat;
 		DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
 
+		GaussianProcessBinary gp;
 		gp.init(dataMat, y);
+		{
+			bayesopt::Parameters par = initialize_parameters_to_default();
+
+			par.kernel.name = "kSum(kSEISO,kConst)";
+			par.kernel.hp_mean <<= 1.0;
+			par.kernel.hp_std <<= 1.0;
+
+			par.mean.name = "mConst";
+			par.mean.coef_mean <<= gp.getLenMean();
+			par.mean.coef_std <<= gp.getKernel().getLenVar();
+
+
+			par.surr_name = "sStudentTProcessJef";
+			par.noise = 1e-10;
+
+			par.sc_type = SC_MAP;
+			par.l_type = L_EMPIRICAL;
+
+			par.n_iterations = 100;    // Number of iterations
+			par.random_seed = 0;
+			par.n_init_samples = 15;
+			par.n_iter_relearn = 0;
+
+			BayesOptimizer bayOpt(gp, par);
+			vectord result(2);
+			bayOpt.optimize(result);
+			std::cout << RED << "Result: " << result[0] << ", "<< result[1] << RESET << std::endl;
+			return;
+
+		}
+
 		//gp.train(); // train the kernel params
 
 		const int dataPoints = data.size();
@@ -130,30 +165,33 @@ void executeForBinaryClass(const std::string& path){
 		DataConverter::toDataMatrix(dataRef, dataMat2, dataRef.size());
 		gp.init(dataMat2, y2);
 		for(int i = 0; i < 100; ++i){
-		//gp.m_kernel.newRandHyperParams();
-		//gp.m_kernel.setHyperParams(gp.m_kernel.len(),gp.m_kernel.sigmaF(),1);
-		gp.train();//WithoutKernelChange(dataMat2, y2); // train only the latent functions
-		std::cout << "Start predicting!" << std::endl;
-		int wright = 0;
-		int amountOfBelow = 0;
-		int amountOfAbove = 0;
-		for(int j = 0; j < dataRef.size(); ++j){
-			double prob = gp.predict(dataRef[j]);
-			if(prob > 0.5 && labels[j] == 0){
-				++wright;
-			}else if(prob < 0.5 && labels[j] == 1){
-				++wright;
+			//gp.m_kernel.newRandHyperParams();
+			//gp.m_kernel.setHyperParams(gp.m_kernel.len(),gp.m_kernel.sigmaF(),1);
+			gp.train();//WithoutKernelChange(dataMat2, y2); // train only the latent functions
+			std::cout << "Start predicting!" << std::endl;
+			int wright = 0;
+			int amountOfBelow = 0;
+			int amountOfAbove = 0;
+			for(int j = 0; j < dataRef.size(); ++j){
+				double prob = gp.predict(dataRef[j]);
+				std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
+				if(prob > 0.5 && labels[j] == 0){
+					++wright;
+				}else if(prob < 0.5 && labels[j] == 1){
+					++wright;
+				}
+				if(prob > 0.5){
+					++amountOfAbove;
+				}else{
+					++amountOfBelow;
+				}
 			}
-			if(prob > 0.5){
-				++amountOfAbove;
-			}else{
-				++amountOfBelow;
-			}
-		}
+		std::cout << RED;
 		std::cout << "Amount of wright: " << (double) wright / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "Amount of above: " << (double) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
-		std::cout << "len: " << gp.m_kernel.len() << ", sigmaF: " << gp.m_kernel.sigmaF() <<std::endl;
+		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
+		std::cout << RESET;
 		}
 	}else{
 		printError("Implement me!");

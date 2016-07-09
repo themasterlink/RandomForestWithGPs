@@ -12,7 +12,8 @@
 #include <cmath>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/NonLinearOptimization>
-#include "GaussianProcessBinaryClass.h"
+
+#include "GaussianProcessBinary.h"
 
 struct OptimizeFunctor
 {
@@ -39,12 +40,12 @@ struct OptimizeFunctor
 	  return 0;
   }
 
-  OptimizeFunctor(GaussianProcessBinaryClass* gp): m_logZ(0.0){
+  OptimizeFunctor(GaussianProcessBinary* gp): m_logZ(0.0){
 	  m_dLogZ.reserve(3);
 	  m_gp = gp;
   }
 
-  GaussianProcessBinaryClass* m_gp;
+  GaussianProcessBinary* m_gp;
   mutable std::vector<double> m_dLogZ;
   mutable double m_logZ;
   int inputs() const { return 3; }
