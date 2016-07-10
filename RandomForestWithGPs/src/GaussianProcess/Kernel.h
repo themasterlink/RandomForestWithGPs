@@ -53,6 +53,12 @@ public:
 
 	double getLenVar() const {return m_randLenVar;};
 
+	std::string prettyString() const {
+		std::stringstream ss;
+		ss << "len: " << m_hyperParams[0] << ", sigmaF: " << m_hyperParams[1] << ", sigmaN: " << m_hyperParams[2];
+		return ss.str();
+	}
+
 private:
 	double kernelFunc(const int row, const int col) const;
 

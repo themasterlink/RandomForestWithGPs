@@ -85,25 +85,24 @@ void executeForMultiClass(const std::string& path){
 }
 
 void executeForBinaryClass(const std::string& path){
-
 	Data data;
 	Labels labels;
 	Data testData;
 	Labels testLabels;
-	const bool useRealData = false;
+	const bool useRealData = true;
 	std::map<std::string, Data > datas;
 	if(useRealData){
 		DataReader::readFromFiles(datas, "../realData/");
 		int labelCounter = 0;
 		const int amountOfElements = datas.begin()->second.size();
-		const double fac = 0.015;
+		const double fac = 0.10;
 		for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
 			for(int i = 0; i < amountOfElements; ++i){
 				if(i < fac * amountOfElements){
 					// train data
 					data.push_back(itData->second[i]);
 					labels.push_back(labelCounter);
-				}else if(i < (fac) * amountOfElements + 50){
+				}else{ //  if(i < (fac) * amountOfElements + 200)
 					// test data
 					testData.push_back(itData->second[i]);
 					testLabels.push_back(labelCounter);
@@ -127,6 +126,9 @@ void executeForBinaryClass(const std::string& path){
 		gp.init(dataMat, y);
 		{
 			bayesopt::Parameters par = initialize_parameters_to_default();
+			par.noise = 1e-12;
+			par.epsilon = 0.2;
+			par.surr_name = "sGaussianProcessML";
 
 			BayesOptimizer bayOpt(gp, par);
 			vectord result(2);
@@ -135,7 +137,7 @@ void executeForBinaryClass(const std::string& path){
 			lowerBound[0] = 0.1;
 			lowerBound[1] = 0.1;
 			vectord upperBound(2);
-			upperBound[0] = gp.getLenMean();
+			upperBound[0] = gp.getLenMean() / 4;
 			upperBound[1] = 1.3;
 			/*
 			vectord lowerBound(2);
@@ -149,12 +151,18 @@ void executeForBinaryClass(const std::string& path){
 			std::cout << RED << "Result: " << result[0] << ", "<< result[1] << RESET << std::endl;
 
 			gp.getKernel().setHyperParams(result[0], result[1], 0.95);
-			gp.trainWithoutKernelOptimize(dataMat, y);
+
 
 		}
 
 		//gp.train(); // train the kernel params
-		const Data& dataRef = data;
+
+
+		Eigen::VectorXd y2;
+		Eigen::MatrixXd dataMat2;
+		DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 10000000);
+		gp.init(dataMat2, y2);
+		gp.trainWithoutKernelOptimize(dataMat2, y2);
 /*
 		const int dataPoints = data.size();
 		Eigen::VectorXd y2(dataPoints);
@@ -170,16 +178,20 @@ void executeForBinaryClass(const std::string& path){
 		//gp.m_kernel.setHyperParams(gp.m_kernel.len(),gp.m_kernel.sigmaF(),1);
 		//gp.train();//WithoutKernelChange(dataMat2, y2); // train only the latent functions
 		std::cout << "Start predicting!" << std::endl;
+		const Data& dataRef = testData;
+		const Labels& labelsRef = testLabels;
 		int wright = 0;
 		int amountOfBelow = 0;
 		int amountOfAbove = 0;
-		for(int j = 0; j < dataRef.size(); ++j){
+		std::cout << "Test" << std::endl;
+		for(int j = dataRef.size() - 1; j >= 0 ; --j){
 			double prob = gp.predict(dataRef[j]);
-			std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
-			if(prob > 0.5 && labels[j] == 1){
+			if(prob > 0.5 && labelsRef[j] == 1){
 				++wright;
-			}else if(prob < 0.5 && labels[j] == 0){
+			}else if(prob < 0.5 && labelsRef[j] == 0){
 				++wright;
+			}else{
+				std::cout << "Prob: " << prob << ", label is: " << labelsRef[j] << std::endl;
 			}
 			if(prob > 0.5){
 				++amountOfAbove;
@@ -207,6 +219,10 @@ void executeForBinaryClass(const std::string& path){
  		//par.noise = 1-6;
 		//par.init_method = 50;
 		//par.n_iterations = 1000;
+		par.noise = 1e-12;
+		par.epsilon = 0.2;
+		par.surr_name = "sGaussianProcessML";
+
 		BayesOptimizer bayOpt(gp, par);
 
 		vectord result(2);
@@ -216,7 +232,7 @@ void executeForBinaryClass(const std::string& path){
 		vectord upperBound(2);
 		std::cout << "mean len: " << gp.getLenMean() << std::endl;
 		upperBound[0] = gp.getLenMean();// + gp.getKernel().getLenVar();
-		upperBound[1] = 5.0;max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
+		upperBound[1] = 1.6;//max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
 
 		bayOpt.setBoundingBox(lowerBound, upperBound);
 		bayOpt.optimize(result);

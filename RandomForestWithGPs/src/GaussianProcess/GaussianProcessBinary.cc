@@ -80,6 +80,7 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainBayOpt(double& logZ, c
 	}
 	const double prob = (1.0 + exp(-(double) (m_y.dot(m_f)))); // should be very small!
 	const double logVal = prob < 1e100 ? -log(prob) : -100;
+	const double aDotF = -0.5 * (double) (m_a.dot(m_f));
 	std::cout << "Prob: " << prob << std::endl;
 	std::cout << "Mean: " << m_f.mean() << std::endl;
 	//std::cout << "a: " << m_a.transpose() << std::endl;
@@ -88,10 +89,11 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainBayOpt(double& logZ, c
 	for(int i = 0; i < m_f.rows(); ++i){
 		sumF += fabs((double)m_f[i]);
 	}
+
 	//sumF /= m_f.rows();
-	std::cout << CYAN << "LogZ elements a * f: " << -0.5 * (double) (m_a.dot(m_f)) << ", log: " << logVal << ", sum: " << sum << ", sumF: " << sumF << RESET << std::endl;
+	logZ = aDotF + logVal - sum;
+	std::cout << CYAN << "LogZ elements a * f: " << aDotF << ", log: " << logVal << ", sum: " << -sum << ", sumF: " << sumF << ", logZ: " << logZ << RESET << std::endl;
 	// -0.5 * (double) (m_a.dot(m_f)) - 0.5 *sumF
-	logZ = logVal - sum ;
 	return ALLFINE;
 }
 
@@ -332,6 +334,7 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainF(const int dataPoints
 			std::cout << RED << "overshoot!" << "new: " <<  -0.5 * (double) (m_a.dot(m_f)) << ", old: " << -0.5 * (double) (oldA.dot(oldF)) << RESET << std::endl;
 			m_a = oldA;
 			m_f = oldF;
+			updatePis(dataPoints,y,t);
 			break;
 			// decrease the step size and try again!
 			//m_f = (m_f - lastF) * stepSize + lastF;
@@ -371,13 +374,17 @@ double GaussianProcessBinary::predict(const DataElement& newPoint) const{
 		return -1.0;
 	}
 	const DiagMatrixXd WSqrt(m_sqrtDDLogPi);
+
+	double fStar = 0, vFStar = 0;
 	Eigen::VectorXd kXStar;
 	m_kernel.calcKernelVector(newPoint, m_dataMat, kXStar);
-	const double fStar = (double) (kXStar.transpose() * (m_dLogPi));
+	fStar = (double) (kXStar.dot(m_dLogPi));
 	const Eigen::VectorXd v = m_choleskyLLT.solve(WSqrt * kXStar);
-	const double vFStar = fabs((m_kernel.sigmaN() * m_kernel.sigmaN() + 1) - v.transpose() * v);
-
-	const int amountOfSamples = 50000;
+	vFStar = fabs((m_kernel.sigmaN() * m_kernel.sigmaN() + 1) - v.dot(v));
+	if(isnan(vFStar) || vFStar > 1e200){
+		std::cout << "Kernel: " << m_kernel.prettyString() << std::endl;
+	}
+	const int amountOfSamples = 5000;
 	const double start = fStar - vFStar * 3;
 	const double end = fStar + vFStar * 3;
 	const double stepSize = (end- start) / amountOfSamples;
@@ -386,8 +393,11 @@ double GaussianProcessBinary::predict(const DataElement& newPoint) const{
 		const double x = rand()/static_cast<double>(RAND_MAX);
 		const double y = rand()/static_cast<double>(RAND_MAX);
 		const double result = cos(2.0 * M_PI * x)*sqrt(-2*log(y)); // random gaussian after box mueller
-		const double height = 1.0 / (1.0 + exp(p)) * (result * vFStar + fStar);
-		prob += height * fabs(stepSize); // gives the integral
+		const double height = 1.0 / (1.0 + exp(-p)) * (result * vFStar + fStar);
+		prob += height * stepSize; // gives the integral
+	}
+	if(isnan(prob)){
+		std::cout << RED << fStar << ", " << vFStar << RESET << std::endl;
 	}
 	if(prob < 0){
 		return 0;

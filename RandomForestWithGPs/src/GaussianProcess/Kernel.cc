@@ -23,7 +23,7 @@ void Kernel::init(const Eigen::MatrixXd& dataMat){
 	for(int i = 0; i < m_dataPoints ; ++i){
 		for(int j = i + 1; j < m_dataPoints ; ++j){
 			const Eigen::VectorXd diff = dataMat.col(i) - dataMat.col(j);
-			m_differences(i,j) = diff.dot(diff);
+			m_differences(i,j) = diff.squaredNorm();
 			m_differences(j,i) = m_differences(i,j);
 			const double frac = (double) (counter) / (double) (counter + 1) ;
 			m_randLenMean = m_randLenMean * frac + (double) m_differences(i,j) * (1.0-frac);
@@ -53,7 +53,7 @@ double Kernel::kernelFunc(const int row, const int col) const{
 }
 
 double Kernel::kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const{
-	return m_hyperParams[1] * m_hyperParams[1] * exp(-0.5 * (1.0/ (m_hyperParams[0] * m_hyperParams[0])) * (double) (lhs-rhs).dot(lhs-rhs));
+	return m_hyperParams[1] * m_hyperParams[1] * exp(-0.5 * (1.0/ (m_hyperParams[0] * m_hyperParams[0])) * (double) (lhs-rhs).squaredNorm());
 }
 
 double Kernel::kernelFuncDerivativeToLength(const int row, const int col) const{

@@ -16,7 +16,7 @@ with open("../Settings/init.json") as data_file:
 
 def plotPoints(fileName):
     y,x,temp = np.loadtxt(fileName).T #Transposed for easier unpacking
-    nrows, ncols = 51, 50
+    nrows, ncols = 51, 51
     grid = np.fliplr(temp.reshape((nrows, ncols)).T)
 
     plt.imshow(grid, extent=(x.min(), x.max(), y.max(), y.min()),
