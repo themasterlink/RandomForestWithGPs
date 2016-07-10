@@ -8,7 +8,7 @@
 #include "BayesOptimizer.h"
 
 BayesOptimizer::BayesOptimizer(GaussianProcessBinary& gp, bayesopt::Parameters param):
-	ContinuousModel(2,param), m_gp(gp) {
+	ContinuousModel(2,param), m_gp(gp), m_lowestValue(1000000), bestVal(-100000000) {
 }
 
 BayesOptimizer::~BayesOptimizer() {
@@ -18,11 +18,21 @@ BayesOptimizer::~BayesOptimizer() {
 double BayesOptimizer::evaluateSample(const vectord& x) {
 	printWarning("X: " << x);
 	m_gp.getKernel().setHyperParams(x[0], x[1], m_gp.getKernel().sigmaN());
-	std::vector<double> dLogZ;
-	dLogZ.reserve(3);
 	double logZ = 0.0;
-	GaussianProcessBinary::Status status = m_gp.trainLM(logZ, dLogZ);
-	return status == GaussianProcessBinary::NANORINFERROR ? -std::numeric_limits<double>::infinity() : logZ;
+	GaussianProcessBinary::Status status = m_gp.trainBayOpt(logZ,1);
+	std::cout << RED << "logZ: " << logZ << RESET << std::endl;
+	if(-logZ < m_lowestValue){
+		m_lowestValue = -logZ;
+	}
+	if(logZ > bestVal){
+		bestVal = logZ;
+		bestLen = m_gp.getKernel().len();
+		bestSigma = m_gp.getKernel().sigmaF();
+		//getchar();
+	}
+	std::cout << RED << "bestVal: " << bestVal << ", kernel: " << bestLen << ", " << bestSigma << RESET << std::endl;
+
+	return status == GaussianProcessBinary::NANORINFERROR ? m_lowestValue : 10000 - logZ;
 };
 
 

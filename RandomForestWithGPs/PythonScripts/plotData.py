@@ -16,7 +16,7 @@ with open("../Settings/init.json") as data_file:
 
 def plotPoints(fileName):
     y,x,temp = np.loadtxt(fileName).T #Transposed for easier unpacking
-    nrows, ncols = 20, 20
+    nrows, ncols = 51, 50
     grid = np.fliplr(temp.reshape((nrows, ncols)).T)
 
     plt.imshow(grid, extent=(x.min(), x.max(), y.max(), y.min()),
@@ -24,13 +24,12 @@ def plotPoints(fileName):
 
 plt.figure(0)
 
-plotPoints("out.txt")
+plotPoints("out2.txt")
 
 file1 = open(data["Training"]["path"], "r")
 txt = file1.read()
 lines = []
 lines = txt.split("\n")
-lines = []
 var = 0
 
 i = 0

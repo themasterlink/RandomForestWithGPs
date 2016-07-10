@@ -87,33 +87,37 @@ void executeForMultiClass(const std::string& path){
 void executeForBinaryClass(const std::string& path){
 
 	Data data;
-	Data testData;
 	Labels labels;
+	Data testData;
 	Labels testLabels;
+	const bool useRealData = false;
 	std::map<std::string, Data > datas;
-	DataReader::readFromFiles(datas, "../realData/");
-	int labelCounter = 0;
-	const int amountOfElements = datas.begin()->second.size();
-	const double fac = 0.015;
-	for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
-		for(int i = 0; i < amountOfElements; ++i){
-			if(i < fac * amountOfElements){
-				// train data
-				data.push_back(itData->second[i]);
-				labels.push_back(labelCounter);
-			}else if(i < (fac) * amountOfElements + 50){
-				// test data
-				testData.push_back(itData->second[i]);
-				testLabels.push_back(labelCounter);
+	if(useRealData){
+		DataReader::readFromFiles(datas, "../realData/");
+		int labelCounter = 0;
+		const int amountOfElements = datas.begin()->second.size();
+		const double fac = 0.015;
+		for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
+			for(int i = 0; i < amountOfElements; ++i){
+				if(i < fac * amountOfElements){
+					// train data
+					data.push_back(itData->second[i]);
+					labels.push_back(labelCounter);
+				}else if(i < (fac) * amountOfElements + 50){
+					// test data
+					testData.push_back(itData->second[i]);
+					testLabels.push_back(labelCounter);
+				}
 			}
+			++labelCounter;
 		}
-		++labelCounter;
+	}else{
+		DataReader::readFromFile(data, labels, "../testData/trainInput.txt");
 	}
 	std::cout << "Data has dim: " << data[0].rows() << std::endl;
 	std::cout << "Training size: " << data.size() << std::endl;
 	// for binary case:
-	if(datas.size() == 2){
-
+	if(useRealData && datas.size() == 2){
 		const int firstPoints = 35;
 		Eigen::VectorXd y;
 		Eigen::MatrixXd dataMat;
@@ -124,77 +128,127 @@ void executeForBinaryClass(const std::string& path){
 		{
 			bayesopt::Parameters par = initialize_parameters_to_default();
 
-			par.kernel.name = "kSum(kSEISO,kConst)";
-			par.kernel.hp_mean <<= 1.0;
-			par.kernel.hp_std <<= 1.0;
-
-			par.mean.name = "mConst";
-			par.mean.coef_mean <<= gp.getLenMean();
-			par.mean.coef_std <<= gp.getKernel().getLenVar();
-
-
-			par.surr_name = "sStudentTProcessJef";
-			par.noise = 1e-10;
-
-			par.sc_type = SC_MAP;
-			par.l_type = L_EMPIRICAL;
-
-			par.n_iterations = 100;    // Number of iterations
-			par.random_seed = 0;
-			par.n_init_samples = 15;
-			par.n_iter_relearn = 0;
-
 			BayesOptimizer bayOpt(gp, par);
 			vectord result(2);
+
+			vectord lowerBound(2);
+			lowerBound[0] = 0.1;
+			lowerBound[1] = 0.1;
+			vectord upperBound(2);
+			upperBound[0] = gp.getLenMean();
+			upperBound[1] = 1.3;
+			/*
+			vectord lowerBound(2);
+			lowerBound[0] = gp.getLenMean() - 2.5 * gp.getKernel().getLenVar();
+			lowerBound[1] = 0.1;
+			vectord upperBound(2);
+			upperBound[0] = gp.getLenMean() + 2.5 * gp.getKernel().getLenVar();
+			upperBound[1] = 2.0;*/
+			bayOpt.setBoundingBox(lowerBound, upperBound);
 			bayOpt.optimize(result);
 			std::cout << RED << "Result: " << result[0] << ", "<< result[1] << RESET << std::endl;
-			return;
+
+			gp.getKernel().setHyperParams(result[0], result[1], 0.95);
+			gp.trainWithoutKernelOptimize(dataMat, y);
 
 		}
 
 		//gp.train(); // train the kernel params
-
+		const Data& dataRef = data;
+/*
 		const int dataPoints = data.size();
 		Eigen::VectorXd y2(dataPoints);
 		for(int i = 0; i < dataPoints; ++i){
 			y2[i] = labels[i] != 0 ? 1 : -1; // just two classes left!
 		}
-		const Data& dataRef = data;
 		Eigen::MatrixXd dataMat2;
 
 		DataConverter::toDataMatrix(dataRef, dataMat2, dataRef.size());
 		gp.init(dataMat2, y2);
-		for(int i = 0; i < 100; ++i){
-			//gp.m_kernel.newRandHyperParams();
-			//gp.m_kernel.setHyperParams(gp.m_kernel.len(),gp.m_kernel.sigmaF(),1);
-			gp.train();//WithoutKernelChange(dataMat2, y2); // train only the latent functions
-			std::cout << "Start predicting!" << std::endl;
-			int wright = 0;
-			int amountOfBelow = 0;
-			int amountOfAbove = 0;
-			for(int j = 0; j < dataRef.size(); ++j){
-				double prob = gp.predict(dataRef[j]);
-				std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
-				if(prob > 0.5 && labels[j] == 0){
-					++wright;
-				}else if(prob < 0.5 && labels[j] == 1){
-					++wright;
-				}
-				if(prob > 0.5){
-					++amountOfAbove;
-				}else{
-					++amountOfBelow;
-				}
+ */
+		//gp.m_kernel.newRandHyperParams();
+		//gp.m_kernel.setHyperParams(gp.m_kernel.len(),gp.m_kernel.sigmaF(),1);
+		//gp.train();//WithoutKernelChange(dataMat2, y2); // train only the latent functions
+		std::cout << "Start predicting!" << std::endl;
+		int wright = 0;
+		int amountOfBelow = 0;
+		int amountOfAbove = 0;
+		for(int j = 0; j < dataRef.size(); ++j){
+			double prob = gp.predict(dataRef[j]);
+			std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
+			if(prob > 0.5 && labels[j] == 1){
+				++wright;
+			}else if(prob < 0.5 && labels[j] == 0){
+				++wright;
 			}
+			if(prob > 0.5){
+				++amountOfAbove;
+			}else{
+				++amountOfBelow;
+			}
+		}
 		std::cout << RED;
 		std::cout << "Amount of wright: " << (double) wright / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "Amount of above: " << (double) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
-		}
+
 	}else{
-		printError("Implement me!");
+		const int firstPoints = 10000000; // all points
+		Eigen::VectorXd y;
+		Eigen::MatrixXd dataMat;
+		DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
+
+		GaussianProcessBinary gp;
+		gp.init(dataMat, y);
+		bayesopt::Parameters par = initialize_parameters_to_default();
+		std::cout << "noise: " << par.noise << std::endl;
+ 		//par.noise = 1-6;
+		//par.init_method = 50;
+		//par.n_iterations = 1000;
+		BayesOptimizer bayOpt(gp, par);
+
+		vectord result(2);
+		vectord lowerBound(2);
+		lowerBound[0] = 0.1; // max(0.1,gp.getLenMean() - 2 * gp.getKernel().getLenVar());
+		lowerBound[1] = 0.1;
+		vectord upperBound(2);
+		std::cout << "mean len: " << gp.getLenMean() << std::endl;
+		upperBound[0] = gp.getLenMean();// + gp.getKernel().getLenVar();
+		upperBound[1] = 5.0;max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
+
+		bayOpt.setBoundingBox(lowerBound, upperBound);
+		bayOpt.optimize(result);
+		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
+		gp.getKernel().setHyperParams(0.620284,0.55, 0.95);
+		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
+			gp.trainWithoutKernelOptimize(dataMat, y);
+		std::cout << "Start predicting!" << std::endl;
+		int wright = 0;
+		int amountOfBelow = 0;
+		int amountOfAbove = 0;
+		for(int j = 0; j < data.size(); ++j){
+			double prob = gp.predict(data[j]);
+			std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
+			if(prob > 0.5 && labels[j] == 1){
+				++wright;
+			}else if(prob < 0.5 && labels[j] == 0){
+				++wright;
+			}
+			if(prob > 0.5){
+				++amountOfAbove;
+			}else{
+				++amountOfBelow;
+			}
+		}
+		std::cout << RED;
+		std::cout << "Amount of wright: " << (double) wright / data.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of above: " << (double) amountOfAbove / data.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of below: " << (double) amountOfBelow / data.size() * 100.0 << "%" << std::endl;
+		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
+		std::cout << RESET;
+		DataWriterForVisu::generateGrid("out2.txt", gp, 50, data);
 	}
 	//DataReader::readFromFile(data, labels, path);
 

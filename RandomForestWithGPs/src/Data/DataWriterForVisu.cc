@@ -95,7 +95,6 @@ void DataWriterForVisu::generateGrid(const std::string& fileName, const RandomFo
 	file.close();
 }
 
-
 void DataWriterForVisu::generateGrid(const std::string& fileName, const RandomForestGaussianProcess& rfgp,
 		const double amountOfPointsOnOneAxis, const Data& data,
 		const int x, const int y){
@@ -145,6 +144,69 @@ void DataWriterForVisu::generateGrid(const std::string& fileName, const RandomFo
 			points.push_back(ele);
 			int val = rfgp.predict(ele, prob);
 			labels.push_back(prob[val]);
+			++amount;
+		}
+	}
+	for(int i = 0; i < amount; ++i){
+		file << points[i][0] << " " << points[i][1] << " " << labels[i] << "\n";
+	}
+	file.close();
+}
+
+
+
+void DataWriterForVisu::generateGrid(const std::string& fileName, const GaussianProcessBinary& gp,
+		const double amountOfPointsOnOneAxis, const Data& data,
+		const int x, const int y){
+	if(data.size() == 0){
+		printError("No data is given, this data is needed to find min and max!");
+		return;
+	}
+	const int dim = data[0].rows();
+	Eigen::Vector2d dimVec;
+	dimVec << x,y;
+	Eigen::Vector2d min, max;
+	for(int i = 0; i < 2; ++i){
+		min[i] = 1000000;
+		max[i] = -1000000;
+	}
+	for(Data::const_iterator it = data.cbegin(); it != data.cend(); ++it){
+		for(int i = 0; i < 2; ++i){
+			int j = dimVec[i];
+			if(min[i] > (*it)[j]){
+				min[i] = (*it)[j];
+			}
+			if(max[i] < (*it)[j]){
+				max[i] = (*it)[j];
+			}
+		}
+	}
+	const Eigen::Vector2d diff = max - min;
+	max[0] += diff[0] * 0.2;
+	max[1] += diff[1] * 0.2;
+	min[0] -= diff[0] * 0.2;
+	min[1] -= diff[1] * 0.2;
+	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	std::ofstream file;
+	file.open(fileName);
+	Data points;
+	points.reserve(amountOfPointsOnOneAxis * (amountOfPointsOnOneAxis + 1));
+	int amount = 0;
+	std::vector<double> labels;
+	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
+		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+			DataElement ele(dim);
+			for(int i = 0; i < dim; ++i){
+				if(i == x){
+					ele[i] = xVal;
+				}else if(i == y){
+					ele[i] = yVal;
+				}else{
+					ele[i] = 0;
+				}
+			}
+			points.push_back(ele);
+			labels.push_back(gp.predict(ele));
 			++amount;
 		}
 	}

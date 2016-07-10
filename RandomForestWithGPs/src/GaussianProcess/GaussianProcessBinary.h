@@ -32,7 +32,6 @@ public:
 
 	void train();
 
-	void trainWithoutKernelOptimize();
 
 	void trainWithoutKernelOptimize(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
 
@@ -43,6 +42,7 @@ public:
 	double getLenMean() const {return m_kernel.getLenMean();};
 
 private:
+	GaussianProcessBinary::Status trainBayOpt(double& logZ, const double lambda);
 
 	Status trainLM(double& logZ, std::vector<double>& dLogZ);
 

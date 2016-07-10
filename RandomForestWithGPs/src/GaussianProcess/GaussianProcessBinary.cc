@@ -61,6 +61,40 @@ void GaussianProcessBinary::train(){
 	m_trained = true;
 }
 
+GaussianProcessBinary::Status GaussianProcessBinary::trainBayOpt(double& logZ, const double lambda){
+	Eigen::MatrixXd K;
+	const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
+	m_kernel.calcCovariance(K);
+	//std::cout << "K: \n" << K << std::endl;
+	Status status = trainF(m_dataPoints, K, m_y);
+	if(status == NANORINFERROR){
+		return NANORINFERROR;
+	}
+	const Eigen::VectorXd diag = m_choleskyLLT.matrixL().toDenseMatrix().diagonal(); // TOdo more efficient?
+	double sum = 0;
+	if(diag.rows() != m_f.rows()){
+		printError("calc of cholesky failed!");
+	}
+	for(int i = 0; i < diag.rows(); ++i){
+		sum += log((double)diag[i]);
+	}
+	const double prob = (1.0 + exp(-(double) (m_y.dot(m_f)))); // should be very small!
+	const double logVal = prob < 1e100 ? -log(prob) : -100;
+	std::cout << "Prob: " << prob << std::endl;
+	std::cout << "Mean: " << m_f.mean() << std::endl;
+	//std::cout << "a: " << m_a.transpose() << std::endl;
+	//std::cout << "f: " << m_f.transpose() << std::endl;
+	double sumF = 0;
+	for(int i = 0; i < m_f.rows(); ++i){
+		sumF += fabs((double)m_f[i]);
+	}
+	//sumF /= m_f.rows();
+	std::cout << CYAN << "LogZ elements a * f: " << -0.5 * (double) (m_a.dot(m_f)) << ", log: " << logVal << ", sum: " << sum << ", sumF: " << sumF << RESET << std::endl;
+	// -0.5 * (double) (m_a.dot(m_f)) - 0.5 *sumF
+	logZ = logVal - sum ;
+	return ALLFINE;
+}
+
 GaussianProcessBinary::Status GaussianProcessBinary::trainLM(double& logZ, std::vector<double>& dLogZ){
 	Eigen::MatrixXd K;
 	const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
@@ -72,13 +106,20 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainLM(double& logZ, std::
 	}
 	const Eigen::VectorXd diag = m_choleskyLLT.matrixL().toDenseMatrix().diagonal(); // TOdo more efficient?
 	double sum = 0;
+	if(diag.rows() != m_f.rows()){
+		printError("calc of cholesky failed!");
+	}
 	for(int i = 0; i < diag.rows(); ++i){
 		sum += log((double)diag[i]);
 	}
-	const double prob = (1.0 + exp(-(double) (m_y.dot(m_f))));
-	const double tol = 1e-7;
-	const double offsetVal = prob > tol && prob < 1 - tol ? prob : (prob < tol ? tol : 1 -tol );
-	logZ = -0.5 * (double) (m_a.dot(m_f)) - log(offsetVal) + sum;
+	const double prob = (1.0 + exp(-(double) (m_y.dot(m_f)))); // should be very small!
+	const double logVal = prob < 1e100 ? -log(prob) : -100;
+	std::cout << "Prob: " << prob << std::endl;
+	std::cout << "Mean: " << m_f.mean() << std::endl;
+	//std::cout << "a: " << m_a.transpose() << std::endl;
+	//std::cout << "f: " << m_f.transpose() << std::endl;
+	std::cout << CYAN << "LogZ elements a * f: " << -0.5 * (double) (m_a.dot(m_f)) << ", log: " << logVal << ", sum: " << sum << RESET << std::endl;
+	logZ = -0.5 * (double) (m_a.dot(m_f)) + logVal - sum;
 	const DiagMatrixXd WSqrt(m_sqrtDDLogPi);
 	const Eigen::MatrixXd R = WSqrt * m_choleskyLLT.solve( m_choleskyLLT.solve(WSqrt.toDenseMatrix()));
 	Eigen::MatrixXd C = m_choleskyLLT.solve(WSqrt * K);
@@ -106,10 +147,10 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainLM(double& logZ, std::
 }
 
 void GaussianProcessBinary::trainWithoutKernelOptimize(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
-	init(dataMat, y);
 	Eigen::MatrixXd K;
 	m_kernel.calcCovariance(K);
 	trainF(m_dataPoints, K, y);
+	m_trained = true;
 }
 
 GaussianProcessBinary::Status GaussianProcessBinary::train(const int dataPoints,
@@ -266,6 +307,8 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainF(const int dataPoints
 	const Eigen::VectorXd t = (y + Eigen::VectorXd::Ones(y.rows())) * 0.5; // Todo uneccessary often executed
 	double lastObjective = 100000000000;
 	double stepSize = 0.5;
+	Eigen::VectorXd oldA = m_a;
+	Eigen::VectorXd oldF = m_f;
 	while(!converged){
 		// calc - log p(y_i| f_i) -> -
 		updatePis(dataPoints,y,t);
@@ -286,6 +329,9 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainF(const int dataPoints
 			return NANORINFERROR;
 		}
 		if(objective > lastObjective && j != 0){
+			std::cout << RED << "overshoot!" << "new: " <<  -0.5 * (double) (m_a.dot(m_f)) << ", old: " << -0.5 * (double) (oldA.dot(oldF)) << RESET << std::endl;
+			m_a = oldA;
+			m_f = oldF;
 			break;
 			// decrease the step size and try again!
 			//m_f = (m_f - lastF) * stepSize + lastF;
@@ -308,8 +354,10 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainF(const int dataPoints
 			stepSize = 0.5;
 		}
 
-		converged = fabs(lastObjective / objective - 1.0) < 0.005 && j > 3;
+		converged = fabs(lastObjective / objective - 1.0) < 0.0001 && j > 3;
 		lastObjective = objective;
+		oldA = m_a;
+		oldF = m_f;
 		//converged = m_f.mean() < 100 && m_f.mean() > 50;//fabs((m_f-lastF).mean()) < 0.0001;
 		++j;
 	//	lastF = m_f;
