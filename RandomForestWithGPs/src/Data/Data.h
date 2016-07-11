@@ -18,6 +18,7 @@
 
 typedef Eigen::VectorXd DataElement;
 typedef std::vector<DataElement> Data;
+typedef std::map<std::string, Data > DataSets;
 typedef std::vector<Eigen::VectorXd> ComplexLabels; // could be that the data elements have continous labels
 typedef std::vector<int> SimpleLabels; // could be that the data elements have continous labels
 typedef SimpleLabels Labels;

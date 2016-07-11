@@ -32,7 +32,7 @@ public:
 
 	void train();
 
-	void trainWithoutKernelOptimize(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
+	void trainWithoutKernelOptimize();
 
 	double predict(const DataElement& newPoint) const;
 

@@ -11,7 +11,7 @@
         "dim": 2
     },
     "RealData": {
-        "folderPath": "..\/testData\/trainInput.txt"
+        "folderPath": "..\/realData\/"
     },
     "Test": {
         "path": "..\/testData\/testInput3.txt",
@@ -30,8 +30,8 @@
     },
     "MinMaxUsedData": {
     	"useFixedValuesForMinMaxUsedData": "true", 
-    	"minValue": 50,
-    	"maxValue": 200,
+    	"minValue": 100,
+    	"maxValue": 300,
     	"minValueFraction": 0.2,
     	"maxValueFraction": 0.6
     }

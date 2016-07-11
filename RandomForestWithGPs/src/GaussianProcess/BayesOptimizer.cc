@@ -21,6 +21,9 @@ double BayesOptimizer::evaluateSample(const vectord& x) {
 	double logZ = 0.0;
 	GaussianProcessBinary::Status status = m_gp.trainBayOpt(logZ,1);
 	std::cout << RED << "logZ: " << logZ << RESET << std::endl;
+	if(logZ > 1.0){ // overfitting!
+		logZ = -100;
+	}
 	if(-logZ < m_lowestValue){
 		m_lowestValue = -logZ;
 	}

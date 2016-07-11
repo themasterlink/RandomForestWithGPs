@@ -53,9 +53,8 @@ void DecisionTree::train(const Data& data,
 	const Labels& labels,
 	const int amountOfUsedDims,
 	RandomNumberGeneratorForDT& generator){
-
-	std::vector<int> usedDims(amountOfUsedDims);
-	if(amountOfUsedDims == m_amountOfClasses){
+	std::vector<int> usedDims(amountOfUsedDims,-1);
+	if(amountOfUsedDims == data[0].rows()){
 		for(int i = 0; i < amountOfUsedDims; ++i){
 			usedDims[i] = i;
 		}
@@ -63,6 +62,7 @@ void DecisionTree::train(const Data& data,
 		for(int i = 0; i < amountOfUsedDims; ++i){
 			bool doAgain = false;
 			do{
+				doAgain = false;
 				const int randNr = generator.getRandDim(); // generates number in the range 0...data.rows() - 1;
 				for(int j = 0; j < i; ++j){
 					if(randNr == usedDims[j]){
@@ -73,7 +73,7 @@ void DecisionTree::train(const Data& data,
 				if(!doAgain){
 					usedDims[i] = randNr;
 				}
-			}while(doAgain);
+ 			}while(doAgain);
 		}
 	}
 	m_splitDim[1] = NODE_CAN_BE_USED; // init the root value
@@ -86,8 +86,8 @@ void DecisionTree::train(const Data& data,
 		// calc actual nodes
 		// calc split value for each node
 		// choose dimension for split
-		const int randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
 
+		const int randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
 		const int amountOfUsedData = generator.getRandAmountOfUsedData();
 		int maxScoreElement = -1;
 		double actScore = -1000; // TODO check magic number
@@ -206,19 +206,20 @@ double DecisionTree::trySplitFor(const int actNode,
 	}else{
 		const int stepSize = dataInNode.size() / 100;
 		generator.setRandFromRange(1, stepSize);
-		for(int i = 0; i < dataInNode.size(); i += generator.getRandFromRange()){
-			const int val = dataInNode[i];
-			if(usedValue < data[val][usedDim]){ // TODO check < or <=
-				++leftAmount;
-				++leftHisto[labels[val]];
-			}else{
-				++rightAmount;
-				++rightHisto[labels[val]];
+		const int dataSize = dataInNode.size();
+		for(int i = 0; i < dataSize; i += generator.getRandFromRange()){
+			if(i < dataSize){
+				const int val = dataInNode[i];
+				if(usedValue < data[val][usedDim]){ // TODO check < or <=
+					++leftAmount;
+					++leftHisto[labels[val]];
+				}else{
+					++rightAmount;
+					++rightHisto[labels[val]];
+				}
 			}
-
 		}
 	}
-
 	// Entropy -> TODO maybe Gini
 	double leftCost = 0, rightCost = 0;
 	for(int i = 0; i < m_amountOfClasses; ++i){
@@ -235,7 +236,6 @@ double DecisionTree::trySplitFor(const int actNode,
 		leftHisto[i] = 0;
 		rightHisto[i] = 0;
 	}
-
 	return rightAmount * rightCost + leftAmount * leftCost;
 }
 

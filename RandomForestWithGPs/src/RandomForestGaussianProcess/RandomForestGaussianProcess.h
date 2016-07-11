@@ -13,8 +13,7 @@
 
 class RandomForestGaussianProcess{
 public:
-	RandomForestGaussianProcess(const Data& data, const Labels& labels,
-			const int heightOfTrees, const int amountOfTrees, const int amountOfUsedClasses);
+	RandomForestGaussianProcess(const DataSets& data, const int heightOfTrees, const int amountOfTrees);
 	virtual ~RandomForestGaussianProcess();
 
 	int predict(const DataElement& data, std::vector<double>& prob) const;
@@ -22,12 +21,12 @@ public:
 	int amountOfClasses() const {return m_amountOfUsedClasses;};
 
 private:
-	const Data& m_data;
-	const Labels& m_labels;
+	const DataSets& m_data;
 
 	const int m_heightOfTrees;
 	const int m_amountOfTrees;
 	const double m_amountOfUsedClasses;
+	int m_amountOfDataPoints;
 	RandomForest m_forest;
 	std::vector<bool> m_isPure;
 	std::vector<std::vector<GaussianProcessBinary> > m_gps;

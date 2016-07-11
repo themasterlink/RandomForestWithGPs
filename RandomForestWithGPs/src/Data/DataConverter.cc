@@ -61,3 +61,4 @@ void DataConverter::toRandDataMatrix(const Data& data, const Labels& labels, Eig
 		y[i] = labels[randEle] != 0 ? 1 : -1;
 	}
 }
+

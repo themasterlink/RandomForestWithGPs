@@ -72,9 +72,6 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainBayOpt(double& logZ, c
 	}
 	const Eigen::VectorXd diag = m_choleskyLLT.matrixL().toDenseMatrix().diagonal(); // TOdo more efficient?
 	double sum = 0;
-	if(diag.rows() != m_f.rows()){
-		printError("calc of cholesky failed!");
-	}
 	for(int i = 0; i < diag.rows(); ++i){
 		sum += log((double)diag[i]);
 	}
@@ -85,14 +82,9 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainBayOpt(double& logZ, c
 	std::cout << "Mean: " << m_f.mean() << std::endl;
 	//std::cout << "a: " << m_a.transpose() << std::endl;
 	//std::cout << "f: " << m_f.transpose() << std::endl;
-	double sumF = 0;
-	for(int i = 0; i < m_f.rows(); ++i){
-		sumF += fabs((double)m_f[i]);
-	}
-
 	//sumF /= m_f.rows();
 	logZ = aDotF + logVal - sum;
-	std::cout << CYAN << "LogZ elements a * f: " << aDotF << ", log: " << logVal << ", sum: " << -sum << ", sumF: " << sumF << ", logZ: " << logZ << RESET << std::endl;
+	std::cout << CYAN << "LogZ elements a * f: " << aDotF << ", log: " << logVal << ", sum: " << -sum << ", logZ: " << logZ << RESET << std::endl;
 	// -0.5 * (double) (m_a.dot(m_f)) - 0.5 *sumF
 	return ALLFINE;
 }
@@ -148,10 +140,10 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainLM(double& logZ, std::
 	return ALLFINE;
 }
 
-void GaussianProcessBinary::trainWithoutKernelOptimize(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
+void GaussianProcessBinary::trainWithoutKernelOptimize(){
 	Eigen::MatrixXd K;
 	m_kernel.calcCovariance(K);
-	trainF(m_dataPoints, K, y);
+	trainF(m_dataPoints, K, m_y);
 	m_trained = true;
 }
 

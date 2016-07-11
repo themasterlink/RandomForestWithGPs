@@ -32,7 +32,7 @@ TimeFrame::TimeFrame(const double seconds){
 void TimeFrame::setWithSeconds(const double seconds){
 	if(seconds > 3600){
 		this->m_hours = (int) seconds / 3600;
-		this->m_minutes = (int) seconds / 60;
+		this->m_minutes = (int) (seconds - this->m_hours * 3600) / 60;
 		this->m_seconds = fmod(seconds, 60.0);
 	}else if(seconds > 60){
 		this->m_hours = 0;

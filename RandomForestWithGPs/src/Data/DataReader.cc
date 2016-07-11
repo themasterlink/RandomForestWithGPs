@@ -62,7 +62,7 @@ void DataReader::readFromFile(Data& data, const std::string& inputName){
 	}
 }
 
-void DataReader::readFromFiles(std::map<std::string, Data >& dataSets, const std::string& folderLocation){
+void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLocation){
 	boost::filesystem::path targetDir(folderLocation);
 	boost::filesystem::directory_iterator end_itr;
 	// cycle through the directory

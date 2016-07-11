@@ -49,10 +49,10 @@ void RandomForest::train(const Data& data, const Labels& labels, const int amoun
 	}
 
 	StopWatch sw;
-	const int nrOfParallel = 1; //std::thread::hardware_concurrency();
+	const int nrOfParallel = std::thread::hardware_concurrency();
 	boost::thread_group group;
 	TreeCounter counter;
-	m_counterIncreaseValue = std::max(2, m_amountOfTrees / nrOfParallel / 100);
+	m_counterIncreaseValue = min(max(2, m_amountOfTrees / nrOfParallel / 100), 100);
 	std::vector<RandomNumberGeneratorForDT> generators;
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int seed = i;

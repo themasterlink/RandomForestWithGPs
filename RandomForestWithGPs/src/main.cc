@@ -124,36 +124,27 @@ void executeForBinaryClass(const std::string& path){
 
 		GaussianProcessBinary gp;
 		gp.init(dataMat, y);
-		{
-			bayesopt::Parameters par = initialize_parameters_to_default();
-			par.noise = 1e-12;
-			par.epsilon = 0.2;
-			par.surr_name = "sGaussianProcessML";
+		bayesopt::Parameters par = initialize_parameters_to_default();
+		par.noise = 1e-12;
+		par.epsilon = 0.2;
+		par.surr_name = "sGaussianProcessML";
 
-			BayesOptimizer bayOpt(gp, par);
-			vectord result(2);
+		BayesOptimizer bayOpt(gp, par);
+		vectord result(2);
 
-			vectord lowerBound(2);
-			lowerBound[0] = 0.1;
-			lowerBound[1] = 0.1;
-			vectord upperBound(2);
-			upperBound[0] = gp.getLenMean() / 4;
-			upperBound[1] = 1.3;
-			/*
-			vectord lowerBound(2);
-			lowerBound[0] = gp.getLenMean() - 2.5 * gp.getKernel().getLenVar();
-			lowerBound[1] = 0.1;
-			vectord upperBound(2);
-			upperBound[0] = gp.getLenMean() + 2.5 * gp.getKernel().getLenVar();
-			upperBound[1] = 2.0;*/
-			bayOpt.setBoundingBox(lowerBound, upperBound);
-			bayOpt.optimize(result);
-			std::cout << RED << "Result: " << result[0] << ", "<< result[1] << RESET << std::endl;
+		vectord lowerBound(2);
+		lowerBound[0] = 0.1;
+		lowerBound[1] = 0.1;
+		vectord upperBound(2);
+		upperBound[0] = gp.getLenMean();
+		upperBound[1] = 1.3;
+		bayOpt.setBoundingBox(lowerBound, upperBound);
+		bayOpt.optimize(result);
+		std::cout << RED << "Result: " << result[0] << ", "<< result[1] << RESET << std::endl;
 
-			gp.getKernel().setHyperParams(result[0], result[1], 0.95);
+		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
 
 
-		}
 
 		//gp.train(); // train the kernel params
 
@@ -162,7 +153,7 @@ void executeForBinaryClass(const std::string& path){
 		Eigen::MatrixXd dataMat2;
 		DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 10000000);
 		gp.init(dataMat2, y2);
-		gp.trainWithoutKernelOptimize(dataMat2, y2);
+		gp.trainWithoutKernelOptimize();
 /*
 		const int dataPoints = data.size();
 		Eigen::VectorXd y2(dataPoints);
@@ -230,16 +221,14 @@ void executeForBinaryClass(const std::string& path){
 		lowerBound[0] = 0.1; // max(0.1,gp.getLenMean() - 2 * gp.getKernel().getLenVar());
 		lowerBound[1] = 0.1;
 		vectord upperBound(2);
-		std::cout << "mean len: " << gp.getLenMean() << std::endl;
 		upperBound[0] = gp.getLenMean();// + gp.getKernel().getLenVar();
 		upperBound[1] = 1.6;//max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
 
 		bayOpt.setBoundingBox(lowerBound, upperBound);
 		bayOpt.optimize(result);
+		//gp.getKernel().setHyperParams(0.620284,0.55, 0.95);
 		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
-		gp.getKernel().setHyperParams(0.620284,0.55, 0.95);
-		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
-			gp.trainWithoutKernelOptimize(dataMat, y);
+		gp.trainWithoutKernelOptimize();
 		std::cout << "Start predicting!" << std::endl;
 		int wright = 0;
 		int amountOfBelow = 0;
@@ -343,8 +332,92 @@ void executeForBinaryClass(const std::string& path){
 	 */
 }
 
-int main(){
+void executeForRFBinaryClass(){
+	Data data;
+	Data testData;
+	Labels labels;
+	Labels testLabels;
+	std::map<std::string, Data > datas;
+	DataReader::readFromFiles(datas, "../realData/");
+	int labelCounter = 0;
+	for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
+		const int amountOfElements = itData->second.size();
 
+		for(int i = 0; i < amountOfElements; ++i){
+			if(i < amountOfElements * 0.8){
+				// train data
+				data.push_back(itData->second[i]);
+				labels.push_back(labelCounter);
+			}else{
+				// test data
+				testData.push_back(itData->second[i]);
+				testLabels.push_back(labelCounter);
+			}
+		}
+		++labelCounter;
+	}
+
+	std::cout << "Training size: " << data.size() << std::endl;
+	std::cout << "Test size:     " << testData.size() << std::endl;
+	std::vector<int> heights(5);
+	heights[0] = 2;
+	heights[1] = 4;
+	heights[2] = 6;
+	heights[3] = 8;
+	heights[4] = 12;
+	std::vector<int> trees(5);
+	trees[0] = 100;
+	trees[1] = 1000;
+	trees[2] = 10000;
+	trees[3] = 100000;
+	trees[4] = 1000000;
+
+	for(int i = 0; i < heights.size(); ++i){
+		int maxTree = trees.size();
+		if(heights[i] > 10){
+			maxTree = 3;
+		}else if(heights[i] > 7){
+			maxTree = 4;
+		}
+		for(int j = 0; j < maxTree; ++j){
+			const int height = heights[i];
+			const int amountOfTrees = trees[j];
+			// for binary case:
+			const int dataPoints = data.size();
+			std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
+			bool useFixedValuesForMinMaxUsedData;
+			Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
+			Eigen::Vector2i minMaxUsedData;
+			if(useFixedValuesForMinMaxUsedData){
+				int minVal = 0, maxVal = 0;
+				Settings::getValue("MinMaxUsedData.minValue", minVal);
+				Settings::getValue("MinMaxUsedData.maxValue", maxVal);
+				minMaxUsedData << minVal, maxVal;
+			}else{
+				double minVal = 0, maxVal = 0;
+				Settings::getValue("MinMaxUsedData.minValueFraction", minVal);
+				Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
+				minMaxUsedData << (int) (minVal * data.size()),  (int) (maxVal * data.size());
+			}
+			std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";
+
+			RandomForest forest(height, amountOfTrees, data[0].rows());
+			forest.train(data, labels, data[0].rows(), minMaxUsedData);
+
+			int right = 0;
+			Labels predictedLabels;
+			forest.predictData(testData, predictedLabels);
+			for(int j = 0; j < testData.size(); ++j){
+				if(testLabels[j] == predictedLabels[j]){
+					++right;
+				}
+			}
+			std::cout << RED << "Amount of right: " << (double) right / testData.size() * 100.0 << "%" << RESET << std::endl;
+		}
+	}
+}
+
+int main(){
 
 	std::cout << "Start" << std::endl;
 	// read in Settings
@@ -352,23 +425,22 @@ int main(){
 	std::string path;
 	Settings::getValue("RealData.folderPath", path);
 
-	executeForBinaryClass(path);
-	//executeForBinaryClass(path);
-	return 0;
-	Data data;
-	Labels labels;
-	DataReader::readFromFile(data, labels, path);
-	RandomForestGaussianProcess rfGp(data, labels, 4, 500, 2);
 
-	DataWriterForVisu::generateGrid("out.txt", rfGp, 40, data, 0, 1);
+	//executeForRFBinaryClass();
+	//return 0;
+
+	//executeForBinaryClass(path);
+	DataSets dataSets;
+	DataReader::readFromFiles(dataSets, path);
+	RandomForestGaussianProcess rfGp(dataSets, 4, 5);
+
+//	DataWriterForVisu::generateGrid("out.txt", rfGp, 40, data, 0, 1);
 
 	std::cout << "finish" << std::endl;
 	return 0;
-	/*
 	Data data;
 	Labels labels;
 	DataReader::readFromFile(data, labels, path);
-*/
 	bool useFixedValuesForMinMaxUsedData;
 	Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
 	Eigen::Vector2i minMaxUsedData;
