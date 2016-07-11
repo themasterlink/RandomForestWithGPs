@@ -131,7 +131,6 @@ void executeForBinaryClass(const std::string& path){
 
 		BayesOptimizer bayOpt(gp, par);
 		vectord result(2);
-
 		vectord lowerBound(2);
 		lowerBound[0] = 0.1;
 		lowerBound[1] = 0.1;
