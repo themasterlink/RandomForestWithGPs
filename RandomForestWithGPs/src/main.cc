@@ -151,6 +151,7 @@ void executeForBinaryClass(const std::string& path){
 		Eigen::VectorXd y2;
 		Eigen::MatrixXd dataMat2;
 		DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 10000000);
+		std::cout << "Init with: " << data.size() << std::endl;
 		gp.init(dataMat2, y2);
 		gp.trainWithoutKernelOptimize();
 /*
@@ -167,7 +168,7 @@ void executeForBinaryClass(const std::string& path){
 		//gp.m_kernel.newRandHyperParams();
 		//gp.m_kernel.setHyperParams(gp.m_kernel.len(),gp.m_kernel.sigmaF(),1);
 		//gp.train();//WithoutKernelChange(dataMat2, y2); // train only the latent functions
-		std::cout << "Start predicting!" << std::endl;
+		std::cout << "Start predicting for " << testData.size() << " points!" << std::endl;
 		const Data& dataRef = testData;
 		const Labels& labelsRef = testLabels;
 		int wright = 0;
@@ -424,11 +425,15 @@ int main(){
 	std::string path;
 	Settings::getValue("RealData.folderPath", path);
 
-
+	bool useGP;
+	Settings::getValue("OnlyGp.useGP", useGP);
+	if(useGP){
+		executeForBinaryClass(path);
+		return 0;
+	}
 	//executeForRFBinaryClass();
 	//return 0;
 
-	//executeForBinaryClass(path);
 	DataSets dataSets;
 	DataReader::readFromFiles(dataSets, path);
 	RandomForestGaussianProcess rfGp(dataSets, 4, 5);

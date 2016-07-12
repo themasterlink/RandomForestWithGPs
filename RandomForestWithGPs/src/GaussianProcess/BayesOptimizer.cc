@@ -34,7 +34,6 @@ double BayesOptimizer::evaluateSample(const vectord& x) {
 		//getchar();
 	}
 	std::cout << RED << "bestVal: " << bestVal << ", kernel: " << bestLen << ", " << bestSigma << RESET << std::endl;
-
 	return status == GaussianProcessBinary::NANORINFERROR ? m_lowestValue : 10000 - logZ;
 };
 

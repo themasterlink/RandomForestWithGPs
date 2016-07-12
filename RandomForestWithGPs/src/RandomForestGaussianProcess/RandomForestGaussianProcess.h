@@ -28,7 +28,7 @@ private:
 	const double m_amountOfUsedClasses;
 	int m_amountOfDataPoints;
 	RandomForest m_forest;
-	std::vector<bool> m_isPure;
+	std::vector<int> m_pureClassLabelForRfClass;
 	std::vector<std::vector<GaussianProcessBinary> > m_gps;
 };
 

@@ -34,5 +34,8 @@
     	"maxValue": 300,
     	"minValueFraction": 0.2,
     	"maxValueFraction": 0.6
+    },
+    "OnlyGp": {
+    	"useGP": "true"
     }
 }
