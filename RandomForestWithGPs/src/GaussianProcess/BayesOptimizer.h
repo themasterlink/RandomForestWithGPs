@@ -29,9 +29,9 @@ public:
 private:
 	GaussianProcessBinary& m_gp;
 	double m_lowestValue;
-	double bestVal;
+	/*double bestVal;
 	double bestLen;
-	double bestSigma;
+	double bestSigma;*/
 };
 
 #endif /* GAUSSIANPROCESS_BAYESOPTIMIZER_H_ */

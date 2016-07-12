@@ -36,6 +36,6 @@
     	"maxValueFraction": 0.6
     },
     "OnlyGp": {
-    	"useGP": "true"
+    	"useGP": "false"
     }
 }

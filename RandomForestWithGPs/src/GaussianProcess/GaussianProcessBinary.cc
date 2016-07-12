@@ -78,13 +78,13 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainBayOpt(double& logZ, c
 	const double prob = (1.0 + exp(-(double) (m_y.dot(m_f)))); // should be very small!
 	const double logVal = prob < 1e100 ? -log(prob) : -100;
 	const double aDotF = -0.5 * (double) (m_a.dot(m_f));
-	std::cout << "Prob: " << prob << std::endl;
-	std::cout << "Mean: " << m_f.mean() << std::endl;
+	//std::cout << "Prob: " << prob << std::endl;
+	//std::cout << "Mean: " << m_f.mean() << std::endl;
 	//std::cout << "a: " << m_a.transpose() << std::endl;
 	//std::cout << "f: " << m_f.transpose() << std::endl;
 	//sumF /= m_f.rows();
 	logZ = aDotF + logVal - sum;
-	std::cout << CYAN << "LogZ elements a * f: " << aDotF << ", log: " << logVal << ", sum: " << -sum << ", logZ: " << logZ << RESET << std::endl;
+	//td::cout << CYAN << "LogZ elements a * f: " << aDotF << ", log: " << logVal << ", sum: " << -sum << ", logZ: " << logZ << RESET << std::endl;
 	// -0.5 * (double) (m_a.dot(m_f)) - 0.5 *sumF
 	return ALLFINE;
 }
@@ -108,11 +108,11 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainLM(double& logZ, std::
 	}
 	const double prob = (1.0 + exp(-(double) (m_y.dot(m_f)))); // should be very small!
 	const double logVal = prob < 1e100 ? -log(prob) : -100;
-	std::cout << "Prob: " << prob << std::endl;
-	std::cout << "Mean: " << m_f.mean() << std::endl;
+	//std::cout << "Prob: " << prob << std::endl;
+	//std::cout << "Mean: " << m_f.mean() << std::endl;
 	//std::cout << "a: " << m_a.transpose() << std::endl;
 	//std::cout << "f: " << m_f.transpose() << std::endl;
-	std::cout << CYAN << "LogZ elements a * f: " << -0.5 * (double) (m_a.dot(m_f)) << ", log: " << logVal << ", sum: " << sum << RESET << std::endl;
+	//std::cout << CYAN << "LogZ elements a * f: " << -0.5 * (double) (m_a.dot(m_f)) << ", log: " << logVal << ", sum: " << sum << RESET << std::endl;
 	logZ = -0.5 * (double) (m_a.dot(m_f)) + logVal - sum;
 	const DiagMatrixXd WSqrt(m_sqrtDDLogPi);
 	const Eigen::MatrixXd R = WSqrt * m_choleskyLLT.solve( m_choleskyLLT.solve(WSqrt.toDenseMatrix()));
@@ -319,11 +319,11 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainF(const int dataPoints
 		const double objective = firstPart + log(offsetVal);
 		//std::cout << "\rError in " << j <<": " << fabs(lastObjective / objective - 1.0) << ", from: " << lastObjective << ", to: " << objective <<  ", log: " << log(offsetVal) << "                    " << std::endl;
 		if(isnan(objective)){
-			std::cout << "Objective is nan!" << std::endl;
+			//std::cout << "Objective is nan!" << std::endl;
 			return NANORINFERROR;
 		}
 		if(objective > lastObjective && j != 0){
-			std::cout << RED << "overshoot!" << "new: " <<  -0.5 * (double) (m_a.dot(m_f)) << ", old: " << -0.5 * (double) (oldA.dot(oldF)) << RESET << std::endl;
+			//std::cout << RED << "overshoot!" << "new: " <<  -0.5 * (double) (m_a.dot(m_f)) << ", old: " << -0.5 * (double) (oldA.dot(oldF)) << RESET << std::endl;
 			m_a = oldA;
 			m_f = oldF;
 			updatePis(dataPoints,y,t);

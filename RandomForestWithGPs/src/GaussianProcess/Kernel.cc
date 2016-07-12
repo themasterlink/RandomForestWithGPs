@@ -41,8 +41,8 @@ void Kernel::init(const Eigen::MatrixXd& dataMat){
 		}
 	}
 	m_randLenVar = sqrt(m_randLenVar);
-	std::cout << "Rand mean is: " << m_randLenMean << std::endl;
-	std::cout << "Rand var is:  " << m_randLenVar << std::endl;
+	//std::cout << "Rand mean is: " << m_randLenMean << std::endl;
+	//std::cout << "Rand var is:  " << m_randLenVar << std::endl;
 	m_randLen.reset(m_randLenMean, m_randLenVar);
 	m_randSigmaF.reset(1.0, 0.25);
 	m_init = true;

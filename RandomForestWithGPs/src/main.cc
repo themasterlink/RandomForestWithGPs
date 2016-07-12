@@ -431,8 +431,8 @@ int main(){
 
 	DataSets dataSets;
 	DataReader::readFromFiles(dataSets, path);
-	RandomForestGaussianProcess rfGp(dataSets, 4, 5);
-
+	RandomForestGaussianProcess rfGp(dataSets, 6, 100);
+	rfGp.train();
 //	DataWriterForVisu::generateGrid("out.txt", rfGp, 40, data, 0, 1);
 
 	std::cout << "finish" << std::endl;

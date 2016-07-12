@@ -68,8 +68,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 	// cycle through the directory
 	for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 		if(boost::filesystem::is_directory(itr->path())){
-			std::string temp(itr->path().filename().c_str());
-			const std::string name(temp.substr(1, temp.length() - 2));
+			const std::string name(itr->path().filename().c_str());
 			Data data;
 			std::string filePath(itr->path().c_str());
 			filePath += "/vectors.txt";

@@ -5,7 +5,6 @@
  *      Author: Max
  */
 
-#include <thread>
 #include "RandomForest.h"
 
 RandomForest::RandomForest(const int maxDepth, const int amountOfTrees,
@@ -49,7 +48,7 @@ void RandomForest::train(const Data& data, const Labels& labels, const int amoun
 	}
 
 	StopWatch sw;
-	const int nrOfParallel = std::thread::hardware_concurrency();
+	const int nrOfParallel = boost::thread::hardware_concurrency();
 	boost::thread_group group;
 	TreeCounter counter;
 	m_counterIncreaseValue = min(max(2, m_amountOfTrees / nrOfParallel / 100), 100);
