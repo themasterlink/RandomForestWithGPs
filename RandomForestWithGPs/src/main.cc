@@ -143,11 +143,6 @@ void executeForBinaryClass(const std::string& path){
 
 		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
 
-
-
-		//gp.train(); // train the kernel params
-
-
 		Eigen::VectorXd y2;
 		Eigen::MatrixXd dataMat2;
 		DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 10000000);
