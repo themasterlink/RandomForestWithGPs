@@ -18,10 +18,11 @@ public:
 
 	void print(const std::string& text);
 
-	void print(const std::string& text, const char* color);
+	void printSwitchingColor(const std::string& text);
 
 private:
 	boost::mutex m_mutex;
+	bool m_change;
 	std::ostream& m_stream;
 };
 

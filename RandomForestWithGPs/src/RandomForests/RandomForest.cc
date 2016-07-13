@@ -64,6 +64,7 @@ void RandomForest::train(const Data& data, const Labels& labels, const int amoun
 		// just the update for the amount of training left:
 		usleep(0.2 * 1e6);
 		const int c = counter.getCounter();
+		std::cout << "c: " << c << std::endl;
 		if(c != 0){
 			std::cout << "\r                                                                                                   \r";
 			TimeFrame time = sw.elapsedAsTimeFrame();

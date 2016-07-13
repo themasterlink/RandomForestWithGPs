@@ -7,7 +7,7 @@
 
 #include "ThreadSafeOutput.h"
 
-ThreadSafeOutput::ThreadSafeOutput(std::ostream& stream): m_stream(stream) {
+ThreadSafeOutput::ThreadSafeOutput(std::ostream& stream): m_stream(stream), m_change(false) {
 	// TODO Auto-generated constructor stub
 
 }
@@ -22,8 +22,14 @@ void ThreadSafeOutput::print(const std::string& text){
 	m_mutex.unlock();
 }
 
-void ThreadSafeOutput::print(const std::string& text, const char* color){
+void ThreadSafeOutput::printSwitchingColor(const std::string& text){
 	m_mutex.lock();
-	m_stream << color << text << RESET << std::endl;
+	if(m_change){
+		m_stream << RED;
+	}else{
+		m_stream << CYAN;
+	}
+	m_change = !m_change;
+	m_stream << text << RESET << std::endl;
 	m_mutex.unlock();
 }

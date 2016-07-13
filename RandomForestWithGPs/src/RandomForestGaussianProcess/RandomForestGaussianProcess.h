@@ -29,7 +29,7 @@ private:
 
 	void trainInParallel(const int iActClass, const int amountOfDataInRfRes,
 			const int amountOfHyperPoints,
-			const int maxPointsUsedInGpSingleTraining, const Data& dataOfActRf,
+			const int iActRfClass, const Data& dataOfActRf,
 			const Labels& labelsOfActRf, const std::vector<int>& classCounts,
 			GaussianProcessBinary& actGp);
 
@@ -47,6 +47,8 @@ private:
 	std::vector<std::string> m_classNames; // save name for a class id
 
 	ThreadSafeOutput m_output;
+
+	int m_maxPointsUsedInGpSingleTraining;
 };
 
 #endif /* RANDOMFORESTGAUSSIANPROCESS_RANDOMFORESTGAUSSIANPROCESS_H_ */

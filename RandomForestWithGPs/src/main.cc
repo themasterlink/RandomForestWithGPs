@@ -378,7 +378,7 @@ void executeForRFBinaryClass(){
 			const int height = heights[i];
 			const int amountOfTrees = trees[j];
 			// for binary case:
-			const int dataPoints = data.size();
+			//const int dataPoints = data.size();
 			std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
 			bool useFixedValuesForMinMaxUsedData;
 			Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
@@ -431,8 +431,52 @@ int main(){
 
 	DataSets dataSets;
 	DataReader::readFromFiles(dataSets, path);
-	RandomForestGaussianProcess rfGp(dataSets, 6, 100);
+	DataSets trainSets;
+	DataSets testSets;
+	const double facForTraining = 0.8;
+	for(DataSets::const_iterator it = dataSets.begin(); it != dataSets.end(); ++it){
+		trainSets.insert(std::pair<std::string, Data >(it->first, Data()));
+		DataSets::iterator itTrain = trainSets.find(it->first);
+		itTrain->second.reserve(facForTraining * it->second.size());
+		testSets.insert(std::pair<std::string, Data >(it->first, Data()));
+		DataSets::iterator itTest = testSets.find(it->first);
+		itTest->second.reserve((1-facForTraining) * it->second.size());
+		for(int i = 0; i < it->second.size(); ++i){
+			if(i <= min(300, (int) (facForTraining * it->second.size()))){
+				itTrain->second.push_back(it->second[i]);
+			}else{
+				itTest->second.push_back(it->second[i]);
+			}
+		}
+	}
+
+	for(DataSets::const_iterator it = trainSets.begin(); it != trainSets.end(); ++it){
+		std::cout << "for training: "<< it->first << ", has: " << it->second.size() << std::endl;
+	}
+	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
+		std::cout << "for testing:  "<< it->first << ", has: " << it->second.size() << std::endl;
+	}
+	RandomForestGaussianProcess rfGp(trainSets, 6, 1000);
 	rfGp.train();
+	std::cout << CYAN << "Finish training -> Start prediction" << RESET << std::endl;
+	int labelCounter = 0;
+	int correct = 0;
+	int amount = 0;
+	std::vector<double> prob;
+	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
+		for(int i = 0; i < it->second.size(); ++i){
+			if(rfGp.predict(it->second[i], prob) == labelCounter){
+				++correct;
+			}
+			++amount;
+		}
+		++labelCounter;
+	}
+	std::cout << RED << "Amount of test data: " << amount << RESET << std::endl;
+	std::cout << RED << "Amount of right: " << (double) correct / amount * 100.0 << "%" << RESET << std::endl;
+
+
+
 //	DataWriterForVisu::generateGrid("out.txt", rfGp, 40, data, 0, 1);
 
 	std::cout << "finish" << std::endl;
