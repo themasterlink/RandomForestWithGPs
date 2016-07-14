@@ -155,7 +155,7 @@ void DataWriterForVisu::generateGrid(const std::string& fileName, const RandomFo
 
 
 
-void DataWriterForVisu::generateGrid(const std::string& fileName, const GaussianProcessBinary& gp,
+void DataWriterForVisu::generateGrid(const std::string& fileName, const GaussianProcess& gp,
 		const double amountOfPointsOnOneAxis, const Data& data,
 		const int x, const int y){
 	if(data.size() == 0){

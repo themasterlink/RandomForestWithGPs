@@ -12,6 +12,7 @@
 #include <sstream>
 #include <fstream>
 #include <istream>
+#include <iostream>
 #include <string>
 #include <vector>
 #include "StopWatch.h"
@@ -91,4 +92,5 @@ void readVecFromStream(std::istream &input, std::vector<T>& output) {
 }
 
 }
+
 #endif /* UTILITY_UTIL_H_ */

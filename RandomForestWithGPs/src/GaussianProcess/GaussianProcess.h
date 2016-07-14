@@ -5,8 +5,8 @@
  *      Author: Max
  */
 
-#ifndef GAUSSIANPROCESS_GAUSSIANPROCESSBINARY_H_
-#define GAUSSIANPROCESS_GAUSSIANPROCESSBINARY_H_
+#ifndef GAUSSIANPROCESS_GAUSSIANPROCESS_H_
+#define GAUSSIANPROCESS_GAUSSIANPROCESS_H_
 
 #include "../Utility/Util.h"
 #include <cmath>
@@ -14,10 +14,12 @@
 #include <Eigen/Dense>
 #include "Kernel.h"
 
+class GaussianProcessWriter;
 class BayesOptimizer;
 
-class GaussianProcessBinary{
-friend BayesOptimizer;
+class GaussianProcess{
+	friend GaussianProcessWriter;
+	friend BayesOptimizer;
 public:
 
 	enum Status {
@@ -25,8 +27,8 @@ public:
 		ALLFINE = 0
 	};
 
-	GaussianProcessBinary();
-	virtual ~GaussianProcessBinary();
+	GaussianProcess();
+	virtual ~GaussianProcess();
 
 	void init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
 
@@ -41,7 +43,7 @@ public:
 	double getLenMean() const {return m_kernel.getLenMean();};
 
 private:
-	GaussianProcessBinary::Status trainBayOpt(double& logZ, const double lambda);
+	GaussianProcess::Status trainBayOpt(double& logZ, const double lambda);
 
 	Status trainLM(double& logZ, std::vector<double>& dLogZ);
 
@@ -61,6 +63,7 @@ private:
 	Eigen::VectorXd m_dLogPi;
 	Eigen::VectorXd m_ddLogPi;
 	Eigen::VectorXd m_sqrtDDLogPi;
+	Eigen::MatrixXd m_innerOfLLT;
 	Eigen::LLT<Eigen::MatrixXd> m_choleskyLLT;
 	int m_dataPoints; // amount of data points
 	StopWatch m_sw;
@@ -71,4 +74,4 @@ private:
 	Kernel m_kernel;
 };
 
-#endif /* GAUSSIANPROCESS_GAUSSIANPROCESSBINARY_H_ */
+#endif /* GAUSSIANPROCESS_GAUSSIANPROCESS_H_ */

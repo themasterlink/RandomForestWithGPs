@@ -7,7 +7,7 @@
 
 #include "BayesOptimizer.h"
 
-BayesOptimizer::BayesOptimizer(GaussianProcessBinary& gp, bayesopt::Parameters param):
+BayesOptimizer::BayesOptimizer(GaussianProcess& gp, bayesopt::Parameters param):
 	ContinuousModel(2,param), m_gp(gp), m_lowestValue(1000000){ //, bestVal(-100000000), bestLen(0), bestSigma(0) {
 }
 
@@ -18,7 +18,7 @@ BayesOptimizer::~BayesOptimizer() {
 double BayesOptimizer::evaluateSample(const vectord& x) {
 	m_gp.getKernel().setHyperParams(x[0], x[1], m_gp.getKernel().sigmaN());
 	double logZ = 0.0;
-	GaussianProcessBinary::Status status = m_gp.trainBayOpt(logZ,1);
+	GaussianProcess::Status status = m_gp.trainBayOpt(logZ,1);
 	if(logZ > 1.0){ // avoid overfitting!
 		logZ = m_lowestValue;
 	}
@@ -33,7 +33,7 @@ double BayesOptimizer::evaluateSample(const vectord& x) {
 		//getchar();
 	}*/
 	//std::cout << RED << "bestVal: " << bestVal << ", kernel: " << bestLen << ", " << bestSigma << RESET << std::endl;
-	return status == GaussianProcessBinary::NANORINFERROR ? m_lowestValue : 10000 - logZ;
+	return status == GaussianProcess::NANORINFERROR ? m_lowestValue : 10000 - logZ;
 };
 
 

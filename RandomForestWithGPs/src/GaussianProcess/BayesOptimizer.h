@@ -12,13 +12,13 @@
 #include <bayesopt/bayesoptbase.hpp>
 #include <bayesopt/parameters.hpp>
 #include "../Data/Data.h"
-#include "GaussianProcessBinary.h"
 #include <limits>
+#include "GaussianProcess.h"
 
 class BayesOptimizer : public bayesopt::ContinuousModel {
 
 public:
-	BayesOptimizer(GaussianProcessBinary& gp, bayesopt::Parameters param);
+	BayesOptimizer(GaussianProcess& gp, bayesopt::Parameters param);
 
 	double evaluateSample(const vectord& x);
 
@@ -27,7 +27,7 @@ public:
 	virtual ~BayesOptimizer();
 
 private:
-	GaussianProcessBinary& m_gp;
+	GaussianProcess& m_gp;
 	double m_lowestValue;
 	/*double bestVal;
 	double bestLen;

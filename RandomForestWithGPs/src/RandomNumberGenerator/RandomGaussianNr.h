@@ -11,7 +11,10 @@
 #include <boost/random.hpp>
 #include <boost/random/normal_distribution.hpp>
 
+class GaussianProcessWriter;
+
 class RandomGaussianNr{
+	friend GaussianProcessWriter;
 public:
 
 	typedef boost::random::mt19937 base_generator_type; // generator type
@@ -29,6 +32,8 @@ public:
 private:
 	base_generator_type m_generator;
 	variante_generator m_normalGenerator;
+	double m_mean;
+	double m_sd;
 };
 
 inline

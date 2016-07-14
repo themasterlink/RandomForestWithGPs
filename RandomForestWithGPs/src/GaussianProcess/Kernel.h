@@ -11,7 +11,10 @@
 #include "../Data/Data.h"
 #include "../RandomNumberGenerator/RandomGaussianNr.h"
 
+class GaussianProcessWriter;
+
 class Kernel{
+	friend GaussianProcessWriter;
 public:
 
 	enum ParamType { // same order as in m_hyperParams!

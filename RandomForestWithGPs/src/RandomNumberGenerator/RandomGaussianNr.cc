@@ -8,7 +8,7 @@
 #include "RandomGaussianNr.h"
 
 RandomGaussianNr::RandomGaussianNr(const double mean, const double sd):
-	m_normalGenerator(m_generator, normal_distribution(mean, sd)){
+	m_normalGenerator(m_generator, normal_distribution(mean, sd)), m_mean(mean), m_sd(sd){
 }
 
 RandomGaussianNr::~RandomGaussianNr(){
@@ -17,4 +17,6 @@ RandomGaussianNr::~RandomGaussianNr(){
 
 void RandomGaussianNr::reset(const double mean, const double sd){
 	m_normalGenerator.distribution().param(normal_distribution::param_type(mean,sd));
+	m_mean = mean;
+	m_sd = sd;
 }

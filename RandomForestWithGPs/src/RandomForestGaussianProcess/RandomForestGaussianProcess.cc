@@ -8,19 +8,45 @@
 #include "../RandomForestGaussianProcess/RandomForestGaussianProcess.h"
 #include "../GaussianProcess/BayesOptimizer.h"
 #include "../Data/DataWriterForVisu.h"
+#include "../RandomForests/RandomForestWriter.h"
 #include "../Data/DataConverter.h"
+#include "../Utility/Settings.h"
+#include "boost/filesystem.hpp"
 
 RandomForestGaussianProcess::RandomForestGaussianProcess(const DataSets& data, const int heightOfTrees,
-		const int amountOfTrees) :
+		const int amountOfTrees, const std::string& folderPath) :
 	m_data(data), m_heightOfTrees(heightOfTrees),
 	m_amountOfTrees(amountOfTrees), m_amountOfUsedClasses(data.size()),
 	m_amountOfDataPoints(0),
 	m_forest(m_heightOfTrees, m_amountOfTrees, m_amountOfUsedClasses),
 	m_pureClassLabelForRfClass(m_amountOfUsedClasses, -1),
 	m_isGpInUse(m_amountOfUsedClasses, std::vector<bool>(m_amountOfUsedClasses, false)),
-	m_classNames(m_amountOfUsedClasses, ""){
+	m_classNames(m_amountOfUsedClasses, ""),
+	m_maxPointsUsedInGpSingleTraining(1000),
+	m_folderPath(folderPath),
+	m_didLoadTree(false),
+	m_nrOfRunningThreads(0){
 	if(m_data.size() == 0){
 		printError("No data given!");
+	}
+	if(m_folderPath.length() > 0){
+		// check if something was already saved in this folder!
+		boost::filesystem::path targetDir(folderPath);
+		boost::filesystem::directory_iterator end_itr;
+		// cycle through the directory
+		for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
+			if(boost::filesystem::is_regular_file(itr->path())){
+				const std::string file(itr->path().c_str());
+				if(file.length() > 3 && file.substr(file.length() - 3, 3) == "brf"){
+					// remove the empty trees otherwise, he will add the loaded trees to the empty ones
+					m_forest.init(0);
+					RandomForestWriter::readFromFile(file, m_forest);
+					m_didLoadTree = true;
+					std::cout << "Read Random Forest from file: " << m_folderPath + "randomForests.brf" << std::endl;
+					break;
+				}
+			}
+		}
 	}
 }
 
@@ -30,12 +56,9 @@ void RandomForestGaussianProcess::train(){
 	for(DataSets::const_iterator it = m_data.begin(); it != m_data.end(); ++it){
 		m_amountOfDataPoints += it->second.size();
 	}
-	// calc min used data for training of random forest TODO values should be from settings
-	Eigen::Vector2i minMaxUsedData;
-	minMaxUsedData << m_amountOfDataPoints * 0.2 , m_amountOfDataPoints * 0.6;
-	// copy all points in one Data field for training of the RF
-	Labels labels(m_amountOfDataPoints);
+		// copy all points in one Data field for training of the RF
 	Data rfData(m_amountOfDataPoints);
+	Labels labels(m_amountOfDataPoints);
 	int labelsCounter = 0, offset = 0;
 	for(DataSets::const_iterator it = m_data.begin(); it != m_data.end(); ++it){
 		m_classNames[labelsCounter] = it->first;
@@ -46,9 +69,29 @@ void RandomForestGaussianProcess::train(){
 		offset += it->second.size();
 		++labelsCounter;
 	}
-	// train the random forest
-	m_forest.train(rfData, labels, dim, minMaxUsedData);
-
+	if(!m_didLoadTree){
+		// calc min used data for training of random forest bool useFixedValuesForMinMaxUsedData;
+		bool useFixedValuesForMinMaxUsedData;
+		Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
+		Eigen::Vector2i minMaxUsedData;
+		if(useFixedValuesForMinMaxUsedData){
+			int minVal = 0, maxVal = 0;
+			Settings::getValue("MinMaxUsedData.minValue", minVal);
+			Settings::getValue("MinMaxUsedData.maxValue", maxVal);
+			minMaxUsedData << minVal, maxVal;
+		}else{
+			double minVal = 0, maxVal = 0;
+			Settings::getValue("MinMaxUsedData.minValueFraction", minVal);
+			Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
+			minMaxUsedData << (int) (minVal * rfData.size()),  (int) (maxVal * rfData.size());
+		}
+		std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";
+		// train the random forest
+		m_forest.train(rfData, labels, dim, minMaxUsedData);
+		// save it!
+		RandomForestWriter::writeToFile(m_folderPath + "randomForests.brf", m_forest);
+		std::cout << "Write Random Forest to file: " << m_folderPath + "randomForests.brf" << std::endl;
+	}
 	// get the pre classes for each data point
 	std::vector<int> guessedLabels; // contains for each data point the rf result classes
 	m_forest.predictData(rfData, guessedLabels);
@@ -86,12 +129,13 @@ void RandomForestGaussianProcess::train(){
 		std::cout << std::endl;
 	}*/
 	const int thresholdForNoise = 15; // TODO get out of settings
-	const int pointsPerClassForBayOpt = 12; // TODO settings
+	const int pointsPerClassForBayOpt = 8; // TODO settings
 	m_maxPointsUsedInGpSingleTraining = 1000; // TODO setting
-	const int maxNrOfPointsForBayesOpt = 250; // TODO settings
+	const int maxNrOfPointsForBayesOpt = 200; // TODO settings
 	m_gps.resize(m_amountOfUsedClasses);
 	boost::thread_group group;
 	for(int iActRfRes = 0; iActRfRes < m_amountOfUsedClasses; ++iActRfRes){ // go over all classes
+		m_output.printSwitchingColor("Act Class: " + number2String(iActRfRes));
 		const Data& dataOfActRf = sortedData[iActRfRes];
 		const Labels& labelsOfActRf = sortedLabels[iActRfRes];
 		const int amountOfDataInRfRes = dataOfActRf.size();
@@ -117,6 +161,7 @@ void RandomForestGaussianProcess::train(){
 			}
 		}
 		if(amountOfDataInRfRes > thresholdForNoise * 2){
+			m_output.printSwitchingColor("Class: " + m_classNames[iActRfRes] + ", has " + number2String(amountOfDataInRfRes) + " points!");
 			if(amountOfClassesOverThreshold <= 1){ // only one class or no class
 				if(idOfMaxClass == -1){
 					// use the result of the rf -> but bad sign that there is no trainings element in this rf class
@@ -125,6 +170,7 @@ void RandomForestGaussianProcess::train(){
 				m_pureClassLabelForRfClass[iActRfRes] = idOfMaxClass;
 				continue; // no gps needed! for this class
 			}
+			m_output.printSwitchingColor("Class: " + m_classNames[iActRfRes] + ", best for it is: " + m_classNames[idOfMaxClass]);
 			/*
 			Eigen::MatrixXd dataMat; // contains all the data for this specified pre class result of the RF
 			dataMat.conservativeResize(sortedData[iActRfRes][0].rows(), amountOfDataInRfRes);
@@ -136,15 +182,15 @@ void RandomForestGaussianProcess::train(){
 			// resize gps for all other classes
 			m_gps[iActRfRes].resize(m_amountOfUsedClasses);
 			for(int iActClass = 0; iActClass < m_amountOfUsedClasses; ++iActClass){
-				if(classCounts[iActClass] <= thresholdForNoise || (classCounts[iActClass] > 5 && iActClass == iActRfRes)){ // check if class is there, otherwise go to next!
+				if(classCounts[iActClass] <= thresholdForNoise && iActClass != iActRfRes){ // check if class is there, otherwise go to next!
 					continue;
 				}
+				m_output.printSwitchingColor("In Class: " + m_classNames[iActRfRes] + ", has act class: " + m_classNames[iActClass] + " so many points: " + number2String(classCounts[iActClass]));
 				m_isGpInUse[iActRfRes][iActClass] = true; // there is actually a gp for this config
-				GaussianProcessBinary& actGp = m_gps[iActRfRes][iActClass];
+				GaussianProcess& actGp = m_gps[iActRfRes][iActClass];
 				const int nrOfParallel = boost::thread::hardware_concurrency();
-				while(group.size() > nrOfParallel){
-					usleep(0.2 * 1e6);
-					std::cout << "Group Size: " << group.size() << std::endl;
+				while(m_nrOfRunningThreads >= nrOfParallel){
+					usleep(0.35 * 1e6);
 				}
 				group.add_thread(new boost::thread(boost::bind(&RandomForestGaussianProcess::trainInParallel, this, iActClass, amountOfDataInRfRes,
 						min(maxNrOfPointsForBayesOpt, pointsPerClassForBayOpt * amountOfClassesOverThreshold),
@@ -174,7 +220,8 @@ void RandomForestGaussianProcess::trainInParallel(const int iActClass,
 		const int amountOfDataInRfRes, const int amountOfHyperPoints,
 		const int iActRfClass, const Data& dataOfActRf,
 		const Labels& labelsOfActRf, const std::vector<int>& classCounts,
-		GaussianProcessBinary& actGp) {
+		GaussianProcess& actGp) {
+	++m_nrOfRunningThreads;
 	// compare to all other classes! // one vs. all
 	std::string betweenNames = ", for " + m_classNames[iActClass] + " in " + m_classNames[iActRfClass] + ", which has " + number2String(amountOfDataInRfRes);
 	m_output.printSwitchingColor("Start parallel" + betweenNames);
@@ -263,11 +310,12 @@ std::cout << "One: " << oneCounter << std::endl;
 	sw.startTime();
 	actGp.trainWithoutKernelOptimize();
 	m_output.printSwitchingColor("Finish training in: " + sw.elapsedAsPrettyTime() + betweenNames);
-
+	--m_nrOfRunningThreads;
 }
+
 int RandomForestGaussianProcess::predict(const DataElement& point, std::vector<double>& prob) const {
 	const int rfLabel = m_forest.predict(point);
-	if(m_pureClassLabelForRfClass[rfLabel] != -1){ // is pure
+	if(m_pureClassLabelForRfClass[rfLabel] == -1){ // is pure
 		prob = std::vector<double>(m_amountOfUsedClasses, 0.0); // set all probs to zero
 		prob[m_pureClassLabelForRfClass[rfLabel]] = 1.0; // set the
 		return rfLabel;

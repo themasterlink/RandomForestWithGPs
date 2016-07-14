@@ -8,15 +8,15 @@
 #ifndef RANDOMFORESTGAUSSIANPROCESS_RANDOMFORESTGAUSSIANPROCESS_H_
 #define RANDOMFORESTGAUSSIANPROCESS_RANDOMFORESTGAUSSIANPROCESS_H_
 
-#include "../GaussianProcess/GaussianProcessBinary.h"
 #include "../RandomForests/RandomForest.h"
 #include "../Utility/ThreadSafeOutput.h"
 #include <boost/thread.hpp> // Boost threads
 #include <boost/bind.hpp> // Boost threads
+#include "../GaussianProcess/GaussianProcess.h"
 
 class RandomForestGaussianProcess{
 public:
-	RandomForestGaussianProcess(const DataSets& data, const int heightOfTrees, const int amountOfTrees);
+	RandomForestGaussianProcess(const DataSets& data, const int heightOfTrees, const int amountOfTrees, const std::string& folderPath);
 	virtual ~RandomForestGaussianProcess();
 
 	int predict(const DataElement& data, std::vector<double>& prob) const;
@@ -31,7 +31,7 @@ private:
 			const int amountOfHyperPoints,
 			const int iActRfClass, const Data& dataOfActRf,
 			const Labels& labelsOfActRf, const std::vector<int>& classCounts,
-			GaussianProcessBinary& actGp);
+			GaussianProcess& actGp);
 
 
 	const DataSets& m_data;
@@ -43,12 +43,15 @@ private:
 	RandomForest m_forest;
 	std::vector<int> m_pureClassLabelForRfClass;
 	std::vector< std::vector<bool> > m_isGpInUse;
-	std::vector<std::vector<GaussianProcessBinary> > m_gps;
+	std::vector<std::vector<GaussianProcess> > m_gps;
 	std::vector<std::string> m_classNames; // save name for a class id
 
 	ThreadSafeOutput m_output;
 
 	int m_maxPointsUsedInGpSingleTraining;
+	const std::string& m_folderPath;
+	bool m_didLoadTree;
+	int m_nrOfRunningThreads;
 };
 
 #endif /* RANDOMFORESTGAUSSIANPROCESS_RANDOMFORESTGAUSSIANPROCESS_H_ */

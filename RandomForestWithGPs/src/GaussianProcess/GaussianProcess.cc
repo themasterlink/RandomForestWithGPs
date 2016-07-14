@@ -5,20 +5,20 @@
  *      Author: Max
  */
 
-#include "GaussianProcessBinary.h"
+#include "GaussianProcess.h"
 
 #include "GaussianProcessMultiClass.h"
 #include <iomanip>
 #include "../Data/Data.h"
 #include <algorithm>
 
-GaussianProcessBinary::GaussianProcessBinary(): m_repetitionStepFactor(1.0), m_dataPoints(0), m_init(false), m_trained(false){
+GaussianProcess::GaussianProcess(): m_repetitionStepFactor(1.0), m_dataPoints(0), m_init(false), m_trained(false){
 }
 
-GaussianProcessBinary::~GaussianProcessBinary(){
+GaussianProcess::~GaussianProcess(){
 }
 
-void GaussianProcessBinary::init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
+void GaussianProcess::init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
 	m_dataMat = dataMat;
 	m_y = y;
 	m_dataPoints = m_dataMat.cols();
@@ -27,7 +27,7 @@ void GaussianProcessBinary::init(const Eigen::MatrixXd& dataMat, const Eigen::Ve
 	m_kernel.init(m_dataMat);
 }
 
-void GaussianProcessBinary::updatePis(const int dataPoints, const Eigen::VectorXd& y, const Eigen::VectorXd& t){
+void GaussianProcess::updatePis(const int dataPoints, const Eigen::VectorXd& y, const Eigen::VectorXd& t){
 	for(int i = 0; i < dataPoints; ++i){
 		m_pi[i] = 1.0 / (1.0 + exp((double) -y[i] * (double) m_f[i]));
 		m_dLogPi[i] = t[i] - m_pi[i];
@@ -36,7 +36,7 @@ void GaussianProcessBinary::updatePis(const int dataPoints, const Eigen::VectorX
 	}
 }
 
-void GaussianProcessBinary::train(){
+void GaussianProcess::train(){
 	if(!m_init){
 		printError("Init must be performed before gp can be trained!");
 		return;
@@ -61,7 +61,7 @@ void GaussianProcessBinary::train(){
 	m_trained = true;
 }
 
-GaussianProcessBinary::Status GaussianProcessBinary::trainBayOpt(double& logZ, const double lambda){
+GaussianProcess::Status GaussianProcess::trainBayOpt(double& logZ, const double lambda){
 	Eigen::MatrixXd K;
 	const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
 	m_kernel.calcCovariance(K);
@@ -89,7 +89,7 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainBayOpt(double& logZ, c
 	return ALLFINE;
 }
 
-GaussianProcessBinary::Status GaussianProcessBinary::trainLM(double& logZ, std::vector<double>& dLogZ){
+GaussianProcess::Status GaussianProcess::trainLM(double& logZ, std::vector<double>& dLogZ){
 	Eigen::MatrixXd K;
 	const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
 	m_kernel.calcCovariance(K);
@@ -140,14 +140,14 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainLM(double& logZ, std::
 	return ALLFINE;
 }
 
-void GaussianProcessBinary::trainWithoutKernelOptimize(){
+void GaussianProcess::trainWithoutKernelOptimize(){
 	Eigen::MatrixXd K;
 	m_kernel.calcCovariance(K);
 	trainF(m_dataPoints, K, m_y);
 	m_trained = true;
 }
 
-GaussianProcessBinary::Status GaussianProcessBinary::train(const int dataPoints,
+GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 		const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
 /*
 	Eigen::Vector2d min,max;
@@ -287,7 +287,7 @@ GaussianProcessBinary::Status GaussianProcessBinary::train(const int dataPoints,
 	return ALLFINE;
 }
 
-GaussianProcessBinary::Status GaussianProcessBinary::trainF(const int dataPoints, const Eigen::MatrixXd& K, const Eigen::VectorXd& y){
+GaussianProcess::Status GaussianProcess::trainF(const int dataPoints, const Eigen::MatrixXd& K, const Eigen::VectorXd& y){
 	// find suited f:
 	m_sw.startTime();
 	m_f = Eigen::VectorXd::Zero(dataPoints); 						// f <-- init with zeros
@@ -309,7 +309,8 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainF(const int dataPoints
 		const Eigen::MatrixXd WSqrt( DiagMatrixXd(m_sqrtDDLogPi).toDenseMatrix()); // TODO more efficient
 		//std::cout << "K: \n" << K << std::endl;
 		//std::cout << "inner: \n" << eye + (WSqrt * K * WSqrt) << std::endl;
-		m_choleskyLLT.compute(eye + (WSqrt * K * WSqrt));
+		m_innerOfLLT = eye + (WSqrt * K * WSqrt);
+		m_choleskyLLT.compute(m_innerOfLLT);
 		const Eigen::VectorXd b = m_ddLogPi.cwiseProduct(m_f) + m_dLogPi;
 		m_a = b - m_ddLogPi.cwiseProduct(m_choleskyLLT.solve( m_choleskyLLT.solve(m_ddLogPi.cwiseProduct(K * b)))); // WSqrt * == m_ddLogPi.cwiseProduct(...)
 		const double firstPart = -0.5 * (double) (m_a.transpose() * m_f);
@@ -361,7 +362,7 @@ GaussianProcessBinary::Status GaussianProcessBinary::trainF(const int dataPoints
 	return ALLFINE;
 }
 
-double GaussianProcessBinary::predict(const DataElement& newPoint) const{
+double GaussianProcess::predict(const DataElement& newPoint) const{
 	if(!m_init || !m_trained){
 		return -1.0;
 	}

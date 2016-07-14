@@ -19,9 +19,10 @@
 #include "RandomForestGaussianProcess/RandomForestGaussianProcess.h"
 #include <unsupported/Eigen/NonLinearOptimization>
 #include "GaussianProcess/BayesOptimizer.h"
+#include "GaussianProcess/GaussianProcessWriter.h"
 #include <boost/numeric/ublas/assignment.hpp> // <<= op assigment
 
-#include "GaussianProcess/GaussianProcessBinary.h"
+#include "GaussianProcess/GaussianProcess.h"
 // just for testing
 
 void executeForMultiClass(const std::string& path){
@@ -96,6 +97,7 @@ void executeForBinaryClass(const std::string& path){
 		int labelCounter = 0;
 		const int amountOfElements = datas.begin()->second.size();
 		const double fac = 0.10;
+		int counter = 0;
 		for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
 			for(int i = 0; i < amountOfElements; ++i){
 				if(i < fac * amountOfElements){
@@ -108,6 +110,10 @@ void executeForBinaryClass(const std::string& path){
 					testLabels.push_back(labelCounter);
 				}
 			}
+			if(counter == 1){
+				break;
+			}
+			++counter;
 			++labelCounter;
 		}
 	}else{
@@ -122,11 +128,12 @@ void executeForBinaryClass(const std::string& path){
 		Eigen::MatrixXd dataMat;
 		DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
 
-		GaussianProcessBinary gp;
+		GaussianProcess gp;
 		gp.init(dataMat, y);
 		bayesopt::Parameters par = initialize_parameters_to_default();
 		par.noise = 1e-12;
 		par.epsilon = 0.2;
+		par.verbose_level = 6;
 		par.surr_name = "sGaussianProcessML";
 
 		BayesOptimizer bayOpt(gp, par);
@@ -149,6 +156,12 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Init with: " << data.size() << std::endl;
 		gp.init(dataMat2, y2);
 		gp.trainWithoutKernelOptimize();
+
+		GaussianProcessWriter::writeToFile("gp.bgp", gp);
+
+		GaussianProcess testGp;
+		GaussianProcessWriter::readFromFile("gp.bgp", testGp);
+
 /*
 		const int dataPoints = data.size();
 		Eigen::VectorXd y2(dataPoints);
@@ -191,6 +204,27 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
+		for(int j = dataRef.size() - 1; j >= 0 ; --j){
+			double prob = testGp.predict(dataRef[j]);
+			if(prob > 0.5 && labelsRef[j] == 1){
+				++wright;
+			}else if(prob < 0.5 && labelsRef[j] == 0){
+				++wright;
+			}else{
+				std::cout << "Prob: " << prob << ", label is: " << labelsRef[j] << std::endl;
+			}
+			if(prob > 0.5){
+				++amountOfAbove;
+			}else{
+				++amountOfBelow;
+			}
+		}
+		std::cout << RED;
+		std::cout << "For loaded Gp amount of wright: " << (double) wright / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "For loaded Gp amount of above: " << (double) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "For loaded Gp amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "For loaded Gp len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
+		std::cout << RESET;
 
 	}else{
 		const int firstPoints = 10000000; // all points
@@ -198,7 +232,7 @@ void executeForBinaryClass(const std::string& path){
 		Eigen::MatrixXd dataMat;
 		DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
 
-		GaussianProcessBinary gp;
+		GaussianProcess gp;
 		gp.init(dataMat, y);
 		bayesopt::Parameters par = initialize_parameters_to_default();
 		std::cout << "noise: " << par.noise << std::endl;
@@ -337,9 +371,8 @@ void executeForRFBinaryClass(){
 	int labelCounter = 0;
 	for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
 		const int amountOfElements = itData->second.size();
-
 		for(int i = 0; i < amountOfElements; ++i){
-			if(i < amountOfElements * 0.8){
+			if(i <= min(300, (int) (0.8 * amountOfElements))){
 				// train data
 				data.push_back(itData->second[i]);
 				labels.push_back(labelCounter);
@@ -375,8 +408,9 @@ void executeForRFBinaryClass(){
 			maxTree = 4;
 		}
 		for(int j = 0; j < maxTree; ++j){
-			const int height = heights[i];
-			const int amountOfTrees = trees[j];
+//			, 6, 1000
+			const int height = 6; //heights[i];
+			const int amountOfTrees = 1000; //trees[j];
 			// for binary case:
 			//const int dataPoints = data.size();
 			std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
@@ -408,7 +442,9 @@ void executeForRFBinaryClass(){
 				}
 			}
 			std::cout << RED << "Amount of right: " << (double) right / testData.size() * 100.0 << "%" << RESET << std::endl;
+			break;
 		}
+		break;
 	}
 }
 
@@ -420,6 +456,8 @@ int main(){
 	std::string path;
 	Settings::getValue("RealData.folderPath", path);
 
+//	executeForRFBinaryClass();
+//	return 0;
 	bool useGP;
 	Settings::getValue("OnlyGp.useGP", useGP);
 	if(useGP){
@@ -456,7 +494,7 @@ int main(){
 	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
 		std::cout << "for testing:  "<< it->first << ", has: " << it->second.size() << std::endl;
 	}
-	RandomForestGaussianProcess rfGp(trainSets, 6, 1000);
+	RandomForestGaussianProcess rfGp(trainSets, 6, 1000, path);
 	rfGp.train();
 	std::cout << CYAN << "Finish training -> Start prediction" << RESET << std::endl;
 	int labelCounter = 0;
@@ -465,7 +503,9 @@ int main(){
 	std::vector<double> prob;
 	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
 		for(int i = 0; i < it->second.size(); ++i){
-			if(rfGp.predict(it->second[i], prob) == labelCounter){
+			const int rfGPLabel = rfGp.predict(it->second[i], prob);
+			//std::cout << "Should: " << rfGPLabel << ", is: " << labelCounter << std::endl;
+			if(rfGPLabel == labelCounter){
 				++correct;
 			}
 			++amount;
