@@ -501,14 +501,19 @@ int main(){
 	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
 		std::cout << "for testing:  "<< it->first << ", has: " << it->second.size() << std::endl;
 	}
-	RandomForestGaussianProcess rfGp(trainSets, 6, 1000, path);
+
+	int height;
+	int amountOfTrees;
+	Settings::getValue("Forest.Trees.height", height, 7);
+	Settings::getValue("Forest.amountOfTrees", amountOfTrees, 1000);
+	RandomForestGaussianProcess rfGp(trainSets, height, amountOfTrees, path);
 	rfGp.train();
 	std::cout << CYAN << "Finish training -> Start prediction" << RESET << std::endl;
 	int labelCounter = 0;
 	int correct = 0;
 	int amount = 0;
 	std::vector<double> prob;
-	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
+	for(DataSets::const_iterator it = trainSets.begin(); it != trainSets.end(); ++it){
 		for(int i = 0; i < it->second.size(); ++i){
 			const int rfGPLabel = rfGp.predict(it->second[i], prob);
 			//std::cout << "Should: " << rfGPLabel << ", is: " << labelCounter << std::endl;
@@ -558,10 +563,6 @@ int main(){
 		dim = data[0].rows();
 	}
 
-	int height;
-	int amountOfTrees;
-	Settings::getValue("Forest.Trees.height", height, 7);
-	Settings::getValue("Forest.amountOfTrees", amountOfTrees, 1000);
 	std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
 
 	RandomForest forest(height, amountOfTrees, dim);

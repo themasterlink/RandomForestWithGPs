@@ -1,8 +1,8 @@
 {
     "Forest": {
-        "amountOfTrees": 100,
+        "amountOfTrees": 1000,
         "Trees": {
-            "height": 12
+            "height": 7
         }
     },
     "Training": {
@@ -11,7 +11,7 @@
         "dim": 2
     },
     "RealData": {
-        "folderPath": "..\/quickTest\/"
+        "folderPath": "..\/realData\/"
     },
     "Test": {
         "path": "..\/testData\/testInput3.txt",
@@ -36,6 +36,6 @@
     	"maxValueFraction": 0.6
     },
     "OnlyGp": {
-    	"useGP": "true"
+    	"useGP": "false"
     }
 }

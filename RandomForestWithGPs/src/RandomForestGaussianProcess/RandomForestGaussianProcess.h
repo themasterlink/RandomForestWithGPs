@@ -14,6 +14,8 @@
 #include <boost/bind.hpp> // Boost threads
 #include "../GaussianProcess/GaussianProcess.h"
 
+#define NO_GP_USED -1
+
 class RandomForestGaussianProcess{
 public:
 	RandomForestGaussianProcess(const DataSets& data, const int heightOfTrees, const int amountOfTrees, const std::string& folderPath);

@@ -19,7 +19,7 @@ RandomForestGaussianProcess::RandomForestGaussianProcess(const DataSets& data, c
 	m_amountOfTrees(amountOfTrees), m_amountOfUsedClasses(data.size()),
 	m_amountOfDataPoints(0),
 	m_forest(m_heightOfTrees, m_amountOfTrees, m_amountOfUsedClasses),
-	m_pureClassLabelForRfClass(m_amountOfUsedClasses, -1),
+	m_pureClassLabelForRfClass(m_amountOfUsedClasses, NO_GP_USED),
 	m_isGpInUse(m_amountOfUsedClasses, std::vector<bool>(m_amountOfUsedClasses, false)),
 	m_classNames(m_amountOfUsedClasses, ""),
 	m_maxPointsUsedInGpSingleTraining(1000),
@@ -28,7 +28,9 @@ RandomForestGaussianProcess::RandomForestGaussianProcess(const DataSets& data, c
 	m_nrOfRunningThreads(0){
 	if(m_data.size() == 0){
 		printError("No data given!");
+		return;
 	}
+	std::cout << "Amount of classes: " << data.size() << std::endl;
 	if(m_folderPath.length() > 0){
 		// check if something was already saved in this folder!
 		boost::filesystem::path targetDir(folderPath);
@@ -92,6 +94,7 @@ void RandomForestGaussianProcess::train(){
 		RandomForestWriter::writeToFile(m_folderPath + "randomForests.brf", m_forest);
 		std::cout << "Write Random Forest to file: " << m_folderPath + "randomForests.brf" << std::endl;
 	}
+	std::cout << "Total amount of data points for training: " << m_amountOfDataPoints << std::endl;
 	// get the pre classes for each data point
 	std::vector<int> guessedLabels; // contains for each data point the rf result classes
 	m_forest.predictData(rfData, guessedLabels);
@@ -135,7 +138,7 @@ void RandomForestGaussianProcess::train(){
 	m_gps.resize(m_amountOfUsedClasses);
 	boost::thread_group group;
 	for(int iActRfRes = 0; iActRfRes < m_amountOfUsedClasses; ++iActRfRes){ // go over all classes
-		m_output.printSwitchingColor("Act Class: " + number2String(iActRfRes));
+		//m_output.printSwitchingColor("Act Class: " + m_classNames[iActRfRes]);
 		const Data& dataOfActRf = sortedData[iActRfRes];
 		const Labels& labelsOfActRf = sortedLabels[iActRfRes];
 		const int amountOfDataInRfRes = dataOfActRf.size();
@@ -160,8 +163,9 @@ void RandomForestGaussianProcess::train(){
 				idOfMaxClass = i;
 			}
 		}
-		if(amountOfDataInRfRes > thresholdForNoise * 2){
-			m_output.printSwitchingColor("Class: " + m_classNames[iActRfRes] + ", has " + number2String(amountOfDataInRfRes) + " points!");
+		m_output.printSwitchingColor("Class: " + m_classNames[iActRfRes] + ", has " + number2String(amountOfDataInRfRes) + " points, pure level is: " + number2String(m_pureClassLabelForRfClass[iActRfRes]));
+
+		if(amountOfDataInRfRes > thresholdForNoise * 2 && false){
 			if(amountOfClassesOverThreshold <= 1){ // only one class or no class
 				if(idOfMaxClass == -1){
 					// use the result of the rf -> but bad sign that there is no trainings element in this rf class
@@ -315,11 +319,12 @@ std::cout << "One: " << oneCounter << std::endl;
 
 int RandomForestGaussianProcess::predict(const DataElement& point, std::vector<double>& prob) const {
 	const int rfLabel = m_forest.predict(point);
-	if(m_pureClassLabelForRfClass[rfLabel] == -1){ // is pure
+	if(m_pureClassLabelForRfClass[rfLabel] != NO_GP_USED){ // is pure
 		prob = std::vector<double>(m_amountOfUsedClasses, 0.0); // set all probs to zero
 		prob[m_pureClassLabelForRfClass[rfLabel]] = 1.0; // set the
 		return rfLabel;
 	}
+	std::cout << "Use gp: " << std::endl;
 	prob.resize(m_amountOfUsedClasses);
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
 		if(m_isGpInUse[rfLabel][i]){
