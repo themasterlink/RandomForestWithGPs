@@ -95,12 +95,13 @@ void executeForBinaryClass(const std::string& path){
 	if(useRealData){
 		DataReader::readFromFiles(datas, "../realData/");
 		int labelCounter = 0;
-		const int amountOfElements = datas.begin()->second.size();
-		const double fac = 0.10;
+		const double fac = 0.80;
 		int counter = 0;
 		for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
+			const int amountOfElements = itData->second.size();
+			std::cout << "Name: " << itData->first << std::endl;
 			for(int i = 0; i < amountOfElements; ++i){
-				if(i < fac * amountOfElements){
+				if(i < 500){
 					// train data
 					data.push_back(itData->second[i]);
 					labels.push_back(labelCounter);
@@ -119,6 +120,7 @@ void executeForBinaryClass(const std::string& path){
 	}else{
 		DataReader::readFromFile(data, labels, "../testData/trainInput.txt");
 	}
+	std::cout << "Amount of datas: " << data.size() << std::endl;
 	std::cout << "Data has dim: " << data[0].rows() << std::endl;
 	std::cout << "Training size: " << data.size() << std::endl;
 	// for binary case:
@@ -134,6 +136,7 @@ void executeForBinaryClass(const std::string& path){
 		par.noise = 1e-12;
 		par.epsilon = 0.2;
 		par.verbose_level = 6;
+		par.n_iterations = 400;
 		par.surr_name = "sGaussianProcessML";
 
 		BayesOptimizer bayOpt(gp, par);
@@ -152,8 +155,8 @@ void executeForBinaryClass(const std::string& path){
 
 		Eigen::VectorXd y2;
 		Eigen::MatrixXd dataMat2;
-		DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 10000000);
-		std::cout << "Init with: " << data.size() << std::endl;
+		DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 250);
+		std::cout << "Init with: " << dataMat2.cols() << std::endl;
 		gp.init(dataMat2, y2);
 		gp.trainWithoutKernelOptimize();
 
@@ -190,7 +193,7 @@ void executeForBinaryClass(const std::string& path){
 			}else if(prob < 0.5 && labelsRef[j] == 0){
 				++wright;
 			}else{
-				std::cout << "Prob: " << prob << ", label is: " << labelsRef[j] << std::endl;
+				//std::cout << "Prob: " << prob << ", label is: " << labelsRef[j] << std::endl;
 			}
 			if(prob > 0.5){
 				++amountOfAbove;
@@ -204,6 +207,9 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
+		wright = 0;
+		amountOfAbove = 0;
+		amountOfBelow = 0;
 		for(int j = dataRef.size() - 1; j >= 0 ; --j){
 			double prob = testGp.predict(dataRef[j]);
 			if(prob > 0.5 && labelsRef[j] == 1){
@@ -211,7 +217,7 @@ void executeForBinaryClass(const std::string& path){
 			}else if(prob < 0.5 && labelsRef[j] == 0){
 				++wright;
 			}else{
-				std::cout << "Prob: " << prob << ", label is: " << labelsRef[j] << std::endl;
+				//std::cout << "Prob: " << prob << ", label is: " << labelsRef[j] << std::endl;
 			}
 			if(prob > 0.5){
 				++amountOfAbove;
@@ -241,6 +247,7 @@ void executeForBinaryClass(const std::string& path){
 		//par.n_iterations = 1000;
 		par.noise = 1e-12;
 		par.epsilon = 0.2;
+		par.verbose_level = 6;
 		par.surr_name = "sGaussianProcessML";
 
 		BayesOptimizer bayOpt(gp, par);

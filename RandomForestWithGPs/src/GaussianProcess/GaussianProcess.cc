@@ -328,6 +328,11 @@ GaussianProcess::Status GaussianProcess::trainF(const int dataPoints, const Eige
 			m_a = oldA;
 			m_f = oldF;
 			updatePis(dataPoints,y,t);
+			const Eigen::MatrixXd WSqrt( DiagMatrixXd(m_sqrtDDLogPi).toDenseMatrix()); // TODO more efficient
+			//std::cout << "K: \n" << K << std::endl;
+			//std::cout << "inner: \n" << eye + (WSqrt * K * WSqrt) << std::endl;
+			m_innerOfLLT = eye + (WSqrt * K * WSqrt);
+			m_choleskyLLT.compute(m_innerOfLLT);
 			break;
 			// decrease the step size and try again!
 			//m_f = (m_f - lastF) * stepSize + lastF;

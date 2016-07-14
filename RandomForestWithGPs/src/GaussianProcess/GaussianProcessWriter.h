@@ -25,6 +25,8 @@ private:
 
 	static 	void readVector(std::fstream& stream, Eigen::VectorXd& vector);
 
+	static void writeVector(std::fstream& stream, const Eigen::VectorXd& vector);
+
 	GaussianProcessWriter();
 	virtual ~GaussianProcessWriter();
 };

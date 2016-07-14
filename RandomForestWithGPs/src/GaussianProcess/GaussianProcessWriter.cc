@@ -25,7 +25,8 @@ void GaussianProcessWriter::readFromFile(const std::string& filePath, GaussianPr
 	}
 	std::fstream file(filePath,std::ios::binary| std::ios::in);
 	if(file.is_open()){
-		file >> gp.m_dataPoints;
+		file.read((char*) &gp.m_dataPoints, sizeof(int));
+		std::cout << "Amount of data points: " << gp.m_dataPoints << std::endl;
 		readMatrix(file, gp.m_dataMat);
 		readVector(file, gp.m_a);
 		readVector(file, gp.m_y);
@@ -36,18 +37,23 @@ void GaussianProcessWriter::readFromFile(const std::string& filePath, GaussianPr
 		readVector(file, gp.m_sqrtDDLogPi);
 		readVector(file, gp.m_sqrtDDLogPi);
 		readMatrix(file, gp.m_innerOfLLT);
+		gp.m_choleskyLLT.compute(gp.m_innerOfLLT);
 		readMatrix(file, gp.m_kernel.m_differences);
-		file >> gp.m_kernel.m_hyperParams[0]; // order is len, sigmaF, sigmaN
-		file >> gp.m_kernel.m_hyperParams[1];
-		file >> gp.m_kernel.m_hyperParams[2];
+		file.read((char*) &gp.m_kernel.m_hyperParams[0], sizeof(double)); // order is len, sigmaF, sigmaN
+		file.read((char*) &gp.m_kernel.m_hyperParams[1], sizeof(double));
+		file.read((char*) &gp.m_kernel.m_hyperParams[2], sizeof(double));
+		std::cout << gp.m_kernel.prettyString() << std::endl;
 		gp.m_kernel.init(gp.m_dataMat);
 		double mean, sd;
-		file >> mean;
-		file >> sd;
+		file.read((char*) &mean, sizeof(double));
+		file.read((char*) &sd, sizeof(double));
 		gp.m_kernel.m_randLen.reset(mean, sd);
-		file >> mean;
-		file >> sd;
+		file.read((char*) &mean, sizeof(double));
+		file.read((char*) &sd, sizeof(double));
 		gp.m_kernel.m_randSigmaF.reset(mean, sd);
+		std::cout << "gp. sd: " << gp.m_kernel.m_randSigmaF.m_sd << std::endl;
+		gp.m_trained = true;
+		gp.m_init = true,
 		file.close();
 	}
 
@@ -60,10 +66,17 @@ void GaussianProcessWriter::writeMatrix(std::fstream& stream, const Eigen::Matri
 	stream.write((char*) matrix.data(), rows*cols*sizeof(Eigen::MatrixXd::Scalar) );
 }
 
+void GaussianProcessWriter::writeVector(std::fstream& stream, const Eigen::VectorXd& vector){
+	Eigen::MatrixXd::Index rows = vector.rows();
+	stream.write((char*) (&rows), sizeof(Eigen::MatrixXd::Index));
+	stream.write((char*) vector.data(), rows*sizeof(Eigen::MatrixXd::Scalar));
+}
+
 void GaussianProcessWriter::readMatrix(std::fstream& stream, Eigen::MatrixXd& matrix){
 	Eigen::MatrixXd::Index rows=0, cols=0;
 	stream.read((char*) (&rows),sizeof(Eigen::MatrixXd::Index));
 	stream.read((char*) (&cols),sizeof(Eigen::MatrixXd::Index));
+	std::cout << "rows: " << rows << ", cols: " << cols << std::endl;
 	matrix.resize(rows, cols);
 	stream.read( (char *) matrix.data() , rows*cols*sizeof(Eigen::MatrixXd::Scalar) );
 }
@@ -71,6 +84,7 @@ void GaussianProcessWriter::readMatrix(std::fstream& stream, Eigen::MatrixXd& ma
 void GaussianProcessWriter::readVector(std::fstream& stream, Eigen::VectorXd& vector){
 	Eigen::MatrixXd::Index rows=0;
 	stream.read((char*) (&rows),sizeof(Eigen::MatrixXd::Index));
+	std::cout << "rows: " << rows << std::endl;
 	vector.resize(rows);
 	stream.read( (char *) vector.data() , rows*sizeof(Eigen::MatrixXd::Scalar) );
 }
@@ -85,25 +99,26 @@ void GaussianProcessWriter::writeToFile(const std::string& filePath, GaussianPro
 	}
 	std::fstream file(filePath,std::ios::out|std::ios::binary);
 	if(file.is_open()){
-		file << (int) gp.m_dataPoints << "\n";
+		file.write((char*) &gp.m_dataPoints, sizeof(int));
 		writeMatrix(file, gp.m_dataMat);
-		writeMatrix(file, gp.m_a);
-		writeMatrix(file, gp.m_y);
-		writeMatrix(file, gp.m_f);
-		writeMatrix(file, gp.m_pi);
-		writeMatrix(file, gp.m_dLogPi);
-		writeMatrix(file, gp.m_ddLogPi);
-		writeMatrix(file, gp.m_sqrtDDLogPi);
-		writeMatrix(file, gp.m_sqrtDDLogPi);
+		writeVector(file, gp.m_a);
+		writeVector(file, gp.m_y);
+		writeVector(file, gp.m_f);
+		writeVector(file, gp.m_pi);
+		writeVector(file, gp.m_dLogPi);
+		writeVector(file, gp.m_ddLogPi);
+		writeVector(file, gp.m_sqrtDDLogPi);
+		writeVector(file, gp.m_sqrtDDLogPi);
 		writeMatrix(file, gp.m_innerOfLLT);
 		writeMatrix(file, gp.m_kernel.m_differences);
-		file << gp.m_kernel.m_hyperParams[0]; // order is len, sigmaF, sigmaN
-		file << gp.m_kernel.m_hyperParams[1];
-		file << gp.m_kernel.m_hyperParams[2];
-		file << gp.m_kernel.m_randLen.m_mean;
-		file << gp.m_kernel.m_randLen.m_sd;
-		file << gp.m_kernel.m_randSigmaF.m_mean;
-		file << gp.m_kernel.m_randSigmaF.m_sd;
+		file.write((char*) &gp.m_kernel.m_hyperParams[0], sizeof(double)); // order is len, sigmaF, sigmaN
+		file.write((char*) &gp.m_kernel.m_hyperParams[1], sizeof(double));
+		file.write((char*) &gp.m_kernel.m_hyperParams[2], sizeof(double));
+		file.write((char*) &gp.m_kernel.m_randLen.m_mean, sizeof(double));
+		file.write((char*) &gp.m_kernel.m_randLen.m_sd, sizeof(double));
+		file.write((char*) &gp.m_kernel.m_randSigmaF.m_mean, sizeof(double));
+		file.write((char*) &gp.m_kernel.m_randSigmaF.m_sd, sizeof(double));
+		std::cout << "gp. sd: " << gp.m_kernel.m_randSigmaF.m_sd << std::endl;
 		file.close();
 	}else{
 		printError("The opening failed for: " << filePath);
