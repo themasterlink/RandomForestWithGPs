@@ -1,8 +1,8 @@
 {
     "Forest": {
-        "amountOfTrees": 1000,
+        "amountOfTrees": 4000,
         "Trees": {
-            "height": 7
+            "height": 9
         }
     },
     "Training": {

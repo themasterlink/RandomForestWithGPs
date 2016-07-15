@@ -8,7 +8,7 @@
 #include "BayesOptimizer.h"
 
 BayesOptimizer::BayesOptimizer(GaussianProcess& gp, bayesopt::Parameters param):
-	ContinuousModel(2,param), m_gp(gp), m_lowestValue(1000000){ //, bestVal(-100000000), bestLen(0), bestSigma(0) {
+	ContinuousModel(2,param), m_gp(gp), m_lowestValue(-100){ //, bestVal(-100000000), bestLen(0), bestSigma(0) {
 }
 
 BayesOptimizer::~BayesOptimizer() {

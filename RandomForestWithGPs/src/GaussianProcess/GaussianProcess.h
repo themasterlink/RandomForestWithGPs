@@ -36,7 +36,7 @@ public:
 
 	void trainWithoutKernelOptimize();
 
-	double predict(const DataElement& newPoint) const;
+	double predict(const DataElement& newPoint, const int sampleSize = 5000) const;
 
 	Kernel& getKernel(){ return m_kernel; };
 

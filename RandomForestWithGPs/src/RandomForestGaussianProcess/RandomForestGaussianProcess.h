@@ -33,7 +33,7 @@ private:
 			const int amountOfHyperPoints,
 			const int iActRfClass, const Data& dataOfActRf,
 			const Labels& labelsOfActRf, const std::vector<int>& classCounts,
-			GaussianProcess& actGp);
+			GaussianProcess* actGp);
 
 
 	const DataSets& m_data;
@@ -44,8 +44,8 @@ private:
 	int m_amountOfDataPoints;
 	RandomForest m_forest;
 	std::vector<int> m_pureClassLabelForRfClass;
-	std::vector< std::vector<bool> > m_isGpInUse;
-	std::vector<std::vector<GaussianProcess> > m_gps;
+	//std::vector< std::vector<bool> > m_isGpInUse;
+	std::vector<std::vector<GaussianProcess*> > m_gps;
 	std::vector<std::string> m_classNames; // save name for a class id
 
 	ThreadSafeOutput m_output;

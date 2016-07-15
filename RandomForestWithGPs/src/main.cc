@@ -101,7 +101,7 @@ void executeForBinaryClass(const std::string& path){
 			const int amountOfElements = itData->second.size();
 			std::cout << "Name: " << itData->first << std::endl;
 			for(int i = 0; i < amountOfElements; ++i){
-				if(i < 500){
+				if(i < 200){
 					// train data
 					data.push_back(itData->second[i]);
 					labels.push_back(labelCounter);
@@ -120,32 +120,29 @@ void executeForBinaryClass(const std::string& path){
 	}else{
 		DataReader::readFromFile(data, labels, "../testData/trainInput.txt");
 	}
-	std::cout << "Amount of datas: " << data.size() << std::endl;
+	std::cout << "Amount of datas: " << datas.size() << std::endl;
 	std::cout << "Data has dim: " << data[0].rows() << std::endl;
 	std::cout << "Training size: " << data.size() << std::endl;
 	// for binary case:
-	if(useRealData && datas.size() == 2){
+	if(useRealData){
 		const int firstPoints = 35;
 		Eigen::VectorXd y;
 		Eigen::MatrixXd dataMat;
 		DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
-
 		GaussianProcess gp;
 		gp.init(dataMat, y);
 		bayesopt::Parameters par = initialize_parameters_to_default();
 		par.noise = 1e-12;
 		par.epsilon = 0.2;
-		par.verbose_level = 6;
-		par.n_iterations = 400;
+		par.verbose_level = 3;
 		par.surr_name = "sGaussianProcessML";
-
 		BayesOptimizer bayOpt(gp, par);
 		vectord result(2);
 		vectord lowerBound(2);
-		lowerBound[0] = 0.1;
+		lowerBound[0] = 30.0;
 		lowerBound[1] = 0.1;
 		vectord upperBound(2);
-		upperBound[0] = gp.getLenMean();
+		upperBound[0] = 150.0;
 		upperBound[1] = 1.3;
 		bayOpt.setBoundingBox(lowerBound, upperBound);
 		bayOpt.optimize(result);
@@ -155,16 +152,16 @@ void executeForBinaryClass(const std::string& path){
 
 		Eigen::VectorXd y2;
 		Eigen::MatrixXd dataMat2;
-		DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 250);
+		DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 400);
 		std::cout << "Init with: " << dataMat2.cols() << std::endl;
 		gp.init(dataMat2, y2);
 		gp.trainWithoutKernelOptimize();
-
+		/*
 		GaussianProcessWriter::writeToFile("gp.bgp", gp);
 
 		GaussianProcess testGp;
 		GaussianProcessWriter::readFromFile("gp.bgp", testGp);
-
+	*/
 /*
 		const int dataPoints = data.size();
 		Eigen::VectorXd y2(dataPoints);
@@ -207,7 +204,7 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
-		wright = 0;
+		/*wright = 0;
 		amountOfAbove = 0;
 		amountOfBelow = 0;
 		for(int j = dataRef.size() - 1; j >= 0 ; --j){
@@ -231,6 +228,7 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "For loaded Gp amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "For loaded Gp len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
+		*/
 
 	}else{
 		const int firstPoints = 10000000; // all points

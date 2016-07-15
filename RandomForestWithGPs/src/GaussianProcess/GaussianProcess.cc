@@ -313,8 +313,8 @@ GaussianProcess::Status GaussianProcess::trainF(const int dataPoints, const Eige
 		m_choleskyLLT.compute(m_innerOfLLT);
 		const Eigen::VectorXd b = m_ddLogPi.cwiseProduct(m_f) + m_dLogPi;
 		m_a = b - m_ddLogPi.cwiseProduct(m_choleskyLLT.solve( m_choleskyLLT.solve(m_ddLogPi.cwiseProduct(K * b)))); // WSqrt * == m_ddLogPi.cwiseProduct(...)
-		const double firstPart = -0.5 * (double) (m_a.transpose() * m_f);
-		const double prob = 1.0 / (1.0 + exp(-(double) (y.transpose() * m_f)));
+		const double firstPart = -0.5 * (double) (m_a.dot(m_f));
+		const double prob = 1.0 / (1.0 + exp(-(double) (y.dot(m_f))));
 		const double tol = 1e-7;
 		const double offsetVal = prob > tol && prob < 1 - tol ? prob : (prob < tol ? tol : 1 - tol );
 		const double objective = firstPart + log(offsetVal);
@@ -367,8 +367,9 @@ GaussianProcess::Status GaussianProcess::trainF(const int dataPoints, const Eige
 	return ALLFINE;
 }
 
-double GaussianProcess::predict(const DataElement& newPoint) const{
+double GaussianProcess::predict(const DataElement& newPoint, const int sampleSize) const{
 	if(!m_init || !m_trained){
+		printError("GP was not init: " << m_init << ", or trained: " << m_trained);
 		return -1.0;
 	}
 	const DiagMatrixXd WSqrt(m_sqrtDDLogPi);
@@ -382,7 +383,7 @@ double GaussianProcess::predict(const DataElement& newPoint) const{
 	if(isnan(vFStar) || vFStar > 1e200){
 		std::cout << "Kernel: " << m_kernel.prettyString() << std::endl;
 	}
-	const int amountOfSamples = 5000;
+	const int amountOfSamples = sampleSize;
 	const double start = fStar - vFStar * 3;
 	const double end = fStar + vFStar * 3;
 	const double stepSize = (end- start) / amountOfSamples;

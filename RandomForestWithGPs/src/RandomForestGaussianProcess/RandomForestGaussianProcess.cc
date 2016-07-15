@@ -20,7 +20,7 @@ RandomForestGaussianProcess::RandomForestGaussianProcess(const DataSets& data, c
 	m_amountOfDataPoints(0),
 	m_forest(m_heightOfTrees, m_amountOfTrees, m_amountOfUsedClasses),
 	m_pureClassLabelForRfClass(m_amountOfUsedClasses, NO_GP_USED),
-	m_isGpInUse(m_amountOfUsedClasses, std::vector<bool>(m_amountOfUsedClasses, false)),
+	m_gps(m_amountOfUsedClasses, std::vector<GaussianProcess*>(m_amountOfUsedClasses, NULL)),
 	m_classNames(m_amountOfUsedClasses, ""),
 	m_maxPointsUsedInGpSingleTraining(1000),
 	m_folderPath(folderPath),
@@ -135,7 +135,6 @@ void RandomForestGaussianProcess::train(){
 	const int pointsPerClassForBayOpt = 8; // TODO settings
 	m_maxPointsUsedInGpSingleTraining = 1000; // TODO setting
 	const int maxNrOfPointsForBayesOpt = 200; // TODO settings
-	m_gps.resize(m_amountOfUsedClasses);
 	boost::thread_group group;
 	for(int iActRfRes = 0; iActRfRes < m_amountOfUsedClasses; ++iActRfRes){ // go over all classes
 		//m_output.printSwitchingColor("Act Class: " + m_classNames[iActRfRes]);
@@ -165,7 +164,7 @@ void RandomForestGaussianProcess::train(){
 		}
 		m_output.printSwitchingColor("Class: " + m_classNames[iActRfRes] + ", has " + number2String(amountOfDataInRfRes) + " points, pure level is: " + number2String(m_pureClassLabelForRfClass[iActRfRes]));
 
-		if(amountOfDataInRfRes > thresholdForNoise * 2 && false){
+		if(amountOfDataInRfRes > thresholdForNoise * 2){
 			if(amountOfClassesOverThreshold <= 1){ // only one class or no class
 				if(idOfMaxClass == -1){
 					// use the result of the rf -> but bad sign that there is no trainings element in this rf class
@@ -184,14 +183,13 @@ void RandomForestGaussianProcess::train(){
 			}
 			*/
 			// resize gps for all other classes
-			m_gps[iActRfRes].resize(m_amountOfUsedClasses);
 			for(int iActClass = 0; iActClass < m_amountOfUsedClasses; ++iActClass){
 				if(classCounts[iActClass] <= thresholdForNoise && iActClass != iActRfRes){ // check if class is there, otherwise go to next!
 					continue;
 				}
 				m_output.printSwitchingColor("In Class: " + m_classNames[iActRfRes] + ", has act class: " + m_classNames[iActClass] + " so many points: " + number2String(classCounts[iActClass]));
-				m_isGpInUse[iActRfRes][iActClass] = true; // there is actually a gp for this config
-				GaussianProcess& actGp = m_gps[iActRfRes][iActClass];
+				//m_isGpInUse[iActRfRes][iActClass] = true; // there is actually a gp for this config
+				m_gps[iActRfRes][iActClass] = new GaussianProcess();
 				const int nrOfParallel = boost::thread::hardware_concurrency();
 				while(m_nrOfRunningThreads >= nrOfParallel){
 					usleep(0.35 * 1e6);
@@ -199,7 +197,7 @@ void RandomForestGaussianProcess::train(){
 				group.add_thread(new boost::thread(boost::bind(&RandomForestGaussianProcess::trainInParallel, this, iActClass, amountOfDataInRfRes,
 						min(maxNrOfPointsForBayesOpt, pointsPerClassForBayOpt * amountOfClassesOverThreshold),
 						iActRfRes, dataOfActRf,
-						labelsOfActRf, classCounts, actGp)));
+						labelsOfActRf, classCounts, m_gps[iActRfRes][iActClass])));
 				/*trainInParallel(iActClass, amountOfDataInRfRes,
 						pointsPerClassForBayOpt, amountOfClassesOverThreshold,
 						maxPointsUsedInGpSingleTraining, dataOfActRf,
@@ -214,7 +212,7 @@ void RandomForestGaussianProcess::train(){
 	int c = 0;
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
 		for(int j = 0; j < m_amountOfUsedClasses; ++j){
-			c += m_isGpInUse[i][j] ? 1 : 0;
+			c += m_gps[i][j] != NULL? 1 : 0;
 		}
 	}
 	std::cout << "Amount of gps: " << c << std::endl;
@@ -224,17 +222,33 @@ void RandomForestGaussianProcess::trainInParallel(const int iActClass,
 		const int amountOfDataInRfRes, const int amountOfHyperPoints,
 		const int iActRfClass, const Data& dataOfActRf,
 		const Labels& labelsOfActRf, const std::vector<int>& classCounts,
-		GaussianProcess& actGp) {
+		GaussianProcess* actGp) {
 	++m_nrOfRunningThreads;
+	Eigen::MatrixXd dataMat;
+	Eigen::VectorXd yGpInit;
+	// calc for final training
+	DataConverter::toRandUniformDataMatrix(dataOfActRf, labelsOfActRf, classCounts, dataMat, yGpInit, m_maxPointsUsedInGpSingleTraining, iActClass); // get a uniform portion of at most 1000 points
+
+	Eigen::MatrixXd testDataMat;
+	Eigen::VectorXd testYGpInit;
+	// calc for final training
+	DataConverter::toRandUniformDataMatrix(dataOfActRf, labelsOfActRf, classCounts, testDataMat, testYGpInit, m_maxPointsUsedInGpSingleTraining / 5, iActClass); // get a uniform portion of at most 1000 points
+
 	// compare to all other classes! // one vs. all
 	std::string betweenNames = ", for " + m_classNames[iActClass] + " in " + m_classNames[iActRfClass] + ", which has " + number2String(amountOfDataInRfRes);
 	m_output.printSwitchingColor("Start parallel" + betweenNames);
 	Eigen::VectorXd y(amountOfDataInRfRes);
-	const int hyperPoints = amountOfHyperPoints; // really big could take a while
-	Eigen::MatrixXd dataHyper;
-	Eigen::VectorXd yHyper;
-	DataConverter::toRandUniformDataMatrix(dataOfActRf, labelsOfActRf, classCounts, dataHyper, yHyper, hyperPoints, iActClass); // get a uniform portion of all points
-	/* copy the #hyperPoints points of both TODO find way of randomly taking the values
+	const int size = min(300, (int)(dataOfActRf.size()));
+	int bestWright = -1;
+	double len = 70, sigmaF = 0.4;
+	StopWatch sw;
+	int noChange = 1;
+	for(int i = 0; i < 20; ++i){
+		m_output.printSwitchingColor("Is in: " + number2String(i) + ", best is at the moment: " + number2String(len) + ", " + number2String(sigmaF) + ", with: " + number2String(bestWright / (double)size * 100.0) + betweenNames);
+		Eigen::MatrixXd dataHyper;
+		Eigen::VectorXd yHyper;
+		DataConverter::toRandUniformDataMatrix(dataOfActRf, labelsOfActRf, classCounts, dataHyper, yHyper, noChange * amountOfHyperPoints, iActClass); // get a uniform portion of all points
+		/* copy the #hyperPoints points of both TODO find way of randomly taking the values
 int oneCounter = 0, minusCounter = 0, counterHyper = 0;
 if(amountOfDataInRfRes > hyperPoints){
 	for(int j = 0; j < amountOfDataInRfRes; ++j){
@@ -272,47 +286,72 @@ for(int i = 0; i < yHyper.rows(); ++i){
 	std::cout << (double) yHyper[i] << std::endl;
 }
 std::cout << "One: " << oneCounter << std::endl;
-	 */
-	// find good hyperparameters with bayesian optimization:
-	vectord result(2);
-	actGp.init(dataHyper, yHyper);
-	bayesopt::Parameters par = initialize_parameters_to_default();
-	par.noise = 1e-12;
-	par.epsilon = 0.2;
-	par.verbose_level = 6;
-	par.surr_name = "sGaussianProcessML";
-	vectord lowerBound(2); // for hyper params in bayesian optimization
-	lowerBound[0] = 0.1;
-	lowerBound[1] = 0.1;
-	vectord upperBound(2);
-	upperBound[0] = actGp.getKernel().getLenVar() / 3;
-	upperBound[1] = 1.3;
-	BayesOptimizer bayOpt(actGp, par);
-	bayOpt.setBoundingBox(lowerBound, upperBound);
-	StopWatch sw;
-	bool hasError = false;
-	do{
-		try{
-			bayOpt.optimize(result);
-		}catch(std::runtime_error& e){
-			m_output.printSwitchingColor(e.what());
-			hasError = true;
-			getchar();
-		}
-	}while(hasError);
-	// set hyper params
+		 */
+		// find good hyperparameters with bayesian optimization:
+		vectord result(2);
+		actGp->init(dataHyper, yHyper);
+		bayesopt::Parameters par = initialize_parameters_to_default();
+		par.noise = 1e-12;
+		par.epsilon = 0.2;
+		par.verbose_level = 6;
+		par.n_iterations = 200;
+		par.surr_name = "sGaussianProcessML";
+		vectord lowerBound(2); // for hyper params in bayesian optimization
+		lowerBound[0] = 0.1;
+		lowerBound[1] = 0.05;
+		vectord upperBound(2);
+		upperBound[0] = 30; //;actGp->getKernel().getLenVar() / 3;
+		upperBound[1] = 1.5;
+		BayesOptimizer bayOpt(*actGp, par);
+		bayOpt.setBoundingBox(lowerBound, upperBound);
+		bool hasError = false;
+		do{
+			try{
+				bayOpt.optimize(result);
+			}catch(std::runtime_error& e){
+				m_output.printSwitchingColor(e.what());
+				hasError = true;
+				getchar();
+			}
+		}while(hasError);
+		actGp->getKernel().setHyperParams(result[0], result[1], actGp->getKernel().sigmaN());
 
-	actGp.getKernel().setHyperParams(result[0], result[1], actGp.getKernel().sigmaN());
-	m_output.printSwitchingColor("Finish optimizing in: " + sw.elapsedAsPrettyTime() + betweenNames);
+		actGp->init(testDataMat,testYGpInit);
+		actGp->trainWithoutKernelOptimize();
+		int wright = 0;
+		for(int i = 0; i < size; ++i){
+			const int nextEle = rand() / (double) RAND_MAX * dataOfActRf.size();
+			double prob = actGp->predict(dataOfActRf[nextEle], 500);
+			if(prob > 0.5 && labelsOfActRf[nextEle] == iActClass){
+				++wright;
+			}else if(prob < 0.5 && labelsOfActRf[nextEle] != iActClass){
+				++wright;
+			}
+		}
+		if(wright > bestWright){
+			bestWright = wright;
+			len = result[0];
+			noChange = 1;
+			sigmaF = result[1];
+		}else{
+			++noChange;
+		}
+		if(noChange > 4){
+			break;
+		}
+		if(bestWright / (double)size * 100.0 > 92.0){
+			break;
+		}
+	}
+	// set hyper params
+	m_output.printSwitchingColor("Finish optimizing with " + number2String(len) + ", " + number2String(sigmaF) + " in: " + sw.elapsedAsPrettyTime() + ", with: " + number2String(bestWright / (double)size * 100.0) + betweenNames);
 	sw.startTime();
 	// train on whole data set
-	Eigen::MatrixXd dataMat;
-	Eigen::VectorXd yGpInit;
-	DataConverter::toRandUniformDataMatrix(dataOfActRf, labelsOfActRf, classCounts, dataMat, yGpInit, m_maxPointsUsedInGpSingleTraining, iActClass); // get a uniform portion of at most 1000 points
-	actGp.init(dataMat,yGpInit);
-	m_output.printSwitchingColor("Finish init in: " + sw.elapsedAsPrettyTime() + betweenNames);
+	actGp->getKernel().setHyperParams(len, sigmaF, actGp->getKernel().sigmaN());
+	actGp->init(dataMat,yGpInit);
+	m_output.printSwitchingColor("Finish init in: " + sw.elapsedAsPrettyTime() + betweenNames );
 	sw.startTime();
-	actGp.trainWithoutKernelOptimize();
+	actGp->trainWithoutKernelOptimize();
 	m_output.printSwitchingColor("Finish training in: " + sw.elapsedAsPrettyTime() + betweenNames);
 	--m_nrOfRunningThreads;
 }
@@ -322,15 +361,34 @@ int RandomForestGaussianProcess::predict(const DataElement& point, std::vector<d
 	if(m_pureClassLabelForRfClass[rfLabel] != NO_GP_USED){ // is pure
 		prob = std::vector<double>(m_amountOfUsedClasses, 0.0); // set all probs to zero
 		prob[m_pureClassLabelForRfClass[rfLabel]] = 1.0; // set the
-		return rfLabel;
+		return m_pureClassLabelForRfClass[rfLabel];
 	}
-	std::cout << "Use gp: " << std::endl;
+//	std::cout << "Use gp: " << std::endl;
 	prob.resize(m_amountOfUsedClasses);
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
-		if(m_isGpInUse[rfLabel][i]){
-			prob[i] = m_gps[rfLabel][i].predict(point);
+		if(m_gps[rfLabel][i] != NULL){
+			prob[i] = m_gps[rfLabel][i]->predict(point);
+		}else{
+			prob[i] = 0.0; // there were not enough elements to identify a prob for this class!
 		}
-		prob[i] = 0.0; // there were not enough elements to identify a prob for this class!
+	}
+	double p = 0;
+	for(int i = 0; i < m_amountOfUsedClasses; ++i){
+		p += prob[i];
+	}
+	if(fabs(p) <= 1e-7){
+		//std::cout << "p is zero, p: " << p << std::endl;
+		return m_pureClassLabelForRfClass[rfLabel];
+	}
+	int sum = 0;
+	for(int i = 0; i < m_amountOfUsedClasses; ++i){
+		if(fabs(prob[i] - 1.0) <= 1e-7){
+			++sum;
+		}
+	}
+	if(sum > 1){
+		//std::cout << "fuck yu bitch!" << std::endl;
+		return m_pureClassLabelForRfClass[rfLabel];
 	}
 	return std::distance(prob.cbegin(), std::max_element(prob.cbegin(), prob.cend()));
 }
