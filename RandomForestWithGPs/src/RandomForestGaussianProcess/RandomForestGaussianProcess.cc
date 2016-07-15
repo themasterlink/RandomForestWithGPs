@@ -164,7 +164,7 @@ void RandomForestGaussianProcess::train(){
 		}
 		m_output.printSwitchingColor("Class: " + m_classNames[iActRfRes] + ", has " + number2String(amountOfDataInRfRes) + " points, pure level is: " + number2String(m_pureClassLabelForRfClass[iActRfRes]));
 
-		if(amountOfDataInRfRes > thresholdForNoise * 2){
+		if(amountOfDataInRfRes > thresholdForNoise * 2 && false){
 			if(amountOfClassesOverThreshold <= 1){ // only one class or no class
 				if(idOfMaxClass == -1){
 					// use the result of the rf -> but bad sign that there is no trainings element in this rf class
@@ -183,6 +183,7 @@ void RandomForestGaussianProcess::train(){
 			}
 			*/
 			// resize gps for all other classes
+
 			for(int iActClass = 0; iActClass < m_amountOfUsedClasses; ++iActClass){
 				if(classCounts[iActClass] <= thresholdForNoise && iActClass != iActRfRes){ // check if class is there, otherwise go to next!
 					continue;
