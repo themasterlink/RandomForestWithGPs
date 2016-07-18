@@ -9,6 +9,7 @@
 #define GAUSSIANPROCESS_GAUSSIANPROCESSWRITER_H_
 
 #include "GaussianProcess.h"
+#include <fstream>
 
 class GaussianProcessWriter {
 public:
@@ -17,15 +18,11 @@ public:
 
 	static void writeToFile(const std::string& filePath, GaussianProcess& gp);
 
+	static void writeToStream(std::fstream& file, GaussianProcess& gp);
+
+	static void readFromStream(std::fstream& file, GaussianProcess& gp);
+
 private:
-
-	static 	void writeMatrix(std::fstream& stream, const Eigen::MatrixXd& matrix);
-
-	static 	void readMatrix(std::fstream& stream, Eigen::MatrixXd& matrix);
-
-	static 	void readVector(std::fstream& stream, Eigen::VectorXd& vector);
-
-	static void writeVector(std::fstream& stream, const Eigen::VectorXd& vector);
 
 	GaussianProcessWriter();
 	virtual ~GaussianProcessWriter();

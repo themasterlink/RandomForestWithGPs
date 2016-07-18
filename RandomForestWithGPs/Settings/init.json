@@ -1,8 +1,15 @@
 {
+	"RFGP": {
+        "thresholdForNoise": 5,
+        "pointsPerClassForBayOpt": 16,
+        "maxPointsUsedInGpSingleTraining": 1500,
+        "maxNrOfPointsForBayesOpt": 250,
+        "nrOfNoChanges": 6
+    },
     "Forest": {
-        "amountOfTrees": 4000,
+        "amountOfTrees": 30,
         "Trees": {
-            "height": 9
+            "height": 3
         }
     },
     "Training": {
@@ -11,7 +18,7 @@
         "dim": 2
     },
     "RealData": {
-        "folderPath": "..\/realData\/"
+        "folderPath": "..\/realTest\/"
     },
     "Test": {
         "path": "..\/testData\/testInput3.txt",

@@ -17,6 +17,10 @@ public:
 
 	static void readFromFile(const std::string& filePath, RandomForest& forest);
 
+	static void writeToStream(std::fstream& file, const RandomForest& forest);
+
+	static void readFromStream(std::fstream& file, RandomForest& forest);
+
 private:
 	RandomForestWriter();
 	virtual ~RandomForestWriter();
