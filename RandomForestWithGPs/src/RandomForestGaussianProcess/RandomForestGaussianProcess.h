@@ -14,11 +14,16 @@
 #include <boost/bind.hpp> // Boost threads
 #include "../GaussianProcess/GaussianProcess.h"
 
-#define NO_GP_USED -1
+#define GP_USED -1
+
+class RFGPWriter;
 
 class RandomForestGaussianProcess{
+	friend RFGPWriter;
 public:
-	RandomForestGaussianProcess(const DataSets& data, const int heightOfTrees, const int amountOfTrees, const std::string& folderPath);
+
+	RandomForestGaussianProcess(const DataSets& data, const int heightOfTrees = 0, const int amountOfTrees = 0, const std::string& folderPath = std::string(""));
+
 	virtual ~RandomForestGaussianProcess();
 
 	int predict(const DataElement& data, std::vector<double>& prob) const;
@@ -38,9 +43,7 @@ private:
 
 	const DataSets& m_data;
 
-	const int m_heightOfTrees;
-	const int m_amountOfTrees;
-	const double m_amountOfUsedClasses;
+	int m_amountOfUsedClasses;
 	int m_amountOfDataPoints;
 	RandomForest m_forest;
 	std::vector<int> m_pureClassLabelForRfClass;

@@ -21,7 +21,7 @@
 #include "GaussianProcess/BayesOptimizer.h"
 #include "GaussianProcess/GaussianProcessWriter.h"
 #include <boost/numeric/ublas/assignment.hpp> // <<= op assigment
-
+#include "RandomForestGaussianProcess/RFGPWriter.h"
 #include "GaussianProcess/GaussianProcess.h"
 // just for testing
 
@@ -93,7 +93,7 @@ void executeForBinaryClass(const std::string& path){
 	const bool useRealData = true;
 	std::map<std::string, Data > datas;
 	if(useRealData){
-		DataReader::readFromFiles(datas, "../realData/");
+		DataReader::readFromFiles(datas, "../realTest/");
 		int labelCounter = 0;
 		const double fac = 0.80;
 		int counter = 0;
@@ -156,12 +156,11 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Init with: " << dataMat2.cols() << std::endl;
 		gp.init(dataMat2, y2);
 		gp.trainWithoutKernelOptimize();
-		/*
 		GaussianProcessWriter::writeToFile("gp.bgp", gp);
 
 		GaussianProcess testGp;
 		GaussianProcessWriter::readFromFile("gp.bgp", testGp);
-	*/
+
 /*
 		const int dataPoints = data.size();
 		Eigen::VectorXd y2(dataPoints);
@@ -204,7 +203,7 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
-		/*wright = 0;
+		wright = 0;
 		amountOfAbove = 0;
 		amountOfBelow = 0;
 		for(int j = dataRef.size() - 1; j >= 0 ; --j){
@@ -228,7 +227,7 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "For loaded Gp amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "For loaded Gp len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
-		*/
+
 
 	}else{
 		const int firstPoints = 10000000; // all points
@@ -504,13 +503,38 @@ int main(){
 	int amountOfTrees;
 	Settings::getValue("Forest.Trees.height", height, 7);
 	Settings::getValue("Forest.amountOfTrees", amountOfTrees, 1000);
+//#define WRITE
+#ifdef WRITE
 	RandomForestGaussianProcess rfGp(trainSets, height, amountOfTrees, path);
 	rfGp.train();
+	RFGPWriter::writeToFile("rfGp.rfgpbin", rfGp);
+#else
+	RandomForestGaussianProcess rfGp(trainSets);
+	RFGPWriter::readFromFile("rfGp.rfgpbin", rfGp);
+#endif
 	std::cout << CYAN << "Finish training -> Start prediction" << RESET << std::endl;
 	int labelCounter = 0;
 	int correct = 0;
 	int amount = 0;
 	std::vector<double> prob;
+	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
+		for(int i = 0; i < it->second.size(); ++i){
+			const int rfGPLabel = rfGp.predict(it->second[i], prob);
+			//std::cout << "Should: " << rfGPLabel << ", is: " << labelCounter << std::endl;
+			if(rfGPLabel == labelCounter){
+				++correct;
+			}
+			++amount;
+		}
+		++labelCounter;
+	}
+	std::cout << RED << "Amount of test data: " << amount << RESET << std::endl;
+	std::cout << RED << "Amount of right: " << (double) correct / amount * 100.0 << "%" << RESET << std::endl;
+
+	std::cout << CYAN << "Start second prediction" << RESET << std::endl;
+	labelCounter = 0;
+	correct = 0;
+	amount = 0;
 	for(DataSets::const_iterator it = trainSets.begin(); it != trainSets.end(); ++it){
 		for(int i = 0; i < it->second.size(); ++i){
 			const int rfGPLabel = rfGp.predict(it->second[i], prob);
@@ -525,7 +549,9 @@ int main(){
 	std::cout << RED << "Amount of test data: " << amount << RESET << std::endl;
 	std::cout << RED << "Amount of right: " << (double) correct / amount * 100.0 << "%" << RESET << std::endl;
 
-
+/*RandomForestGaussianProcess rfGp(trainSets);
+	RFGPWriter::readFromFile("rfGp.rfgpbin", rfGp);
+	*/
 
 //	DataWriterForVisu::generateGrid("out.txt", rfGp, 40, data, 0, 1);
 
