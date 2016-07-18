@@ -7,7 +7,11 @@
         "nrOfNoChanges": 6
     },
     "Forest": {
+<<<<<<< Updated upstream
         "amountOfTrees": 30,
+=======
+        "amountOfTrees": 15,
+>>>>>>> Stashed changes
         "Trees": {
             "height": 3
         }
