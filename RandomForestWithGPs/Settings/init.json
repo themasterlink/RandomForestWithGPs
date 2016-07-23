@@ -8,6 +8,7 @@
     },
     "Forest": {
         "amountOfTrees": 4000,
+        "amountOfTrees": 15,
         "Trees": {
             "height": 9
         }

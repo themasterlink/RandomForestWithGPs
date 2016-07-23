@@ -249,7 +249,7 @@ void RandomForestGaussianProcess::trainInParallel(const int iActClass,
 	Eigen::VectorXd y(amountOfDataInRfRes);
 	const int size = min(300, (int)(dataOfActRf.size()));
 	int bestWright = -1;
-	double len = 70, sigmaF = 0.4;
+	double len = 10, sigmaF = 0.4;
 	StopWatch sw;
 	int noChange = 1;
 	for(int i = 0; i < 20; ++i){
