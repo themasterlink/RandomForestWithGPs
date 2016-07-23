@@ -18,6 +18,8 @@ public:
 
 	void print(const std::string& text);
 
+	void printInColor(const std::string& text, const char* color);
+
 	void printSwitchingColor(const std::string& text);
 
 private:

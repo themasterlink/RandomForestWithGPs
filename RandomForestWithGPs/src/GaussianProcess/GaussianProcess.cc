@@ -380,9 +380,9 @@ double GaussianProcess::predict(const DataElement& newPoint, const int sampleSiz
 	fStar = (double) (kXStar.dot(m_dLogPi));
 	const Eigen::VectorXd v = m_choleskyLLT.solve(WSqrt * kXStar);
 	vFStar = fabs((m_kernel.sigmaN() * m_kernel.sigmaN() + 1) - v.dot(v));
-	if(isnan(vFStar) || vFStar > 1e200){
+	/*if(isnan(vFStar) || vFStar > 1e200){
 		std::cout << "Kernel: " << m_kernel.prettyString() << std::endl;
-	}
+	}*/
 	const int amountOfSamples = sampleSize;
 	const double start = fStar - vFStar * 3;
 	const double end = fStar + vFStar * 3;
@@ -395,9 +395,9 @@ double GaussianProcess::predict(const DataElement& newPoint, const int sampleSiz
 		const double height = 1.0 / (1.0 + exp(-p)) * (result * vFStar + fStar);
 		prob += height * stepSize; // gives the integral
 	}
-	if(isnan(prob)){
+	/*if(isnan(prob)){
 		std::cout << RED << fStar << ", " << vFStar << RESET << std::endl;
-	}
+	}*/
 	if(prob < 0){
 		return 0;
 	}else if(prob > 1){

@@ -1,15 +1,15 @@
 {
 	"RFGP": {
         "thresholdForNoise": 5,
-        "pointsPerClassForBayOpt": 16,
+        "pointsPerClassForBayOpt": 4,
         "maxPointsUsedInGpSingleTraining": 1500,
         "maxNrOfPointsForBayesOpt": 250,
         "nrOfNoChanges": 6
     },
     "Forest": {
-        "amountOfTrees": 30,
+        "amountOfTrees": 4000,
         "Trees": {
-            "height": 3
+            "height": 9
         }
     },
     "Training": {
@@ -43,6 +43,6 @@
     	"maxValueFraction": 0.6
     },
     "OnlyGp": {
-    	"useGP": "false"
+    	"useGP": "true"
     }
 }

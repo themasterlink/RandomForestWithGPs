@@ -10,6 +10,7 @@
 #include "../Data/DataWriterForVisu.h"
 #include "../RandomForests/RandomForestWriter.h"
 #include "../Data/DataConverter.h"
+#include "../Data/DataContainer.h"
 #include "../Utility/Settings.h"
 #include "boost/filesystem.hpp"
 
@@ -53,7 +54,7 @@ RandomForestGaussianProcess::RandomForestGaussianProcess(const DataSets& data, c
 
 void RandomForestGaussianProcess::train(){
 	const int dim = m_data.begin()->second[0].rows();
-	// count total data points in dataset
+	/*// count total data points in dataset
 	for(DataSets::const_iterator it = m_data.begin(); it != m_data.end(); ++it){
 		m_amountOfDataPoints += it->second.size();
 	}
@@ -69,7 +70,9 @@ void RandomForestGaussianProcess::train(){
 		}
 		offset += it->second.size();
 		++labelsCounter;
-	}
+	}*/
+	DataContainer container;
+	container.fillWith(m_data);
 	if(!m_didLoadTree){
 		// calc min used data for training of random forest bool useFixedValuesForMinMaxUsedData;
 		bool useFixedValuesForMinMaxUsedData;
@@ -84,19 +87,19 @@ void RandomForestGaussianProcess::train(){
 			double minVal = 0, maxVal = 0;
 			Settings::getValue("MinMaxUsedData.minValueFraction", minVal);
 			Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
-			minMaxUsedData << (int) (minVal * rfData.size()),  (int) (maxVal * rfData.size());
+			minMaxUsedData << (int) (minVal * container.amountOfPoints),  (int) (maxVal * container.amountOfPoints);
 		}
 		std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";
 		// train the random forest
-		m_forest.train(rfData, labels, dim, minMaxUsedData);
+		m_forest.train(container.data, container.labels, dim, minMaxUsedData);
 		// save it!
 		RandomForestWriter::writeToFile(m_folderPath + "randomForests.brf", m_forest);
 		std::cout << "Write Random Forest to file: " << m_folderPath + "randomForests.brf" << std::endl;
 	}
 	std::cout << "Total amount of data points for training: " << m_amountOfDataPoints << std::endl;
 	// get the pre classes for each data point
-	std::vector<int> guessedLabels; // contains for each data point the rf result classes
-	m_forest.predictData(rfData, guessedLabels);
+	Labels guessedLabels; // contains for each data point the rf result classes
+	m_forest.predictData(container.data, guessedLabels);
 	// count the occurence of each pre class of the random forest
 	std::vector<int> countClasses(m_amountOfUsedClasses, 0);
 	for(int i = 0; i < guessedLabels.size(); ++i){
@@ -115,8 +118,8 @@ void RandomForestGaussianProcess::train(){
 	std::vector<int> counter(m_amountOfUsedClasses,0);
 	for(int i = 0; i < m_amountOfDataPoints;  ++i){
 		const int label = guessedLabels[i];
-		sortedData[label][counter[label]] = rfData[i];
-		sortedLabels[label][counter[label]] = labels[i];
+		sortedData[label][counter[label]] = container.data[i];
+		sortedLabels[label][counter[label]] = container.labels[i];
 		counter[label] += 1;
 	}
 	/*	for(int i = 0; i < m_amountOfUsedClasses; ++i){
