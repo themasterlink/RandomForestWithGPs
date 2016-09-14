@@ -264,7 +264,7 @@ std::cout << "One: " << oneCounter << std::endl;
 						+ number2String(bestWright / (double) size * 100.0)
 						+ " %, use "
 						+ number2String(noChange * amountOfHyperPoints)
-						+ " HPs " + betweenNames);
+						+ " HPs " + betweenNames + " time in trainF was: " + usedGp.getTrainFWatch().elapsedAvgAsPrettyTime());
 
 	}
 	m_threadCounter.removeThread();

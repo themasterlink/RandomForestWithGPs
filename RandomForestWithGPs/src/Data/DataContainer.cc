@@ -15,7 +15,7 @@ DataContainer::~DataContainer() {
 
 
 void DataContainer::fillWith(const DataSets& dataSets){
-	const int dim = dataSets.begin()->second[0].rows();
+	//const int dim = dataSets.begin()->second[0].rows();
 	// count total data points in dataset
 	amountOfClasses = dataSets.size();
 	amountOfPoints = 0;

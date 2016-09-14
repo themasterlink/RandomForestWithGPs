@@ -21,16 +21,23 @@ GaussianProcess::~GaussianProcess(){
 void GaussianProcess::init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
 	m_dataMat = dataMat;
 	m_y = y;
+	m_t = (m_y + Eigen::VectorXd::Ones(m_y.rows())) * 0.5;
 	m_dataPoints = m_dataMat.cols();
+	m_f = Eigen::VectorXd(m_dataPoints);
+	m_pi = Eigen::VectorXd(m_dataPoints);
+	m_dLogPi = Eigen::VectorXd(m_dataPoints);
+	m_ddLogPi = Eigen::VectorXd(m_dataPoints);
+	m_sqrtDDLogPi = Eigen::VectorXd(m_dataPoints);
 	m_repetitionStepFactor = 1.0;
 	m_init = true;
+	m_innerOfLLT = Eigen::MatrixXd(m_dataPoints,m_dataPoints);
 	m_kernel.init(m_dataMat);
 }
 
-void GaussianProcess::updatePis(const int dataPoints, const Eigen::VectorXd& y, const Eigen::VectorXd& t){
-	for(int i = 0; i < dataPoints; ++i){
-		m_pi[i] = 1.0 / (1.0 + exp((double) -y[i] * (double) m_f[i]));
-		m_dLogPi[i] = t[i] - m_pi[i];
+void GaussianProcess::updatePis(){
+	for(int i = 0; i < m_dataPoints; ++i){
+		m_pi[i] = 1.0 / (1.0 + exp((double) -m_y[i] * (double) m_f[i]));
+		m_dLogPi[i] = m_t[i] - m_pi[i];
 		m_ddLogPi[i] = -(-m_pi[i] * (1 - m_pi[i])); // first minus to get -ddlog(p_i|f_i)
 		m_sqrtDDLogPi[i] = sqrt((double) m_ddLogPi[i]);
 	}
@@ -66,7 +73,7 @@ GaussianProcess::Status GaussianProcess::trainBayOpt(double& logZ, const double 
 	const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
 	m_kernel.calcCovariance(K);
 	//std::cout << "K: \n" << K << std::endl;
-	Status status = trainF(m_dataPoints, K, m_y);
+	Status status = trainF(K);
 	if(status == NANORINFERROR){
 		return NANORINFERROR;
 	}
@@ -94,7 +101,7 @@ GaussianProcess::Status GaussianProcess::trainLM(double& logZ, std::vector<doubl
 	const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
 	m_kernel.calcCovariance(K);
 	//std::cout << "K: \n" << K << std::endl;
-	Status status = trainF(m_dataPoints, K, m_y);
+	Status status = trainF(K);
 	if(status == NANORINFERROR){
 		return NANORINFERROR;
 	}
@@ -143,7 +150,7 @@ GaussianProcess::Status GaussianProcess::trainLM(double& logZ, std::vector<doubl
 void GaussianProcess::trainWithoutKernelOptimize(){
 	Eigen::MatrixXd K;
 	m_kernel.calcCovariance(K);
-	trainF(m_dataPoints, K, m_y);
+	trainF(K);
 	m_trained = true;
 }
 
@@ -287,34 +294,38 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 	return ALLFINE;
 }
 
-GaussianProcess::Status GaussianProcess::trainF(const int dataPoints, const Eigen::MatrixXd& K, const Eigen::VectorXd& y){
+GaussianProcess::Status GaussianProcess::trainF(const Eigen::MatrixXd& K){
 	// find suited f:
 	m_sw.startTime();
-	m_f = Eigen::VectorXd::Zero(dataPoints); 						// f <-- init with zeros
-	const Eigen::MatrixXd eye(Eigen::MatrixXd::Identity(dataPoints,dataPoints));
+	// m_f = Eigen::VectorXd::Zero(m_dataPoints); 						// f <-- init with zeros
+	m_f.fill(0);														// f <-- init with zeros
 	bool converged = false;
 	int j = 0;
-	m_pi = Eigen::VectorXd::Zero(dataPoints);
-	m_dLogPi = Eigen::VectorXd::Zero(dataPoints);
-	m_ddLogPi = Eigen::VectorXd::Zero(dataPoints);
-	m_sqrtDDLogPi = Eigen::VectorXd::Zero(dataPoints);
-	const Eigen::VectorXd t = (y + Eigen::VectorXd::Ones(y.rows())) * 0.5; // Todo uneccessary often executed
 	double lastObjective = 100000000000;
 	double stepSize = 0.5;
 	Eigen::VectorXd oldA = m_a;
 	Eigen::VectorXd oldF = m_f;
+
 	while(!converged){
 		// calc - log p(y_i| f_i) -> -
-		updatePis(dataPoints,y,t);
-		const Eigen::MatrixXd WSqrt( DiagMatrixXd(m_sqrtDDLogPi).toDenseMatrix()); // TODO more efficient
+
+		updatePis();
+
+		//const Eigen::MatrixXd WSqrt( DiagMatrixXd(m_sqrtDDLogPi).toDenseMatrix()); // TODO more efficient
 		//std::cout << "K: \n" << K << std::endl;
 		//std::cout << "inner: \n" << eye + (WSqrt * K * WSqrt) << std::endl;
-		m_innerOfLLT = eye + (WSqrt * K * WSqrt);
+		//m_innerOfLLT = eye + (WSqrt * K * WSqrt);
+		for(int i = 0; i < m_dataPoints; ++i){
+			for(int j = 0; j < m_dataPoints; ++j){
+				m_innerOfLLT(i,j) = m_sqrtDDLogPi[i] * m_sqrtDDLogPi[j] * K(i,j);
+			}
+			m_innerOfLLT(i,i) += 1;
+		}
 		m_choleskyLLT.compute(m_innerOfLLT);
 		const Eigen::VectorXd b = m_ddLogPi.cwiseProduct(m_f) + m_dLogPi;
 		m_a = b - m_ddLogPi.cwiseProduct(m_choleskyLLT.solve( m_choleskyLLT.solve(m_ddLogPi.cwiseProduct(K * b)))); // WSqrt * == m_ddLogPi.cwiseProduct(...)
 		const double firstPart = -0.5 * (double) (m_a.dot(m_f));
-		const double prob = 1.0 / (1.0 + exp(-(double) (y.dot(m_f))));
+		const double prob = 1.0 / (1.0 + exp(-(double) (m_y.dot(m_f))));
 		const double tol = 1e-7;
 		const double offsetVal = prob > tol && prob < 1 - tol ? prob : (prob < tol ? tol : 1 - tol );
 		const double objective = firstPart + log(offsetVal);
@@ -327,11 +338,17 @@ GaussianProcess::Status GaussianProcess::trainF(const int dataPoints, const Eige
 			//std::cout << RED << "overshoot!" << "new: " <<  -0.5 * (double) (m_a.dot(m_f)) << ", old: " << -0.5 * (double) (oldA.dot(oldF)) << RESET << std::endl;
 			m_a = oldA;
 			m_f = oldF;
-			updatePis(dataPoints,y,t);
-			const Eigen::MatrixXd WSqrt( DiagMatrixXd(m_sqrtDDLogPi).toDenseMatrix()); // TODO more efficient
+			updatePis();
+			//const Eigen::MatrixXd WSqrt( DiagMatrixXd(m_sqrtDDLogPi).toDenseMatrix()); // TODO more efficient
 			//std::cout << "K: \n" << K << std::endl;
 			//std::cout << "inner: \n" << eye + (WSqrt * K * WSqrt) << std::endl;
-			m_innerOfLLT = eye + (WSqrt * K * WSqrt);
+			//m_innerOfLLT = eye + (WSqrt * K * WSqrt);
+			for(int i = 0; i < m_dataPoints; ++i){
+				for(int j = 0; j < m_dataPoints; ++j){
+					m_innerOfLLT(i,j) = m_sqrtDDLogPi[i] * m_sqrtDDLogPi[j] * K(i,j);
+				}
+				m_innerOfLLT(i,i) += 1;
+			}
 			m_choleskyLLT.compute(m_innerOfLLT);
 			break;
 			// decrease the step size and try again!
@@ -342,10 +359,10 @@ GaussianProcess::Status GaussianProcess::trainF(const int dataPoints, const Eige
 			if(stepSize < 0.005){
 				if(j > 2){
 					//m_f = lastF;
-					updatePis(dataPoints,y,t);
+					updatePis();
 					break;
 				}
-				m_f = Eigen::VectorXd::Zero(dataPoints); // start again!
+				m_f.fill(0); // start again!
 				stepSize = 0.5;
 				j = 0;
 			}

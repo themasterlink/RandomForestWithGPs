@@ -18,16 +18,16 @@ public:
 
 	void startTime();
 	void stopTime();
-	double elapsedSeconds();
-	double elapsedMiliSeconds();
+	double elapsedSeconds() const;
+	double elapsedMiliSeconds() const;
 
-	TimeFrame elapsedAsTimeFrame();
+	TimeFrame elapsedAsTimeFrame() const;
 
-	std::string elapsedAsPrettyTime();
+	const std::string elapsedAsPrettyTime() const;
 
 	void recordActTime();
 
-	std::string elapsedAvgAsPrettyTime();
+	const std::string elapsedAvgAsPrettyTime() const;
 
 private:
 
@@ -38,5 +38,37 @@ private:
 	int counter;
 	double avgTime;
 };
+
+inline
+void StopWatch::startTime(){
+	m_start = boost::posix_time::microsec_clock::local_time();
+}
+
+inline
+void StopWatch::stopTime(){
+	m_stop = boost::posix_time::microsec_clock::local_time();
+}
+
+inline
+double StopWatch::elapsedSeconds() const{
+	return (boost::posix_time::microsec_clock::local_time() - m_start).total_milliseconds() / 1000.0;
+}
+
+inline
+double StopWatch::elapsedMiliSeconds() const{
+	return (boost::posix_time::microsec_clock::local_time() - m_start).total_milliseconds();
+}
+
+inline
+TimeFrame StopWatch::elapsedAsTimeFrame() const{
+	return TimeFrame(elapsedSeconds());
+}
+
+inline
+const std::string StopWatch::elapsedAsPrettyTime() const{
+	std::stringstream ss;
+	ss << TimeFrame(elapsedSeconds());
+	return ss.str();
+}
 
 #endif /* UTILITY_STOPWATCH_H_ */

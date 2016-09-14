@@ -17,7 +17,7 @@ Kernel::~Kernel(){
 
 void Kernel::init(const Eigen::MatrixXd& dataMat){
 	m_dataPoints = dataMat.cols();
-	m_differences = Eigen::MatrixXd::Zero(m_dataPoints , m_dataPoints );
+	m_differences = Eigen::MatrixXd(m_dataPoints , m_dataPoints );
 	int counter = 0;
 	m_randLenMean = 0;
 	for(int i = 0; i < m_dataPoints ; ++i){

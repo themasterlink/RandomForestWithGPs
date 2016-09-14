@@ -42,22 +42,25 @@ public:
 
 	double getLenMean() const {return m_kernel.getLenMean();};
 
+	const StopWatch& getTrainFWatch(){return m_sw;};
+
 private:
 	GaussianProcess::Status trainBayOpt(double& logZ, const double lambda);
 
 	Status trainLM(double& logZ, std::vector<double>& dLogZ);
 
-	Status trainF(const int dataPoints, const Eigen::MatrixXd& K, const Eigen::VectorXd& y);
+	Status trainF(const Eigen::MatrixXd& K);
 
 	Status train(const int dataPoints, const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
 
-	void updatePis(const int dataPoints, const Eigen::VectorXd& y, const Eigen::VectorXd& t);
+	void updatePis();
 
 	double m_repetitionStepFactor;
 
 	Eigen::MatrixXd m_dataMat;
 	Eigen::VectorXd m_a;
 	Eigen::VectorXd m_y;
+	Eigen::VectorXd m_t;
 	Eigen::VectorXd m_f;
 	Eigen::VectorXd m_pi;
 	Eigen::VectorXd m_dLogPi;

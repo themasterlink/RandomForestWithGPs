@@ -16,31 +16,6 @@ StopWatch::StopWatch(){
 StopWatch::~StopWatch(){
 }
 
-void StopWatch::startTime(){
-	m_start = boost::posix_time::microsec_clock::local_time();
-}
-void StopWatch::stopTime(){
-	m_stop = boost::posix_time::microsec_clock::local_time();
-}
-
-double StopWatch::elapsedSeconds(){
-	return (boost::posix_time::microsec_clock::local_time() - m_start).total_milliseconds() / 1000.0;
-}
-
-double StopWatch::elapsedMiliSeconds(){
-	return (boost::posix_time::microsec_clock::local_time() - m_start).total_milliseconds();
-}
-
-TimeFrame StopWatch::elapsedAsTimeFrame(){
-	return TimeFrame(elapsedSeconds());
-}
-
-std::string StopWatch::elapsedAsPrettyTime(){
-	std::stringstream ss;
-	ss << TimeFrame(elapsedSeconds());
-	return ss.str();
-}
-
 void StopWatch::recordActTime(){
 	const double time = elapsedSeconds();
 	const double fac = 1.0 / counter;
@@ -49,7 +24,7 @@ void StopWatch::recordActTime(){
 	++counter;
 }
 
-std::string StopWatch::elapsedAvgAsPrettyTime(){
+const std::string StopWatch::elapsedAvgAsPrettyTime() const{
 	std::stringstream ss;
 	ss << TimeFrame(avgTime);
 	return ss.str();

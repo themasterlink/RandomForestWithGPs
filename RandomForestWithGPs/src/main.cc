@@ -24,6 +24,7 @@
 #include "RandomForestGaussianProcess/RFGPWriter.h"
 #include "GaussianProcess/GaussianProcess.h"
 #include "GaussianProcess/GaussianProcessMultiBinary.h"
+#include "Tests/performanceMeasurement.h"
 // just for testing
 
 void executeForMultiClass(const std::string& path){
@@ -45,7 +46,7 @@ void executeForMultiClass(const std::string& path){
 	for(int i = 0; i < data.size(); ++i){
 		dataPerClass[labels[i]].push_back(data[i]);
 	}*/
-	Eigen::VectorXd y(Eigen::VectorXd::Zero(dataPoints * amountOfClass));
+	Eigen::VectorXd y(Eigen::VectorXd(dataPoints * amountOfClass));
 	for(int i = 0; i < labels.size(); ++i){
 		y[labels[i] * dataPoints + i] = 1;
 	}
@@ -95,17 +96,13 @@ void executeForBinaryClass(const std::string& path){
 	std::map<std::string, Data > datas;
 	if(useRealData){
 		DataReader::readFromFiles(datas, "../realTest/");
-
 	}else{
 		DataReader::readFromFile(data, labels, "../testData/trainInput.txt");
 	}
 	std::cout << "Amount of datas: " << datas.size() << std::endl;
 	// for binary case:
 	if(useRealData && datas.size() == 2){
-		std::cout << "Data has dim: " << data[0].rows() << std::endl;
-		std::cout << "Training size: " << data.size() << std::endl;
 		int labelCounter = 0;
-		//const double fac = 0.80;
 		for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
 			const int amountOfElements = itData->second.size();
 			std::cout << "Name: " << itData->first << std::endl;
@@ -122,12 +119,19 @@ void executeForBinaryClass(const std::string& path){
 			}
 			++labelCounter;
 		}
+		std::cout << "Training size: " << data.size() << std::endl;
+		std::cout << "Data has dim: " << data[0].rows() << std::endl;
+		printLine();
 		const int firstPoints = 35;
 		Eigen::VectorXd y;
 		Eigen::MatrixXd dataMat;
 		DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
 		GaussianProcess gp;
+
+		printLine();
 		gp.init(dataMat, y);
+
+		printLine();
 		bayesopt::Parameters par = initialize_parameters_to_default();
 		par.noise = 1e-12;
 		par.epsilon = 0.2;
@@ -145,6 +149,7 @@ void executeForBinaryClass(const std::string& path){
 		bayOpt.optimize(result);
 		std::cout << RED << "Result: " << result[0] << ", "<< result[1] << RESET << std::endl;
 
+		printLine();
 		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
 
 		Eigen::VectorXd y2;
@@ -152,7 +157,11 @@ void executeForBinaryClass(const std::string& path){
 		DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 400);
 		std::cout << "Init with: " << dataMat2.cols() << std::endl;
 		gp.init(dataMat2, y2);
+
+		printLine();
 		gp.trainWithoutKernelOptimize();
+
+		printLine();
 		GaussianProcessWriter::writeToFile("gp.bgp", gp);
 
 		GaussianProcess testGp;
@@ -520,6 +529,9 @@ int main(){
 	std::string path;
 	Settings::getValue("RealData.folderPath", path);
 
+
+
+	//testSpeedOfEigenMultWithDiag();
 //	executeForRFBinaryClass();
 //	return 0;
 	bool useGP;
