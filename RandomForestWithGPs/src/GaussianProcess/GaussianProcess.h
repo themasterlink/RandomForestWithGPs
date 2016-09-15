@@ -73,8 +73,11 @@ private:
 
 	bool m_init;
 	bool m_trained;
-
+	mutable bool m_fastPredict;
+	mutable double m_fastPredictVFStar;
 	Kernel m_kernel;
+
+
 };
 
 #endif /* GAUSSIANPROCESS_GAUSSIANPROCESS_H_ */

@@ -34,7 +34,7 @@ private:
 
 	void optimizeHyperParams(const int iActClass,
 			const int amountOfHyperPoints, const DataContainer& container,
-			const std::vector<int>& classCounts, const std::string& betweenNames,
+			const std::vector<int>& classCounts, const std::vector<bool>& elementsUsedForValidation,
 			const Eigen::MatrixXd& testDataMat, const Eigen::VectorXd& testYGpInit, BestHyperParams* bestHyperParams);
 
 	const int m_amountOfUsedClasses;

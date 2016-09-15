@@ -10,6 +10,7 @@
 #include <Eigen/Dense>
 #include "kernelCalc.h"
 #include "Utility/Settings.h"
+#include "Utility/ConfusionMatrixPrinter.h"
 #include "Data/DataReader.h"
 #include "Data/DataConverter.h"
 #include "Data/DataWriterForVisu.h"
@@ -24,7 +25,7 @@
 #include "RandomForestGaussianProcess/RFGPWriter.h"
 #include "GaussianProcess/GaussianProcess.h"
 #include "GaussianProcess/GaussianProcessMultiBinary.h"
-#include "Tests/performanceMeasurement.h"
+//#include "Tests/performanceMeasurement.h"
 // just for testing
 
 void executeForMultiClass(const std::string& path){
@@ -102,16 +103,19 @@ void executeForBinaryClass(const std::string& path){
 	std::cout << "Amount of datas: " << datas.size() << std::endl;
 	// for binary case:
 	if(useRealData && datas.size() == 2){
+		srand(2);
 		int labelCounter = 0;
+		const int trainAmount = 500;
 		for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
 			const int amountOfElements = itData->second.size();
-			std::cout << "Name: " << itData->first << std::endl;
+			std::cout << itData->first << " with: " << amountOfElements << " points"<< std::endl;
+			int testAmount = 200;
 			for(int i = 0; i < amountOfElements; ++i){
-				if(i < 300){
+				if(i < trainAmount){
 					// train data
 					data.push_back(itData->second[i]);
 					labels.push_back(labelCounter);
-				}else{ //  if(i < (fac) * amountOfElements + 200)
+				}else if(i < trainAmount + testAmount){ //  if(i < (fac) * amountOfElements + 200)
 					// test data
 					testData.push_back(itData->second[i]);
 					testLabels.push_back(labelCounter);
@@ -124,7 +128,15 @@ void executeForBinaryClass(const std::string& path){
 		const int firstPoints = 35;
 		Eigen::VectorXd y;
 		Eigen::MatrixXd dataMat;
-		DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
+		std::vector<int> classCounts(2,trainAmount);
+		Eigen::VectorXd y3;
+		Eigen::MatrixXd dataMat3;
+		std::vector<bool> usedElements;
+		std::vector<bool> blockElements(data.size(), false);
+		DataConverter::toRandClassAndHalfUniformDataMatrix(data, labels, classCounts, dataMat, y, firstPoints, 0, usedElements, blockElements);
+		//DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
+		std::cout << "y: " << y.transpose() << std::endl;
+		//std::cout << "y: " << y.transpose() << std::endl;
 		GaussianProcess gp;
 
 		printLine();
@@ -147,19 +159,19 @@ void executeForBinaryClass(const std::string& path){
 		bayOpt.setBoundingBox(lowerBound, upperBound);
 		bayOpt.optimize(result);
 		std::cout << RED << "Result: " << result[0] << ", "<< result[1] << RESET << std::endl;
-
-		printLine();
 		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
 
 		Eigen::VectorXd y2;
 		Eigen::MatrixXd dataMat2;
-		DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 400);
+		//DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 400);
+		std::vector<bool> usedElements2;
+		std::vector<bool> blockElements2(data.size(), false);
+		DataConverter::toRandClassAndHalfUniformDataMatrix(data, labels, classCounts, dataMat2, y2, 400, 0, usedElements2, blockElements2);
 		std::cout << "Init with: " << dataMat2.cols() << std::endl;
 		gp.init(dataMat2, y2);
 
 		printLine();
 		gp.trainWithoutKernelOptimize();
-		printLine();
 
 		/*
 		GaussianProcessWriter::writeToFile("gp.bgp", gp);
@@ -190,9 +202,9 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Test" << std::endl;
 		for(int j = dataRef.size() - 1; j >= 0 ; --j){
 			double prob = gp.predict(dataRef[j]);
-			if(prob > 0.5 && labelsRef[j] == 1){
+			if(prob > 0.5 && labelsRef[j] == 0){
 				++wright;
-			}else if(prob < 0.5 && labelsRef[j] == 0){
+			}else if(prob < 0.5 && labelsRef[j] == 1){
 				++wright;
 			}else{
 				//std::cout << "Prob: " << prob << ", label is: " << labelsRef[j] << std::endl;
@@ -209,7 +221,8 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
-		/*wright = 0; // for the loaded gp
+		/*
+		wright = 0;
 		amountOfAbove = 0;
 		amountOfBelow = 0;
 		for(int j = dataRef.size() - 1; j >= 0 ; --j){
@@ -232,8 +245,9 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "For loaded Gp amount of above: " << (double) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "For loaded Gp amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "For loaded Gp len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
-		std::cout << RESET;*/
+		std::cout << RESET; */
 	}else if(useRealData){
+		std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(6);
 		GaussianProcessMultiBinary gp(datas.size());
 		DataContainer container;
 		container.namesOfClasses.resize(datas.size());
@@ -241,14 +255,16 @@ void executeForBinaryClass(const std::string& path){
 		//const double fac = 0.80;
 		for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
 			const int amountOfElements = itData->second.size();
-			std::cout << "Name: " << itData->first << std::endl;
+			std::cout << itData->first << " with: " << amountOfElements << " points"<< std::endl;
 			container.namesOfClasses[labelCounter] = itData->first;
+			int trainAmount = 300;
+			int testAmount = 50;
 			for(int i = 0; i < amountOfElements; ++i){
-				if(i < 300){
+				if(i < trainAmount){
 					// train data
 					container.data.push_back(itData->second[i]);
 					container.labels.push_back(labelCounter);
-				}else if(i < 400){ //  if(i < (fac) * amountOfElements + 200)
+				}else if(i < trainAmount + testAmount){ //  if(i < (fac) * amountOfElements + 200)
 					// test data
 					testData.push_back(itData->second[i]);
 					testLabels.push_back(labelCounter);
@@ -273,30 +289,33 @@ void executeForBinaryClass(const std::string& path){
 		//gp.m_kernel.newRandHyperParams();
 		//gp.m_kernel.setHyperParams(gp.m_kernel.len(),gp.m_kernel.sigmaF(),1);
 		//gp.train();//WithoutKernelChange(dataMat2, y2); // train only the latent functions
-		std::cout << "Start predicting for " << testData.size() << " points!" << std::endl;
 		const Data& dataRef = testData;
+		std::cout << "Start predicting for " << dataRef.size() << " points!" << std::endl;
 		const Labels& labelsRef = testLabels;
 		int wright = 0;
-		int amountOfBelow = 0;
-		int amountOfAbove = 0;
 		std::cout << "Test" << std::endl;
 		std::vector<double> prob;
 		Eigen::MatrixXd confusion = Eigen::MatrixXd::Zero(datas.size(), datas.size());
+		int unknownCounter = 0;
 		for(int j = dataRef.size() - 1; j >= 0 ; --j){
 			const int label = gp.predict(dataRef[j], prob);
 			if(labelsRef[j] == label){
 				++wright;
 			}
 			if(label != -1){
-				confusion(label,labelsRef[j]) += 1;
+				confusion(labelsRef[j],label) += 1;
+			}else{
+				++unknownCounter;
 			}
+			std::cout << "\r                                                                                            ";
+			std::cout << "\rDone: " << (dataRef.size()-j) / (double) dataRef.size() * 100.0 << " %, correct until now: " <<  (double) wright /  (dataRef.size()-j) * 100 << " % is in class: " << container.namesOfClasses[labelsRef[j]];
+			flush(std::cout);
 		}
 		std::cout << RED;
-		std::cout << "Amount of wright: " << (double) wright / dataRef.size() * 100.0 << "%" << std::endl;
-		std::cout << "Amount of above: " << (double) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
-		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of wright:  " << (double) wright / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of unknown: " << (double) unknownCounter / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << RESET;
-		std::cout << "Confusion:\n" << confusion << std::endl;
+		ConfusionMatrixPrinter::print(confusion, container.namesOfClasses);
 	}else{
 		const int firstPoints = 10000000; // all points
 		Eigen::VectorXd y;

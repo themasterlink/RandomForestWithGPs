@@ -12,7 +12,7 @@
 #include "../Data/Data.h"
 #include <algorithm>
 
-GaussianProcess::GaussianProcess(): m_repetitionStepFactor(1.0), m_dataPoints(0), m_init(false), m_trained(false){
+GaussianProcess::GaussianProcess(): m_repetitionStepFactor(1.0), m_dataPoints(0), m_init(false), m_trained(false), m_fastPredict(false), m_fastPredictVFStar(0){
 }
 
 GaussianProcess::~GaussianProcess(){
@@ -21,7 +21,6 @@ GaussianProcess::~GaussianProcess(){
 void GaussianProcess::init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
 	m_dataMat = dataMat;
 	m_y = y;
-	m_t = (m_y + Eigen::VectorXd::Ones(m_y.rows())) * 0.5;
 	m_dataPoints = m_dataMat.cols();
 	m_f = Eigen::VectorXd(m_dataPoints);
 	m_pi = Eigen::VectorXd(m_dataPoints);
@@ -32,11 +31,12 @@ void GaussianProcess::init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd
 	m_init = true;
 	m_innerOfLLT = Eigen::MatrixXd(m_dataPoints,m_dataPoints);
 	m_kernel.init(m_dataMat);
+	m_fastPredict = false;
 }
 
 void GaussianProcess::updatePis(){
 	for(int i = 0; i < m_dataPoints; ++i){
-		m_pi[i] = 1.0 / (1.0 + exp((double) -m_y[i] * (double) m_f[i]));
+		m_pi[i] = 1.0 / (1.0 + exp((double) - m_y[i] * (double) m_f[i]));
 		m_dLogPi[i] = m_t[i] - m_pi[i];
 		m_ddLogPi[i] = -(-m_pi[i] * (1 - m_pi[i])); // first minus to get -ddlog(p_i|f_i)
 		m_sqrtDDLogPi[i] = sqrt((double) m_ddLogPi[i]);
@@ -148,6 +148,7 @@ GaussianProcess::Status GaussianProcess::trainLM(double& logZ, std::vector<doubl
 }
 
 void GaussianProcess::trainWithoutKernelOptimize(){
+	m_fastPredict = false;
 	Eigen::MatrixXd K;
 	m_kernel.calcCovariance(K);
 	trainF(K);
@@ -335,7 +336,6 @@ GaussianProcess::Status GaussianProcess::trainF(const Eigen::MatrixXd& K){
 			return NANORINFERROR;
 		}
 		if(objective > lastObjective && j != 0){
-			//std::cout << RED << "overshoot!" << "new: " <<  -0.5 * (double) (m_a.dot(m_f)) << ", old: " << -0.5 * (double) (oldA.dot(oldF)) << RESET << std::endl;
 			m_a = oldA;
 			m_f = oldF;
 			updatePis();
@@ -389,14 +389,22 @@ double GaussianProcess::predict(const DataElement& newPoint, const int sampleSiz
 		printError("GP was not init: " << m_init << ", or trained: " << m_trained);
 		return -1.0;
 	}
-	const DiagMatrixXd WSqrt(m_sqrtDDLogPi);
-
 	double fStar = 0, vFStar = 0;
 	Eigen::VectorXd kXStar;
 	m_kernel.calcKernelVector(newPoint, m_dataMat, kXStar);
 	fStar = (double) (kXStar.dot(m_dLogPi));
-	const Eigen::VectorXd v = m_choleskyLLT.solve(WSqrt * kXStar);
-	vFStar = fabs((m_kernel.sigmaN() * m_kernel.sigmaN() + 1) - v.dot(v));
+	if(m_fastPredict){
+		vFStar = m_fastPredictVFStar;
+	}else{
+		const double vNorm = m_choleskyLLT.solve(m_sqrtDDLogPi.cwiseProduct(kXStar)).squaredNorm();
+		const double leftTermVFStar = fabs(m_kernel.sigmaN() * m_kernel.sigmaN() + 1);
+		vFStar = leftTermVFStar - vNorm;
+		if(fabs(vNorm / leftTermVFStar) < 0.01){ // is vNorm smaller than 1 % of the whole term, than just forget it -> speeds it up!
+			m_fastPredict = true;
+			m_fastPredictVFStar = vFStar; // will be nearly always the same!
+		}
+	}
+//std::cout << " Fstar is " << fStar << std::endl;
 	/*if(isnan(vFStar) || vFStar > 1e200){
 		std::cout << "Kernel: " << m_kernel.prettyString() << std::endl;
 	}*/
@@ -417,8 +425,9 @@ double GaussianProcess::predict(const DataElement& newPoint, const int sampleSiz
 	}*/
 	if(prob < 0){
 		return 0;
-	}else if(prob > 1){
-		return 1;
 	}
+	/*else if(prob > 1){
+		return 1;
+	}*/
 	return prob;
 }
