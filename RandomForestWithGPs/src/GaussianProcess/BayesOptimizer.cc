@@ -16,14 +16,17 @@ BayesOptimizer::~BayesOptimizer() {
 }
 
 double BayesOptimizer::evaluateSample(const vectord& x) {
-	m_gp.getKernel().setHyperParams(x[0], x[1], m_gp.getKernel().sigmaN());
+	GaussianProcess::Status status(GaussianProcess::NANORINFERROR);
 	double logZ = 0.0;
-	GaussianProcess::Status status = m_gp.trainBayOpt(logZ,1);
-	if(logZ > 1.0){ // avoid overfitting!
-		logZ = m_lowestValue;
-	}
-	if(logZ < m_lowestValue){
-		m_lowestValue = logZ;
+	if(x[0] * x[1] < 50){ // avoid overfitting!
+		m_gp.getKernel().setHyperParams(x[0], x[1], m_gp.getKernel().sigmaN());
+		status = m_gp.trainBayOpt(logZ,1);
+		if(logZ > 1.0){ // avoid overfitting!
+			logZ = m_lowestValue;
+		}
+		if(logZ < m_lowestValue){
+			m_lowestValue = logZ;
+		}
 	}
 	/*std::cout << RED << "logZ: " << logZ << RESET << std::endl;
 	if(logZ > bestVal){
@@ -32,8 +35,7 @@ double BayesOptimizer::evaluateSample(const vectord& x) {
 		bestSigma = m_gp.getKernel().sigmaF();
 		//getchar();
 	}*/
-	//std::cout << RED << "bestVal: " << bestVal << ", kernel: " << bestLen << ", " << bestSigma << RESET << std::endl;
-	return status == GaussianProcess::NANORINFERROR ? m_lowestValue : 10000 - logZ;
+	return status == GaussianProcess::NANORINFERROR ? 10000 - m_lowestValue : 10000 - logZ;
 };
 
 

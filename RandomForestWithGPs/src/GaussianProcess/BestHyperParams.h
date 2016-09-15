@@ -15,9 +15,11 @@ public:
 	BestHyperParams(const int amountOfMaxNoChange);
 	~BestHyperParams();
 
-	void trySet(int newWright, double len, double sigmaF);
+	void trySet(int newWright, int newWrightPositive, int newAmountOfValues, int newAmountOfCorLabels, double len, double sigmaF);
 
-	void getBestParams(int& bestWright, double& bestLen, double& bestSigmaF);
+	void getBestHypParams(double& bestLen, double& bestSigmaF);
+
+	void getBestParams(int& bestWright, int& bestWrightPositive, int& bestAmountOfValues, int& bestAmountOfCorLabels, double& bestLen, double& bestSigmaF);
 
 	void getNoChangeCounter(int& noChange);
 
@@ -25,11 +27,17 @@ public:
 
 	void getFinishDuring(bool& isFinish);
 
-	void reachedGoal();
+	bool checkGoal();
+
+	const std::string prettyStringOfBest();
 
 private:
+
 	const int m_maxNrOfNoChange;
 	int m_amountOfBestWright;
+	int m_amountOfBestValues;
+	int m_amountOfCorrectBestValues;
+	int m_amountOfBestWrightPositive;
 	double m_len;
 	double m_sigmaF;
 	int m_noChangeCounter;

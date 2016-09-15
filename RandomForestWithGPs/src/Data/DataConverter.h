@@ -18,6 +18,7 @@ public:
 
 	static void toRandUniformDataMatrix(const Data& data, const Labels& labels, const std::vector<int>& classCounts, Eigen::MatrixXd& result, Eigen::VectorXd& y, const int ele, const int actClass);
 
+	static void toRandClassAndHalfUniformDataMatrix(const Data& data, const Labels& labels, const std::vector<int>& classCounts, Eigen::MatrixXd& result, Eigen::VectorXd& y, const int ele, const int actClass, std::vector<bool>& usedElements, const std::vector<bool>& blockElements);
 
 private:
 	DataConverter();
