@@ -121,7 +121,6 @@ void executeForBinaryClass(const std::string& path){
 		}
 		std::cout << "Training size: " << data.size() << std::endl;
 		std::cout << "Data has dim: " << data[0].rows() << std::endl;
-		printLine();
 		const int firstPoints = 35;
 		Eigen::VectorXd y;
 		Eigen::MatrixXd dataMat;
@@ -160,13 +159,14 @@ void executeForBinaryClass(const std::string& path){
 
 		printLine();
 		gp.trainWithoutKernelOptimize();
-
 		printLine();
+
+		/*
 		GaussianProcessWriter::writeToFile("gp.bgp", gp);
 
 		GaussianProcess testGp;
 		GaussianProcessWriter::readFromFile("gp.bgp", testGp);
-
+		 */
 /*
 		const int dataPoints = data.size();
 		Eigen::VectorXd y2(dataPoints);
@@ -209,7 +209,7 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
-		wright = 0;
+		/*wright = 0; // for the loaded gp
 		amountOfAbove = 0;
 		amountOfBelow = 0;
 		for(int j = dataRef.size() - 1; j >= 0 ; --j){
@@ -232,7 +232,7 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "For loaded Gp amount of above: " << (double) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "For loaded Gp amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "For loaded Gp len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
-		std::cout << RESET;
+		std::cout << RESET;*/
 	}else if(useRealData){
 		GaussianProcessMultiBinary gp(datas.size());
 		DataContainer container;
@@ -267,7 +267,6 @@ void executeForBinaryClass(const std::string& path){
 					y2[i] = labels[i] != 0 ? 1 : -1; // just two classes left!
 				}
 				Eigen::MatrixXd dataMat2;
-
 				DataConverter::toDataMatrix(dataRef, dataMat2, dataRef.size());
 				gp.init(dataMat2, y2);
 		 */

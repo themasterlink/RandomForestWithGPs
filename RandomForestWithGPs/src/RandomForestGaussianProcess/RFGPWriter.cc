@@ -13,7 +13,6 @@
 
 RFGPWriter::RFGPWriter() {
 	// TODO Auto-generated constructor stub
-
 }
 
 RFGPWriter::~RFGPWriter() {

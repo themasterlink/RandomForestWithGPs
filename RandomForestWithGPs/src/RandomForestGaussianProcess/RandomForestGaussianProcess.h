@@ -18,6 +18,8 @@
 
 class RFGPWriter;
 
+class RFGPWriter;
+
 class RandomForestGaussianProcess{
 	friend RFGPWriter;
 public:
