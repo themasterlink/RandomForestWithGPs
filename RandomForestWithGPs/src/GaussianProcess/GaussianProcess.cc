@@ -6,8 +6,6 @@
  */
 
 #include "GaussianProcess.h"
-
-#include "GaussianProcessMultiClass.h"
 #include <iomanip>
 #include "../Data/Data.h"
 #include <algorithm>
@@ -22,6 +20,7 @@ void GaussianProcess::init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd
 	m_dataMat = dataMat;
 	m_y = y;
 	m_dataPoints = m_dataMat.cols();
+	m_t = (m_y + Eigen::VectorXd::Ones(m_y.rows())) * 0.5;
 	m_f = Eigen::VectorXd(m_dataPoints);
 	m_pi = Eigen::VectorXd(m_dataPoints);
 	m_dLogPi = Eigen::VectorXd(m_dataPoints);
@@ -70,7 +69,7 @@ void GaussianProcess::train(){
 
 GaussianProcess::Status GaussianProcess::trainBayOpt(double& logZ, const double lambda){
 	Eigen::MatrixXd K;
-	const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
+	//const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
 	m_kernel.calcCovariance(K);
 	//std::cout << "K: \n" << K << std::endl;
 	Status status = trainF(K);
@@ -309,9 +308,7 @@ GaussianProcess::Status GaussianProcess::trainF(const Eigen::MatrixXd& K){
 
 	while(!converged){
 		// calc - log p(y_i| f_i) -> -
-
 		updatePis();
-
 		//const Eigen::MatrixXd WSqrt( DiagMatrixXd(m_sqrtDDLogPi).toDenseMatrix()); // TODO more efficient
 		//std::cout << "K: \n" << K << std::endl;
 		//std::cout << "inner: \n" << eye + (WSqrt * K * WSqrt) << std::endl;

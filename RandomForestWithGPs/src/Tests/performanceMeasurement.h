@@ -8,6 +8,8 @@
 #ifndef TESTS_PERFORMANCEMEASUREMENT_H_
 #define TESTS_PERFORMANCEMEASUREMENT_H_
 
+#include <Eigen/Dense>
+#include "../Data/Data.h"
 
 bool testSpeedOfEigenMultWithDiag(){
 	const int dataPoints = 300;

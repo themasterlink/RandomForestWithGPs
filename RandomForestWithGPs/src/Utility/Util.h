@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include "StopWatch.h"
+#include "InLinePercentageFiller.h"
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -69,11 +70,5 @@ template<class T> const T& max(const T& a, const T& b){
 	return !(b > a) ? a : b;     // or: return !comp(b,a)?a:b; for version (2)
 }
 
-namespace Utility {
-
-// reading and writing of binary
-
-
-}
 
 #endif /* UTILITY_UTIL_H_ */

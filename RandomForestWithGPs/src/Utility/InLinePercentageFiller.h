@@ -15,7 +15,7 @@ public:
 
 	static void setActValueAndPrintLine(const int iAct);
 
-	static void setActPercentageAndPrintLine(const double iAct);
+	static void setActPercentageAndPrintLine(const double dAct, const bool lastElement = false);
 
 private:
 	InLinePercentageFiller();
@@ -26,7 +26,7 @@ private:
 
 inline
 void InLinePercentageFiller::setActMax(const int iMax){
-	m_max = iMax;
+	m_max = iMax - 1;
 }
 
 #endif /* UTILITY_INLINEPERCENTAGEFILLER_H_ */

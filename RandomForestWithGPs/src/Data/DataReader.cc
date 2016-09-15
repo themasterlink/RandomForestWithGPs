@@ -8,6 +8,8 @@
 #include "DataReader.h"
 #include <iostream>
 #include "boost/filesystem.hpp"
+#include "../Utility/ReadWriterHelper.h"
+
 
 DataReader::DataReader(){
 }
@@ -40,23 +42,28 @@ void DataReader::readFromFile(Data& data, Labels& label, const std::string& inpu
 }
 
 void DataReader::readFromFile(Data& data, const std::string& inputName){
-	std::string line;
-	std::ifstream input(inputName);
+	std::fstream input(inputName);
 	if(input.is_open()){
-		while(std::getline(input, line)){
-			std::vector<std::string> elements;
-			std::stringstream ss(line);
-			std::string item;
-			while(std::getline(ss, item, ' ')){
-				elements.push_back(item);
+		if(inputName.find(".binary") != std::string::npos){
+			// is a binary file -> faster loading!
+			ReadWriterHelper::readVector(input, data);
+		}else{
+			std::string line;
+			while(std::getline(input, line)){
+				std::vector<std::string> elements;
+				std::stringstream ss(line);
+				std::string item;
+				while(std::getline(ss, item, ' ')){
+					elements.push_back(item);
+				}
+				DataElement newEle(elements.size());
+				for(int i = 0; i < elements.size(); ++i){
+					newEle[i] = std::stod(elements[i]);
+				}
+				data.push_back(newEle);
 			}
-			DataElement newEle(elements.size());
-			for(int i = 0; i < elements.size(); ++i){
-				newEle[i] = std::stod(elements[i]);
-			}
-			data.push_back(newEle);
+			input.close();
 		}
-		input.close();
 	}else{
 		printError("File was not found: " << inputName);
 	}

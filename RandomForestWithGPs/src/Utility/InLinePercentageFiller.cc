@@ -22,13 +22,13 @@ InLinePercentageFiller::~InLinePercentageFiller(){
 
 void InLinePercentageFiller::setActValueAndPrintLine(const int iAct){
 	if(iAct <= m_max && iAct >= 0){
-		setActPercentageAndPrintLine((double) iAct / (double) m_max);
+		setActPercentageAndPrintLine((double) iAct / (double) m_max * 100.0, iAct == m_max);
 	}else{
 		printError("Something went wrong!");
 	}
 }
 
-void InLinePercentageFiller::setActPercentageAndPrintLine(const double dAct){
+void InLinePercentageFiller::setActPercentageAndPrintLine(const double dAct, const bool lastElement){
 	if(dAct >= 0 && dAct <= 100.0){
 		std::cout << "\r                                                                                    ";
 		std::cout << "\r";
@@ -39,8 +39,11 @@ void InLinePercentageFiller::setActPercentageAndPrintLine(const double dAct){
 				std::cout << " ";
 			}
 		}
-		std::cout << "  " << dAct << " %";
+		printf("  %3.2f %%", dAct);
 		flush(std::cout);
+		if(lastElement){
+			std::cout << std::endl;
+		}
 	}else{
 		printError("The value is not in percent: " << dAct);
 	}
