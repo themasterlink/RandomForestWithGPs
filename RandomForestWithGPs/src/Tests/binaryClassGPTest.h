@@ -26,21 +26,21 @@ void executeForBinaryClass(const std::string& path){
 	Labels testLabels;
 	const bool useRealData = true;
 	std::map<std::string, Data > datas;
+	const int trainAmount = 500;
+	const int testAmount = 200;
 	if(useRealData){
-		DataReader::readFromFiles(datas, "../realTest/");
+		DataReader::readFromFiles(datas, "../realTest/", trainAmount + testAmount);
 	}else{
-		DataReader::readFromFile(data, labels, "../testData/trainInput.txt");
+		DataReader::readFromFile(data, labels, "../testData/trainInput.txt", trainAmount + testAmount);
 	}
 	std::cout << "Amount of datas: " << datas.size() << std::endl;
 	// for binary case:
 	if(useRealData && datas.size() == 2){
 		srand(2);
 		int labelCounter = 0;
-		const int trainAmount = 500;
 		for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
 			const int amountOfElements = itData->second.size();
 			std::cout << itData->first << " with: " << amountOfElements << " points"<< std::endl;
-			int testAmount = 200;
 			for(int i = 0; i < amountOfElements; ++i){
 				if(i < trainAmount){
 					// train data

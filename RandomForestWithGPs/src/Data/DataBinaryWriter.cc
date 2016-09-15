@@ -26,9 +26,14 @@ void DataBinaryWriter::toFile(const Data& data, const std::string& filePath){
 	}else{
 		printError("The filetype should be set in: " << filePath);
 	}
-	file.open(cpy);
+	file.open(cpy, std::fstream::out | std::fstream::trunc);
 	if(file.is_open()){
-		ReadWriterHelper::writeVector(file, data);
+		long size = data.size();
+		file.write((char*) &size, sizeof(long));
+		std::cout << "Write size: " << size << std::endl;
+		for(long i = 0; i < size; ++i){
+			ReadWriterHelper::writeVector(file, data[i]);
+		}
 	}else{
 		printError("This file could not be opened: " << cpy);
 	}

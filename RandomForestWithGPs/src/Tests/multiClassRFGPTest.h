@@ -30,7 +30,7 @@ void executeForRFGPMultiClass(const std::string& path){
 	//return 0;
 
 	DataSets dataSets;
-	DataReader::readFromFiles(dataSets, path);
+	DataReader::readFromFiles(dataSets, path, 500);
 	DataSets trainSets;
 	DataSets testSets;
 	const double facForTraining = 0.8;

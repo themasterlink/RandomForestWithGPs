@@ -11,6 +11,7 @@
 #include <fstream>
 #include <Eigen/Dense>
 #include <vector>
+#include <iostream>
 
 class ReadWriterHelper {
 public:

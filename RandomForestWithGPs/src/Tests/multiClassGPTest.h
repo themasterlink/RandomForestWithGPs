@@ -17,7 +17,7 @@ void executeForMultiClass(const std::string& path){
 
 	Data data;
 	Labels labels;
-	DataReader::readFromFile(data, labels, path);
+	DataReader::readFromFile(data, labels, path, 500);
 
 	const int dataPoints = data.size();
 	Eigen::MatrixXd dataMat;

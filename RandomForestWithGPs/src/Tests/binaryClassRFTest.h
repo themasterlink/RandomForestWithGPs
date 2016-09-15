@@ -21,7 +21,7 @@ void executeForRFBinaryClass(){
 	Labels labels;
 	Labels testLabels;
 	std::map<std::string, Data > datas;
-	DataReader::readFromFiles(datas, "../realData/");
+	DataReader::readFromFiles(datas, "../realData/", 500);
 	int labelCounter = 0;
 	for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
 		const int amountOfElements = itData->second.size();
@@ -105,7 +105,7 @@ void executeForRFBinaryClass(){
 void executeForRFBinaryClass(const std::string& path){
 	Data data;
 	Labels labels;
-	DataReader::readFromFile(data, labels, path);
+	DataReader::readFromFile(data, labels, path, 500);
 	bool useFixedValuesForMinMaxUsedData;
 	Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
 	Eigen::Vector2i minMaxUsedData;
@@ -126,7 +126,7 @@ void executeForRFBinaryClass(const std::string& path){
 	Labels testLabels;
 	std::string testPath;
 	Settings::getValue("Test.path", testPath);
-	DataReader::readFromFile(testData, testLabels, testPath);
+	DataReader::readFromFile(testData, testLabels, testPath, 500);
 
 	std::cout << "Finished reading" << std::endl;
 	int dim = 2;
