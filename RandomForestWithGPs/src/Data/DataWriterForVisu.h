@@ -10,6 +10,7 @@
 
 #include "../RandomForests/RandomForest.h"
 #include "../RandomForestGaussianProcess/RandomForestGaussianProcess.h"
+#include "../GaussianProcess/GaussianProcessMultiBinary.h"
 
 class DataWriterForVisu{
 public:
@@ -23,6 +24,12 @@ public:
 			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void generateGrid(const std::string& fileName, const GaussianProcess& gp,
+			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
+
+	static void writeSvg(const std::string& fileName, const GaussianProcess& gp,
+			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
+
+	static void writeSvg(const std::string& fileName, const GaussianProcessMultiBinary& gp,
 			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
 
 private:

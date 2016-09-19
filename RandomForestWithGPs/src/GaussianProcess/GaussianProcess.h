@@ -17,7 +17,7 @@
 class GaussianProcessWriter;
 class BayesOptimizer;
 
-class GaussianProcess{
+class GaussianProcess {
 	friend GaussianProcessWriter;
 	friend BayesOptimizer;
 public:

@@ -215,3 +215,153 @@ void DataWriterForVisu::generateGrid(const std::string& fileName, const Gaussian
 	}
 	file.close();
 }
+
+void DataWriterForVisu::writeSvg(const std::string& fileName, const GaussianProcess& gp,
+		const double amountOfPointsOnOneAxis, const Data& data, const int x, const int y){
+	if(data.size() == 0){
+		printError("No data is given, this data is needed to find min and max!");
+		return;
+	}
+	const int dim = data[0].rows();
+	Eigen::Vector2d dimVec;
+	dimVec << x,y;
+	Eigen::Vector2d min, max;
+	for(int i = 0; i < 2; ++i){
+		min[i] = 1000000;
+		max[i] = -1000000;
+	}
+	for(Data::const_iterator it = data.cbegin(); it != data.cend(); ++it){
+		for(int i = 0; i < 2; ++i){
+			int j = dimVec[i];
+			if(min[i] > (*it)[j]){
+				min[i] = (*it)[j];
+			}
+			if(max[i] < (*it)[j]){
+				max[i] = (*it)[j];
+			}
+		}
+	}
+	const Eigen::Vector2d diff = max - min;
+	max[0] += diff[0] * 0.2;
+	max[1] += diff[1] * 0.2;
+	min[0] -= diff[0] * 0.2;
+	min[1] -= diff[1] * 0.2;
+	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	std::ofstream file;
+	file.open(fileName);
+	int amount = 0;
+	std::vector<double> labels;
+	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
+	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
+	int iX = 0, iY;
+	file << "<svg version=\"1.1\" " <<
+			"\nbaseProfile=\"full\"" <<
+			"\nwidth=\"" << 1920 << "\" height=\""<< (int) (1920. / (max[0] - min[0]) *  (max[1] - min[1]))   << "\"\n" <<
+			"xmlns=\"http://www.w3.org/2000/svg\">" << "\n";
+	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
+		iY = 0;
+		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+			DataElement ele(dim);
+			for(int i = 0; i < dim; ++i){
+				if(i == x){
+					ele[i] = xVal;
+				}else if(i == y){
+					ele[i] = yVal;
+				}else{
+					ele[i] = 0;
+				}
+			}
+			double val = fmax(fmin(1.0,gp.predict(ele)), 0.0);
+			file << "<rect x=\""<< iX / elementInX * 100. <<"%\" y=\""<< iY / elementInY  * 100.<< "%\" width=\"" << 100.0 / elementInX << "%\" height=\""
+					<< 100.0 / elementInY << "%\" fill=\"rgb("
+					<< (int)(val * 100.0) << "%,0%," << (int)((1.0-val) * 100.0)<< "%)\" /> \n";
+			++amount;
+			++iY;
+		}
+		++iX;
+	}
+	for(Data::const_iterator it = data.cbegin(); it != data.cend(); ++it){
+		const double dx = ((*it)[x] - min[0]) / (max[0] - min[0]) * 100.;
+		const double dy = ((*it)[y] - min[1]) / (max[1] - min[1]) * 100.;
+		file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"20\" fill=\"green\" /> \n";
+	}
+	file << "</svg>\n";
+	file.close();
+}
+
+
+void DataWriterForVisu::writeSvg(const std::string& fileName, const GaussianProcessMultiBinary& gp,
+		const double amountOfPointsOnOneAxis, const Data& data, const int x, const int y){
+	if(data.size() == 0){
+		printError("No data is given, this data is needed to find min and max!");
+		return;
+	}
+	const int dim = data[0].rows();
+	Eigen::Vector2d dimVec;
+	dimVec << x,y;
+	Eigen::Vector2d min, max;
+	for(int i = 0; i < 2; ++i){
+		min[i] = 1000000;
+		max[i] = -1000000;
+	}
+	for(Data::const_iterator it = data.cbegin(); it != data.cend(); ++it){
+		for(int i = 0; i < 2; ++i){
+			int j = dimVec[i];
+			if(min[i] > (*it)[j]){
+				min[i] = (*it)[j];
+			}
+			if(max[i] < (*it)[j]){
+				max[i] = (*it)[j];
+			}
+		}
+	}
+	const Eigen::Vector2d diff = max - min;
+	max[0] += diff[0] * 0.2;
+	max[1] += diff[1] * 0.2;
+	min[0] -= diff[0] * 0.2;
+	min[1] -= diff[1] * 0.2;
+	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	std::ofstream file;
+	file.open(fileName);
+	int amount = 0;
+	std::vector<double> labels;
+	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
+	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
+	int iX = 0, iY;
+	file << "<svg version=\"1.1\" " <<
+			"\nbaseProfile=\"full\"" <<
+			"\nwidth=\"" << 1920 << "\" height=\""<< (int) (1920. / (max[0] - min[0]) *  (max[1] - min[1]))   << "\"\n" <<
+			"xmlns=\"http://www.w3.org/2000/svg\">" << "\n";
+	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
+		iY = 0;
+		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+			DataElement ele(dim);
+			for(int i = 0; i < dim; ++i){
+				if(i == x){
+					ele[i] = xVal;
+				}else if(i == y){
+					ele[i] = yVal;
+				}else{
+					ele[i] = 0;
+				}
+			}
+			std::vector<double> prob;
+			gp.predict(ele, prob);
+			//double val = fmax(fmin(1.0,), 0.0);
+			file << "<rect x=\""<< iX / elementInX * 100. <<"%\" y=\""<< iY / elementInY  * 100.<< "%\" width=\"" << 100.0 / elementInX << "%\" height=\""
+					<< 100.0 / elementInY << "%\" fill=\"rgb("
+					<< (int)(prob[0] * 100.0) << "%,0%," << (int)((1.0-prob[1]) * 100.0)<< "%)\" /> \n";
+			++amount;
+			++iY;
+		}
+		++iX;
+	}
+	for(Data::const_iterator it = data.cbegin(); it != data.cend(); ++it){
+		const double dx = ((*it)[x] - min[0]) / (max[0] - min[0]) * 100.;
+		const double dy = ((*it)[y] - min[1]) / (max[1] - min[1]) * 100.;
+		file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"20\" fill=\"green\" /> \n";
+	}
+	file << "</svg>\n";
+	file.close();
+}
+

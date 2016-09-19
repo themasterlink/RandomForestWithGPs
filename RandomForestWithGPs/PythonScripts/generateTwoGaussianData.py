@@ -41,7 +41,7 @@ def generateData(dim, amountOfPoints):
     return text
 
 
-train = generateData(dim, data["Training"]["amount"] / 2)
+train = generateData(dim, int(data["Training"]["amount"] / 2))
 
 center0X = -0.5
 center0Y = 0.5
@@ -49,7 +49,7 @@ center0Y = 0.5
 center1X = 0.5
 center1Y = -0.5
 
-train += generateData(dim, data["Training"]["amount"] / 2)
+train += generateData(dim, int(data["Training"]["amount"] / 2))
 
 f = open(data["Training"]["path"], "w")
 f.write(train)

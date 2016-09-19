@@ -19,23 +19,22 @@
 #include "../Utility/ConfusionMatrixPrinter.h"
 
 
-void executeForBinaryClass(const std::string& path){
+void executeForBinaryClass(const std::string& path, const bool useRealData){
 	Data data;
 	Labels labels;
 	Data testData;
 	Labels testLabels;
-	const bool useRealData = true;
 	std::map<std::string, Data > datas;
 	const int trainAmount = 500;
 	const int testAmount = 200;
 	if(useRealData){
 		DataReader::readFromFiles(datas, "../realTest/", trainAmount + testAmount);
+		std::cout << "Amount of datas: " << datas.size() << std::endl;
 	}else{
 		DataReader::readFromFile(data, labels, "../testData/trainInput.txt", trainAmount + testAmount);
 	}
-	std::cout << "Amount of datas: " << datas.size() << std::endl;
 	// for binary case:
-	if(useRealData && datas.size() == 2){
+	if(useRealData && datas.size() == 2 && false){
 		srand(2);
 		int labelCounter = 0;
 		for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
@@ -245,6 +244,10 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Amount of unknown: " << (double) unknownCounter / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << RESET;
 		ConfusionMatrixPrinter::print(confusion, container.namesOfClasses);
+		if(datas.size() == 2){
+			DataWriterForVisu::writeSvg("out.svg", gp, 75, container.data);
+			system("open out.svg &");
+		}
 	}else{
 		const int firstPoints = 10000000; // all points
 		Eigen::VectorXd y;
@@ -256,9 +259,9 @@ void executeForBinaryClass(const std::string& path){
 		bayesopt::Parameters par = initialize_parameters_to_default();
 		std::cout << "noise: " << par.noise << std::endl;
  		//par.noise = 1-6;
-		//par.init_method = 50;
+		par.init_method = 300;
 		//par.n_iterations = 1000;
-		par.noise = 1e-12;
+		par.noise = 1e-5;
 		par.epsilon = 0.2;
 		par.verbose_level = 6;
 		par.surr_name = "sGaussianProcessML";
@@ -267,16 +270,16 @@ void executeForBinaryClass(const std::string& path){
 
 		vectord result(2);
 		vectord lowerBound(2);
-		lowerBound[0] = 0.1; // max(0.1,gp.getLenMean() - 2 * gp.getKernel().getLenVar());
-		lowerBound[1] = 0.1;
+		lowerBound[0] = 0.35; // max(0.1,gp.getLenMean() - 2 * gp.getKernel().getLenVar());
+		lowerBound[1] = 0.35;
 		vectord upperBound(2);
-		upperBound[0] = gp.getLenMean();// + gp.getKernel().getLenVar();
+		upperBound[0] = 1.25;// + gp.getKernel().getLenVar();
 		upperBound[1] = 1.6;//max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
 
 		bayOpt.setBoundingBox(lowerBound, upperBound);
 		bayOpt.optimize(result);
-		//gp.getKernel().setHyperParams(0.620284,0.55, 0.95);
 		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
+		//gp.getKernel().setHyperParams(0.620284,0.55, 0.95);
 		gp.trainWithoutKernelOptimize();
 		std::cout << "Start predicting!" << std::endl;
 		int wright = 0;
@@ -285,9 +288,9 @@ void executeForBinaryClass(const std::string& path){
 		for(int j = 0; j < data.size(); ++j){
 			double prob = gp.predict(data[j]);
 			std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
-			if(prob > 0.5 && labels[j] == 1){
+			if(prob > 0.5 && labels[j] == 0){
 				++wright;
-			}else if(prob < 0.5 && labels[j] == 0){
+			}else if(prob < 0.5 && labels[j] == 1){
 				++wright;
 			}
 			if(prob > 0.5){
@@ -302,7 +305,8 @@ void executeForBinaryClass(const std::string& path){
 		std::cout << "Amount of below: " << (double) amountOfBelow / data.size() * 100.0 << "%" << std::endl;
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
-		DataWriterForVisu::generateGrid("out2.txt", gp, 50, data);
+		DataWriterForVisu::writeSvg("out.svg", gp, 200, data);
+		system("open out.svg &");
 	}
 	//DataReader::readFromFile(data, labels, path);
 
