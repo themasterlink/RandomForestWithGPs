@@ -297,6 +297,7 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 GaussianProcess::Status GaussianProcess::trainF(const Eigen::MatrixXd& K){
 	// find suited f:
 	m_sw.startTime();
+	m_fastPredict = false;
 	// m_f = Eigen::VectorXd::Zero(m_dataPoints); 						// f <-- init with zeros
 	m_f.fill(0);														// f <-- init with zeros
 	bool converged = false;
@@ -305,7 +306,6 @@ GaussianProcess::Status GaussianProcess::trainF(const Eigen::MatrixXd& K){
 	double stepSize = 0.5;
 	Eigen::VectorXd oldA = m_a;
 	Eigen::VectorXd oldF = m_f;
-
 	while(!converged){
 		// calc - log p(y_i| f_i) -> -
 		updatePis();

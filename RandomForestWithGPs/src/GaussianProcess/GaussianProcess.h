@@ -44,8 +44,10 @@ public:
 
 	const StopWatch& getTrainFWatch(){return m_sw;};
 
+	void resetFastPredict(){ m_fastPredict = false; };
+
+	GaussianProcess::Status trainBayOpt(double& logZ, const double lambda); // TODO should be private again
 private:
-	GaussianProcess::Status trainBayOpt(double& logZ, const double lambda);
 
 	Status trainLM(double& logZ, std::vector<double>& dLogZ);
 

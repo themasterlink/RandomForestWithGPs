@@ -1,10 +1,18 @@
 {
 	"RFGP": {
         "thresholdForNoise": 5,
-        "pointsPerClassForBayOpt": 4,
+        "pointsPerClassForBayOpt": 7,
         "maxPointsUsedInGpSingleTraining": 1500,
         "maxNrOfPointsForBayesOpt": 250,
         "nrOfNoChanges": 6
+    },    
+    "MultiBinaryGP": {
+        "lowerBoundNoise": 0.5,
+        "upperBoundNoise": 5.0,
+        "lowerBoundLength": 1.0,
+        "upperBoundLength": 20.0,
+    	"trainingAmount": 400,
+    	"testingAmount": 200
     },
     "Forest": {
         "amountOfTrees": 4000,

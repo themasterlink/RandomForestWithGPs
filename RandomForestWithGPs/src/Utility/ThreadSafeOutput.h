@@ -24,8 +24,8 @@ public:
 
 private:
 	boost::mutex m_mutex;
-	bool m_change;
 	std::ostream& m_stream;
+	bool m_change;
 };
 
 #endif /* UTILITY_THREADSAFEOUTPUT_H_ */

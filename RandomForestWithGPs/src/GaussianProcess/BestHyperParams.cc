@@ -6,6 +6,7 @@
  */
 
 #include "BestHyperParams.h"
+#include "../Utility/Util.h"
 
 BestHyperParams::BestHyperParams(const int amountOfMaxNoChange):
 	m_maxNrOfNoChange(amountOfMaxNoChange),
@@ -85,7 +86,8 @@ void BestHyperParams::getFinishDuring(bool& isFinish){
 
 bool BestHyperParams::checkGoal(){
 	m_mutex.lock();
-	if(m_amountOfBestWright / (double) m_amountOfBestValues * 100.0 > 95.0 && m_amountOfBestWrightPositive / (double) m_amountOfCorrectBestValues * 100.0 > 85.0){
+	if(m_amountOfBestWright / (double) m_amountOfBestValues * 100.0 > 95.0
+			&& m_amountOfBestWrightPositive / (double) m_amountOfCorrectBestValues * 100.0 > 85.0){
 		m_isFinish = true;
 		m_mutex.unlock();
 		return true;
@@ -94,10 +96,22 @@ bool BestHyperParams::checkGoal(){
 	return false;
 }
 
-const std::string BestHyperParams::prettyStringOfBest(){
-	std::stringstream str;
-	m_mutex.lock();
-	str << m_len << ", " << m_sigmaF << ", with: " << m_amountOfBestWright / (double) m_amountOfBestValues * 100.0 << " %, just right: " << m_amountOfBestWrightPositive / (double) m_amountOfCorrectBestValues * 100.0;
-	m_mutex.unlock();
-	return str.str();
+const std::string BestHyperParams::prettyStringOfBest(const int precision){
+	if(precision != -1){
+		std::stringstream str;
+		m_mutex.lock();
+		str << number2String(m_len, precision) << ", " << number2String(m_sigmaF, precision) << ", with: "
+				<< number2String(m_amountOfBestWright / (double) m_amountOfBestValues * 100.0, precision)
+				<< " %, just right: "
+				<< number2String(m_amountOfBestWrightPositive / (double) m_amountOfCorrectBestValues * 100.0, precision) << " %";
+		m_mutex.unlock();
+		return str.str();
+	}else{
+		std::stringstream str;
+		m_mutex.lock();
+		str << m_len << ", " << m_sigmaF << ", with: " << m_amountOfBestWright / (double) m_amountOfBestValues * 100.0
+				<< " %, just right: " << m_amountOfBestWrightPositive / (double) m_amountOfCorrectBestValues * 100.0 << " %";
+		m_mutex.unlock();
+		return str.str();
+	}
 }

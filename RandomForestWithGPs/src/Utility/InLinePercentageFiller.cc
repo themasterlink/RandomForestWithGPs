@@ -39,7 +39,7 @@ void InLinePercentageFiller::setActPercentageAndPrintLine(const double dAct, con
 				std::cout << " ";
 			}
 		}
-		printf("  %3.2f %%", dAct);
+		printf("|  %3.2f %%", dAct);
 		flush(std::cout);
 		if(lastElement){
 			std::cout << std::endl;

@@ -18,9 +18,13 @@ BayesOptimizer::~BayesOptimizer() {
 double BayesOptimizer::evaluateSample(const vectord& x) {
 	GaussianProcess::Status status(GaussianProcess::NANORINFERROR);
 	double logZ = 0.0;
+	const double upperBound = 10000;
 	if(x[0] * x[1] < 50){ // avoid overfitting!
 		m_gp.getKernel().setHyperParams(x[0], x[1], m_gp.getKernel().sigmaN());
 		status = m_gp.trainBayOpt(logZ,1);
+		if(logZ > upperBound){
+			printError("The upper bound is to low, the result of the Bayessian Optimiziation can be wrong!");
+		}
 		if(logZ > 1.0){ // avoid overfitting!
 			logZ = m_lowestValue;
 		}
@@ -35,7 +39,7 @@ double BayesOptimizer::evaluateSample(const vectord& x) {
 		bestSigma = m_gp.getKernel().sigmaF();
 		//getchar();
 	}*/
-	return status == GaussianProcess::NANORINFERROR ? 10000 - m_lowestValue : 10000 - logZ;
+	return status == GaussianProcess::NANORINFERROR ? upperBound - m_lowestValue : upperBound - logZ;
 };
 
 

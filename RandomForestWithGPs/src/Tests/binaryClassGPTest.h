@@ -182,12 +182,14 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		container.namesOfClasses.resize(datas.size());
 		int labelCounter = 0;
 		//const double fac = 0.80;
+		int trainAmount = 400;
+		Settings::getValue("MultiBinaryGP.trainingAmount", trainAmount);
+		int testAmount = 100;
+		Settings::getValue("MultiBinaryGP.testingAmount", testAmount);
 		for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
 			const int amountOfElements = itData->second.size();
 			std::cout << itData->first << " with: " << amountOfElements << " points"<< std::endl;
 			container.namesOfClasses[labelCounter] = itData->first;
-			int trainAmount = 300;
-			int testAmount = 50;
 			for(int i = 0; i < amountOfElements; ++i){
 				if(i < trainAmount){
 					// train data
@@ -249,6 +251,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 			system("open out.svg &");
 		}
 	}else{
+
 		const int firstPoints = 10000000; // all points
 		Eigen::VectorXd y;
 		Eigen::MatrixXd dataMat;
@@ -256,11 +259,47 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 
 		GaussianProcess gp;
 		gp.init(dataMat, y);
+		if(false){
+			double up = 3;
+			double step = 0.05;
+			int size = (up - 0.005) / step + 1;
+			Eigen::MatrixXd mat = Eigen::MatrixXd::Zero(size, size);
+			int i = 0,j;
+			double minX, minY;
+			double minVal = -DBL_MAX;
+			InLinePercentageFiller::setActMax(size * size);
+			for(double x = 0.005; x < up; x += step){
+				j = 0;
+				for(double y = 0.005; y < up; y += step){
+					gp.getKernel().setHyperParams(x, y, gp.getKernel().sigmaN());
+					double val;
+					gp.trainBayOpt(val,1);
+					if(val < 10){
+						if(minVal < val){
+							minVal = val;
+							minX = x;
+							minY = y;
+						}
+						mat(i,j) = val;
+					}else{
+						mat(i,j) = -DBL_MAX;
+					}
+					++j;
+				}
+				InLinePercentageFiller::setActValueAndPrintLine(i * size + j);
+				++i;
+			}
+			std::cout << "X: " << minX << ", y: " << minY << ", for: " << minVal << std::endl;
+			DataWriterForVisu::writeSvg("out2.svg", mat);
+			system("open out2.svg &");
+			return;
+		}
+
 		bayesopt::Parameters par = initialize_parameters_to_default();
 		std::cout << "noise: " << par.noise << std::endl;
  		//par.noise = 1-6;
 		par.init_method = 300;
-		//par.n_iterations = 1000;
+		//par.n_iterations = 500;
 		par.noise = 1e-5;
 		par.epsilon = 0.2;
 		par.verbose_level = 6;
@@ -270,11 +309,11 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 
 		vectord result(2);
 		vectord lowerBound(2);
-		lowerBound[0] = 0.35; // max(0.1,gp.getLenMean() - 2 * gp.getKernel().getLenVar());
-		lowerBound[1] = 0.35;
+		lowerBound[0] = 0.0005; // max(0.1,gp.getLenMean() - 2 * gp.getKernel().getLenVar());
+		lowerBound[1] = 0.20;
 		vectord upperBound(2);
-		upperBound[0] = 1.25;// + gp.getKernel().getLenVar();
-		upperBound[1] = 1.6;//max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
+		upperBound[0] = 5.75;// + gp.getKernel().getLenVar();
+		upperBound[1] = 5.6;//max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
 
 		bayOpt.setBoundingBox(lowerBound, upperBound);
 		bayOpt.optimize(result);
@@ -305,7 +344,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		std::cout << "Amount of below: " << (double) amountOfBelow / data.size() * 100.0 << "%" << std::endl;
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
-		DataWriterForVisu::writeSvg("out.svg", gp, 200, data);
+		DataWriterForVisu::writeSvg("out.svg", gp, 100, data);
 		system("open out.svg &");
 	}
 	//DataReader::readFromFile(data, labels, path);

@@ -32,6 +32,8 @@ public:
 	static void writeSvg(const std::string& fileName, const GaussianProcessMultiBinary& gp,
 			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
 
+	static void writeSvg(const std::string& fileName, const Eigen::MatrixXd mat);
+
 private:
 	DataWriterForVisu();
 	virtual ~DataWriterForVisu();

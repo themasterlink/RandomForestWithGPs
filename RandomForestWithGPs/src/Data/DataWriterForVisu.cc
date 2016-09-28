@@ -365,3 +365,40 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const GaussianProc
 	file.close();
 }
 
+void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::MatrixXd mat){
+	std::ofstream file;
+	file.open(fileName);
+	file << "<svg version=\"1.1\" " <<
+				"\nbaseProfile=\"full\"" <<
+				"\nwidth=\"" << 1920 << "\" height=\""<< (int) (1920. / (mat.cols()) *  (mat.rows()))   << "\"\n" <<
+				"xmlns=\"http://www.w3.org/2000/svg\">" << "\n";
+	double max = -DBL_MAX;
+	double min = DBL_MAX;
+	for(int iX = 0; iX < mat.cols(); ++iX){
+		for(int iY = 0; iY < mat.rows(); ++iY){
+			if(mat(iX,iY) < min && mat(iX,iY) > -DBL_MAX){
+				min = mat(iX,iY);
+			}
+			if(mat(iX,iY) > max){
+				max = mat(iX,iY);
+			}
+		}
+	}
+
+	for(int iX = 0; iX < mat.cols(); ++iX){
+		for(int iY = 0; iY < mat.rows(); ++iY){
+			if(mat(iX,iY) > -DBL_MAX){
+				const double prob = (mat(iX,iY)  - min) / (max - min);
+				file << "<rect x=\""<< iX / (double)mat.cols() * 100. <<"%\" y=\""<< iY / (double)mat.rows()  * 100.<< "%\" width=\"" << 100.0 / mat.cols() << "%\" height=\""
+						<< 100.0 / mat.rows() << "%\" fill=\"rgb("
+						<< (int)(prob * 100.0) << "%,0%," << (int)((1.0-prob) * 100.0)<< "%)\" /> \n";
+			}else{
+				file << "<rect x=\""<< iX / (double)mat.cols() * 100. <<"%\" y=\""<< iY / (double)mat.rows()  * 100.<< "%\" width=\"" << 100.0 / mat.cols() << "%\" height=\""
+						<< 100.0 / mat.rows() << "%\" fill=\"rgb(0%,100%,0%)\" /> \n";
+			}
+		}
+	}
+	file << "</svg>\n";
+	file.close();
+}
+

@@ -32,6 +32,8 @@ public:
 
 	void calcCovarianceDerivative(Eigen::MatrixXd& cov, const ParamType type) const;
 
+	double calcDiagElement() const;
+
 	void calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const;
 
 	void addHyperParams(const double len, const double sigmaF, const double sigmaN);
@@ -129,6 +131,11 @@ void Kernel::newRandHyperParams(){
 	m_hyperParams[0] = m_randLen();
 	m_hyperParams[1] = m_randSigmaF();
 	m_hyperParams[2] = ((double) rand() / (RAND_MAX)) + 0.1;
+}
+
+inline
+double Kernel::calcDiagElement() const{
+	return /*m_hyperParams[1] * m_hyperParams[1] +*/ m_hyperParams[2] * m_hyperParams[2];
 }
 
 #endif /* GAUSSIANPROCESS_KERNEL_H_ */

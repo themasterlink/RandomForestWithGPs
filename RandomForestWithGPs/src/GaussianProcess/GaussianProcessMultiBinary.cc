@@ -8,15 +8,20 @@
 #include "GaussianProcessMultiBinary.h"
 #include "../Data/DataConverter.h"
 #include "../Utility/Settings.h"
-#include "../GaussianProcess/BayesOptimizer.h"
 
 GaussianProcessMultiBinary::GaussianProcessMultiBinary(int amountOfUsedClasses):
 	m_amountOfUsedClasses(amountOfUsedClasses),
 	m_amountOfDataPoints(0),
 	m_amountOfDataPointsForUseAllTestsPoints(300),
 	m_maxPointsUsedInGpSingleTraining(1000),
+	m_lowerBound(2),
+	m_upperBound(2),
 	m_pClassNames(NULL),
 	m_gps(amountOfUsedClasses, NULL){
+	Settings::getValue("MultiBinaryGP.lowerBoundLength", m_lowerBound[0]);
+	Settings::getValue("MultiBinaryGP.lowerBoundNoise",  m_lowerBound[1]);
+	Settings::getValue("MultiBinaryGP.upperBoundLength", m_upperBound[0]);
+	Settings::getValue("MultiBinaryGP.upperBoundNoise",  m_upperBound[1]);
 }
 
 void GaussianProcessMultiBinary::train(const DataContainer& container, const Labels* guessedLabels){
@@ -77,7 +82,8 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 	// calc for final training
 	std::vector<bool> usedElements;
 	std::vector<bool> blockElements(container.data.size(), false); // block none
-	DataConverter::toRandClassAndHalfUniformDataMatrix(container.data, container.labels, classCounts, dataMat, yGpInit, m_maxPointsUsedInGpSingleTraining, iActClass, usedElements, blockElements); // get a uniform portion of at most 1000 points
+	DataConverter::toRandClassAndHalfUniformDataMatrix(container.data, container.labels, classCounts,
+			dataMat, yGpInit, m_maxPointsUsedInGpSingleTraining, iActClass, usedElements, blockElements); // get a uniform portion of at most 1000 points
 
 	Eigen::MatrixXd testDataMat;
 	Eigen::VectorXd testYGpInit;
@@ -85,7 +91,8 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 	// calc for final training
 	std::vector<bool> usedElementsForTheValidationSet; // save the blocked values, for the testing of the hyper params
 	std::vector<bool> blockElementsForValidationSet(container.data.size(), false); // block none
-	DataConverter::toRandClassAndHalfUniformDataMatrix(container.data, container.labels, classCounts, testDataMat, testYGpInit, amountOfPointsUsedForTrainingTheTest, iActClass, usedElementsForTheValidationSet, blockElementsForValidationSet); // get a uniform portion of at most 1000 points
+	DataConverter::toRandClassAndHalfUniformDataMatrix(container.data, container.labels, classCounts, testDataMat, testYGpInit,
+			amountOfPointsUsedForTrainingTheTest, iActClass, usedElementsForTheValidationSet, blockElementsForValidationSet); // get a uniform portion of at most 1000 points
 
 	// compare to all other classes! // one vs. all
 	const int numberOfPointsForClass = classCounts[iActClass];
@@ -128,10 +135,10 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 	actGp->getKernel().setHyperParams(len, sigmaF, actGp->getKernel().sigmaN());
 	// train on whole data set
 	actGp->init(dataMat,yGpInit);
-	m_output.printSwitchingColor("Finish init for " + number2String(yGpInit.rows()) + " elements in: " + sw.elapsedAsPrettyTime() + betweenNames);
+	m_output.printInColor("Finish init for " + number2String(yGpInit.rows()) + " elements in: " + sw.elapsedAsPrettyTime() + betweenNames, MAGENTA);
 	sw.startTime();
 	actGp->trainWithoutKernelOptimize();
-	m_output.printSwitchingColor("Finish training for " + number2String(yGpInit.rows()) + " elements in: " + sw.elapsedAsPrettyTime() + betweenNames);
+	m_output.printInColor("Finish training for " + number2String(yGpInit.rows()) + " elements in: " + sw.elapsedAsPrettyTime() + betweenNames, MAGENTA);
 	m_threadCounter.removeThread();
 }
 
@@ -147,18 +154,12 @@ void GaussianProcessMultiBinary::optimizeHyperParams(const int iActClass,
 	int size = min(m_amountOfDataPointsForUseAllTestsPoints, m_amountOfDataPoints);
 	bool isFinished = false;
 	bestHyperParams->getNoChangeCounter(noChange);
-	vectord lowerBound(2); // for hyper params in bayesian optimization
-	lowerBound[0] = 1.0;
-	lowerBound[1] = 0.5;
-	vectord upperBound(2);
-	upperBound[0] = 17; //;actGp->getKernel().getLenVar() / 3;
-	upperBound[1] = 2.5;
 	while(!isFinished){
 		Eigen::MatrixXd dataHyper;
 		Eigen::VectorXd yHyper;
 		std::vector<bool> usedElements;
-		DataConverter::toRandClassAndHalfUniformDataMatrix(container.data, container.labels, classCounts, dataHyper, yHyper, min(100, noChange * amountOfHyperPoints), iActClass, usedElements, elementsUsedForValidation); // get a uniform portion of all points
-
+		DataConverter::toRandClassAndHalfUniformDataMatrix(container.data, container.labels, classCounts, dataHyper,
+				yHyper, min(100, noChange * amountOfHyperPoints), iActClass, usedElements, elementsUsedForValidation); // get a uniform portion of all points
 		/* copy the #hyperPoints points of both TODO find way of randomly taking the values
 int oneCounter = 0, minusCounter = 0, counterHyper = 0;
 if(amountOfDataInRfRes > hyperPoints){
@@ -202,7 +203,7 @@ std::cout << "One: " << oneCounter << std::endl;
 		bestHyperParams->getFinishDuring(isFinished); // only if one result is above the testing mark
 		if(isFinished){ break; }
 		vectord result(2);
-		usedGp.init(dataHyper, yHyper);
+		usedGp.init(dataHyper, yHyper); // TODO reinit of kernel matrix -> is not necessary
 		bayesopt::Parameters par = initialize_parameters_to_default();
 		par.noise = 1e-12;
 		par.epsilon = 0.2;
@@ -210,13 +211,13 @@ std::cout << "One: " << oneCounter << std::endl;
 		par.n_iterations = 200;
 		par.surr_name = "sGaussianProcessML";
 		BayesOptimizer bayOpt(usedGp, par);
-		bayOpt.setBoundingBox(lowerBound, upperBound);
+		bayOpt.setBoundingBox(m_lowerBound, m_upperBound);
 		try{
 			bestHyperParams->getFinishDuring(isFinished); // only if one result is above the testing mark
 			if(isFinished){ break; }
 			bayOpt.optimize(result);
 		}catch(std::runtime_error& e){
-			upperBound[1] = 1.5; // reduce noice!
+			//upperBound[1] = 1.5; // reduce noice!
 			m_output.printSwitchingColor(e.what() + betweenNames);
 			continue;
 		}
@@ -263,13 +264,14 @@ std::cout << "One: " << oneCounter << std::endl;
 		}
 		bestHyperParams->trySet(wright, rr, amountOfUsedValues, amountOfCorrectLabels, result[0], result[1]);
 		bestHyperParams->getNoChangeCounter(noChange);
-		m_output.printSwitchingColor("Act is: " + number2String(result[0]) + ", " + number2String(result[1])
-						+ " with: " + number2String(wright / (double) container.amountOfPoints * 100.0)
-						+ " %, just right: " + number2String(rr / (double) amountOfCorrectLabels * 100.0)+ " %, best is at the moment: "
-						+ bestHyperParams->prettyStringOfBest() + ", use "
+		const int percentagePrecision = 2;
+		m_output.printSwitchingColor("Act is: " + number2String(result[0], percentagePrecision) + ", " + number2String(result[1], percentagePrecision)
+						+ " with: " + number2String(wright / (double) amountOfUsedValues * 100.0, percentagePrecision) + " %, for " + number2String(amountOfUsedValues)
+						+ " test elements, just right: " + number2String(rr / (double) amountOfCorrectLabels * 100.0, percentagePrecision)
+						+ " %, best now: "
+						+ bestHyperParams->prettyStringOfBest(percentagePrecision) + ", use "
 						+ number2String(min(100, noChange * amountOfHyperPoints))
 						+ " HPs" + betweenNames + " time in trainF was: " + usedGp.getTrainFWatch().elapsedAvgAsPrettyTime());
-
 		if(bestHyperParams->checkGoal()){
 			break;
 		}
@@ -296,6 +298,7 @@ int GaussianProcessMultiBinary::predict(const DataElement& point, std::vector<do
 		p = 0;
 		for(int i = 0; i < m_amountOfUsedClasses; ++i){
 			if(m_gps[i] != NULL){
+				m_gps[i]->resetFastPredict(); // to avoid that the fast prediction is wrong!
 				prob[i] = m_gps[i]->predict(point, 3000);
 			}else{
 				prob[i] = 0.0; // there were not enough elements to identify a prob for this class!
@@ -313,6 +316,8 @@ int GaussianProcessMultiBinary::predict(const DataElement& point, std::vector<do
 }
 
 GaussianProcessMultiBinary::~GaussianProcessMultiBinary() {
-	// TODO Auto-generated destructor stub
+	for(int iActClass = 0; iActClass < m_amountOfUsedClasses; ++iActClass){
+		delete m_gps[iActClass];
+	}
 }
 

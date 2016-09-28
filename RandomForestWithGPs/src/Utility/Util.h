@@ -36,6 +36,22 @@
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
+inline std::string number2String(const double& in, const int precision = -1){
+	if(precision != -1){
+		double t = 1;
+		for(int i = 0; i < precision; ++i){
+			t *= 10;
+		}
+		std::stringstream ss;
+		ss << ((std::trunc(in * t)) / t) ;
+		return ss.str();
+	}else{
+		std::stringstream ss;
+		ss << in;
+		return ss.str();
+	}
+}
+
 template<typename T>
 inline std::string number2String(const T& in){
 	std::stringstream ss;

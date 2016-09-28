@@ -44,9 +44,9 @@ void DataReader::readFromFile(Data& data, Labels& label, const std::string& inpu
 	}
 }
 
-void DataReader::readFromFile(Data& data, const std::string& inputName, const int amountOfData){
+void DataReader::readFromFile(Data& data, const std::string& inputName, const int amountOfData, const bool readTxt){
 	std::string inputPath(inputName);
-	if(boost::filesystem::exists(inputName + ".binary")){
+	if(boost::filesystem::exists(inputName + ".binary") && !readTxt){
 		// is a binary file -> faster loading!
 		inputPath += ".binary";
 		std::fstream input(inputPath, std::fstream::in);
@@ -62,7 +62,7 @@ void DataReader::readFromFile(Data& data, const std::string& inputName, const in
 		}
 		input.close();
 	}else if(boost::filesystem::exists(inputName + ".txt")){
-		std::cout << "txt" << std::endl;
+		std::cout << "Read txt" << std::endl;
 		inputPath += ".txt";
 		std::ifstream input(inputPath);
 		if(input.is_open()){
@@ -92,7 +92,7 @@ void DataReader::readFromFile(Data& data, const std::string& inputName, const in
 	}
 }
 
-void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLocation, const int amountOfData){
+void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLocation, const int amountOfData, const bool readTxt){
 	boost::filesystem::path targetDir(folderLocation);
 	boost::filesystem::directory_iterator end_itr;
 	// cycle through the directory
@@ -102,7 +102,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			Data data;
 			std::string filePath(itr->path().c_str());
 			filePath += "/vectors";
-			readFromFile(data, filePath, amountOfData);
+			readFromFile(data, filePath, amountOfData, readTxt);
 			dataSets.insert( std::pair<std::string, Data >(name, data));
 		}
 	}

@@ -71,10 +71,10 @@ void Kernel::calcCovariance(Eigen::MatrixXd& cov) const{
 		printError("Kernel not inited!");
 		return;
 	}
-	const double sigmaNSquared = m_hyperParams[2] * m_hyperParams[2];
+	const double diagElement = calcDiagElement();
 	cov.conservativeResize(m_dataPoints, m_dataPoints);
 	for(int i = 0; i < m_dataPoints; ++i){
-		cov(i,i) = sigmaNSquared;
+		cov(i,i) =  diagElement;
 		for(int j = i + 1; j < m_dataPoints; ++j){
 			cov(i,j) = kernelFunc(i,j);
 			cov(j,i) = cov(i,j);
@@ -82,11 +82,12 @@ void Kernel::calcCovariance(Eigen::MatrixXd& cov) const{
 	}
 }
 
+
 void Kernel::calcCovarianceDerivative(Eigen::MatrixXd& cov, const ParamType type) const{
 	cov = Eigen::MatrixXd::Identity(m_dataPoints, m_dataPoints);
 	switch(type){
 		case ParamType::LENGTH:{
-			const double sigmaNSquared = m_hyperParams[2] * m_hyperParams[2];
+			const double sigmaNSquared = m_hyperParams[1] * m_hyperParams[1];
 			for(int i = 0; i < m_dataPoints; ++i){
 				cov(i,i) = cov.col(i)[i] * sigmaNSquared;
 				for(int j = i + 1; j < m_dataPoints; ++j){
@@ -96,7 +97,7 @@ void Kernel::calcCovarianceDerivative(Eigen::MatrixXd& cov, const ParamType type
 			}
 			break;
 		} case ParamType::FNOISE:{
-			const double sigmaNSquared = m_hyperParams[2] * m_hyperParams[2];
+			const double sigmaNSquared = 2.0 * m_hyperParams[1];
 			for(int i = 0; i < m_dataPoints; ++i){
 				cov(i,i) = cov.col(i)[i] * sigmaNSquared;
 				for(int j = i + 1; j < m_dataPoints; ++j){

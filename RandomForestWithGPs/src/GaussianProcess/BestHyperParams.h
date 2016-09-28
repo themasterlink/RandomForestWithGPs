@@ -29,7 +29,7 @@ public:
 
 	bool checkGoal();
 
-	const std::string prettyStringOfBest();
+	const std::string prettyStringOfBest(const int precision = -1);
 
 private:
 

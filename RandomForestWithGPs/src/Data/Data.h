@@ -25,6 +25,6 @@ typedef SimpleLabels Labels;
 typedef std::vector<double> DoubleLabels; // could be that the data elements have continous labels
 typedef Eigen::DiagonalWrapper<const Eigen::MatrixXd> DiagMatrixXd;
 
-
+#define EPSILON 1e-15
 
 #endif /* DATA_DATA_H_ */
