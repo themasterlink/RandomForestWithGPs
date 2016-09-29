@@ -64,7 +64,6 @@ public:
 		return ss.str();
 	}
 
-private:
 	double kernelFunc(const int row, const int col) const;
 
 	double kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const;
@@ -72,6 +71,8 @@ private:
 	double kernelFuncDerivativeToLength(const int row, const int col) const;
 
 	double kernelFuncDerivativeToFNoise(const int row, const int col) const;
+
+private:
 
 	Eigen::MatrixXd m_differences;
 	bool m_init;
@@ -135,7 +136,7 @@ void Kernel::newRandHyperParams(){
 
 inline
 double Kernel::calcDiagElement() const{
-	return /*m_hyperParams[1] * m_hyperParams[1] +*/ m_hyperParams[2] * m_hyperParams[2];
+	return /* m_hyperParams[1] * m_hyperParams[1] +*/ m_hyperParams[2] * m_hyperParams[2];
 }
 
 #endif /* GAUSSIANPROCESS_KERNEL_H_ */

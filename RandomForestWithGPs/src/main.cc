@@ -9,9 +9,10 @@
 #include "Tests/tests.h"
 #include "Utility/Settings.h"
 #include <boost/program_options.hpp>
-#include <opencv2/core.hpp>
+/*#include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/xfeatures2d.hpp>
+*/
 #include "Data/DataBinaryWriter.h"
 
 void compress(const std::string& path){
@@ -32,7 +33,7 @@ void compress(const std::string& path){
 }
 
 int main(int ac, char* av[]){
-	const cv::Mat input = cv::imread("../dog.jpg", CV_LOAD_IMAGE_COLOR);
+	/*const cv::Mat input = cv::imread("../dog.jpg", CV_LOAD_IMAGE_COLOR);
 	std::vector<cv::KeyPoint> keypoints;
 	cv::Ptr<cv::xfeatures2d::SiftFeatureDetector> detector = cv::xfeatures2d::SiftFeatureDetector::create();
 	detector->detect(input, keypoints);
@@ -41,7 +42,7 @@ int main(int ac, char* av[]){
 	cv::Mat output;
 	cv::drawKeypoints(input, keypoints, output);
 	cv::imwrite("../sift_result.jpg", output);
-
+*/
 	boost::program_options::options_description desc("Allowed options");
     desc.add_options()
         ("help", "produce help message")

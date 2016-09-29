@@ -8,7 +8,7 @@
 #include "BayesOptimizer.h"
 
 BayesOptimizer::BayesOptimizer(GaussianProcess& gp, bayesopt::Parameters param):
-	ContinuousModel(2,param), m_gp(gp), m_lowestValue(-100){ //, bestVal(-100000000), bestLen(0), bestSigma(0) {
+	ContinuousModel(2,param), m_gp(gp), m_lowestValue(-100000), m_worstValue(100000){ //, bestVal(-100000000), bestLen(0), bestSigma(0) {
 }
 
 BayesOptimizer::~BayesOptimizer() {
@@ -28,8 +28,11 @@ double BayesOptimizer::evaluateSample(const vectord& x) {
 		if(logZ > 1.0){ // avoid overfitting!
 			logZ = m_lowestValue;
 		}
-		if(logZ < m_lowestValue){
+		if(logZ > m_lowestValue){
 			m_lowestValue = logZ;
+		}
+		if(logZ < m_worstValue){
+			m_worstValue = logZ;
 		}
 	}
 	/*std::cout << RED << "logZ: " << logZ << RESET << std::endl;
@@ -39,7 +42,7 @@ double BayesOptimizer::evaluateSample(const vectord& x) {
 		bestSigma = m_gp.getKernel().sigmaF();
 		//getchar();
 	}*/
-	return status == GaussianProcess::NANORINFERROR ? upperBound - m_lowestValue : upperBound - logZ;
+	return status == GaussianProcess::NANORINFERROR ? upperBound - m_worstValue : upperBound - logZ;
 };
 
 

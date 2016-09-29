@@ -28,16 +28,28 @@ public:
 
 	void train();
 
+	double predict(const Vector& input);
+
+	Kernel& getKernel(){ return m_kernel; };
+
 	virtual ~IVM();
 
 private:
 
 	Matrix m_dataMat;
 	Matrix m_M;
+	Matrix m_K;
+	Matrix m_L;
 	Vector m_y;
+	Vector m_nuTilde;
+	Vector m_tauTilde;
 	unsigned int m_dataPoints;
 	unsigned int m_numberOfInducingPoints;
+	double m_bias;
+	double m_lambda;
 	List<int> m_J, m_I;
+
+	Eigen::LLT<Eigen::MatrixXd> m_choleskyLLT;
 
 	Kernel m_kernel;
 	boost::math::normal m_logisticNormal;

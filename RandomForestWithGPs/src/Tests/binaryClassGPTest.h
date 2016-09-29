@@ -13,6 +13,7 @@
 #include "../Data/DataConverter.h"
 #include "../Data/DataWriterForVisu.h"
 #include "../GaussianProcess/GaussianProcess.h"
+#include "../GaussianProcess/IVM.h"
 #include "../GaussianProcess/GaussianProcessMultiBinary.h"
 #include "../GaussianProcess/BayesOptimizer.h"
 #include "../Utility/Settings.h"
@@ -257,39 +258,82 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		Eigen::MatrixXd dataMat;
 		DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
 
+
+		if(true){
+			IVM ivm;
+			ivm.init(dataMat, y, dataMat.cols() * 0.3);
+			ivm.getKernel().setHyperParams(0.6, 0.4, 0.1);
+			ivm.train();
+			int wright = 0;
+			int amountOfBelow = 0;
+			int amountOfAbove = 0;
+			for(int j = 0; j < data.size(); ++j){
+				double prob = ivm.predict(data[j]);
+				std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
+				if(prob > 0.5 && labels[j] == 0){
+					++wright;
+				}else if(prob < 0.5 && labels[j] == 1){
+					++wright;
+				}
+				if(prob > 0.5){
+					++amountOfAbove;
+				}else{
+					++amountOfBelow;
+				}
+			}
+			std::cout << RED;
+			std::cout << "Amount of wright: " << (double) wright / data.size() * 100.0 << "%" << std::endl;
+			std::cout << "Amount of above: " << (double) amountOfAbove / data.size() * 100.0 << "%" << std::endl;
+			std::cout << "Amount of below: " << (double) amountOfBelow / data.size() * 100.0 << "%" << std::endl;
+			std::cout << "len: " << ivm.getKernel().len() << ", sigmaF: " << ivm.getKernel().sigmaF() <<std::endl;
+			std::cout << RESET;
+			return;
+		}
 		GaussianProcess gp;
 		gp.init(dataMat, y);
 		if(false){
-			double up = 3;
-			double step = 0.05;
-			int size = (up - 0.005) / step + 1;
-			Eigen::MatrixXd mat = Eigen::MatrixXd::Zero(size, size);
-			int i = 0,j;
-			double minX, minY;
+			double up1 = 1.8;
+			double up2 = 1.8;
+			double step = 0.025;
+			int size1 = (up1 - 0.005) / step + 1;
+			int size2 = (up2 - 0.) / step + 1;
+			Eigen::MatrixXd mat = Eigen::MatrixXd::Zero(size1, size2);
+			int i = 0,j,k = 0;
+			double minX, minY, minZ;
 			double minVal = -DBL_MAX;
-			InLinePercentageFiller::setActMax(size * size);
-			for(double x = 0.005; x < up; x += step){
-				j = 0;
-				for(double y = 0.005; y < up; y += step){
-					gp.getKernel().setHyperParams(x, y, gp.getKernel().sigmaN());
-					double val;
-					gp.trainBayOpt(val,1);
-					if(val < 10){
-						if(minVal < val){
-							minVal = val;
-							minX = x;
-							minY = y;
+			InLinePercentageFiller::setActMax(size1 * size2);
+			//for(double z = -1.; z < 1.0; z += 0.01){
+			{	double z = 0.1;
+				i = 0;
+				for(double x = 0.005; x < up1; x += step){
+				//{ double x = 0.455;
+					j = 0;
+					for(double y = 0.; y < up2; y += step){
+					//{
+						gp.getKernel().setHyperParams(x, y, z);
+						double val;
+						gp.trainBayOpt(val,1);
+						if(val < 10){
+							if(minVal < val){
+								minVal = val;
+								minX = x;
+								minY = y;
+								minZ = z;
+							}
+							mat(i,j) = val;
+						}else{
+							mat(i,j) = -DBL_MAX;
 						}
-						mat(i,j) = val;
-					}else{
-						mat(i,j) = -DBL_MAX;
+					//	std::cout << "z: " << z << ", val: " << val << std::endl;
+						std::cout << "x: " << x << ", y: " << y << std::endl;
+						++j;
 					}
-					++j;
+					//InLinePercentageFiller::setActValueAndPrintLine(k * size * size + i * size + j);
+					++i;
 				}
-				InLinePercentageFiller::setActValueAndPrintLine(i * size + j);
-				++i;
+				++k;
 			}
-			std::cout << "X: " << minX << ", y: " << minY << ", for: " << minVal << std::endl;
+			std::cout << "X: " << minX << ", y: " << minY << ", z: " << minZ << ", for: " << minVal << std::endl;
 			DataWriterForVisu::writeSvg("out2.svg", mat);
 			system("open out2.svg &");
 			return;
@@ -312,20 +356,22 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		lowerBound[0] = 0.0005; // max(0.1,gp.getLenMean() - 2 * gp.getKernel().getLenVar());
 		lowerBound[1] = 0.20;
 		vectord upperBound(2);
-		upperBound[0] = 5.75;// + gp.getKernel().getLenVar();
-		upperBound[1] = 5.6;//max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
+		upperBound[0] = 1.75;// + gp.getKernel().getLenVar();
+		upperBound[1] = 1.6;//max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
 
 		bayOpt.setBoundingBox(lowerBound, upperBound);
 		bayOpt.optimize(result);
-		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
-		//gp.getKernel().setHyperParams(0.620284,0.55, 0.95);
+		gp.getKernel().setHyperParams(result[0], result[1], 1e-16);
+		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
+		gp.getKernel().setHyperParams(0.155,1.625, 0.1);
 		gp.trainWithoutKernelOptimize();
 		std::cout << "Start predicting!" << std::endl;
 		int wright = 0;
 		int amountOfBelow = 0;
 		int amountOfAbove = 0;
 		for(int j = 0; j < data.size(); ++j){
-			double prob = gp.predict(data[j]);
+			gp.resetFastPredict();
+			double prob = gp.predict(data[j],100000);
 			std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
 			if(prob > 0.5 && labels[j] == 0){
 				++wright;

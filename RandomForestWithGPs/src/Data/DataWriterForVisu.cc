@@ -6,6 +6,7 @@
  */
 
 #include "DataWriterForVisu.h"
+#include "../Utility/ColorConverter.h"
 
 DataWriterForVisu::DataWriterForVisu()
 {
@@ -271,7 +272,8 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const GaussianProc
 					ele[i] = 0;
 				}
 			}
-			double val = fmax(fmin(1.0,gp.predict(ele)), 0.0);
+			//gp.resetFastPredict();
+			double val = fmax(fmin(1.0,gp.predict(ele,50000)), 0.0);
 			file << "<rect x=\""<< iX / elementInX * 100. <<"%\" y=\""<< iY / elementInY  * 100.<< "%\" width=\"" << 100.0 / elementInX << "%\" height=\""
 					<< 100.0 / elementInY << "%\" fill=\"rgb("
 					<< (int)(val * 100.0) << "%,0%," << (int)((1.0-val) * 100.0)<< "%)\" /> \n";
@@ -370,12 +372,12 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::Matri
 	file.open(fileName);
 	file << "<svg version=\"1.1\" " <<
 				"\nbaseProfile=\"full\"" <<
-				"\nwidth=\"" << 1920 << "\" height=\""<< (int) (1920. / (mat.cols()) *  (mat.rows()))   << "\"\n" <<
+				"\nwidth=\"" << 1920 << "\" height=\""<< (int) (1920. / (mat.rows()) *  (mat.cols()))   << "\"\n" <<
 				"xmlns=\"http://www.w3.org/2000/svg\">" << "\n";
 	double max = -DBL_MAX;
 	double min = DBL_MAX;
-	for(int iX = 0; iX < mat.cols(); ++iX){
-		for(int iY = 0; iY < mat.rows(); ++iY){
+	for(int iX = 0; iX < mat.rows(); ++iX){
+		for(int iY = 0; iY < mat.cols(); ++iY){
 			if(mat(iX,iY) < min && mat(iX,iY) > -DBL_MAX){
 				min = mat(iX,iY);
 			}
@@ -385,16 +387,18 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::Matri
 		}
 	}
 
-	for(int iX = 0; iX < mat.cols(); ++iX){
-		for(int iY = 0; iY < mat.rows(); ++iY){
+	for(int iX = 0; iX < mat.rows(); ++iX){
+		for(int iY = 0; iY < mat.cols(); ++iY){
 			if(mat(iX,iY) > -DBL_MAX){
 				const double prob = (mat(iX,iY)  - min) / (max - min);
-				file << "<rect x=\""<< iX / (double)mat.cols() * 100. <<"%\" y=\""<< iY / (double)mat.rows()  * 100.<< "%\" width=\"" << 100.0 / mat.cols() << "%\" height=\""
-						<< 100.0 / mat.rows() << "%\" fill=\"rgb("
-						<< (int)(prob * 100.0) << "%,0%," << (int)((1.0-prob) * 100.0)<< "%)\" /> \n";
+				double r,g,b;
+				ColorConverter::HSV2RGB(prob * 360.,1.0, 1.0,r,g,b);
+				file << "<rect x=\""<< iX / (double)mat.rows() * 100. <<"%\" y=\""<< iY / (double)mat.cols()  * 100.<< "%\" width=\"" << 100.0 / mat.rows() << "%\" height=\""
+						<< 100.0 / mat.cols() << "%\" fill=\"rgb("
+						<< (int)(r * 100.0) << "%," << (int)(g * 100.0) << "%," << (int)((b) * 100.0)<< "%)\" /> \n";
 			}else{
-				file << "<rect x=\""<< iX / (double)mat.cols() * 100. <<"%\" y=\""<< iY / (double)mat.rows()  * 100.<< "%\" width=\"" << 100.0 / mat.cols() << "%\" height=\""
-						<< 100.0 / mat.rows() << "%\" fill=\"rgb(0%,100%,0%)\" /> \n";
+				file << "<rect x=\""<< iX / (double)mat.rows() * 100. <<"%\" y=\""<< iY / (double)mat.cols()  * 100.<< "%\" width=\"" << 100.0 / mat.rows() << "%\" height=\""
+						<< 100.0 / mat.cols() << "%\" fill=\"rgb(0%,100%,0%)\" /> \n";
 			}
 		}
 	}

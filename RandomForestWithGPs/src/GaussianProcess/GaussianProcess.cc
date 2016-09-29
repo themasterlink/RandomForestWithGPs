@@ -90,7 +90,7 @@ GaussianProcess::Status GaussianProcess::trainBayOpt(double& logZ, const double 
 	//std::cout << "f: " << m_f.transpose() << std::endl;
 	//sumF /= m_f.rows();
 	logZ = aDotF + logVal - sum;
-	//td::cout << CYAN << "LogZ elements a * f: " << aDotF << ", log: " << logVal << ", sum: " << -sum << ", logZ: " << logZ << RESET << std::endl;
+	std::cout << CYAN << "LogZ elements a * f: " << aDotF << ", log: " << logVal << ", sum: " << -sum << ", logZ: " << logZ << RESET << std::endl;
 	// -0.5 * (double) (m_a.dot(m_f)) - 0.5 *sumF
 	return ALLFINE;
 }

@@ -29,6 +29,7 @@ public:
 private:
 	GaussianProcess& m_gp;
 	double m_lowestValue;
+	double m_worstValue;
 	/*double bestVal;
 	double bestLen;
 	double bestSigma;*/
