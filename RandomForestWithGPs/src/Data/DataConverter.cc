@@ -29,6 +29,17 @@ void DataConverter::toDataMatrix(const Data& data, Eigen::MatrixXd& result, cons
 	}
 }
 
+void DataConverter::toDataMatrix(const Data& data, const Labels& labels, Eigen::MatrixXd& result, Eigen::VectorXd& y, const int ele){
+	const int min = ele < data.size() ? ele : data.size();
+	result.conservativeResize(data[0].rows(), min);
+	y.conservativeResize(min);
+	int i = 0;
+	for(Data::const_iterator it = data.begin(); it != data.end() && i < min; ++it){
+		y[i] = labels[i] == 0 ? 1 : -1;
+		result.col(i) = *it;
+		++i;
+	}
+}
 
 void DataConverter::toRandDataMatrix(const Data& data, const Labels& labels, Eigen::MatrixXd& result, Eigen::VectorXd& y, const int ele){
 	if(ele == data.size()){
@@ -218,3 +229,113 @@ void DataConverter::toRandClassAndHalfUniformDataMatrix(const Data& data, const 
 		}while(!usedBefore);
 	}
 }
+
+void DataConverter::getMinMax(const Data& data, double& min, double& max, const bool ignoreDBL_MAX_NEG){
+	min = DBL_MAX; max = -DBL_MAX;
+	if(ignoreDBL_MAX_NEG){
+		for(Data::const_iterator it = data.begin(); it != data.end(); ++it){
+			for(unsigned int i = 0; i < it->rows(); ++i){
+				const double val = (*it)[i];
+				if(val < min && min > -DBL_MAX){
+					min = val;
+				}
+				if(val > max){
+					max = val;
+				}
+			}
+		}
+	}else{
+		for(Data::const_iterator it = data.begin(); it != data.end(); ++it){
+			for(unsigned int i = 0; i < it->rows(); ++i){
+				const double val = (*it)[i];
+				if(val < min){
+					min = val;
+				}
+				if(val > max){
+					max = val;
+				}
+			}
+		}
+	}
+}
+
+void DataConverter::getMinMax(const Eigen::MatrixXd& mat, double& min, double& max, const bool ignoreDBL_MAX_NEG){
+	min = DBL_MAX; max = -DBL_MAX;
+	if(ignoreDBL_MAX_NEG){
+		for(unsigned int i = 0; i < mat.rows(); ++i){
+			for(unsigned int j = 0; j < mat.cols(); ++j){
+				const double ele = mat(i,j);
+				if(ele < min && min > -DBL_MAX){
+					min = ele;
+				}
+				if(ele > max){
+					max = ele;
+				}
+			}
+		}
+	}else{
+		for(unsigned int i = 0; i < mat.rows(); ++i){
+			for(unsigned int j = 0; j < mat.cols(); ++j){
+				const double ele = mat(i,j);
+				if(ele < min){
+					min = ele;
+				}
+				if(ele > max){
+					max = ele;
+				}
+			}
+		}
+	}
+}
+
+void DataConverter::getMinMax(const Eigen::VectorXd& vec, double& min, double& max, const bool ignoreDBL_MAX_NEG){
+	min = DBL_MAX; max = -DBL_MAX;
+	if(ignoreDBL_MAX_NEG){
+		for(unsigned int i = 0; i < vec.rows(); ++i){
+			const double ele = vec[i];
+			if(ele < min && min > -DBL_MAX){
+				min = ele;
+			}
+			if(ele > max){
+				max = ele;
+			}
+		}
+	}else{
+		for(unsigned int i = 0; i < vec.rows(); ++i){
+			const double ele = vec[i];
+			if(ele < min){
+				min = ele;
+			}
+			if(ele > max){
+				max = ele;
+			}
+		}
+	}
+}
+
+void DataConverter::getMinMaxIn2D(const Data& data, Eigen::Vector2d& min, Eigen::Vector2d& max, const Eigen::Vector2i& dim){
+	min[0] = min[1] =  DBL_MAX;
+	max[0] = max[1] = -DBL_MAX;
+	if(data.size() > 0){
+		if(dim[0] < data[0].rows() && dim[1] < data[0].rows()){
+			for(Data::const_iterator it = data.begin(); it != data.end(); ++it){
+				const double first = (*it)[dim[0]];
+				const double second = (*it)[dim[1]];
+				if(first < min[0]){
+					min[0] = first;
+				}
+				if(first > max[0]){
+					max[0] = first;
+				}
+				if(second < min[1]){
+					min[1] = second;
+				}
+				if(second > max[1]){
+					max[1] = second;
+				}
+			}
+		}
+	}
+}
+
+

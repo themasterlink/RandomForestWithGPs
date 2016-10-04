@@ -78,6 +78,9 @@ inline std::string number2String(const T& in){
 #define printLine() \
 		std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << std::endl \
 
+#define printDebug(message) \
+	std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl \
+
 template<class T> const T& min(const T& a, const T& b){
 	return !(b < a) ? a : b;     // or: return !comp(b,a)?a:b; for version (2)
 }

@@ -56,8 +56,8 @@ int main(int ac, char* av[]){
     	std::cout << desc << "\n";
     	return 0;
     }
-	std::cout << "Start" << std::endl;
-    Settings::init("../Settings/init.json");
+	std::cout << RESET << "Start" << std::endl;
+	Settings::init("../Settings/init.json");
     std::string path;
     Settings::getValue("RealData.folderPath", path);
     if(vm.count("compress")){

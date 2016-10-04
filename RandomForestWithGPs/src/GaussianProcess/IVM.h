@@ -26,16 +26,18 @@ public:
 
 	void init(const Matrix& dataMat, const Vector& y, const unsigned int numberOfInducingPoints);
 
-	void train();
+	bool train(const int verboseLevel = 0);
 
-	double predict(const Vector& input);
+	double predict(const Vector& input) const;
 
 	Kernel& getKernel(){ return m_kernel; };
 
+	const List<int>& getSelectedInducingPoints(){ return m_I; };
+
 	virtual ~IVM();
 
+	double m_logZ;
 private:
-
 	Matrix m_dataMat;
 	Matrix m_M;
 	Matrix m_K;
@@ -53,6 +55,8 @@ private:
 
 	Kernel m_kernel;
 	boost::math::normal m_logisticNormal;
+
+
 };
 
 #endif /* GAUSSIANPROCESS_IVM_H_ */

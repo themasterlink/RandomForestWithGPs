@@ -30,7 +30,7 @@
     },
     "Test": {
         "path": "..\/testData\/testInput3.txt",
-        "amount": 1000
+        "amount": 100
     },
     "WriteBinarySaveOfTrees": {
     	"doWriting": "true",

@@ -18,7 +18,8 @@
 #include "../GaussianProcess/BayesOptimizer.h"
 #include "../Utility/Settings.h"
 #include "../Utility/ConfusionMatrixPrinter.h"
-
+#include <chrono>
+#include <thread>
 
 void executeForBinaryClass(const std::string& path, const bool useRealData){
 	Data data;
@@ -32,7 +33,8 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		DataReader::readFromFiles(datas, "../realTest/", trainAmount + testAmount);
 		std::cout << "Amount of datas: " << datas.size() << std::endl;
 	}else{
-		DataReader::readFromFile(data, labels, "../testData/trainInput.txt", trainAmount + testAmount);
+		DataReader::readFromFile(data, labels, "../testData/trainInput.txt", trainAmount);
+		DataReader::readFromFile(testData, testLabels, "../testData/testInput3.txt", testAmount);
 	}
 	// for binary case:
 	if(useRealData && datas.size() == 2 && false){
@@ -256,37 +258,96 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		const int firstPoints = 10000000; // all points
 		Eigen::VectorXd y;
 		Eigen::MatrixXd dataMat;
-		DataConverter::toRandDataMatrix(data, labels, dataMat, y, firstPoints);
-
-
-		if(true){
-			IVM ivm;
-			ivm.init(dataMat, y, dataMat.cols() * 0.3);
-			ivm.getKernel().setHyperParams(0.6, 0.4, 0.1);
-			ivm.train();
-			int wright = 0;
-			int amountOfBelow = 0;
-			int amountOfAbove = 0;
-			for(int j = 0; j < data.size(); ++j){
-				double prob = ivm.predict(data[j]);
-				std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
-				if(prob > 0.5 && labels[j] == 0){
-					++wright;
-				}else if(prob < 0.5 && labels[j] == 1){
-					++wright;
+		DataConverter::toDataMatrix(data, labels, dataMat, y, firstPoints);
+		if(false){
+			for(unsigned int i = 0; i < 1000; ++i){
+				IVM ivm;
+				ivm.init(dataMat, y, 12);
+				ivm.getKernel().setHyperParams(0.5, 0.8, 0.1);
+				bool trained = ivm.train(1);
+			}
+			return;
+		}else{
+			Eigen::MatrixXd finalMat;
+			double bestResult = 0;
+			double bestX = 0.57, bestY = 0.84;
+			//for(unsigned int i = 0; i < 100000; ++i){
+			const int size = ((1. - 0.9) / 0.005 + 1);
+			InLinePercentageFiller::setActMax(size * size);
+			int i = 0;
+			double bestLogZ = -DBL_MAX;
+			Eigen::VectorXd correctVec = Eigen::VectorXd::Zero(size * size);
+			for(double x = 0.5; x < 0.6; x += 0.005){
+				int j = 0;
+				for(double y2 = 0.8; y2 < 0.9; y2 += 0.005)
+				{	//double x = 955; double y2 = 0.855;
+					IVM ivm;
+					ivm.init(dataMat, y, 0.33333 * data.size());
+					ivm.getKernel().setHyperParams(x, y2, 0.1);
+					bool trained = ivm.train(1);
+					if(trained){
+						int wright = 0;
+						int amountOfBelow = 0;
+						int amountOfAbove = 0;
+						for(int j = 0; j < testData.size(); ++j){
+							double prob = ivm.predict(testData[j]);
+							//std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
+							if(prob < 0.4 && testLabels[j] == 0){
+								++wright;
+							}else if(prob > 0.6 && testLabels[j] == 1){
+								++wright;
+							}
+							if(prob > 0.5){
+								++amountOfAbove;
+							}else{
+								++amountOfBelow;
+							}
+						}
+						if(ivm.m_logZ > bestLogZ){
+							bestLogZ = ivm.m_logZ;
+							bestX = x; bestY = y2;
+						}
+						if((double) wright / testData.size() * 100.0  <= 90. && false){
+							bestResult = (double) wright / testData.size() * 100.0;
+							DataWriterForVisu::writeSvg("out3.svg", ivm, ivm.getSelectedInducingPoints(), 50, data);
+							std::this_thread::sleep_for(std::chrono::milliseconds((int)(100)));
+							system("open out3.svg");
+							//break;
+							std::this_thread::sleep_for(std::chrono::milliseconds((int)(500)));
+							std::cout << RED;
+							std::cout << "Amount of wright: " << (double) wright / testData.size() * 100.0 << "%" << std::endl;
+							std::cout << "Amount of above: " << (double) amountOfAbove / testData.size() * 100.0 << "%" << std::endl;
+							std::cout << "Amount of below: " << (double) amountOfBelow / testData.size() * 100.0 << "%" << std::endl;
+							std::cout << "len: " << ivm.getKernel().len() << ", sigmaF: " << ivm.getKernel().sigmaF() <<std::endl;
+							std::cout << RESET;
+						}
+						correctVec[size * i + j] = (double) wright / testData.size() * 100.0;
+					}else{
+						correctVec[size * i + j] = -1;
+						//std::cout << "len: " << ivm.getKernel().len() << ", sigmaF: " << ivm.getKernel().sigmaF() <<std::endl;
+					}
+					InLinePercentageFiller::setActValueAndPrintLine(size * i + j);
+					++j;
 				}
-				if(prob > 0.5){
-					++amountOfAbove;
-				}else{
-					++amountOfBelow;
+				++i;
+			}
+			std::cout << "Best log z: " << bestLogZ << ", for: " << bestX << ", " << bestY << std::endl;
+			DataWriterForVisu::writeSvg("vec2.svg", correctVec);
+			unsigned int amountOfCorrect = 0;
+			for(unsigned int i = 0; i < correctVec.size(); ++i){
+				if(correctVec[i] > 90.0){
+					++amountOfCorrect;
 				}
 			}
-			std::cout << RED;
-			std::cout << "Amount of wright: " << (double) wright / data.size() * 100.0 << "%" << std::endl;
-			std::cout << "Amount of above: " << (double) amountOfAbove / data.size() * 100.0 << "%" << std::endl;
-			std::cout << "Amount of below: " << (double) amountOfBelow / data.size() * 100.0 << "%" << std::endl;
-			std::cout << "len: " << ivm.getKernel().len() << ", sigmaF: " << ivm.getKernel().sigmaF() <<std::endl;
-			std::cout << RESET;
+			std::cout << RED << "Amount of correct: " << amountOfCorrect / (double) correctVec.size() * 100.0 << " %" << RESET << std::endl;
+			system("open vec2.svg");
+			IVM ivm;
+			ivm.init(dataMat, y, 12);
+			ivm.getKernel().setHyperParams(bestX, bestY, 0.1);
+			ivm.train();
+			DataWriterForVisu::writeSvg("out3.svg", ivm, ivm.getSelectedInducingPoints(), 100, data);
+			std::this_thread::sleep_for(std::chrono::milliseconds((int)(1000)));
+			system("open out3.svg");
 			return;
 		}
 		GaussianProcess gp;
@@ -363,7 +424,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		bayOpt.optimize(result);
 		gp.getKernel().setHyperParams(result[0], result[1], 1e-16);
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
-		gp.getKernel().setHyperParams(0.155,1.625, 0.1);
+		gp.getKernel().setHyperParams(0.6,0.4, 0.1);
 		gp.trainWithoutKernelOptimize();
 		std::cout << "Start predicting!" << std::endl;
 		int wright = 0;
