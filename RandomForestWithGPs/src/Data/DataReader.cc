@@ -6,10 +6,9 @@
  */
 
 #include "DataReader.h"
+#include "DataBinaryWriter.h"
 #include <iostream>
-#include "boost/filesystem.hpp"
 #include "../Utility/ReadWriterHelper.h"
-
 
 DataReader::DataReader(){
 }
@@ -17,7 +16,7 @@ DataReader::DataReader(){
 DataReader::~DataReader(){
 }
 
-void DataReader::readFromFile(Data& data, Labels& label, const std::string& inputName, const int amountOfData){
+void DataReader::readFromFile(ClassData& data, const std::string& inputName, const int amountOfData){
 	std::string line;
 	std::ifstream input(inputName);
 	if(input.is_open()){
@@ -28,11 +27,10 @@ void DataReader::readFromFile(Data& data, Labels& label, const std::string& inpu
 			while(std::getline(ss, item, ',')){
 				elements.push_back(item);
 			}
-			DataElement newEle(elements.size() - 1);
+			ClassPoint* newEle = new ClassPoint(elements.size() - 1, std::stoi(elements.back()) > 0 ? 1 : 0);
 			for(int i = 0; i < elements.size() - 1; ++i){
-				newEle[i] = std::stod(elements[i]);
-			}
-			label.push_back(std::stoi(elements.back()) > 0 ? 1 : 0);
+				(*newEle)[i] = std::stod(elements[i]);
+			};
 			data.push_back(newEle);
 			if(data.size() == amountOfData){
 				break;
@@ -44,7 +42,8 @@ void DataReader::readFromFile(Data& data, Labels& label, const std::string& inpu
 	}
 }
 
-void DataReader::readFromFile(Data& data, const std::string& inputName, const int amountOfData, const bool readTxt){
+void DataReader::readFromFile(ClassData& data, const std::string& inputName,
+		const int amountOfData, const unsigned int classNr, const bool readTxt){
 	std::string inputPath(inputName);
 	if(boost::filesystem::exists(inputName + ".binary") && !readTxt){
 		// is a binary file -> faster loading!
@@ -55,7 +54,9 @@ void DataReader::readFromFile(Data& data, const std::string& inputName, const in
 			input.read((char*) &size, sizeof(long));
 			data.resize(size);
 			for(long i = 0; i < min(amountOfData,(int)size); ++i){
-				ReadWriterHelper::readVector(input, data[i]);
+				data[i] = new ClassPoint();
+				ReadWriterHelper::readVector(input, *data[i]);
+				data[i]->setLabel(classNr);
 			}
 		}else{
 			printError("The file could not be opened: " << inputPath);
@@ -74,9 +75,9 @@ void DataReader::readFromFile(Data& data, const std::string& inputName, const in
 				while(std::getline(ss, item, ' ')){
 					elements.push_back(item);
 				}
-				DataElement newEle(elements.size());
+				ClassPoint* newEle = new ClassPoint(elements.size(), classNr);
 				for(int i = 0; i < elements.size(); ++i){
-					newEle[i] = std::stod(elements[i]);
+					(*newEle)[i] = std::stod(elements[i]);
 				}
 				data.push_back(newEle);
 				if(data.size() == amountOfData){
@@ -84,6 +85,7 @@ void DataReader::readFromFile(Data& data, const std::string& inputName, const in
 				}
 			}
 			input.close();
+			DataBinaryWriter::toFile(data, inputName + ".binary"); // create binary to avoid rereading .txt
 		}else{
 			printError("The file could not be opened: " << inputPath);
 		}
@@ -96,14 +98,16 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 	boost::filesystem::path targetDir(folderLocation);
 	boost::filesystem::directory_iterator end_itr;
 	// cycle through the directory
+	unsigned int label = 0;
 	for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 		if(boost::filesystem::is_directory(itr->path())){
 			const std::string name(itr->path().filename().c_str());
-			Data data;
+			ClassData data;
 			std::string filePath(itr->path().c_str());
 			filePath += "/vectors";
-			readFromFile(data, filePath, amountOfData, readTxt);
-			dataSets.insert( std::pair<std::string, Data >(name, data));
+			readFromFile(data, filePath, amountOfData, label, readTxt);
+			++label;
+			dataSets.insert( DataSetPair(name, data));
 		}
 	}
 }

@@ -13,7 +13,7 @@
 
 class ConfusionMatrixPrinter {
 public:
-	static void print(const Eigen::MatrixXd& conv, const std::vector<std::string>& names, std::ostream& stream = std::cout);
+	static void print(const Eigen::MatrixXd& conv, std::ostream& stream = std::cout);
 
 private:
 

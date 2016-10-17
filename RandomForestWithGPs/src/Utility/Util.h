@@ -17,6 +17,7 @@
 #include <vector>
 #include "StopWatch.h"
 #include "InLinePercentageFiller.h"
+#include "boost/filesystem.hpp"
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -35,6 +36,8 @@
 #define BOLDMAGENTA "\033[1m\033[35m"      /* Bold Magenta */
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
+
+#define EPSILON 1e-15
 
 inline std::string number2String(const double& in, const int precision = -1){
 	if(precision != -1){
@@ -57,6 +60,12 @@ inline std::string number2String(const T& in){
 	std::stringstream ss;
 	ss << in;
 	return ss.str();
+}
+
+inline void openFileInViewer(const std::string& filename){
+	if(boost::filesystem::exists(filename)){
+		system(("open " + filename).c_str());
+	}
 }
 
 #define printMsg(message, ...)\

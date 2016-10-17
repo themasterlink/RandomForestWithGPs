@@ -15,17 +15,16 @@
 
 void executeForMultiClass(const std::string& path){
 
-	Data data;
-	Labels labels;
-	DataReader::readFromFile(data, labels, path, 500);
+	ClassData data;
+	DataReader::readFromFile(data, path, 500);
 
 	const int dataPoints = data.size();
 	Eigen::MatrixXd dataMat;
 
-	dataMat.conservativeResize(data[0].rows(), data.size());
+	dataMat.conservativeResize(data[0]->rows(), data.size());
 	int i = 0;
-	for(Data::iterator it = data.begin(); it != data.end(); ++it){
-		dataMat.col(i++) = *it;
+	for(ClassDataIterator it = data.begin(); it != data.end(); ++it){
+		dataMat.col(i++) = **it;
 	}
 	const int amountOfClass = 2;
 	/*std::vector<Data> dataPerClass(amountOfClass);
@@ -33,8 +32,8 @@ void executeForMultiClass(const std::string& path){
 		dataPerClass[labels[i]].push_back(data[i]);
 	}*/
 	Eigen::VectorXd y(Eigen::VectorXd(dataPoints * amountOfClass));
-	for(int i = 0; i < labels.size(); ++i){
-		y[labels[i] * dataPoints + i] = 1;
+	for(int i = 0; i < data.size(); ++i){
+		y[data[i]->getLabel() * dataPoints + i] = 1;
 	}
 	std::fstream f("t.txt", std::ios::out);
 	//f << "dataMat:\n" << dataMat << std::endl;
@@ -46,14 +45,14 @@ void executeForMultiClass(const std::string& path){
 	kernel.calcCovariance(covariance);
 	f << "covariance: \n" << covariance << std::endl;
 	f << "labels: \n";
-	for(int i = 0; i < labels.size(); ++i){
-		f << "           " << labels[i];
+	for(int i = 0; i < data.size(); ++i){
+		f << "           " << data[i]->getLabel();
 	}
 	f << std::endl;
 	for(int i = 0; i < amountOfClass; ++i){ // calc the covariance matrix for each f_c
 		Eigen::MatrixXd cov_c = covariance; //  * y.segment(i*dataPoints, dataPoints).transpose();
 		for(int j = 0; j < dataPoints; ++j){
-			if(i == labels[j]){
+			if(i == data[j]->getLabel()){
 				for(int k = 0; k < dataPoints; ++k){
 					cov_c(j,k) = 0;
 					cov_c(k,j) = 0;

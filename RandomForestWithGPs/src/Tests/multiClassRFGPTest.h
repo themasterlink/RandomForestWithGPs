@@ -34,12 +34,12 @@ void executeForRFGPMultiClass(const std::string& path){
 	DataSets trainSets;
 	DataSets testSets;
 	const double facForTraining = 0.8;
-	for(DataSets::const_iterator it = dataSets.begin(); it != dataSets.end(); ++it){
-		trainSets.insert(std::pair<std::string, Data >(it->first, Data()));
-		DataSets::iterator itTrain = trainSets.find(it->first);
+	for(DataSetsConstIterator it = dataSets.begin(); it != dataSets.end(); ++it){
+		trainSets.insert(DataSetPair(it->first, ClassData()));
+		DataSetsIterator itTrain = trainSets.find(it->first);
 		itTrain->second.reserve(facForTraining * it->second.size());
-		testSets.insert(std::pair<std::string, Data >(it->first, Data()));
-		DataSets::iterator itTest = testSets.find(it->first);
+		testSets.insert(DataSetPair(it->first, ClassData()));
+		DataSetsIterator itTest = testSets.find(it->first);
 		itTest->second.reserve((1-facForTraining) * it->second.size());
 		for(int i = 0; i < it->second.size(); ++i){
 			if(i <= min(300, (int) (facForTraining * it->second.size()))){
@@ -77,7 +77,7 @@ void executeForRFGPMultiClass(const std::string& path){
 	std::vector<double> prob;
 	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
 		for(int i = 0; i < it->second.size(); ++i){
-			const int rfGPLabel = rfGp.predict(it->second[i], prob);
+			const int rfGPLabel = rfGp.predict(*it->second[i], prob);
 			//std::cout << "Should: " << rfGPLabel << ", is: " << labelCounter << std::endl;
 			if(rfGPLabel == labelCounter){
 				++correct;
@@ -95,7 +95,7 @@ void executeForRFGPMultiClass(const std::string& path){
 	amount = 0;
 	for(DataSets::const_iterator it = trainSets.begin(); it != trainSets.end(); ++it){
 		for(int i = 0; i < it->second.size(); ++i){
-			const int rfGPLabel = rfGp.predict(it->second[i], prob);
+			const int rfGPLabel = rfGp.predict(*it->second[i], prob);
 			//std::cout << "Should: " << rfGPLabel << ", is: " << labelCounter << std::endl;
 			if(rfGPLabel == labelCounter){
 				++correct;

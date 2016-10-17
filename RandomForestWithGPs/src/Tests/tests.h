@@ -11,6 +11,7 @@
 #include "multiClassRFGPTest.h"
 #include "binaryClassRFTest.h"
 #include "binaryClassGPTest.h"
+#include "binaryClassIVMTest.h"
 #include "multiClassGPTest.h"
 #include "performanceMeasurement.h"
 

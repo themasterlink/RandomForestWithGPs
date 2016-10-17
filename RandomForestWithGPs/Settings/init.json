@@ -20,9 +20,18 @@
             "height": 9
         }
     },
+    "IVM": {
+        "doEpUpdate": "false",
+        "lambda": 0.5,
+        "nrOfInducingPoints": 8,
+        "desiredFraction": 0.45
+    },
+    "Kernel": {
+        "path": "..\/realTest\/kernelData.kernel"
+    },
     "Training": {
         "path": "..\/testData\/trainInput.txt",
-        "amount": 30,
+        "amount": 100,
         "dim": 2
     },
     "RealData": {

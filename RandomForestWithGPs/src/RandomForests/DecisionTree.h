@@ -8,7 +8,7 @@
 #ifndef OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_
 #define OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_
 
-#include "../Data/Data.h"
+#include "../Data/ClassData.h"
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 #include "DecisionTreeData.h"
 
@@ -26,14 +26,14 @@ public:
 
 	virtual ~DecisionTree();
 
-	void train(const Data& data, const Labels& labels, const int amountOfUsedDims,
+	void train(const ClassData& data, const int amountOfUsedDims,
 			RandomNumberGeneratorForDT& generator);
 
-	double trySplitFor(const int actNode, const int usedNode, const int usedDim, const Data& data,
-			const Labels& labels, const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
+	double trySplitFor(const int actNode, const int usedNode, const int usedDim, const ClassData& data,
+			const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
 			std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator);
 
-	int predict(const DataElement& point) const;
+	int predict(const DataPoint& point) const;
 
 	void writeToData(DecisionTreeData& data) const;
 

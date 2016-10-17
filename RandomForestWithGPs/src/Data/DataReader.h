@@ -8,19 +8,21 @@
 #ifndef DATA_DATAREADER_H_
 #define DATA_DATAREADER_H_
 
-#include "Data.h"
+#include "ClassData.h"
+#include "DataSets.h"
 
 class DataReader{
 
 public:
 
-	static void readFromFile(Data& data, Labels& label, const std::string& inputName, const int amountOfData);
+	static void readFromFile(ClassData& data, const std::string& inputName, const int amountOfData);
 
 	static void readFromFiles(DataSets& dataSets, const std::string& folderLocation, const int amountOfData, const bool readTxt = false);
 
-	static void readFromFile(Data& data, const std::string& inputName, const int amountOfData, const bool readTxt = false);
-
 private:
+
+	static void readFromFile(ClassData& data, const std::string& inputName, const int amountOfData, const unsigned int classNr, const bool readTxt = false);
+
 	DataReader();
 	~DataReader();
 };

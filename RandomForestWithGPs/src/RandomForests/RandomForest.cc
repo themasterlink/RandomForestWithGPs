@@ -6,6 +6,7 @@
  */
 
 #include "RandomForest.h"
+#include "../Utility/Util.h"
 
 RandomForest::RandomForest(const int maxDepth, const int amountOfTrees,
 		const int amountOfClasses)
@@ -32,17 +33,14 @@ void RandomForest::generateTreeBasedOnData(const DecisionTreeData& data, const i
 	}
 }
 
-void RandomForest::train(const Data& data, const Labels& labels, const int amountOfUsedDims,
+void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
 		const Eigen::Vector2i minMaxUsedData){
-	if(data.size() != labels.size()){
-		printError("Label and data size are not equal!");
-		return;
-	}else if(data.size() < 2){
+	if(data.size() < 2){
 		printError("There must be at least two points!");
 		return;
-	}else if(data[0].rows() < 2){
+	}else if(data[0]->rows() < 2){
 		printError("There should be at least 2 dimensions in the data");
-	}else if(amountOfUsedDims > data[0].rows()){
+	}else if(amountOfUsedDims > data[0]->rows()){
 		printError("Amount of dims can't be bigger than the dimension size!");
 		return;
 	}
@@ -55,10 +53,10 @@ void RandomForest::train(const Data& data, const Labels& labels, const int amoun
 	std::vector<RandomNumberGeneratorForDT> generators;
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int seed = i;
-		generators.push_back(RandomNumberGeneratorForDT(data[0].rows(), minMaxUsedData[0], minMaxUsedData[1], data.size(), seed));
+		generators.push_back(RandomNumberGeneratorForDT(data[0]->rows(), minMaxUsedData[0], minMaxUsedData[1], data.size(), seed));
 		const int start = (i / (double) nrOfParallel) * m_amountOfTrees;
 		const int end = ((i + 1) / (double) nrOfParallel) * m_amountOfTrees;
-		group.add_thread(new boost::thread(boost::bind(&RandomForest::trainInParallel, this, data, labels, amountOfUsedDims, generators[i], start, end, &counter)));
+		group.add_thread(new boost::thread(boost::bind(&RandomForest::trainInParallel, this, data, amountOfUsedDims, generators[i], start, end, &counter)));
 	}
 	while(counter.getCounter() < m_amountOfTrees){
 		// just the update for the amount of training left:
@@ -77,12 +75,12 @@ void RandomForest::train(const Data& data, const Labels& labels, const int amoun
 	std::cout << "\rFinish training in : " << sw.elapsedSeconds() << " sec                                                                 " << std::endl;
 }
 
-void RandomForest::trainInParallel(const Data& data, const Labels& labels,
+void RandomForest::trainInParallel(const ClassData& data,
 		const int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const int start,
 		const int end, TreeCounter* counter){
 	int iCounter = 0;
 	for(int i = start; i < end; ++i){
-		m_trees[i].train(data, labels, amountOfUsedDims, generator);
+		m_trees[i].train(data, amountOfUsedDims, generator);
 		if(i % m_counterIncreaseValue == 0 && counter != NULL){
 			counter->addToCounter(m_counterIncreaseValue); // is a thread safe add
 			iCounter += m_counterIncreaseValue;
@@ -90,7 +88,16 @@ void RandomForest::trainInParallel(const Data& data, const Labels& labels,
 	}
 }
 
-int RandomForest::predict(const DataElement& point) const{
+int RandomForest::predict(const DataPoint& point) const{
+	std::vector<int> values(m_amountOfClasses, 0);
+	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
+		++values[it->predict(point)];
+	}
+	//std::cout << "First: " << values[0] << ", second: " << values[1] << std::endl;
+	return std::distance(values.cbegin(), std::max_element(values.cbegin(), values.cend()));
+}
+
+int RandomForest::predict(const ClassPoint& point) const{
 	std::vector<int> values(m_amountOfClasses, 0);
 	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
 		++values[it->predict(point)];
@@ -106,22 +113,43 @@ void RandomForest::predictData(const Data& points, Labels& labels) const{
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int start = (i / (double) nrOfParallel) * points.size();
 		const int end = ((i + 1) / (double) nrOfParallel) * points.size();
-		group.add_thread(new boost::thread(boost::bind(&RandomForest::predictDataInParallel, this, points, &labels, start, end)));
+		group.add_thread(new boost::thread(boost::bind(&RandomForest::predictDataInParallel,
+				this, points, &labels, start, end)));
 	}
 	group.join_all(); // wait until all are finished!
+}
+
+void RandomForest::predictData(const ClassData& points, Labels& labels) const{
+	labels.resize(points.size());
+	const int nrOfParallel = 1; //std::thread::hardware_concurrency();
+	boost::thread_group group;
+	for(int i = 0; i < nrOfParallel; ++i){
+		const int start = (i / (double) nrOfParallel) * points.size();
+		const int end = ((i + 1) / (double) nrOfParallel) * points.size();
+		group.add_thread(new boost::thread(boost::bind(&RandomForest::predictDataInParallelClass,
+				this, points, &labels, start, end)));
+	}
+	group.join_all(); // wait until all are finished!
+}
+
+void RandomForest::predictDataInParallelClass(const ClassData& points, Labels* labels, const int start,
+		const int end) const{
+	for(int i = start; i < end; ++i){
+		(*labels)[i] = predict(*points[i]);
+	}
 }
 
 void RandomForest::predictDataInParallel(const Data& points, Labels* labels, const int start,
 		const int end) const{
 	for(int i = start; i < end; ++i){
-		(*labels)[i] = predict(points[i]);
+		(*labels)[i] = predict(*points[i]);
 	}
 }
 
-void RandomForest::getLeafNrFor(const Data& data, const Labels& labels, std::vector<int>& leafNrs){
+void RandomForest::getLeafNrFor(const ClassData& data, std::vector<int>& leafNrs){
 	leafNrs = std::vector<int>(m_amountOfClasses, 0);
 	for(int i = 0; i < data.size(); ++i){
-		leafNrs[predict(data[i])] += 1;
+		leafNrs[predict(*data[i])] += 1;
 	}
 }
 

@@ -10,6 +10,7 @@
 
 #include "../Data/Data.h"
 #include "../RandomNumberGenerator/RandomGaussianNr.h"
+#include <list>
 
 class GaussianProcessWriter;
 
@@ -28,11 +29,20 @@ public:
 
 	void init(const Eigen::MatrixXd& dataMat);
 
+	bool isInit() const { return m_init; };
+
+	// with calc of len and var of the kernel matrix
+	void completeInit(const Eigen::MatrixXd& dataMat);
+
 	void calcCovariance(Eigen::MatrixXd& cov) const;
 
 	void calcCovarianceDerivative(Eigen::MatrixXd& cov, const ParamType type) const;
 
+	void calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& cov, const std::list<int>& activeSet, const ParamType type) const;
+
 	double calcDiagElement() const;
+
+	double getDifferences(const int row, const int col) const { return (double) m_differences(row, col); };
 
 	void calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const;
 
@@ -136,7 +146,7 @@ void Kernel::newRandHyperParams(){
 
 inline
 double Kernel::calcDiagElement() const{
-	return /* m_hyperParams[1] * m_hyperParams[1] +*/ m_hyperParams[2] * m_hyperParams[2];
+	return m_hyperParams[1] * m_hyperParams[1] + m_hyperParams[2] * m_hyperParams[2];
 }
 
 #endif /* GAUSSIANPROCESS_KERNEL_H_ */

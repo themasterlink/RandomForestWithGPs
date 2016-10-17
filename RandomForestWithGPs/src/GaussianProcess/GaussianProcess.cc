@@ -381,7 +381,7 @@ GaussianProcess::Status GaussianProcess::trainF(const Eigen::MatrixXd& K){
 	return ALLFINE;
 }
 
-double GaussianProcess::predict(const DataElement& newPoint, const int sampleSize) const{
+double GaussianProcess::predict(const DataPoint& newPoint, const int sampleSize) const{
 	if(!m_init || !m_trained){
 		printError("GP was not init: " << m_init << ", or trained: " << m_trained);
 		return -1.0;

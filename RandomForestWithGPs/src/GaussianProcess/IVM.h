@@ -15,8 +15,8 @@
 
 class IVM {
 public:
-	typedef Eigen::VectorXd Vector;
-	typedef Eigen::MatrixXd Matrix;
+	typedef typename Eigen::VectorXd Vector;
+	typedef typename Eigen::MatrixXd Matrix;
 	template <typename T>
 	using List = std::list<T>;
 	template <typename M, typename N>
@@ -24,9 +24,12 @@ public:
 
 	IVM();
 
-	void init(const Matrix& dataMat, const Vector& y, const unsigned int numberOfInducingPoints);
+	void init(const Matrix& dataMat, const Vector& y,
+			const unsigned int numberOfInducingPoints, const bool doEPUpdate);
 
-	bool train(const int verboseLevel = 0);
+	void setNumberOfInducingPoints(unsigned int nr);
+
+	bool train(bool clearActiveSet = true, const int verboseLevel = 0);
 
 	double predict(const Vector& input) const;
 
@@ -37,7 +40,18 @@ public:
 	virtual ~IVM();
 
 	double m_logZ;
+	Vector m_derivLogZ;
+
 private:
+
+	double calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j,
+			const Vector& zeta, const Vector& mu,
+			double& g_kn, double& nu_kn,
+			const double fraction, const Eigen::Vector2i& amountOfPointsPerClassLeft, const int verboseLevel);
+
+	double cumulativeLog(const double x);
+
+	double cumulativeDerivLog(const double x);
 	Matrix m_dataMat;
 	Matrix m_M;
 	Matrix m_K;
@@ -45,10 +59,13 @@ private:
 	Vector m_y;
 	Vector m_nuTilde;
 	Vector m_tauTilde;
+	Vector m_muTildePlusBias;
 	unsigned int m_dataPoints;
 	unsigned int m_numberOfInducingPoints;
 	double m_bias;
 	double m_lambda;
+	bool m_doEPUpdate;
+	double m_desiredFraction;
 	List<int> m_J, m_I;
 
 	Eigen::LLT<Eigen::MatrixXd> m_choleskyLLT;

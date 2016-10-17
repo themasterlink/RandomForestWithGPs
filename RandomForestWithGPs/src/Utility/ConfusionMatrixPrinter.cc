@@ -6,6 +6,7 @@
  */
 
 #include "ConfusionMatrixPrinter.h"
+#include "../Data/ClassKnowledge.h"
 
 ConfusionMatrixPrinter::ConfusionMatrixPrinter() {
 	// TODO Auto-generated constructor stub
@@ -18,20 +19,20 @@ ConfusionMatrixPrinter::~ConfusionMatrixPrinter() {
 
 
 
-void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv, const std::vector<std::string>& names, std::ostream& stream){
-	if(conv.rows() != names.size() || conv.cols() != names.size()){
+void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv, std::ostream& stream){
+	if(conv.rows() != ClassKnowledge::amountOfClasses() || conv.cols() != ClassKnowledge::amountOfClasses()){
 		printError("The amount of rows or cols does not correspond to the amount of names!");
 		return;
 	}
 	int maxLength = 0;
-	for(std::vector<std::string>::const_iterator it = names.begin(); it != names.end(); ++it){
-		if(it->length() > maxLength){
-			maxLength = it->length();
+	for(unsigned int i = 0; i < ClassKnowledge::amountOfClasses(); ++i){
+		if(ClassKnowledge::getNameFor(i).length() > maxLength){
+			maxLength = ClassKnowledge::getNameFor(i).length();
 		}
 	}
 	std::vector<int> maxSize(conv.cols(), 0);
 	for(int i = 0; i < conv.cols(); ++i){
-		maxSize[i] = names[i].length();
+		maxSize[i] = ClassKnowledge::getNameFor(i).length();
 		for(int j = 0; j < conv.rows(); ++j){
 			const int res = amountOfDigits((int)conv(i,j));
 			if(res > maxSize[i]){
@@ -46,19 +47,19 @@ void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv, const std::vecto
 		stream << " ";
 	}
 	int l = 0;
-	for(std::vector<std::string>::const_iterator it = names.begin(); it != names.end(); ++it){
-		for(int i = it->length(); i < maxSize[l]; ++i)
+	for(unsigned int t = 0; t < ClassKnowledge::amountOfClasses(); ++t){
+		for(int i = ClassKnowledge::getNameFor(t).length(); i < maxSize[l]; ++i)
 			stream << " ";
-		stream << *it;
+		stream << ClassKnowledge::getNameFor(t);
 		++l;
 	}
 	stream << "\n";
 	for(int i = 0; i < conv.cols(); ++i){
-		stream << names[i];
-		for(int k = names[i].length(); k < maxLength; ++k)
+		stream << ClassKnowledge::getNameFor(i);
+		for(int k = ClassKnowledge::getNameFor(i).length(); k < maxLength; ++k)
 			stream << " ";
 		for(int j = 0; j < conv.rows(); ++j){
-			const int covMaxSize = max(maxSize[j], (int) names[j].length());
+			const int covMaxSize = max(maxSize[j], (int) ClassKnowledge::getNameFor(j).length());
 			const int amountOfAct = amountOfDigits((int)conv(i,j));
 			for(int k = 0; k < covMaxSize - amountOfAct; ++k){
 				stream << " ";

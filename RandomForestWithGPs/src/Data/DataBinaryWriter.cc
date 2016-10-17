@@ -32,7 +32,7 @@ void DataBinaryWriter::toFile(const Data& data, const std::string& filePath){
 		file.write((char*) &size, sizeof(long));
 		std::cout << "Write size: " << size << std::endl;
 		for(long i = 0; i < size; ++i){
-			ReadWriterHelper::writeVector(file, data[i]);
+			ReadWriterHelper::writeVector(file, *data[i]);
 		}
 	}else{
 		printError("This file could not be opened: " << cpy);
@@ -40,3 +40,25 @@ void DataBinaryWriter::toFile(const Data& data, const std::string& filePath){
 	file.close();
 }
 
+void DataBinaryWriter::toFile(const ClassData& data, const std::string& filePath){
+	std::fstream file;
+	std::string cpy(filePath);
+	if(cpy.find_last_of(".")  != std::string::npos){
+		cpy.erase(cpy.find_last_of("."));
+		cpy += ".binary";
+	}else{
+		printError("The filetype should be set in: " << filePath);
+	}
+	file.open(cpy, std::fstream::out | std::fstream::trunc);
+	if(file.is_open()){
+		long size = data.size();
+		file.write((char*) &size, sizeof(long));
+		std::cout << "Write size: " << size << std::endl;
+		for(ClassDataConstIterator it = data.begin(); it != data.end(); ++it){
+			ReadWriterHelper::writePoint(file, **it);
+		}
+	}else{
+		printError("This file could not be opened: " << cpy);
+	}
+	file.close();
+}

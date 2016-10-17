@@ -9,6 +9,7 @@
 #include <random>
 #include <algorithm>
 #include <limits>
+#include "../Utility/Util.h"
 #include "DecisionTree.h"
 #include <boost/thread.hpp> // Boost threads
 
@@ -49,12 +50,11 @@ DecisionTree& DecisionTree::operator=(const DecisionTree& tree){
 DecisionTree::~DecisionTree(){
 }
 
-void DecisionTree::train(const Data& data,
-	const Labels& labels,
+void DecisionTree::train(const ClassData& data,
 	const int amountOfUsedDims,
 	RandomNumberGeneratorForDT& generator){
 	std::vector<int> usedDims(amountOfUsedDims,-1);
-	if(amountOfUsedDims == data[0].rows()){
+	if(amountOfUsedDims == data[0]->rows()){
 		for(int i = 0; i < amountOfUsedDims; ++i){
 			usedDims[i] = i;
 		}
@@ -93,7 +93,7 @@ void DecisionTree::train(const Data& data,
 		double actScore = -1000; // TODO check magic number
 		for(int j = 0; j < amountOfUsedData; ++j){ // amount of checks for a specified split
 			const int randElementId = generator.getRandNextDataEle();
-			const double score = trySplitFor(iActNode, randElementId, randDim, data, labels,
+			const double score = trySplitFor(iActNode, randElementId, randDim, data,
 					dataPosition[iActNode], leftHisto, rightHisto, generator);
 			if(score > actScore){
 				actScore = score;
@@ -101,7 +101,7 @@ void DecisionTree::train(const Data& data,
 			}
 		}
 		// save actual split
-		m_splitValues[iActNode] = (double) data[maxScoreElement][randDim];
+		m_splitValues[iActNode] = (double) (*data[maxScoreElement])[randDim];
 		m_splitDim[iActNode] = randDim;
 		// apply split to data
 		int foundDataLeft = 0, foundDataRight = 0;
@@ -110,7 +110,7 @@ void DecisionTree::train(const Data& data,
 			dataPosition[leftPos].reserve(dataPosition[iActNode].size());
 			dataPosition[rightPos].reserve(dataPosition[iActNode].size());
 			for(int i = 0; i < data.size(); ++i){
-				if(data[i][randDim] >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
+				if((*data[i])[randDim] >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
 					dataPosition[rightPos].push_back(i);
 					++foundDataRight;
 				}else{
@@ -123,7 +123,7 @@ void DecisionTree::train(const Data& data,
 			dataPosition[rightPos].reserve(dataPosition[iActNode].size());
 			for(std::vector<int>::const_iterator it = dataPosition[iActNode].cbegin();
 					it != dataPosition[iActNode].cend(); ++it){
-				if(data[*it][randDim] >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
+				if((*data[*it])[randDim] >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
 					dataPosition[rightPos].push_back(*it);
 					++foundDataRight;
 				}else{
@@ -167,7 +167,7 @@ void DecisionTree::train(const Data& data,
 
 		for(std::vector<int>::const_iterator it = dataPosition[lastValue].cbegin();
 				it != dataPosition[lastValue].cend(); ++it){
-			++histo[labels[*it]];
+			++histo[data[*it]->getLabel()];
 		}
 		int maxEle = 0, labelWithHighestOcc = 0;
 		for(int k = 0; k < m_amountOfClasses; ++k){
@@ -180,27 +180,27 @@ void DecisionTree::train(const Data& data,
 	}
 	if(m_splitDim[1] == NODE_CAN_BE_USED){
 		// try again!
-		train(data,labels,amountOfUsedDims,generator);
+		train(data, amountOfUsedDims,generator);
 	}
 }
 
 double DecisionTree::trySplitFor(const int actNode,
 		const int usedNode, const int usedDim,
-		const Data& data, const Labels& labels,
+		const ClassData& data,
 		const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
 		std::vector<int>& rightHisto,
 		RandomNumberGeneratorForDT& generator){
-	const double usedValue = data[usedNode][usedDim];
+	const double usedValue = (*data[usedNode])[usedDim];
 	double leftAmount = 0, rightAmount = 0;
 	if(dataInNode.size() < 100){ // under 100 take each value
 		for(std::vector<int>::const_iterator it = dataInNode.cbegin(); it != dataInNode.cend();
 				++it){
-			if(usedValue < data[*it][usedDim]){ // TODO check < or <=
+			if(usedValue < (*data[*it])[usedDim]){ // TODO check < or <=
 				++leftAmount;
-				++leftHisto[labels[*it]];
+				++leftHisto[data[*it]->getLabel()];
 			}else{
 				++rightAmount;
-				++rightHisto[labels[*it]];
+				++rightHisto[data[*it]->getLabel()];
 			}
 		}
 	}else{
@@ -210,12 +210,12 @@ double DecisionTree::trySplitFor(const int actNode,
 		for(int i = 0; i < dataSize; i += generator.getRandFromRange()){
 			if(i < dataSize){
 				const int val = dataInNode[i];
-				if(usedValue < data[val][usedDim]){ // TODO check < or <=
+				if(usedValue < (*data[val])[usedDim]){ // TODO check < or <=
 					++leftAmount;
-					++leftHisto[labels[val]];
+					++leftHisto[data[val]->getLabel()];
 				}else{
 					++rightAmount;
-					++rightHisto[labels[val]];
+					++rightHisto[data[val]->getLabel()];
 				}
 			}
 		}
@@ -239,7 +239,7 @@ double DecisionTree::trySplitFor(const int actNode,
 	return rightAmount * rightCost + leftAmount * leftCost;
 }
 
-int DecisionTree::predict(const DataElement& point) const{
+int DecisionTree::predict(const DataPoint& point) const{
 	int iActNode = 1; // start in root
 	if(m_splitDim[1] != NODE_IS_NOT_USED && m_splitDim[1] != NODE_CAN_BE_USED){
 		while(iActNode <= m_maxInternalNodeNr){
@@ -278,7 +278,6 @@ void DecisionTree::writeToData(DecisionTreeData& data) const{
 	data.dimValues = m_splitDim;
 	data.labelsOfWinningClassInLeaves = m_labelsOfWinningClassesInLeaves;
 }
-
 
 void DecisionTree::initFromData(const DecisionTreeData& data){
 	*(const_cast<int*>(&m_maxDepth)) = data.height; // change of const value

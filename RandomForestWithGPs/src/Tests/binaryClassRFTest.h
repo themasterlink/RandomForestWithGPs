@@ -16,24 +16,20 @@
 #include "../Utility/Settings.h"
 
 void executeForRFBinaryClass(){
-	Data data;
-	Data testData;
-	Labels labels;
-	Labels testLabels;
-	std::map<std::string, Data > datas;
+	ClassData data;
+	ClassData testData;
+	DataSets datas;
 	DataReader::readFromFiles(datas, "../realData/", 500);
 	int labelCounter = 0;
-	for(std::map<std::string, Data >::iterator itData = datas.begin(); itData != datas.end(); ++itData){
+	for(DataSetsIterator itData = datas.begin(); itData != datas.end(); ++itData){
 		const int amountOfElements = itData->second.size();
 		for(int i = 0; i < amountOfElements; ++i){
 			if(i <= min(300, (int) (0.8 * amountOfElements))){
 				// train data
 				data.push_back(itData->second[i]);
-				labels.push_back(labelCounter);
 			}else{
 				// test data
 				testData.push_back(itData->second[i]);
-				testLabels.push_back(labelCounter);
 			}
 		}
 		++labelCounter;
@@ -84,14 +80,14 @@ void executeForRFBinaryClass(){
 			}
 			std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";
 
-			RandomForest forest(height, amountOfTrees, data[0].rows());
-			forest.train(data, labels, data[0].rows(), minMaxUsedData);
+			RandomForest forest(height, amountOfTrees, data[0]->rows());
+			forest.train(data, data[0]->rows(), minMaxUsedData);
 
 			int right = 0;
 			Labels predictedLabels;
 			forest.predictData(testData, predictedLabels);
 			for(int j = 0; j < testData.size(); ++j){
-				if(testLabels[j] == predictedLabels[j]){
+				if(testData[j]->getLabel() == predictedLabels[j]){
 					++right;
 				}
 			}
@@ -103,9 +99,8 @@ void executeForRFBinaryClass(){
 }
 
 void executeForRFBinaryClass(const std::string& path){
-	Data data;
-	Labels labels;
-	DataReader::readFromFile(data, labels, path, 500);
+	ClassData data;
+	DataReader::readFromFile(data, path, 500);
 	bool useFixedValuesForMinMaxUsedData;
 	Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
 	Eigen::Vector2i minMaxUsedData;
@@ -122,16 +117,15 @@ void executeForRFBinaryClass(const std::string& path){
 	}
 	std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";
 
-	Data testData;
-	Labels testLabels;
+	ClassData testData;
 	std::string testPath;
 	Settings::getValue("Test.path", testPath);
-	DataReader::readFromFile(testData, testLabels, testPath, 500);
+	DataReader::readFromFile(testData, testPath, 500);
 
 	std::cout << "Finished reading" << std::endl;
 	int dim = 2;
 	if(data.size() > 0){
-		dim = data[0].rows();
+		dim = data[0]->rows();
 	}
 	int amountOfTrees, height;
 	Settings::getValue("Forest.amountOfTrees", amountOfTrees);
@@ -139,14 +133,14 @@ void executeForRFBinaryClass(const std::string& path){
 	std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
 
 	RandomForest forest(height, amountOfTrees, dim);
-	forest.train(data, labels, dim, minMaxUsedData);
+	forest.train(data, dim, minMaxUsedData);
 
 	Labels guessedLabels;
 	forest.predictData(testData, guessedLabels);
 
 	int wrong = 0;
 	for(int i = 0; i < testData.size(); ++i){
-		if(guessedLabels[i] != testLabels[i]){
+		if(guessedLabels[i] != testData[i]->getLabel()){
 			++wrong;
 		}
 	}
@@ -170,7 +164,7 @@ void executeForRFBinaryClass(const std::string& path){
 
 	wrong = 0;
 	for(int i = 0; i < testData.size(); ++i){
-		if(guessedLabels2[i] != testLabels[i]){
+		if(guessedLabels2[i] != testData[i]->getLabel()){
 			++wrong;
 		}
 	}
@@ -188,7 +182,7 @@ void executeForRFBinaryClass(const std::string& path){
 		StopWatch sw;
 		DataWriterForVisu::generateGrid(writePath, forest, 200, data, printX, printY);
 		Settings::getValue("Write2D.testPath", writePath);
-		DataWriterForVisu::writeData(writePath, testData, testLabels, printX, printY);
+		DataWriterForVisu::writeData(writePath, testData, printX, printY);
 		std::cout << "Time for write: " << sw.elapsedSeconds() << std::endl;
 		std::cout << "End Reached" << std::endl;
 		system("../PythonScripts/plotData.py");

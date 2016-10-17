@@ -7,7 +7,9 @@
 
 #include "GaussianProcessMultiBinary.h"
 #include "../Data/DataConverter.h"
+#include "../Data/ClassData.h"
 #include "../Utility/Settings.h"
+#include "../Data/ClassKnowledge.h"
 
 GaussianProcessMultiBinary::GaussianProcessMultiBinary(int amountOfUsedClasses):
 	m_amountOfUsedClasses(amountOfUsedClasses),
@@ -16,7 +18,6 @@ GaussianProcessMultiBinary::GaussianProcessMultiBinary(int amountOfUsedClasses):
 	m_maxPointsUsedInGpSingleTraining(1000),
 	m_lowerBound(2),
 	m_upperBound(2),
-	m_pClassNames(NULL),
 	m_gps(amountOfUsedClasses, NULL){
 	Settings::getValue("MultiBinaryGP.lowerBoundLength", m_lowerBound[0]);
 	Settings::getValue("MultiBinaryGP.lowerBoundNoise",  m_lowerBound[1]);
@@ -24,16 +25,14 @@ GaussianProcessMultiBinary::GaussianProcessMultiBinary(int amountOfUsedClasses):
 	Settings::getValue("MultiBinaryGP.upperBoundNoise",  m_upperBound[1]);
 }
 
-void GaussianProcessMultiBinary::train(const DataContainer& container, const Labels* guessedLabels){
-	m_amountOfDataPoints = container.amountOfPoints;
+void GaussianProcessMultiBinary::train(const ClassData& data, const Labels* guessedLabels){
+	m_amountOfDataPoints = data.size();
 	// count the occurence of each pre class of the random forest
-	const Labels& refGuessedLabels = guessedLabels != NULL ? *guessedLabels : container.labels;
 	std::vector<int> countClasses(m_amountOfUsedClasses, 0);
-	for(int i = 0; i < m_amountOfDataPoints; ++i){
-		countClasses[refGuessedLabels[i]] += 1;
+	for(ClassDataConstIterator it = data.begin(); it != data.end(); ++it){
+		countClasses[(*it)->getLabel()] += 1;
 	}
 	m_amountOfDataPointsForUseAllTestsPoints = 300;
-	m_pClassNames = const_cast<std::vector<std::string>* >(&(container.namesOfClasses));
 	int thresholdForNoise = 5;
 	Settings::getValue("RFGP.thresholdForNoise", thresholdForNoise);
 	int pointsPerClassForBayOpt = 16;
@@ -45,10 +44,10 @@ void GaussianProcessMultiBinary::train(const DataContainer& container, const Lab
 	boost::thread_group group;
 	for(int iActClass = 0; iActClass < m_amountOfUsedClasses; ++iActClass){
 		if(countClasses[iActClass] < thresholdForNoise){
-			m_output.printSwitchingColor(container.namesOfClasses[iActClass] + " is not used, because count class is: " + number2String(countClasses[iActClass]) + "!");
+			m_output.printSwitchingColor(ClassKnowledge::getNameFor(iActClass) + " is not used, because count class is: " + number2String(countClasses[iActClass]) + "!");
 			continue; // do not use this class
 		}
-		m_output.printSwitchingColor("In Class: " + container.namesOfClasses[iActClass] + " has so many points: " + number2String(countClasses[iActClass]));
+		m_output.printSwitchingColor("In Class: " + ClassKnowledge::getNameFor(iActClass) + " has so many points: " + number2String(countClasses[iActClass]));
 		//m_isGpInUse[iActRfRes][iActClass] = true; // there is actually a gp for this config
 
 		m_gps[iActClass] = new GaussianProcess();
@@ -58,7 +57,7 @@ void GaussianProcessMultiBinary::train(const DataContainer& container, const Lab
 		}
 		group.add_thread(new boost::thread(boost::bind(&GaussianProcessMultiBinary::trainInParallel, this, iActClass,
 				min(maxNrOfPointsForBayesOpt, pointsPerClassForBayOpt * m_amountOfUsedClasses),
-				container, countClasses, m_gps[iActClass])));
+				data, countClasses, m_gps[iActClass])));
 		/*trainInParallel(iActClass, amountOfDataInRfRes,
 							pointsPerClassForBayOpt, amountOfClassesOverThreshold,
 							maxPointsUsedInGpSingleTraining, dataOfActRf,
@@ -73,7 +72,7 @@ void GaussianProcessMultiBinary::train(const DataContainer& container, const Lab
 }
 
 void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
-		const int amountOfHyperPoints, const DataContainer& container,
+		const int amountOfHyperPoints, const ClassData& data,
 		const std::vector<int>& classCounts, GaussianProcess* actGp) {
 	int nrOfNoChanges;
 	Settings::getValue("RFGP.nrOfNoChanges", nrOfNoChanges);
@@ -81,8 +80,8 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 	Eigen::VectorXd yGpInit;
 	// calc for final training
 	std::vector<bool> usedElements;
-	std::vector<bool> blockElements(container.data.size(), false); // block none
-	DataConverter::toRandClassAndHalfUniformDataMatrix(container.data, container.labels, classCounts,
+	std::vector<bool> blockElements(data.size(), false); // block none
+	DataConverter::toRandClassAndHalfUniformDataMatrix(data, classCounts,
 			dataMat, yGpInit, m_maxPointsUsedInGpSingleTraining, iActClass, usedElements, blockElements); // get a uniform portion of at most 1000 points
 
 	Eigen::MatrixXd testDataMat;
@@ -90,13 +89,13 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 	const int amountOfPointsUsedForTrainingTheTest = 300; // min(max(200,container.amountOfPoints / 3),m_maxPointsUsedInGpSingleTraining / 3); TODO
 	// calc for final training
 	std::vector<bool> usedElementsForTheValidationSet; // save the blocked values, for the testing of the hyper params
-	std::vector<bool> blockElementsForValidationSet(container.data.size(), false); // block none
-	DataConverter::toRandClassAndHalfUniformDataMatrix(container.data, container.labels, classCounts, testDataMat, testYGpInit,
+	std::vector<bool> blockElementsForValidationSet(data.size(), false); // block none
+	DataConverter::toRandClassAndHalfUniformDataMatrix(data, classCounts, testDataMat, testYGpInit,
 			amountOfPointsUsedForTrainingTheTest, iActClass, usedElementsForTheValidationSet, blockElementsForValidationSet); // get a uniform portion of at most 1000 points
 
 	// compare to all other classes! // one vs. all
 	const int numberOfPointsForClass = classCounts[iActClass];
-	const std::string betweenNames = ", for " + (*m_pClassNames)[iActClass] + " has " + number2String(numberOfPointsForClass);
+	const std::string betweenNames = ", for " + ClassKnowledge::getNameFor(iActClass) + " has " + number2String(numberOfPointsForClass);
 	m_output.printSwitchingColor("Start parallel with " + number2String(amountOfPointsUsedForTrainingTheTest) + " amount of points, which are used in the training for the testing" + betweenNames);
 	//Eigen::VectorXd y(numberOfPointsForClass);
 	StopWatch sw;
@@ -115,7 +114,7 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 		if(addNewThread){ // if adding is possible
 			// create a new one for this problem
 			group.add_thread(new boost::thread(boost::bind(&GaussianProcessMultiBinary::optimizeHyperParams, this,
-					iActClass, amountOfHyperPoints, container, classCounts, usedElementsForTheValidationSet, testDataMat, testYGpInit, &bestHyperParams)));
+					iActClass, amountOfHyperPoints, data, classCounts, usedElementsForTheValidationSet, testDataMat, testYGpInit, &bestHyperParams)));
 			m_output.printInColor("At the moment are " + number2String(m_threadCounter.currentThreadCount()) + " threads running" + betweenNames, RESET);
 		}
 		bestHyperParams.getFinishLast(isFinish);
@@ -143,12 +142,12 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 }
 
 void GaussianProcessMultiBinary::optimizeHyperParams(const int iActClass,
-		const int amountOfHyperPoints, const DataContainer& container,
+		const int amountOfHyperPoints, const ClassData& data,
 		const std::vector<int>& classCounts, const std::vector<bool>& elementsUsedForValidation,
 		const Eigen::MatrixXd& testDataMat, const Eigen::VectorXd& testYGpInit, BestHyperParams* bestHyperParams){
 	GaussianProcess usedGp;
 	const int numberOfPointsForClass = classCounts[iActClass];
-	const std::string betweenNames = ", for " + (*m_pClassNames)[iActClass] + " has " + number2String(numberOfPointsForClass);
+	const std::string betweenNames = ", for " + ClassKnowledge::getNameFor(iActClass) + " has " + number2String(numberOfPointsForClass);
 	int noChange = 1;
 	const bool useAllTestValues = true; //m_amountOfDataPoints <= m_amountOfDataPointsForUseAllTestsPoints; TODO
 	int size = min(m_amountOfDataPointsForUseAllTestsPoints, m_amountOfDataPoints);
@@ -158,7 +157,7 @@ void GaussianProcessMultiBinary::optimizeHyperParams(const int iActClass,
 		Eigen::MatrixXd dataHyper;
 		Eigen::VectorXd yHyper;
 		std::vector<bool> usedElements;
-		DataConverter::toRandClassAndHalfUniformDataMatrix(container.data, container.labels, classCounts, dataHyper,
+		DataConverter::toRandClassAndHalfUniformDataMatrix(data, classCounts, dataHyper,
 				yHyper, min(100, noChange * amountOfHyperPoints), iActClass, usedElements, elementsUsedForValidation); // get a uniform portion of all points
 		/* copy the #hyperPoints points of both TODO find way of randomly taking the values
 int oneCounter = 0, minusCounter = 0, counterHyper = 0;
@@ -230,7 +229,7 @@ std::cout << "One: " << oneCounter << std::endl;
 		usedGp.trainWithoutKernelOptimize();
 		bestHyperParams->getFinishDuring(isFinished); // only if one result is above the testing mark
 		if(isFinished){ break; }
-		int wright = 0;
+		int right = 0;
 		int rr = 0;
 		int amountOfCorrectLabels = 0;
 		int amountOfUsedValues = 0;
@@ -238,35 +237,37 @@ std::cout << "One: " << oneCounter << std::endl;
 			for(int i = 0; i < size; ++i){
 				const int nextEle = rand() / (double) RAND_MAX * m_amountOfDataPoints;
 				if(!elementsUsedForValidation[nextEle]){ // is not part of the validation trainings part
-					double prob = usedGp.predict(container.data[nextEle], 500);
-					if(prob > 0.5 && container.labels[nextEle] == iActClass){
-						++wright;
-					}else if(prob < 0.5 && container.labels[nextEle] != iActClass){
-						++wright;
+					ClassPoint& ele = *data[nextEle];
+					double prob = usedGp.predict(ele, 500);
+					if(prob > 0.5 && ele.getLabel() == iActClass){
+						++right;
+					}else if(prob < 0.5 && ele.getLabel() != iActClass){
+						++right;
 					}
 				}
 			}
 		}else{
-			for(int i = 0; i < container.amountOfPoints; ++i){
+			for(int i = 0; i < data.size(); ++i){
 				if(!elementsUsedForValidation[i]){ // is not part of the validation trainings part
 					++amountOfUsedValues;
-					double prob = usedGp.predict(container.data[i], 500);
-					if(container.labels[i] == iActClass)
+					ClassPoint& ele = *data[i];
+					double prob = usedGp.predict(ele, 500);
+					if(ele.getLabel() == iActClass)
 						++amountOfCorrectLabels;
-					if(prob > 0.75 && container.labels[i] == iActClass){
+					if(prob > 0.75 && ele.getLabel() == iActClass){
 						++rr;
-						++wright; // stronger weight on correct values, than on wrong values, the goal is to identify good values
-					}else if(prob < 0.2 && container.labels[i] != iActClass){
-						++wright;
+						++right; // stronger weight on correct values, than on wrong values, the goal is to identify good values
+					}else if(prob < 0.2 && ele.getLabel() != iActClass){
+						++right;
 					}
 				}
 			}
 		}
-		bestHyperParams->trySet(wright, rr, amountOfUsedValues, amountOfCorrectLabels, result[0], result[1]);
+		bestHyperParams->trySet(right, rr, amountOfUsedValues, amountOfCorrectLabels, result[0], result[1]);
 		bestHyperParams->getNoChangeCounter(noChange);
 		const int percentagePrecision = 2;
 		m_output.printSwitchingColor("Act is: " + number2String(result[0], percentagePrecision) + ", " + number2String(result[1], percentagePrecision)
-						+ " with: " + number2String(wright / (double) amountOfUsedValues * 100.0, percentagePrecision) + " %, for " + number2String(amountOfUsedValues)
+						+ " with: " + number2String(right / (double) amountOfUsedValues * 100.0, percentagePrecision) + " %, for " + number2String(amountOfUsedValues)
 						+ " test elements, just right: " + number2String(rr / (double) amountOfCorrectLabels * 100.0, percentagePrecision)
 						+ " %, best now: "
 						+ bestHyperParams->prettyStringOfBest(percentagePrecision) + ", use "
@@ -280,7 +281,7 @@ std::cout << "One: " << oneCounter << std::endl;
 	m_threadCounter.removeThread();
 }
 
-int GaussianProcessMultiBinary::predict(const DataElement& point, std::vector<double>& prob) const {
+int GaussianProcessMultiBinary::predict(const DataPoint& point, std::vector<double>& prob) const {
 	prob.resize(m_amountOfUsedClasses);
 	double p = 0;
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){

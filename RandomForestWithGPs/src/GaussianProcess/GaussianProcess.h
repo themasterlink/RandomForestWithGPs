@@ -13,6 +13,7 @@
 #include <Eigen/Cholesky>
 #include <Eigen/Dense>
 #include "Kernel.h"
+#include "../Data/DataPoint.h"
 
 class GaussianProcessWriter;
 class BayesOptimizer;
@@ -36,7 +37,7 @@ public:
 
 	void trainWithoutKernelOptimize();
 
-	double predict(const DataElement& newPoint, const int sampleSize = 5000) const;
+	double predict(const DataPoint& newPoint, const int sampleSize = 5000) const;
 
 	Kernel& getKernel(){ return m_kernel; };
 

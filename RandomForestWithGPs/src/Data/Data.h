@@ -16,15 +16,26 @@
 #include <string>
 #include <vector>
 
-typedef Eigen::VectorXd DataElement;
+#include "DataPoint.h"
+
+typedef typename std::vector<DataPoint*> Data;
+
+typedef typename Data::iterator DataIterator;
+
+typedef typename Data::const_iterator DataConstIterator;
+
+typedef typename std::vector<unsigned int> Labels;
+
+typedef typename Eigen::DiagonalWrapper<const Eigen::MatrixXd> DiagMatrixXd;
+
+/*typedef Eigen::VectorXd DataElement;
 typedef std::vector<DataElement> Data;
 typedef std::map<std::string, Data > DataSets;
 typedef std::vector<Eigen::VectorXd> ComplexLabels; // could be that the data elements have continous labels
 typedef std::vector<int> SimpleLabels; // could be that the data elements have continous labels
 typedef SimpleLabels Labels;
 typedef std::vector<double> DoubleLabels; // could be that the data elements have continous labels
-typedef Eigen::DiagonalWrapper<const Eigen::MatrixXd> DiagMatrixXd;
+*/
 
-#define EPSILON 1e-15
 
 #endif /* DATA_DATA_H_ */

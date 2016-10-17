@@ -10,10 +10,10 @@
 
 BestHyperParams::BestHyperParams(const int amountOfMaxNoChange):
 	m_maxNrOfNoChange(amountOfMaxNoChange),
-	m_amountOfBestWright(0),
+	m_amountOfBestRight(0),
 	m_amountOfBestValues(1),
 	m_amountOfCorrectBestValues(1),
-	m_amountOfBestWrightPositive(0),
+	m_amountOfBestRightPositive(0),
 	m_len(70),
 	m_sigmaF(0.5),
 	m_noChangeCounter(1),
@@ -24,15 +24,15 @@ BestHyperParams::BestHyperParams(const int amountOfMaxNoChange):
 BestHyperParams::~BestHyperParams(){
 }
 
-void BestHyperParams::trySet(int newWright, int newWrightPositive, int newAmountOfValues, int newAmountOfCorLabels, double len, double sigmaF){
+void BestHyperParams::trySet(int newRight, int newRightPositive, int newAmountOfValues, int newAmountOfCorLabels, double len, double sigmaF){
 	m_mutex.lock();
-	if (newWright / (double) newAmountOfValues
-			+ newWrightPositive / (double) newAmountOfCorLabels
-			> m_amountOfBestWright / (double) m_amountOfBestValues
-					+ m_amountOfBestWrightPositive
+	if (newRight / (double) newAmountOfValues
+			+ newRightPositive / (double) newAmountOfCorLabels
+			> m_amountOfBestRight / (double) m_amountOfBestValues
+					+ m_amountOfBestRightPositive
 							/ (double) m_amountOfCorrectBestValues) {
-		m_amountOfBestWright = newWright;
-		m_amountOfBestWrightPositive = newWrightPositive;
+		m_amountOfBestRight = newRight;
+		m_amountOfBestRightPositive = newRightPositive;
 		m_amountOfBestValues = newAmountOfValues;
 		m_amountOfCorrectBestValues = newAmountOfCorLabels;
 		m_len = len;
@@ -47,10 +47,10 @@ void BestHyperParams::trySet(int newWright, int newWrightPositive, int newAmount
 }
 
 
-void BestHyperParams::getBestParams(int& bestWright, int& bestWrightPositive, int& bestAmountOfValues, int& bestAmountOfCorLabels, double& bestLen, double& bestSigmaF){
+void BestHyperParams::getBestParams(int& bestRight, int& bestRightPositive, int& bestAmountOfValues, int& bestAmountOfCorLabels, double& bestLen, double& bestSigmaF){
 	m_mutex.lock();
-	bestWright = m_amountOfBestWright;
-	bestWrightPositive = m_amountOfBestWrightPositive;
+	bestRight = m_amountOfBestRight;
+	bestRightPositive = m_amountOfBestRightPositive;
 	bestAmountOfValues = m_amountOfBestValues;
 	bestAmountOfCorLabels = m_amountOfCorrectBestValues;
 	bestLen = m_len;
@@ -86,8 +86,8 @@ void BestHyperParams::getFinishDuring(bool& isFinish){
 
 bool BestHyperParams::checkGoal(){
 	m_mutex.lock();
-	if(m_amountOfBestWright / (double) m_amountOfBestValues * 100.0 > 95.0
-			&& m_amountOfBestWrightPositive / (double) m_amountOfCorrectBestValues * 100.0 > 85.0){
+	if(m_amountOfBestRight / (double) m_amountOfBestValues * 100.0 > 95.0
+			&& m_amountOfBestRightPositive / (double) m_amountOfCorrectBestValues * 100.0 > 85.0){
 		m_isFinish = true;
 		m_mutex.unlock();
 		return true;
@@ -101,16 +101,16 @@ const std::string BestHyperParams::prettyStringOfBest(const int precision){
 		std::stringstream str;
 		m_mutex.lock();
 		str << number2String(m_len, precision) << ", " << number2String(m_sigmaF, precision) << ", with: "
-				<< number2String(m_amountOfBestWright / (double) m_amountOfBestValues * 100.0, precision)
+				<< number2String(m_amountOfBestRight / (double) m_amountOfBestValues * 100.0, precision)
 				<< " %, just right: "
-				<< number2String(m_amountOfBestWrightPositive / (double) m_amountOfCorrectBestValues * 100.0, precision) << " %";
+				<< number2String(m_amountOfBestRightPositive / (double) m_amountOfCorrectBestValues * 100.0, precision) << " %";
 		m_mutex.unlock();
 		return str.str();
 	}else{
 		std::stringstream str;
 		m_mutex.lock();
-		str << m_len << ", " << m_sigmaF << ", with: " << m_amountOfBestWright / (double) m_amountOfBestValues * 100.0
-				<< " %, just right: " << m_amountOfBestWrightPositive / (double) m_amountOfCorrectBestValues * 100.0 << " %";
+		str << m_len << ", " << m_sigmaF << ", with: " << m_amountOfBestRight / (double) m_amountOfBestValues * 100.0
+				<< " %, just right: " << m_amountOfBestRightPositive / (double) m_amountOfCorrectBestValues * 100.0 << " %";
 		m_mutex.unlock();
 		return str.str();
 	}

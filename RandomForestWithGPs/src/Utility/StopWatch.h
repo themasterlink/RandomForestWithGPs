@@ -23,11 +23,15 @@ public:
 
 	TimeFrame elapsedAsTimeFrame() const;
 
+	TimeFrame elapsedAvgAsTimeFrame() const;
+
 	const std::string elapsedAsPrettyTime() const;
 
 	void recordActTime();
 
 	const std::string elapsedAvgAsPrettyTime() const;
+
+	static double getActTime();
 
 private:
 
@@ -69,6 +73,17 @@ const std::string StopWatch::elapsedAsPrettyTime() const{
 	std::stringstream ss;
 	ss << TimeFrame(elapsedSeconds());
 	return ss.str();
+}
+
+inline
+TimeFrame StopWatch::elapsedAvgAsTimeFrame() const{
+	return TimeFrame(avgTime);
+}
+
+inline
+double StopWatch::getActTime(){
+	static Time startOfTime(boost::gregorian::date(1970,1,1));
+	return (boost::posix_time::microsec_clock::local_time() - startOfTime).total_milliseconds() / 1000.0;
 }
 
 #endif /* UTILITY_STOPWATCH_H_ */

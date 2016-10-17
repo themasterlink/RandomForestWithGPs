@@ -16,31 +16,42 @@
 class DataWriterForVisu{
 public:
 
-	static void writeData(const std::string& fileName, const Data& data, const Labels& labels, const int x = 0, const int y = 1);
+	static void writeData(const std::string& fileName, const ClassData& data, const int x = 0, const int y = 1);
 
 	static void generateGrid(const std::string& fileName, const RandomForest& forest,
-			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
+			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void generateGrid(const std::string& fileName, const RandomForestGaussianProcess& rfgp,
-			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
+			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void generateGrid(const std::string& fileName, const GaussianProcess& gp,
-			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
+			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const GaussianProcess& gp,
-			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
+			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const GaussianProcessMultiBinary& gp,
-			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
+			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const IVM& ivm, const std::list<int>& selectedInducingPoints,
-			const double amountOfPointsOnOneAxis, const Data& dataForMinMax, const int x = 0, const int y = 1);
+			const Eigen::VectorXd& yVec, const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax,
+			const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const Eigen::MatrixXd mat);
 
 	static void writeSvg(const std::string& fileName, const Eigen::VectorXd vec, const bool drawLine = false);
 
+	static void writeSvg(const std::string& fileName, const std::list<double> vec, const bool drawLine = false);
+
+	static void writeSvg(const std::string& fileName, const std::list<double> vec, const std::list<std::string>& colors);
+
+	static void writeHisto(const std::string&fileName, const std::list<double> list, const unsigned int nrOfBins = 40);
+
 private:
+
+	static void drawSvgDataPoints(std::ofstream& file, const ClassData& points,
+			const Eigen::Vector2d& min, const Eigen::Vector2d& max,
+			const Eigen::Vector2i& dim, const std::list<int>& selectedInducingPoints);
 
 	static void drawSvgLine(std::ofstream& file, const Eigen::VectorXd vec,
 			const double startX, const double startY, const double min,
@@ -50,6 +61,10 @@ private:
 	static void drawSvgDots(std::ofstream& file, const Eigen::VectorXd vec,
 			const double startX, const double startY, const double min,
 			const double max, const double width, const double heigth, const std::string& color);
+
+	static void drawSvgDots(std::ofstream& file, const Eigen::VectorXd vec,
+			const double startX, const double startY, const double min,
+			const double max, const double width, const double heigth, const std::list<std::string>& color);
 
 	static bool openSvgFile(const std::string& fileName, const double width,
 			const double problemWidth, const double problemHeight, std::ofstream& file);
@@ -62,7 +77,7 @@ private:
 
 	static void drawSvgCoords(std::ofstream& file,
 			const double startX, const double startY, const double startXForData, const double startYForData, const double xSize,
-			const double ySize, const double min, const double max, const double width, const double heigth);
+			const double ySize, const double min, const double max, const double width, const double heigth, const bool useAllXSegments = false);
 
 	DataWriterForVisu();
 	virtual ~DataWriterForVisu();

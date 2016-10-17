@@ -12,6 +12,8 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <iostream>
+#include "boost/filesystem.hpp"
+#include "../Data/ClassPoint.h"
 
 class ReadWriterHelper {
 public:
@@ -23,6 +25,10 @@ public:
 	static 	void readVector(std::fstream& stream, Eigen::VectorXd& vector);
 
 	static void writeVector(std::fstream& stream, const Eigen::VectorXd& vector);
+
+	static 	void readPoint(std::fstream& stream, ClassPoint& vector);
+
+	static void writePoint(std::fstream& stream, const ClassPoint& vector);
 
 	template<class T>
 	static void writeVector(std::fstream& stream, const std::vector<T>& vector);

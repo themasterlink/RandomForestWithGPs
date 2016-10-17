@@ -15,11 +15,11 @@ public:
 	BestHyperParams(const int amountOfMaxNoChange);
 	~BestHyperParams();
 
-	void trySet(int newWright, int newWrightPositive, int newAmountOfValues, int newAmountOfCorLabels, double len, double sigmaF);
+	void trySet(int newRight, int newRightPositive, int newAmountOfValues, int newAmountOfCorLabels, double len, double sigmaF);
 
 	void getBestHypParams(double& bestLen, double& bestSigmaF);
 
-	void getBestParams(int& bestWright, int& bestWrightPositive, int& bestAmountOfValues, int& bestAmountOfCorLabels, double& bestLen, double& bestSigmaF);
+	void getBestParams(int& bestRight, int& bestRightPositive, int& bestAmountOfValues, int& bestAmountOfCorLabels, double& bestLen, double& bestSigmaF);
 
 	void getNoChangeCounter(int& noChange);
 
@@ -34,10 +34,10 @@ public:
 private:
 
 	const int m_maxNrOfNoChange;
-	int m_amountOfBestWright;
+	int m_amountOfBestRight;
 	int m_amountOfBestValues;
 	int m_amountOfCorrectBestValues;
-	int m_amountOfBestWrightPositive;
+	int m_amountOfBestRightPositive;
 	double m_len;
 	double m_sigmaF;
 	int m_noChangeCounter;
