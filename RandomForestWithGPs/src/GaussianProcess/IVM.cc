@@ -7,17 +7,26 @@
 
 #include "IVM.h"
 #include <boost/math/special_functions/erf.hpp>
+
+#include "../Base/Settings.h"
 #include "../Data/DataWriterForVisu.h"
-#include "../Utility/Settings.h"
 
 #define LOG2   0.69314718055994528623
 #define LOG2PI 1.8378770664093453391
 #define SQRT2  1.4142135623730951455
 
-IVM::IVM(): m_logZ(0), m_derivLogZ(2), m_dataPoints(0), m_numberOfInducingPoints(0), m_bias(0), m_lambda(0), m_doEPUpdate(false), m_desiredFraction(0) {
+IVM::IVM(): m_logZ(0), m_derivLogZ(2), m_dataPoints(0),
+	m_numberOfInducingPoints(0), m_bias(0), m_lambda(0),
+	m_doEPUpdate(false), m_desiredFraction(0),
+	m_calcLogZ(false), m_calcDerivLogZ(false) {
 }
 
 IVM::~IVM() {
+}
+
+void IVM::setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ){
+	m_calcDerivLogZ = doDerivLogZ;
+	m_calcLogZ = doLogZ;
 }
 
 void IVM::init(const Matrix& dataMat, const Vector& y, const unsigned int numberOfInducingPoints, const bool doEPUpdate){
@@ -49,6 +58,7 @@ void IVM::setNumberOfInducingPoints(unsigned int nr){
 	m_numberOfInducingPoints = std::min(nr, m_dataPoints);
 	m_nuTilde = Vector(m_numberOfInducingPoints);
 	m_tauTilde = Vector(m_numberOfInducingPoints);
+	m_eye = Matrix::Identity(m_numberOfInducingPoints, m_numberOfInducingPoints);
 }
 
 double IVM::cumulativeDerivLog(const double x){
@@ -312,14 +322,13 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		m_tauTilde[l] = beta[*itOfI];
 		muSqueezed[l] = mu[*itOfI];
 	}
-	const Matrix I = Matrix::Identity(m_numberOfInducingPoints, m_numberOfInducingPoints); // is needed after EP, too
 	// calc m_L
 	//std::cout << "m_L: \n" << m_L << std::endl;
 	//std::cout << "m_K: \n" << m_K << std::endl;
 	//std::cout << "m_M: \n" << m_M << std::endl;
 	m_choleskyLLT.compute(m_L);
 	if(m_doEPUpdate){ // EP update
-		Matrix Sigma = m_K * (I - m_choleskyLLT.solve(m_K));
+		Matrix Sigma = m_K * (m_eye - m_choleskyLLT.solve(m_K));
 		//Matrix controlSigma = m_K * (I - m_choleskyLLT.solve(m_K));
 		double deltaMax = 1.0;
 		const unsigned int maxEpCounter = 100;
@@ -425,8 +434,18 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		// compute log z
 	}
 	//std::cout << "m_L: \n" << m_L << std::endl;
+	if(m_calcLogZ){
+		calcLogZ();
+	}else if(m_calcDerivLogZ){
+		printError("The derivative can not be calculated without the log!");
+	}
+	m_muTildePlusBias = m_nuTilde.cwiseQuotient(m_tauTilde) + (m_bias * Vector::Ones(m_numberOfInducingPoints));
+	return true;
+}
+
+void IVM::calcLogZ(){
 	m_logZ = 0.0;
-	const Matrix llt = m_choleskyLLT.matrixL().toDenseMatrix();
+	const Matrix& llt = m_choleskyLLT.matrixLLT();
 	//std::cout << "llt: \n" << llt << std::endl;
 	for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
 		m_logZ -= log((double) llt(i,i));
@@ -449,9 +468,13 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		muL1[i] = sum / (double)llt(i,i);
 	}
 	m_logZ -= 0.5 * muTilde.dot(muL1);
+	if(m_calcDerivLogZ){
+		calcDerivatives(muL1);
+	}
+}
 
-	// compute derivatives
-	Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(I) * 0.5;
+void IVM::calcDerivatives(const Vector& muL1){
+	Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(m_eye) * 0.5;
 	Matrix CLen;
 	m_kernel.calcCovarianceDerivativeForInducingPoints(CLen, m_I, Kernel::LENGTH);
 	Matrix CFNoise;
@@ -463,8 +486,6 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 			m_derivLogZ[1] += Z2(i,j) * CFNoise(i,j);
 		}
 	}
-	m_muTildePlusBias = m_nuTilde.cwiseQuotient(m_tauTilde) + (m_bias * Vector::Ones(m_numberOfInducingPoints));
-	return true;
 }
 
 double IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, const Vector& zeta, const Vector& mu, double& g_kn, double& nu_kn, const double fraction, const Eigen::Vector2i& amountOfPointsPerClassLeft, const int verboseLevel){

@@ -7,57 +7,99 @@
 
 #include "OnlineRandomForest.h"
 #include "../Utility/Util.h"
+#include "../Base/Settings.h"
 
-OnlineRandomForest::OnlineRandomForest(const int maxDepth,
-		const int amountOfTrees, const int amountOfUsedClasses):
+OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
+		const int maxDepth,
+		const int amountOfTrees,
+		const int amountOfUsedClasses):
 		m_amountOfTrees(amountOfTrees),
-		m_amountOfClasses(amountOfUsedClasses){
+		m_maxDepth(maxDepth),
+		m_amountOfClasses(amountOfUsedClasses),
+		m_amountOfPointsUntilRetrain(0),
+		m_counterForRetrain(0),
+		m_amountOfUsedDims(0),
+		m_storage(storage){
+	Settings::getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
+	double val;
+	Settings::getValue("OnlineRandomForest.minUsedDataFactor", val);
+	m_minMaxUsedDataFactor[0] = val;
+	Settings::getValue("OnlineRandomForest.maxUsedDataFactor", val);
+	m_minMaxUsedDataFactor[1] = val;
 }
 
 OnlineRandomForest::~OnlineRandomForest(){
 }
 
-void OnlineRandomForest::train(const ClassData& data, const int amountOfUsedDims,
-		const Eigen::Vector2i minMaxUsedData){
-	if(data.size() < 2){
+void OnlineRandomForest::train(){
+	if(m_storage.size() < 2){
 		printError("There must be at least two points!");
 		return;
-	}else if(data[0]->rows() < 2){
+	}else if(m_storage.dim() < 2){
 		printError("There should be at least 2 dimensions in the data");
-	}else if(amountOfUsedDims > data[0]->rows()){
+	}else if(m_amountOfUsedDims > m_storage.dim()){
 		printError("Amount of dims can't be bigger than the dimension size!");
 		return;
 	}
 	std::vector<int> values(m_amountOfClasses, 0);
 	const int seed = 0;
-	RandomNumberGeneratorForDT generator(data[0]->rows(), minMaxUsedData[0],
-			minMaxUsedData[1], data.size(), seed);
+	const Eigen::Vector2i minMax = getMinMaxData();
+	RandomNumberGeneratorForDT generator(m_storage.dim(), minMax[0],
+			minMax[1], m_storage.size(), seed);
 	for(unsigned int i = 0; i < m_amountOfTrees; ++i){
-		m_trees.push_back(DecisionTree(0,0));
-		m_trees.back().train(data, amountOfUsedDims, generator);
+		m_trees.push_back(DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses));
+		m_trees.back().train(m_amountOfUsedDims, generator);
 	}
 }
 
-void OnlineRandomForest::update(const ClassData& data, const int amountOfUsedDims,
-		const Eigen::Vector2i minMaxUsedData){
+void OnlineRandomForest::update(Subject* caller, unsigned int event){
+	switch(event){
+		case OnlineStorage<ClassPoint*>::APPEND:{
+			if(m_counterForRetrain >= m_amountOfPointsUntilRetrain){
+				update();
+				m_counterForRetrain = 0;
+			}
+			break;
+		}
+		case OnlineStorage<ClassPoint*>::APPENDBLOCK:{
+			update();
+			m_counterForRetrain = 0;
+			break;
+		}
+		case OnlineStorage<ClassPoint*>::ERASE:{
+			printError("This update type is not supported here!");
+			break;
+		}
+		default: {
+			printError("This update type is not supported here!");
+			break;
+		}
+	}
+}
+
+void OnlineRandomForest::update(){
 	double startAmountOfRight = 0;
-	DecisionTreeIterator itWorst = findWorstPerformingTree(data, startAmountOfRight);
+	DecisionTreeIterator itWorst = findWorstPerformingTree(startAmountOfRight);
 	if(startAmountOfRight > 90.){
 		printDebug("No update needed!");
 		return;
 	}
+	const int seed = 0;
+	const Eigen::Vector2i minMax = getMinMaxData();
+	RandomNumberGeneratorForDT generator(m_storage.dim(), minMax[0], minMax[1], m_storage.size(), seed);
 	double lastWorstAmountOfRight = startAmountOfRight;
 	for(unsigned int updateStep = 0; startAmountOfRight + 10 > lastWorstAmountOfRight && updateStep < m_trees.size() * 0.25; ++updateStep){
-
+		itWorst->train(m_amountOfUsedDims, generator);
+		itWorst = findWorstPerformingTree(startAmountOfRight);
 	}
 }
 
-OnlineRandomForest::DecisionTreeIterator OnlineRandomForest::findWorstPerformingTree(const ClassData& data, double& correctAmount){
-	int minCorrect = data.size();
+OnlineRandomForest::DecisionTreeIterator OnlineRandomForest::findWorstPerformingTree(double& correctAmount){
+	int minCorrect = m_storage.size();
 	DecisionTreeIterator itWorst = m_trees.end();
 	for(DecisionTreeIterator itTree = m_trees.begin(); itTree != m_trees.end(); ++itTree){
 		int correct = 0;
-		for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it){
+		for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			ClassPoint& point = *(*it);
 			if(point.getLabel() == itTree->predict(point)){
 				++correct;
@@ -68,7 +110,7 @@ OnlineRandomForest::DecisionTreeIterator OnlineRandomForest::findWorstPerforming
 			itWorst = itTree;
 		}
 	}
-	correctAmount = minCorrect / (double) data.size() * 100.;
+	correctAmount = minCorrect / (double) m_storage.size() * 100.;
 	return itWorst;
 }
 
@@ -84,6 +126,16 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 
 }
 
-void OnlineRandomForest::getLeafNrFor(const ClassData& data, std::vector<int>& leafNrs){
+void OnlineRandomForest::getLeafNrFor(std::vector<int>& leafNrs){
+	leafNrs = std::vector<int>(m_amountOfClasses, 0);
+	for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
+		leafNrs[predict(**it)] += 1;
+	}
+}
 
+Eigen::Vector2i OnlineRandomForest::getMinMaxData(){
+	Eigen::Vector2i minMax;
+	minMax[0] = m_minMaxUsedDataFactor[0] * m_storage.size();
+	minMax[1] = m_minMaxUsedDataFactor[1] * m_storage.size();
+	return minMax;
 }

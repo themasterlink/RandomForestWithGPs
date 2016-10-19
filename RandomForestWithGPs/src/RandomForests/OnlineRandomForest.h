@@ -8,41 +8,57 @@
 #ifndef RANDOMFORESTS_ONLINERANDOMFOREST_H_
 #define RANDOMFORESTS_ONLINERANDOMFOREST_H_
 
-#include "DecisionTree.h"
+#include "DynamicDecisionTree.h"
 #include "../Data/Data.h"
+#include "../Data/OnlineStorage.h"
 #include <list>
 
-class OnlineRandomForest {
+class OnlineRandomForest : public Observer {
 public:
-	typedef std::list<DecisionTree> DecisionTreesContainer;
-	typedef std::list<DecisionTree>::iterator DecisionTreeIterator;
-	typedef std::list<DecisionTree>::const_iterator DecisionTreeConstIterator;
+	typedef std::list<DynamicDecisionTree> DecisionTreesContainer;
+	typedef std::list<DynamicDecisionTree>::iterator DecisionTreeIterator;
+	typedef std::list<DynamicDecisionTree>::const_iterator DecisionTreeConstIterator;
 
-	OnlineRandomForest(const int maxDepth, const int amountOfTrees, const int amountOfUsedClasses);
+	OnlineRandomForest(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfTrees, const int amountOfUsedClasses);
 
 	virtual ~OnlineRandomForest();
 
-	void train(const ClassData& data, const int amountOfUsedDims,
-			const Eigen::Vector2i minMaxUsedData);
+	void train();
 
 	int predict(const DataPoint& point) const;
 
 	void predictData(const Data& points, Labels& labels) const;
 
-	void getLeafNrFor(const ClassData& data, std::vector<int>& leafNrs);
+	void getLeafNrFor(std::vector<int>& leafNrs);
 
 	int getNrOfTrees() const { return m_trees.size(); };
 
-	void update(const ClassData& data, const int amountOfUsedDims, const Eigen::Vector2i minMaxUsedData);
+	void update(Subject* caller, unsigned int event);
+
+	void update();
 
 private:
 	const int m_amountOfTrees;
 
+	const int m_maxDepth;
+
 	const int m_amountOfClasses;
+
+	int m_amountOfPointsUntilRetrain;
+
+	int m_counterForRetrain;
+
+	int m_amountOfUsedDims;
+
+	Eigen::Vector2d m_minMaxUsedDataFactor;
+
+	OnlineStorage<ClassPoint*>& m_storage;
 
 	DecisionTreesContainer m_trees;
 
-	DecisionTreeIterator findWorstPerformingTree(const ClassData& data, double& correctAmount);
+	DecisionTreeIterator findWorstPerformingTree(double& correctAmount);
+
+	Eigen::Vector2i getMinMaxData();
 
 };
 

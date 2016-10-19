@@ -16,7 +16,7 @@
 #include "../GaussianProcess/GaussianProcess.h"
 #include "../GaussianProcess/GaussianProcessMultiBinary.h"
 #include "../GaussianProcess/BayesOptimizer.h"
-#include "../Utility/Settings.h"
+#include "../Base/Settings.h"
 #include "../Utility/ConfusionMatrixPrinter.h"
 #include "../Data/ClassKnowledge.h"
 #include <chrono>

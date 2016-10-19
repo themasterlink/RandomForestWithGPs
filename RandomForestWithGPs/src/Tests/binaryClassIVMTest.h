@@ -14,7 +14,7 @@
 #include "../Data/DataWriterForVisu.h"
 #include "../GaussianProcess/IVM.h"
 #include "../GaussianProcess/BayesOptimizerIVM.h"
-#include "../Utility/Settings.h"
+#include "../Base/Settings.h"
 #include "../Utility/ConfusionMatrixPrinter.h"
 #include <chrono>
 #include <thread>
@@ -76,8 +76,8 @@ void executeForBinaryClassIVM(const std::string& path, const bool useRealData, c
 		DataConverter::centerAndNormalizeData(datas, center, var);
 		DataConverter::toDataMatrix(datas, dataMat, y, dataMatTest, yTest, trainAmount);
 	}else{
-		DataReader::readFromFile(data, "../testData/trainInput.txt", trainAmount);
-		DataReader::readFromFile(testData, "../testData/testInput3.txt", testAmount);
+		DataReader::readFromFile(data, "../testData/trainInput.txt", 1000000);
+		DataReader::readFromFile(testData, "../testData/testInput3.txt", 1000000);
 		DataPoint center, var;
 		DataConverter::centerAndNormalizeData(data, center, var);
 		DataConverter::centerAndNormalizeData(testData, center, var);
@@ -95,6 +95,7 @@ void executeForBinaryClassIVM(const std::string& path, const bool useRealData, c
 		if(false){
 			IVM ivm;
 			ivm.init(dataMat, y, number, doEpUpdate);
+			ivm.setDerivAndLogZFlag(true, false);
 			std::list<double> list;
 			Eigen::VectorXd hyperparams(2);
 			Eigen::VectorXd bestHyperparams(2);
@@ -125,6 +126,7 @@ void executeForBinaryClassIVM(const std::string& path, const bool useRealData, c
 			StopWatch swGrad;
 			hyperparams[0] = bestHyperparams[0];
 			hyperparams[1] = bestHyperparams[1];
+			ivm.setDerivAndLogZFlag(true, true);
 			ivm.getKernel().setHyperParams((double)bestHyperparams[0], (double) bestHyperparams[1], sNoise);
 			bool t = ivm.train();
 			if(!useRealData && t){
@@ -256,6 +258,7 @@ void executeForBinaryClassIVM(const std::string& path, const bool useRealData, c
 		return;*/
 			IVM ivm;
 			ivm.init(dataMat, y, number, doEpUpdate);
+			ivm.setDerivAndLogZFlag(true, false);
 			ivm.getKernel().setHyperParams(0.5, 0.8, 0.1);
 			bayesopt::Parameters par = initialize_parameters_to_default();
 			std::cout << "noise: " << par.noise << std::endl;
@@ -324,6 +327,7 @@ void executeForBinaryClassIVM(const std::string& path, const bool useRealData, c
 				{	//double x = 955; double y2 = 0.855;
 					IVM ivm;
 					ivm.init(dataMat, y, 0.33333 * dataMat.cols(), doEpUpdate);
+					ivm.setDerivAndLogZFlag(true, false);
 					ivm.getKernel().setHyperParams(x, y2, sNoise);
 					bool trained = ivm.train(2);
 					if(trained){
@@ -401,11 +405,21 @@ void executeForBinaryClassIVM(const std::string& path, const bool useRealData, c
 		int nrOfInducingPoints;
 		Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 		ivm.init(dataMat, y, nrOfInducingPoints, doEpUpdate);
+		ivm.setDerivAndLogZFlag(true, true);
 		ivm.getKernel().setHyperParams(bestX, bestY, sNoise);
 		std::cout << "Start training" << std::endl;
-		StopWatch sw;
-		ivm.train(true, 1);
-		std::cout << "For IVM training: " << sw.elapsedAsTimeFrame() << std::endl;
+		std::list<double> times;
+		for(unsigned int k = 2; k < 350; k += 2){
+			StopWatch sw;
+			ivm.setNumberOfInducingPoints(k);
+			ivm.train(true, 1);
+			times.push_back(sw.elapsedSeconds());
+			std::cout << "For IVM " << k << " training: " << sw.elapsedAsTimeFrame() << std::endl;
+		}
+		DataWriterForVisu::writeSvg("timeLine.svg", times);
+		openFileInViewer("timeLine.svg");
+		DataWriterForVisu::writeHisto("timeLineHisto.svg", times);
+		openFileInViewer("timeLineHisto.svg");
 		if(!useRealData && visu){
 			DataWriterForVisu::writeSvg("out3.svg", ivm, ivm.getSelectedInducingPoints(), y, 100, data);
 			openFileInViewer("out3.svg");

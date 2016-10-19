@@ -5,10 +5,10 @@
  *      Author: Max
  */
 
-#ifndef UTILITY_SETTINGS_H_
-#define UTILITY_SETTINGS_H_
+#ifndef BASE_SETTINGS_H_
+#define BASE_SETTINGS_H_
 
-#include "Util.h"
+#include "../Utility/Util.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/thread.hpp> // Boost mutex
@@ -74,4 +74,4 @@ void Settings::getValue(const std::string& nameOfValue, T& value){
 	}
 }
 
-#endif /* UTILITY_SETTINGS_H_ */
+#endif /* BASE_SETTINGS_H_ */

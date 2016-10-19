@@ -9,6 +9,8 @@
 #define TESTS_MULTICLASSRFGPTEST_H_
 
 #include <Eigen/Dense>
+
+#include "../Base/Settings.h"
 #include "../Data/DataReader.h"
 /*#include "../Data/DataConverter.h"
 #include "../Data/DataWriterForVisu.h"
@@ -17,7 +19,6 @@
 */
 #include "../RandomForestGaussianProcess/RandomForestGaussianProcess.h"
 #include "../RandomForestGaussianProcess/RFGPWriter.h"
-#include "../Utility/Settings.h"
 //#include "../Utility/ConfusionMatrixPrinter.h"
 
 void executeForRFGPMultiClass(const std::string& path){

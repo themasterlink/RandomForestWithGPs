@@ -7,8 +7,9 @@
 //============================================================================
 
 #include "Tests/tests.h"
-#include "Utility/Settings.h"
 #include <boost/program_options.hpp>
+
+#include "Base/Settings.h"
 /*#include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/xfeatures2d.hpp>

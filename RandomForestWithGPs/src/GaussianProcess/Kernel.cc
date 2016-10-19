@@ -7,8 +7,8 @@
 
 #include "Kernel.h"
 #include "../Utility/ReadWriterHelper.h"
-#include "../Utility/Settings.h"
 #include <cmath>
+#include "../Base/Settings.h"
 
 Kernel::Kernel(): m_init(false), m_dataPoints(0), m_randLenMean(0), m_randLenVar(0){
 	m_hyperParams[0] = m_hyperParams[1] = m_hyperParams[2] = 0.0;

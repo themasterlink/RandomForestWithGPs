@@ -6,9 +6,10 @@
  */
 
 #include "GaussianProcessMultiBinary.h"
+
+#include "../Base/Settings.h"
 #include "../Data/DataConverter.h"
 #include "../Data/ClassData.h"
-#include "../Utility/Settings.h"
 #include "../Data/ClassKnowledge.h"
 
 GaussianProcessMultiBinary::GaussianProcessMultiBinary(int amountOfUsedClasses):

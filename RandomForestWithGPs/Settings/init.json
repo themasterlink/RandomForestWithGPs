@@ -31,7 +31,7 @@
     },
     "Training": {
         "path": "..\/testData\/trainInput.txt",
-        "amount": 100,
+        "amount": 350,
         "dim": 2
     },
     "RealData": {
@@ -39,7 +39,7 @@
     },
     "Test": {
         "path": "..\/testData\/testInput3.txt",
-        "amount": 100
+        "amount": 1000
     },
     "WriteBinarySaveOfTrees": {
     	"doWriting": "true",

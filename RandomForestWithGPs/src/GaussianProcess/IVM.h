@@ -37,6 +37,8 @@ public:
 
 	const List<int>& getSelectedInducingPoints(){ return m_I; };
 
+	void setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ);
+
 	virtual ~IVM();
 
 	double m_logZ;
@@ -52,10 +54,16 @@ private:
 	double cumulativeLog(const double x);
 
 	double cumulativeDerivLog(const double x);
+
+	void calcDerivatives(const Vector& muL1);
+
+	void calcLogZ();
+
 	Matrix m_dataMat;
 	Matrix m_M;
 	Matrix m_K;
 	Matrix m_L;
+	Matrix m_eye;
 	Vector m_y;
 	Vector m_nuTilde;
 	Vector m_tauTilde;
@@ -65,6 +73,8 @@ private:
 	double m_bias;
 	double m_lambda;
 	bool m_doEPUpdate;
+	bool m_calcLogZ;
+	bool m_calcDerivLogZ;
 	double m_desiredFraction;
 	List<int> m_J, m_I;
 

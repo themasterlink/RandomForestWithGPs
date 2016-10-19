@@ -13,7 +13,7 @@
 #include "../Data/DataWriterForVisu.h"
 #include "../RandomForests/RandomForest.h"
 #include "../RandomForests/RandomForestWriter.h"
-#include "../Utility/Settings.h"
+#include "../Base/Settings.h"
 
 void executeForRFBinaryClass(){
 	ClassData data;

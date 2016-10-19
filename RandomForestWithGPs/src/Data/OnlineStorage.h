@@ -9,6 +9,7 @@
 #define DATA_ONLINESTORAGE_H_
 
 #include "../Base/Observer.h"
+#include <vector>
 
 template<typename T>
 class OnlineStorage : public Subject {
@@ -20,7 +21,7 @@ public:
 		UNDEFINED = 3
 	};
 
-	typedef typename std::list<T> InternalStorage;
+	typedef typename std::vector<T> InternalStorage;
 	typedef typename InternalStorage::iterator Iterator;
 	typedef typename InternalStorage::const_iterator ConstIterator;
 
@@ -28,15 +29,37 @@ public:
 
 	void append(const T& data);
 
+	void append(const std::vector<T>& data);
+
 	void append(const OnlineStorage& storage);
 
 	void remove(const Iterator& it);
+
+	T& operator[](int element);
+
+	const T& operator[](int element) const;
+
+
+	Iterator begin();
+
+	Iterator end();
+
+	ConstIterator begin() const;
+
+	ConstIterator end() const;
+
+	T& first();
+
+	T& last();
+
+	unsigned int size() const{ return m_internal.size(); };
+
+	unsigned int dim() const;
 
 	virtual ~OnlineStorage();
 
 private:
 	InternalStorage m_internal;
-
 };
 
 #define __INCLUDE_ONLINESTORAGE

@@ -5,7 +5,7 @@
  *      Author: Max
  */
 
-#include "Settings.h"
+#include "../Base/Settings.h"
 
 boost::property_tree::ptree Settings::m_root;
 boost::mutex Settings::m_mutex;
