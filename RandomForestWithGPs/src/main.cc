@@ -116,9 +116,13 @@ int main(int ac, char* av[]){
 	bool useGP;
 	Settings::getValue("OnlyGp.useGP", useGP);
 	if(useGP){
+		//StopWatch sw;
+		//executeForBinaryClassIVM(path, !vm.count("useFakeData"), vm.count("visu"));
+		//std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
 		StopWatch sw;
-		executeForBinaryClassIVM(path, !vm.count("useFakeData"), vm.count("visu"));
+		executeForBinaryClassORF(path, !vm.count("useFakeData"), vm.count("visu"));
 		std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
+
 		/*sw.startTime();
 		executeForBinaryClass(path, !vm.count("useFakeData"));
 		std::cout << "For GP: " << sw.elapsedAsTimeFrame() << std::endl;*/

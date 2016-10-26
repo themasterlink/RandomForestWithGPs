@@ -12,8 +12,9 @@
 #include "../Data/ClassPoint.h"
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 #include "../RandomForests/DecisionTreeData.h"
+#include "../Base/Predictor.h"
 
-class DynamicDecisionTree {
+class DynamicDecisionTree : public PredictorMultiClass {
 public:
 	enum NodeType{ // saved in m_splitDim
 		NODE_IS_NOT_USED = -1,
@@ -29,7 +30,7 @@ public:
 
 	void train(const int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
 
-	double trySplitFor(const int actNode, const int usedNode, const int usedDim,
+	double trySplitFor(const int actNode, const double usedSplitValue, const int usedDim,
 			const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
 			std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator);
 
@@ -37,7 +38,17 @@ public:
 
 	int predict(const DataPoint& point) const;
 
+	void predictData(const Data& data, Labels& labels) const{
+		printError("This function is not implemented!");
+	}
+
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+		printError("Not implemented yet!");
+	}
+
 	int getNrOfLeaves();
+
+	int amountOfClasses() const;
 
 private:
 	OnlineStorage<ClassPoint*>& m_storage;

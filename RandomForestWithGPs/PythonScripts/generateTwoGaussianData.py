@@ -20,7 +20,8 @@ center0X = 0.5
 center0Y = 0.5
 
 center1X = -0.5
-center1Y = -0.5
+center1Y = 0.5
+
 
 def generateData(dim, amountOfPoints):
     text = ""
@@ -33,30 +34,24 @@ def generateData(dim, amountOfPoints):
         if(i % 2 == 0):
             xVal = center0X + math.cos(angle) * dist
             yVal = center0Y + math.sin(angle) * dist
-            text += str(xVal) + "," + str(yVal) +  "," + str(1) + "\n"
+            text += str(xVal) + " " + str(yVal) + "\n"
         else:
             xVal = center1X + math.cos(angle) * dist
             yVal = center1Y + math.sin(angle) * dist
-            text += str(xVal) + "," + str(yVal) +  "," + str(0) + "\n"
+            text += str(xVal) + " " + str(yVal) + "\n"
     return text
 
 
-train = generateData(dim, int(data["Training"]["amount"] / 2))
-text = generateData(dim, data["Test"]["amount"] / 2)
+train = generateData(dim, int(data["Training"]["amount"]))
 
 center0X = -0.5
-center0Y = 0.5
+center0Y = -0.5
 
 center1X = 0.5
 center1Y = -0.5
 
-train += generateData(dim, int(data["Training"]["amount"] / 2))
-text += generateData(dim, data["Test"]["amount"] / 2)
+#train += generateData(dim, int(data["Training"]["amount"] / 2))
 
 f = open(data["Training"]["path"], "w")
 f.write(train)
-f.close()
-
-f = open(data["Test"]["path"], "w")
-f.write(text)
 f.close()

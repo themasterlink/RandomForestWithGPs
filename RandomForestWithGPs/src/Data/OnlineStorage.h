@@ -35,10 +35,15 @@ public:
 
 	void remove(const Iterator& it);
 
+	void resize(const unsigned int size);
+
 	T& operator[](int element);
 
 	const T& operator[](int element) const;
 
+	InternalStorage& storage();
+
+	const InternalStorage& storage() const;
 
 	Iterator begin();
 
@@ -56,10 +61,18 @@ public:
 
 	unsigned int dim() const;
 
+	unsigned int getLastUpdateIndex();
+
+	ClassTypeSubject classType() const;
+
 	virtual ~OnlineStorage();
 
 private:
 	InternalStorage m_internal;
+
+	// always contains the index to last element before the last
+	// append call was executed, in the beginning it is zero
+	unsigned int m_lastUpdateIndex;
 };
 
 #define __INCLUDE_ONLINESTORAGE

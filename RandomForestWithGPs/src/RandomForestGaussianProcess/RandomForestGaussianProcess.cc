@@ -396,6 +396,11 @@ int RandomForestGaussianProcess::predict(const DataPoint& point, std::vector<dou
 	return std::distance(prob.cbegin(), std::max_element(prob.cbegin(), prob.cend()));
 }
 
+int RandomForestGaussianProcess::predict(const DataPoint& point) const{
+	std::vector<double> prob;
+	return predict(point, prob);
+}
+
 RandomForestGaussianProcess::~RandomForestGaussianProcess(){
 }
 

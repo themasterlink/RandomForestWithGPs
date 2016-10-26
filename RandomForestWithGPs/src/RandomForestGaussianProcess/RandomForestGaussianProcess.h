@@ -19,9 +19,7 @@
 
 class RFGPWriter;
 
-class RFGPWriter;
-
-class RandomForestGaussianProcess{
+class RandomForestGaussianProcess : public PredictorMultiClass {
 	friend RFGPWriter;
 public:
 
@@ -31,6 +29,16 @@ public:
 	virtual ~RandomForestGaussianProcess();
 
 	int predict(const DataPoint& data, std::vector<double>& prob) const;
+
+	int predict(const DataPoint& point) const;
+
+	void predictData(const Data& data, Labels& labels) const{
+		printError("This function is not implemented!");
+	}
+
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+		printError("Not implemented yet!");
+	}
 
 	int amountOfClasses() const {return m_amountOfUsedClasses;};
 

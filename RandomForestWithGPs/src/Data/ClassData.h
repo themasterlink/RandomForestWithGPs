@@ -11,6 +11,7 @@
 #include "ClassPoint.h"
 #include <vector>
 
+/*
 class ClassData : public std::vector<ClassPoint*> {
 public:
 	ClassData();
@@ -19,6 +20,9 @@ public:
 
 	virtual ~ClassData();
 };
+*/
+
+typedef typename std::vector<ClassPoint*> ClassData;
 
 typedef typename ClassData::iterator ClassDataIterator;
 

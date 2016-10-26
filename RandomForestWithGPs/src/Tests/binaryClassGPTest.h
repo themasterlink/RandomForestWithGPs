@@ -243,7 +243,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		std::cout << RESET;
 		ConfusionMatrixPrinter::print(confusion);
 		if(datas.size() == 2){
-			DataWriterForVisu::writeSvg("out.svg", gp, 75, data);
+			DataWriterForVisu::writeSvg("out.svg", &gp, 75, data);
 			system("open out.svg &");
 		}
 	}else{
@@ -357,7 +357,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		std::cout << "Amount of below: " << (double) amountOfBelow / data.size() * 100.0 << "%" << std::endl;
 		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET;
-		DataWriterForVisu::writeSvg("out.svg", gp, 100, data);
+		DataWriterForVisu::writeSvg("out.svg", &gp, 100, data);
 		system("open out.svg &");
 	}
 	//DataReader::readFromFile(data, labels, path);

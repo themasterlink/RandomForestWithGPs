@@ -11,6 +11,7 @@
 #include <vector>
 #include "ClassPoint.h"
 #include "DataSets.h"
+#include "OnlineStorage.h"
 
 class TotalStorage {
 public:
@@ -23,13 +24,25 @@ public:
 
 	static ClassPoint* getDefaultEle();
 
-	static void readData(const std::string& folderLocation, const int amountOfData);
+	static void readData(const int amountOfData, const bool useRealData = true);
 
 	static unsigned int getTotalSize();
 
+	static unsigned int getAmountOfClass();
+
 	static unsigned int getSize(unsigned int classNr);
 
+	static unsigned int getSmallestClassSize();
+
+	static void getOnlineStorageCopy(OnlineStorage<ClassPoint*>& storage);
+
+	static void getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train, OnlineStorage<ClassPoint*>& test, const int amountOfPointsForTraining);
+
 private:
+
+	static DataPoint m_center;
+
+	static DataPoint m_var;
 
 	static InternalStorage m_storage;
 

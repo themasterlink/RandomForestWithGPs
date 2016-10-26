@@ -7,7 +7,7 @@
 
 #include "DynamicDecisionTree.h"
 #include "../Utility/Util.h"
-
+#include <algorithm>
 
 DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfClasses):
 		m_storage(storage),
@@ -37,6 +37,11 @@ DynamicDecisionTree::~DynamicDecisionTree(){
 
 void DynamicDecisionTree::DynamicDecisionTree::train(const int amountOfUsedDims,
 		RandomNumberGeneratorForDT& generator){
+	if(m_splitDim[1] != NODE_IS_NOT_USED || m_splitDim[1] != NODE_CAN_BE_USED){
+		// reset training
+		std::fill(m_splitDim.begin(), m_splitDim.end(), NODE_IS_NOT_USED);
+		std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), -1);
+	}
 	std::vector<int> usedDims(amountOfUsedDims,-1);
 	if(amountOfUsedDims == m_storage.dim()){
 		for(int i = 0; i < amountOfUsedDims; ++i){
@@ -70,22 +75,23 @@ void DynamicDecisionTree::DynamicDecisionTree::train(const int amountOfUsedDims,
 		// calc actual nodes
 		// calc split value for each node
 		// choose dimension for split
-
 		const int randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
 		const int amountOfUsedData = generator.getRandAmountOfUsedData();
-		int maxScoreElement = 0;
-		double actScore = -1000; // TODO check magic number
+		double maxScoreElementValue = 0;
+		double actScore = -DBL_MAX; // TODO check magic number
 		for(int j = 0; j < amountOfUsedData; ++j){ // amount of checks for a specified split
-			const int randElementId = generator.getRandNextDataEle();
-			const double score = trySplitFor(iActNode, randElementId, randDim,
+			//const int randElementId = generator.getRandNextDataEle();
+			//const double usedValue = (*m_storage[usedNode])[usedDim];
+			const double usedValue = generator.getRandSplitValueInDim(randDim);
+			const double score = trySplitFor(iActNode, usedValue, randDim,
 					dataPosition[iActNode], leftHisto, rightHisto, generator);
 			if(score > actScore){
 				actScore = score;
-				maxScoreElement = randElementId;
+				maxScoreElementValue = usedValue;
 			}
 		}
 		// save actual split
-		m_splitValues[iActNode] = (double) (*m_storage[maxScoreElement])[randDim];
+		m_splitValues[iActNode] = maxScoreElementValue;//(double) (*m_storage[maxScoreElement])[randDim];
 		m_splitDim[iActNode] = randDim;
 		// apply split to data
 		int foundDataLeft = 0, foundDataRight = 0;
@@ -168,10 +174,9 @@ void DynamicDecisionTree::DynamicDecisionTree::train(const int amountOfUsedDims,
 	}
 }
 
-double DynamicDecisionTree::trySplitFor(const int actNode, const int usedNode, const int usedDim,
+double DynamicDecisionTree::trySplitFor(const int actNode, const double usedValue, const int usedDim,
 		const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
 		std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator){
-	const double usedValue = (*m_storage[usedNode])[usedDim];
 	double leftAmount = 0, rightAmount = 0;
 	if(dataInNode.size() < 100){ // under 100 take each value
 		for(std::vector<int>::const_iterator it = dataInNode.cbegin(); it != dataInNode.cend();
@@ -297,4 +302,7 @@ int DynamicDecisionTree::getNrOfLeaves(){
 	return pow(2, m_maxDepth);
 }
 
+int DynamicDecisionTree::amountOfClasses() const{
+	return m_amountOfClasses;
+}
 

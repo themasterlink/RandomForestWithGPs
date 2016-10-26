@@ -15,9 +15,9 @@
     	"testingAmount": 200
     },
     "Forest": {
-        "amountOfTrees": 4000,
+        "amountOfTrees": 100,
         "Trees": {
-            "height": 9
+            "height": 2
         }
     },
     "IVM": {
@@ -26,12 +26,22 @@
         "nrOfInducingPoints": 8,
         "desiredFraction": 0.45
     },
+    "TotalStorage": {
+        "folderLocReal": "..\/bigTest\/",
+        "folderLocFake": "..\/fakeData\/"
+    },
+    "OnlineRandomForest": {
+		"amountOfPointsUntilRetrain": 300,
+		"minUsedDataFactor":  0.2,
+		"maxUsedDataFactor":  0.8,
+		"factorAmountOfUsedDims": 1.0
+	},
     "Kernel": {
         "path": "..\/realTest\/kernelData.kernel"
     },
     "Training": {
-        "path": "..\/testData\/trainInput.txt",
-        "amount": 350,
+        "path": "..\/fakeData\/",
+        "amount": 200,
         "dim": 2
     },
     "RealData": {

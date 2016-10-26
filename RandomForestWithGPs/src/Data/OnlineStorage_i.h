@@ -3,9 +3,19 @@
 #error "Don't include OnlineStorage_i.h directly. Include OnlineStorage.h instead."
 #endif
 
+#include "../Utility/Util.h"
+
+template<typename T>
+OnlineStorage<T>::OnlineStorage(): m_lastUpdateIndex(0){
+}
+
+template<typename T>
+OnlineStorage<T>::~OnlineStorage(){
+}
 
 template<typename T>
 void OnlineStorage<T>::append(const T& data){
+	m_lastUpdateIndex = size();
 	m_internal.push_back(data);
 	notify(APPEND);
 }
@@ -18,14 +28,24 @@ void OnlineStorage<T>::remove(const Iterator& it){
 
 template<typename T>
 void OnlineStorage<T>::append(const OnlineStorage<T>& storage){
+	m_lastUpdateIndex = size();
 	m_internal.push_back(storage.m_internal);
 	notify(APPENDBLOCK);
 }
 
 template<typename T>
 void OnlineStorage<T>::append(const std::vector<T>& storage){
-	m_internal.push_back(storage.m_internal);
+	m_lastUpdateIndex = size();
+	m_internal.insert(m_internal.end(), storage.begin(), storage.end());
 	notify(APPENDBLOCK);
+}
+
+template<typename T>
+void OnlineStorage<T>::resize(const unsigned int size){
+	m_internal.resize(size);
+	if(this->size() < m_lastUpdateIndex){
+		m_lastUpdateIndex = this->size();
+	}
 }
 
 template<typename T>
@@ -75,4 +95,24 @@ T& OnlineStorage<T>::first(){
 template<typename T>
 T& OnlineStorage<T>::last(){
 	return m_internal.back();
+}
+
+template<typename T>
+typename OnlineStorage<T>::InternalStorage& OnlineStorage<T>::storage(){
+	return m_internal;
+}
+
+template<typename T>
+const typename OnlineStorage<T>::InternalStorage& OnlineStorage<T>::storage() const{
+	return m_internal;
+}
+
+template<typename T>
+unsigned int OnlineStorage<T>::getLastUpdateIndex(){
+	return m_lastUpdateIndex;
+}
+
+template<typename T>
+ClassTypeSubject OnlineStorage<T>::classType() const{
+	return ClassTypeSubject::ONLINESTORAGE;
 }

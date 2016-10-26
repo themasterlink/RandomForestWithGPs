@@ -13,26 +13,10 @@
 #include "DecisionTree.h"
 #include "DecisionTreeData.h"
 #include "../Data/Data.h"
+#include "../Base/Predictor.h"
+#include "TreeCounter.h"
 
-class TreeCounter{
-public:
-	TreeCounter() : counter(0){};
-
-	void addToCounter(const int val){
-		mutex.lock();
-		counter += val;
-		mutex.unlock();
-	}
-
-	int getCounter() const{
-		return counter;
-	}
-private:
-	boost::mutex mutex;
-	int counter;
-};
-
-class RandomForest{
+class RandomForest : public PredictorMultiClass {
 public:
 	typedef std::vector<DecisionTree> DecisionTreesContainer;
 
@@ -56,6 +40,10 @@ public:
 
 	void predictData(const ClassData& points, Labels& labels) const;
 
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+		printError("Not implemented yet!");
+	}
+
 	int getNrOfTrees() const { return m_trees.size(); };
 
 	const DecisionTreesContainer& getTrees() const{ return m_trees; };
@@ -63,6 +51,8 @@ public:
 	DecisionTreesContainer& getTrees(){ return m_trees; };
 
 	void getLeafNrFor(const ClassData& data, std::vector<int>& leafNrs);
+
+	int amountOfClasses() const;
 
 private:
 	const int m_amountOfTrees;

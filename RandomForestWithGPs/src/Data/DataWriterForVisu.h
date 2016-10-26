@@ -8,9 +8,9 @@
 #ifndef DATA_DATAWRITERFORVISU_H_
 #define DATA_DATAWRITERFORVISU_H_
 
-#include "../RandomForests/RandomForest.h"
-#include "../RandomForestGaussianProcess/RandomForestGaussianProcess.h"
-#include "../GaussianProcess/GaussianProcessMultiBinary.h"
+#include "../Base/Predictor.h"
+#include "../Data/ClassData.h"
+#include <string>
 #include "../GaussianProcess/IVM.h"
 
 class DataWriterForVisu{
@@ -18,19 +18,16 @@ public:
 
 	static void writeData(const std::string& fileName, const ClassData& data, const int x = 0, const int y = 1);
 
-	static void generateGrid(const std::string& fileName, const RandomForest& forest,
+	static void generateGrid(const std::string& fileName,  const PredictorBinaryClass* predictor,
 			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
-	static void generateGrid(const std::string& fileName, const RandomForestGaussianProcess& rfgp,
+	static void generateGrid(const std::string& fileName, const PredictorMultiClass* predictor,
 			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
-	static void generateGrid(const std::string& fileName, const GaussianProcess& gp,
+	static void writeSvg(const std::string& fileName, const PredictorBinaryClass* predictor,
 			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
-	static void writeSvg(const std::string& fileName, const GaussianProcess& gp,
-			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
-
-	static void writeSvg(const std::string& fileName, const GaussianProcessMultiBinary& gp,
+	static void writeSvg(const std::string& fileName, const PredictorMultiClass* predictor,
 			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const IVM& ivm, const std::list<int>& selectedInducingPoints,
@@ -51,7 +48,8 @@ private:
 
 	static void drawSvgDataPoints(std::ofstream& file, const ClassData& points,
 			const Eigen::Vector2d& min, const Eigen::Vector2d& max,
-			const Eigen::Vector2i& dim, const std::list<int>& selectedInducingPoints);
+			const Eigen::Vector2i& dim, const std::list<int>& selectedInducingPoints,
+			const int amountOfClasses = 2);
 
 	static void drawSvgLine(std::ofstream& file, const Eigen::VectorXd vec,
 			const double startX, const double startY, const double min,

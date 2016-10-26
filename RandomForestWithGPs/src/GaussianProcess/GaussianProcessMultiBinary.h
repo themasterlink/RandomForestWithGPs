@@ -18,7 +18,7 @@
 #include "../GaussianProcess/BayesOptimizer.h"
 
 
-class GaussianProcessMultiBinary {
+class GaussianProcessMultiBinary : public PredictorMultiClass {
 public:
 	GaussianProcessMultiBinary(int amountOfUsedClasses);
 	virtual ~GaussianProcessMultiBinary();
@@ -26,6 +26,18 @@ public:
 	void train(const ClassData& data, const Labels* guessedLabels = NULL);
 
 	int predict(const DataPoint& point, std::vector<double>& prob) const;
+
+	int predict(const DataPoint& point) const;
+
+	void predictData(const Data& data, Labels& labels) const{
+		printError("This function is not implemented!");
+	}
+
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+		printError("Not implemented yet!");
+	}
+
+	int amountOfClasses() const;
 
 private:
 

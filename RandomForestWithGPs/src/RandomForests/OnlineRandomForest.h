@@ -11,10 +11,13 @@
 #include "DynamicDecisionTree.h"
 #include "../Data/Data.h"
 #include "../Data/OnlineStorage.h"
+#include "../Data/ClassData.h"
 #include <list>
+#include "TreeCounter.h"
 
-class OnlineRandomForest : public Observer {
+class OnlineRandomForest : public Observer, public PredictorMultiClass, public Subject {
 public:
+
 	typedef std::list<DynamicDecisionTree> DecisionTreesContainer;
 	typedef std::list<DynamicDecisionTree>::iterator DecisionTreeIterator;
 	typedef std::list<DynamicDecisionTree>::const_iterator DecisionTreeConstIterator;
@@ -29,15 +32,38 @@ public:
 
 	void predictData(const Data& points, Labels& labels) const;
 
+	void predictData(const ClassData& points, Labels& labels) const;
+
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
+
 	void getLeafNrFor(std::vector<int>& leafNrs);
 
 	int getNrOfTrees() const { return m_trees.size(); };
 
 	void update(Subject* caller, unsigned int event);
 
-	void update();
+	bool update();
+
+	int amountOfClasses() const;
+
+	OnlineStorage<ClassPoint*>& getStorageRef();
+
+	ClassTypeSubject classType() const;
 
 private:
+
+	void predictDataInParallel(const Data& points, Labels* labels, const int start, const int end) const;
+
+	void predictClassDataInParallel(const ClassData& points, Labels* labels, const int start, const int end) const;
+
+	void predictDataProbInParallel(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const int start, const int end) const;
+
+	void trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT& generator, TreeCounter* counter);
+
+	void sortTreesAfterPerformance(std::list<std::pair<DecisionTreeIterator, double> >& list);
+
+	void updateInParallel(std::list<std::pair<DecisionTreeIterator, double> >* list, const int amountOfSteps, boost::mutex* mutex);
+
 	const int m_amountOfTrees;
 
 	const int m_maxDepth;
@@ -50,6 +76,8 @@ private:
 
 	int m_amountOfUsedDims;
 
+	double m_factorForUsedDims;
+
 	Eigen::Vector2d m_minMaxUsedDataFactor;
 
 	OnlineStorage<ClassPoint*>& m_storage;
@@ -60,6 +88,9 @@ private:
 
 	Eigen::Vector2i getMinMaxData();
 
+	std::vector<RandomNumberGeneratorForDT*> m_generators;
+
+	bool m_firstTrainingDone;
 };
 
 

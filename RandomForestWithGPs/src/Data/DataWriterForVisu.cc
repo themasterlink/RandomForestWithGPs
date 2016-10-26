@@ -15,9 +15,7 @@ DataWriterForVisu::DataWriterForVisu()
 
 }
 
-DataWriterForVisu::~DataWriterForVisu()
-{
-	// TODO Auto-generated destructor stub
+DataWriterForVisu::~DataWriterForVisu(){
 }
 
 void DataWriterForVisu::writeData(const std::string& fileName, const ClassData& data,
@@ -40,8 +38,10 @@ void DataWriterForVisu::writeData(const std::string& fileName, const ClassData& 
 	}
 }
 
-void DataWriterForVisu::generateGrid(const std::string& fileName, const RandomForest& forest,
-		const double amountOfPointsOnOneAxis, const ClassData& data,
+void DataWriterForVisu::generateGrid(const std::string& fileName,
+		const PredictorMultiClass* predictor,
+		const double amountOfPointsOnOneAxis,
+		const ClassData& data,
 		const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
@@ -60,31 +60,27 @@ void DataWriterForVisu::generateGrid(const std::string& fileName, const RandomFo
 	int amount = 0;
 	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
 		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-			DataPoint* ele = new DataPoint(dim);
+			DataPoint ele(dim);
 			for(int i = 0; i < dim; ++i){
 				if(i == x){
-					(*ele)[i] = xVal;
+					ele[i] = xVal;
 				}else if(i == y){
-					(*ele)[i] = yVal;
+					ele[i] = yVal;
 				}else{
-					(*ele)[i] = 0;
+					ele[i] = 0;
 				}
 			}
-			points.push_back(ele);
+			file << xVal << " " << yVal << " " << predictor->predict(ele) << "\n";
 			++amount;
 		}
-	}
-	Labels labels;
-	forest.predictData(points, labels);
-	for(int i = 0; i < amount; ++i){
-		file << points[i][0] << " " << points[i][1] << " " << labels[i] << "\n";
-		delete(points[i]);
 	}
 	file.close();
 }
 
-void DataWriterForVisu::generateGrid(const std::string& fileName, const RandomForestGaussianProcess& rfgp,
-		const double amountOfPointsOnOneAxis, const ClassData& data,
+void DataWriterForVisu::generateGrid(const std::string& fileName,
+		const PredictorBinaryClass* predictor,
+		const double amountOfPointsOnOneAxis,
+		const ClassData& data,
 		const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
@@ -101,82 +97,26 @@ void DataWriterForVisu::generateGrid(const std::string& fileName, const RandomFo
 	Data points;
 	points.reserve(amountOfPointsOnOneAxis * (amountOfPointsOnOneAxis + 1));
 	int amount = 0;
-	std::vector<double> labels;
-	std::vector<double> prob(rfgp.amountOfClasses());
 	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
 		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-			DataPoint* ele = new DataPoint(dim);
+			DataPoint ele(dim);
 			for(int i = 0; i < dim; ++i){
 				if(i == x){
-					(*ele)[i] = xVal;
+					ele[i] = xVal;
 				}else if(i == y){
-					(*ele)[i] = yVal;
+					ele[i] = yVal;
 				}else{
-					(*ele)[i] = 0;
+					ele[i] = 0;
 				}
 			}
-			points.push_back(ele);
-			int val = rfgp.predict(*ele, prob);
-			labels.push_back(prob[val]);
+			file << xVal << " " << yVal << " " << predictor->predict(ele) << "\n";
 			++amount;
 		}
-	}
-	for(int i = 0; i < amount; ++i){
-		file << points[i][0] << " " << points[i][1] << " " << labels[i] << "\n";
-		delete(points[i]);
 	}
 	file.close();
 }
 
-void DataWriterForVisu::generateGrid(const std::string& fileName, const GaussianProcess& gp,
-		const double amountOfPointsOnOneAxis, const ClassData& data,
-		const int x, const int y){
-	if(data.size() == 0){
-		printError("No data is given, this data is needed to find min and max!");
-		return;
-	}
-	const int dim = data[0]->rows();
-	Eigen::Vector2i dimVec;
-	dimVec << x,y;
-	Eigen::Vector2d min, max;
-	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
-	const Eigen::Vector2d diff = max - min;
-	max[0] += diff[0] * 0.2;
-	max[1] += diff[1] * 0.2;
-	min[0] -= diff[0] * 0.2;
-	min[1] -= diff[1] * 0.2;
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
-	std::ofstream file;
-	file.open(fileName);
-	Data points;
-	points.reserve(amountOfPointsOnOneAxis * (amountOfPointsOnOneAxis + 1));
-	int amount = 0;
-	std::vector<double> labels;
-	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
-		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-			DataPoint* ele = new DataPoint(dim);
-			for(int i = 0; i < dim; ++i){
-				if(i == x){
-					(*ele)[i] = xVal;
-				}else if(i == y){
-					(*ele)[i] = yVal;
-				}else{
-					(*ele)[i] = 0;
-				}
-			}
-			points.push_back(ele);
-			labels.push_back(gp.predict(*ele));
-			++amount;
-		}
-	}
-	for(int i = 0; i < amount; ++i){
-		file << points[i][0] << " " << points[i][1] << " " << labels[i] << "\n";
-		delete(points[i]);
-	}
-	file.close();
-}
-
-void DataWriterForVisu::writeSvg(const std::string& fileName, const GaussianProcess& gp,
+void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorBinaryClass* predictor,
 		const double amountOfPointsOnOneAxis, const ClassData& data, const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
@@ -214,22 +154,20 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const GaussianProc
 				}
 			}
 			//gp.resetFastPredict();
-			double val = fmax(fmin(1.0,gp.predict(ele,50000)), 0.0);
+			double val = fmax(fmin(1.0, predictor->predict(ele)), 0.0);
 			drawSvgRect(file, iX / elementInX * 100., iY / elementInY  * 100.,
-					100.0 / elementInX, 100.0 / elementInY, val * 100, 0, (1-val) * 100);
+					100.0 / elementInX, 100.0 / elementInY, val * 100, 0, (1.-val) * 100);
 			++amount;
 			++iY;
 		}
 		++iX;
 	}
-
 	std::list<int> empty;
 	drawSvgDataPoints(file, data, min, max, dimVec, empty);
 	closeSvgFile(file);
 }
 
-
-void DataWriterForVisu::writeSvg(const std::string& fileName, const GaussianProcessMultiBinary& gp,
+void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMultiClass* predictor,
 		const double amountOfPointsOnOneAxis, const ClassData& data, const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
@@ -250,37 +188,65 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const GaussianProc
 	std::vector<double> labels;
 	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
 	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
-	int iX = 0, iY;
 	std::ofstream file;
+	const int classAmount = predictor->amountOfClasses();
 	openSvgFile(fileName, 820., (double) (max[0] - min[0]), (double) (max[1] - min[1]), file);
-	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
-		iY = 0;
+	Data points;
+	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+	//for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
 		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-			DataPoint ele(dim);
+			DataPoint* ele = new DataPoint(dim);
 			for(int i = 0; i < dim; ++i){
 				if(i == x){
-					ele[i] = xVal;
+					(*ele)[i] = xVal;
 				}else if(i == y){
-					ele[i] = yVal;
+					(*ele)[i] = yVal;
 				}else{
-					ele[i] = 0;
+					(*ele)[i] = 0;
 				}
 			}
-			std::vector<double> prob;
-			gp.predict(ele, prob);
-			//double val = fmax(fmin(1.0,), 0.0);
-			drawSvgRect(file, iX / elementInX * 100., iY / elementInY  * 100.,
-					100.0 / elementInX, 100.0 / elementInY, prob[0] * 100, 0, prob[1] * 100);
+			points.push_back(ele);
 			++amount;
+		}
+	}
+	Labels result;
+	std::vector< std::vector<double> > probs;
+	predictor->predictData(points, result, probs);
+	printLine();
+	int counter = 0;
+	int iX = 0, iY;
+	std::vector< std::vector<double> > colors(classAmount, std::vector<double>(3));
+	for(unsigned int i = 0; i < classAmount; ++i){ // save all colors
+		ColorConverter::HSV2LAB((i + 1) / (double) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
+	}
+	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+		iY = 0;
+		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+				//double val = fmax(fmin(1.0,), 0.0);
+			double l = 0, a = 0, b = 0;
+			for(unsigned int i = 0; i < classAmount; ++i){
+				l += probs[counter][i] * colors[i][0];
+				a += probs[counter][i] * colors[i][1];
+				b += probs[counter][i] * colors[i][2];
+			}
+			double r, g, b_;
+			ColorConverter::LAB2RGB(l, a, b, r, g, b_);
+			drawSvgRect(file, iX / elementInX * 100., iY / elementInY  * 100.,
+					100.0 / elementInX, 100.0 / elementInY, r * 100., g * 100., b_ * 100.);
+			++counter;
 			++iY;
 		}
 		++iX;
 	}
+	printLine();
+	for(unsigned int i = 0; i < points.size(); ++i){
+		delete points[i];
+	}
+	printLine();
 	std::list<int> empty;
-	drawSvgDataPoints(file, data, min, max, dimVec, empty);
+	drawSvgDataPoints(file, data, min, max, dimVec, empty, classAmount);
 	closeSvgFile(file);
 }
-
 
 void DataWriterForVisu::writeHisto(const std::string&fileName, const std::list<double> list, const unsigned int nrOfBins){
 	if(list.size() == 0){
@@ -363,38 +329,57 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 }
 
 void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& points,
-		const Eigen::Vector2d& min, const Eigen::Vector2d& max, const Eigen::Vector2i& dim, const std::list<int>& selectedInducingPoints){
+		const Eigen::Vector2d& min, const Eigen::Vector2d& max, const Eigen::Vector2i& dim, const std::list<int>& selectedInducingPoints, const int amountOfClasses){
 	unsigned int counter = 0;
-	std::list<ClassDataConstIterator> inducedPoints;
-	for(ClassDataConstIterator it = points.cbegin(); it != points.cend(); ++it, ++counter){
-		bool isInduced = false;
-		for(std::list<int>::const_iterator itI = selectedInducingPoints.begin(); itI != selectedInducingPoints.end(); ++itI){
-			if((*itI) == counter){
-				isInduced = true; break;
+	if(selectedInducingPoints.size() > 0){
+		std::list<ClassDataConstIterator> inducedPoints;
+		for(ClassDataConstIterator it = points.cbegin(); it != points.cend(); ++it, ++counter){
+			bool isInduced = false;
+			for(std::list<int>::const_iterator itI = selectedInducingPoints.begin(); itI != selectedInducingPoints.end(); ++itI){
+				if((*itI) == counter){
+					isInduced = true; break;
+				}
+			}
+			if(isInduced){
+				inducedPoints.push_back(it);
+				continue;
+			}
+			const double dx = ((**it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
+			const double dy = ((**it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
+			std::string color = "blue";
+			if((*it)->getLabel() == 0){
+				color = "red";
+			}
+			file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
+		}
+		// draw after all points, to make them more visible
+		for(std::list<ClassDataConstIterator>::const_iterator it = inducedPoints.cbegin(); it != inducedPoints.cend(); ++it){
+			const double dx = ((***it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
+			const double dy = ((***it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
+			std::string color = "blue";
+			if((**it)->getLabel() == 0){
+				color = "red";
+			}
+			file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
+			file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"3\" fill=\"white\" /> \n";
+		}
+	}else{
+		for(ClassDataConstIterator it = points.cbegin(); it != points.cend(); ++it, ++counter){
+			const double dx = ((**it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
+			const double dy = ((**it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
+			if(amountOfClasses == 2){
+				std::string color = "blue";
+				if((*it)->getLabel() == 0){
+					color = "red";
+				}
+				file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
+			}else{
+				double r, g, b;
+				//std::cout << "(*it)->getLabel(): " << (*it)->getLabel() + 1 << " " << amountOfClasses << ",";
+				ColorConverter::HSV2RGB(((*it)->getLabel() + 1) / (double) (amountOfClasses) * 360., 1.0, 1.0, r, g, b);
+				file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"rgb(" << r * 100. << "%," << g * 100. << "%," << b * 100. << "%)\" stroke=\"black\" stroke-width=\"2\"/> \n";
 			}
 		}
-		if(isInduced){
-			inducedPoints.push_back(it);
-			continue;
-		}
-		const double dx = ((**it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
-		const double dy = ((**it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
-		std::string color = "blue";
-		if((*it)->getLabel() == 0){
-			color = "red";
-		}
-		file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
-	}
-	// draw after all points, to make them more visible
-	for(std::list<ClassDataConstIterator>::const_iterator it = inducedPoints.cbegin(); it != inducedPoints.cend(); ++it){
-		const double dx = ((***it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
-		const double dy = ((***it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
-		std::string color = "blue";
-		if((**it)->getLabel() == 0){
-			color = "red";
-		}
-		file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
-		file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"3\" fill=\"white\" /> \n";
 	}
 }
 

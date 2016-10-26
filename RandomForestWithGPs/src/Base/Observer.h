@@ -22,7 +22,11 @@ public:
 	virtual ~Observer();
 };
 
-
+enum ClassTypeSubject {
+	ONLINESTORAGE,
+	ONLINERANDOMFOREST,
+	UNDEFINED
+};
 
 class Subject {
 	friend Observer;
@@ -38,6 +42,8 @@ public:
 	void notify(const unsigned int event);
 
 	unsigned int numberOfObservers() const;
+
+	virtual ClassTypeSubject classType() const = 0;
 
 	virtual ~Subject();
 

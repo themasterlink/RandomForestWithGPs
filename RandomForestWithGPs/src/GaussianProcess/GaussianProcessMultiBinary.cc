@@ -317,6 +317,16 @@ int GaussianProcessMultiBinary::predict(const DataPoint& point, std::vector<doub
 	return std::distance(prob.cbegin(), std::max_element(prob.cbegin(), prob.cend()));
 }
 
+int GaussianProcessMultiBinary::predict(const DataPoint& point) const{
+	std::vector<double> prob;
+	return predict(point, prob);
+}
+
+int GaussianProcessMultiBinary::amountOfClasses() const{
+	return m_amountOfUsedClasses;
+}
+
+
 GaussianProcessMultiBinary::~GaussianProcessMultiBinary() {
 	for(int iActClass = 0; iActClass < m_amountOfUsedClasses; ++iActClass){
 		delete m_gps[iActClass];

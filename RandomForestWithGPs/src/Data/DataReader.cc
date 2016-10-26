@@ -52,10 +52,10 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		if(input.is_open()){
 			long size;
 			input.read((char*) &size, sizeof(long));
-			data.resize(size);
+			data.resize(min(amountOfData,(int)size));
 			for(long i = 0; i < min(amountOfData,(int)size); ++i){
 				data[i] = new ClassPoint();
-				ReadWriterHelper::readVector(input, *data[i]);
+				ReadWriterHelper::readPoint(input, *data[i]);
 				data[i]->setLabel(classNr);
 			}
 		}else{

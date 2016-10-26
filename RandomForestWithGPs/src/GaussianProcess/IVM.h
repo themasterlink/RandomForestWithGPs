@@ -73,9 +73,9 @@ private:
 	double m_bias;
 	double m_lambda;
 	bool m_doEPUpdate;
+	double m_desiredFraction;
 	bool m_calcLogZ;
 	bool m_calcDerivLogZ;
-	double m_desiredFraction;
 	List<int> m_J, m_I;
 
 	Eigen::LLT<Eigen::MatrixXd> m_choleskyLLT;

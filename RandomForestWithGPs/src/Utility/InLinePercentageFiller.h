@@ -8,6 +8,8 @@
 #ifndef UTILITY_INLINEPERCENTAGEFILLER_H_
 #define UTILITY_INLINEPERCENTAGEFILLER_H_
 
+#include "StopWatch.h"
+
 class InLinePercentageFiller {
 public:
 
@@ -22,11 +24,14 @@ private:
 	virtual ~InLinePercentageFiller();
 
 	static int m_max;
+
+	static StopWatch m_sw;
 };
 
 inline
 void InLinePercentageFiller::setActMax(const int iMax){
 	m_max = iMax - 1;
+	m_sw.startTime();
 }
 
 #endif /* UTILITY_INLINEPERCENTAGEFILLER_H_ */

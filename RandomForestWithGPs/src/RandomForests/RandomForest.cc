@@ -165,3 +165,7 @@ void RandomForest::addForest(const RandomForest& forest){
 	}
 }
 
+int RandomForest::amountOfClasses() const{
+	return m_amountOfClasses;
+}
+

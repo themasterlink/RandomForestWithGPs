@@ -180,7 +180,7 @@ void executeForRFBinaryClass(const std::string& path){
 	if(doWriting){
 		Settings::getValue("Write2D.gridPath", writePath);
 		StopWatch sw;
-		DataWriterForVisu::generateGrid(writePath, forest, 200, data, printX, printY);
+		DataWriterForVisu::generateGrid(writePath, &forest, 200, data, printX, printY);
 		Settings::getValue("Write2D.testPath", writePath);
 		DataWriterForVisu::writeData(writePath, testData, printX, printY);
 		std::cout << "Time for write: " << sw.elapsedSeconds() << std::endl;

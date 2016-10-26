@@ -428,3 +428,8 @@ double GaussianProcess::predict(const DataPoint& newPoint, const int sampleSize)
 	}*/
 	return prob;
 }
+
+
+double GaussianProcess::predict(const DataPoint& point) const{
+	return predict(point, 5000);
+}

@@ -53,7 +53,6 @@ void DataBinaryWriter::toFile(const ClassData& data, const std::string& filePath
 	if(file.is_open()){
 		long size = data.size();
 		file.write((char*) &size, sizeof(long));
-		std::cout << "Write size: " << size << std::endl;
 		for(ClassDataConstIterator it = data.begin(); it != data.end(); ++it){
 			ReadWriterHelper::writePoint(file, **it);
 		}

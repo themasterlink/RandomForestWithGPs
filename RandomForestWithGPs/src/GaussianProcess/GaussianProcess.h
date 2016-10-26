@@ -14,11 +14,12 @@
 #include <Eigen/Dense>
 #include "Kernel.h"
 #include "../Data/DataPoint.h"
+#include "../Base/Predictor.h"
 
 class GaussianProcessWriter;
 class BayesOptimizer;
 
-class GaussianProcess {
+class GaussianProcess : public PredictorBinaryClass {
 	friend GaussianProcessWriter;
 	friend BayesOptimizer;
 public:
@@ -37,7 +38,9 @@ public:
 
 	void trainWithoutKernelOptimize();
 
-	double predict(const DataPoint& newPoint, const int sampleSize = 5000) const;
+	double predict(const DataPoint& newPoint, const int sampleSize) const;
+
+	double predict(const DataPoint& point) const;
 
 	Kernel& getKernel(){ return m_kernel; };
 

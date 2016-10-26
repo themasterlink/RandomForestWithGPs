@@ -8,6 +8,7 @@
 #include "ClassData.h"
 #include "TotalStorage.h"
 
+/*
 ClassData::ClassData() {
 }
 
@@ -17,3 +18,4 @@ ClassData::~ClassData() {
 ClassData::ClassData(const int size):
 	std::vector<ClassPoint*>(size, TotalStorage::getDefaultEle()) {
 }
+*/
