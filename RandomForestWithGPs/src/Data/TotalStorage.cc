@@ -42,7 +42,9 @@ void TotalStorage::readData(const int amountOfData){
 	const bool readTxt = false;
 	DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt);
 	m_totalSize = m_storage.size();
-	DataConverter::centerAndNormalizeData(m_storage, m_center, m_var);
+	if(Settings::getDirectBoolValue("TotalStorage.normalizeData")){
+		DataConverter::centerAndNormalizeData(m_storage, m_center, m_var);
+	}
 }
 
 ClassPoint* TotalStorage::getDefaultEle(){

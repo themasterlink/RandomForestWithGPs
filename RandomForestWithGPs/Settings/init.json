@@ -25,15 +25,16 @@
         "lambda": 0.5,
         "nrOfInducingPoints": 8,
         "desiredFraction": 0.45,
-        "hasLengthMoreThanParam" : "false",
+        "hasLengthMoreThanParam" : "true",
         "Training": {
-        	"useSavedHyperParams": "true",
-        	"overwriteExistingHyperParams": "false"
+        	"useSavedHyperParams": "false",
+        	"overwriteExistingHyperParams": "true"
         }
     },
     "TotalStorage": {
         "folderLocReal": "..\/realTest\/",
-        "folderLocFake": "..\/fakeData\/"
+        "folderLocFake": "..\/fakeData\/",
+        "normalizeData": "false"
     },
     "OnlineRandomForest": {
 		"amountOfPointsUntilRetrain": 300,

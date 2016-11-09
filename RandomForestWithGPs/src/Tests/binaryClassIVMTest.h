@@ -72,13 +72,13 @@ void executeForBinaryClassIVM(){
 	usedClasses[1] = 1;
 	const double sNoise = 0.2;
 	if(true){
-		std::vector<double> means = {10, 1.7, 1};
-		std::vector<double> sds = {8, 0.2, 1};
+		std::vector<double> means = {10, 1.4, 1};
+		std::vector<double> sds = {8, 0.5, 1};
 		int number = 30;
 		if(CommandSettings::get_useFakeData()){
 			means[0] = 1.;
-			sds[0] = 0.1;
-			number = 50;
+			sds[0] = 0.4;
+			number = 150;
 		}
 		bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 		if(true){
@@ -103,7 +103,7 @@ void executeForBinaryClassIVM(){
 			if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
 				bestParams.readFromFile(kernelFilePath);
 			}else{
-				for(int i = 0; i < 2000; ++i){
+				for(int i = 0; i < 500; ++i){
 					ivm.getKernel().newRandHyperParams();
 					//ivm.getKernel().getHyperParams().m_sNoise.setAllValuesTo(sNoise);
 					std::cout << "Try " << ivm.getKernel().getHyperParams() << ", logZ: " << ivm.m_logZ
