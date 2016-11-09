@@ -11,7 +11,6 @@
 #include <Eigen/Dense>
 #include "../Data/DataReader.h"
 #include "../GaussianProcess/GaussianProcessMultiClass.h"
-#include "../GaussianProcess/Kernel.h"
 
 void executeForMultiClass(const std::string& path){
 
@@ -40,7 +39,7 @@ void executeForMultiClass(const std::string& path){
 	std::vector<Eigen::MatrixXd> cov;
 
 	Eigen::MatrixXd covariance;
-	Kernel kernel;
+	GaussianKernel kernel;
 	kernel.init(dataMat);
 	kernel.calcCovariance(covariance);
 	f << "covariance: \n" << covariance << std::endl;

@@ -59,7 +59,7 @@ void OnlineRandomForest::train(){
 	m_generators.resize(amountOfThreads);
 	for(unsigned int i = 0; i < amountOfThreads; ++i){
 		m_generators[i] = new RandomNumberGeneratorForDT(m_storage.dim(), minMax[0],
-				minMax[1], m_storage.size(), seed);
+				minMax[1], m_storage.size(), i * 82734879237);
 		attach(m_generators[i]);
 		m_generators[i]->update(this, OnlineStorage<ClassPoint*>::APPENDBLOCK); // init training with just one element is not useful
 	}
@@ -133,32 +133,39 @@ bool OnlineRandomForest::update(){
 	if(!m_firstTrainingDone){
 		train();
 	}else{
-		printLine();
 		std::list<std::pair<DecisionTreeIterator, double> >* list = new std::list<std::pair<DecisionTreeIterator, double> >();
-		printLine();
 		sortTreesAfterPerformance(*list);
-		printLine();
-		std::cout << list->size() << std::endl;
-		printLine();
-		for(std::list<std::pair<DecisionTreeIterator, double> >::const_iterator it = list->begin(); it != list->end(); ++it){
-			std::cout << it->second << std::endl;
-		}
 		if(list->begin()->second > 90.){
 			printDebug("No update needed!");
 			return false;
 		}
 		boost::thread_group group;
-		const int nrOfParallel = boost::thread::hardware_concurrency();
+		const int nrOfParallel = std::min((int) boost::thread::hardware_concurrency(), (int) m_trees.size());
 		boost::mutex* mutex = new boost::mutex();
+		if(list->size() != m_trees.size()){
+			printError("The sorting process failed, list size is: " << list->size() << ", should be: " << m_trees.size());
+			return true;
+		}
+		int counter = 0;
+		const int totalAmount = m_trees.size() / nrOfParallel * nrOfParallel;
+		const int amountOfElements = totalAmount / nrOfParallel;
+		InLinePercentageFiller::setActMax(totalAmount + 1);
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
-			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::updateInParallel, this, list, 200, mutex)));
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::updateInParallel, this, list, amountOfElements, mutex, i, &counter)));
+		}
+		while(counter < totalAmount){
+			usleep(0.1 * 1e6);
+			InLinePercentageFiller::setActValueAndPrintLine(counter);
 		}
 		group.join_all();
+		delete mutex;
+		delete list;
 	}
 	return true;
 }
 
-void OnlineRandomForest::sortTreesAfterPerformance(std::list<std::pair<DecisionTreeIterator, double> >& list){
+void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list){
+
 	for(DecisionTreeIterator itTree = m_trees.begin(); itTree != m_trees.end(); ++itTree){
 		int correct = 0;
 		for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
@@ -168,27 +175,18 @@ void OnlineRandomForest::sortTreesAfterPerformance(std::list<std::pair<DecisionT
 			}
 		}
 		const double correctVal = correct / (double) m_storage.size() * 100.;
-		if(list.size() == 0){
-			list.push_back(std::pair<DecisionTreeIterator, double>(itTree, correctVal));
-		}else{
-			for(std::list<std::pair<DecisionTreeIterator, double> >::iterator it = list.begin(); it != list.end(); ++it){
-				if(it->second > correctVal){
-					list.insert(it, std::pair<DecisionTreeIterator, double>(itTree, correctVal));
-					break;
-				}
-			}
-		}
+		internalAppendToSortedList(&list, itTree, correctVal);
 	}
 }
 
-void OnlineRandomForest::updateInParallel(std::list<std::pair<DecisionTreeIterator, double> >* list, const int amountOfSteps, boost::mutex* mutex){
+void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const int amountOfSteps, boost::mutex* mutex, unsigned int threadNr, int* counter){
 	mutex->lock();
-	std::pair<DecisionTreeIterator, double> pair = *list->begin(); // copy of the first element
+	SortedDecisionTreePair pair = *list->begin(); // copy of the first element
 	list->pop_front(); // remove it
 	mutex->unlock();
 
 	for(unsigned int i = 0; i < amountOfSteps; ++i){
-		pair.first->train(m_amountOfUsedDims, *m_generators[0]); // retrain worst tree
+		pair.first->train(m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
 		int correct = 0;
 		for(OnlineStorage<ClassPoint*>::ConstIterator itPoint = m_storage.begin(); itPoint != m_storage.end(); ++itPoint){
 			ClassPoint& point = **itPoint;
@@ -199,20 +197,30 @@ void OnlineRandomForest::updateInParallel(std::list<std::pair<DecisionTreeIterat
 
 		// add to list again!
 		mutex->lock();
+		*counter += 1; // is already protected in mutex lock
 		const double correctVal = correct / (double) m_storage.size() * 100.;
-		if(list->size() == 0){
-			list->push_back(std::pair<DecisionTreeIterator, double>(pair.first, correctVal));
-		}else{
-			for(std::list<std::pair<DecisionTreeIterator, double> >::iterator it = list->begin(); it != list->end(); ++it){
-				std::cout << "it->second: " << it->second << ", correct: " << correctVal << std::endl;
-				if(it->second > correctVal){
-					list->insert(it, std::pair<DecisionTreeIterator, double>(pair.first, correctVal));
-				}
-			}
-		}
-		pair = *list->begin(); // copy of the first element
+		internalAppendToSortedList(list, pair.first, correctVal); // insert decision tree again in the list
+		pair = *list->begin(); // get new element
 		list->pop_front(); // remove it
 		mutex->unlock();
+	}
+}
+
+void OnlineRandomForest::internalAppendToSortedList(SortedDecisionTreeList* list, DecisionTreeIterator& itTree, double correctVal){
+	if(list->size() == 0){
+		list->push_back(SortedDecisionTreePair(itTree, correctVal));
+	}else{
+		bool added = false;
+		for(SortedDecisionTreeList::iterator it = list->begin(); it != list->end(); ++it){
+			if(it->second > correctVal){
+				list->insert(it, SortedDecisionTreePair(itTree, correctVal));
+				added = true;
+				break;
+			}
+		}
+		if(!added){
+			list->push_back(SortedDecisionTreePair(itTree, correctVal));
+		}
 	}
 }
 
@@ -255,7 +263,6 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
 		const int start = i / (double) nrOfParallel * points.size();
 		const int end = (i + 1) / (double) nrOfParallel * points.size();
-		std::cout << start << ", for: " << points.size() << std::endl;
 		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictDataInParallel, this, points, &labels, start, end)));
 	}
 	group.join_all();

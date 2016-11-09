@@ -8,10 +8,10 @@
 #ifndef GAUSSIANPROCESS_IVM_H_
 #define GAUSSIANPROCESS_IVM_H_
 
-#include "../Data/Data.h"
-#include "Kernel.h"
+#include "../Data/ClassData.h"
 #include <boost/math/distributions/normal.hpp> // for normal_distribution
 #include <list>
+#include "Kernel/GaussianKernel.h"
 
 class IVM {
 public:
@@ -24,8 +24,7 @@ public:
 
 	IVM();
 
-	void init(const Matrix& dataMat, const Vector& y,
-			const unsigned int numberOfInducingPoints, const bool doEPUpdate);
+	void init(const ClassData& dataMat, const unsigned int numberOfInducingPoints, const Eigen::Vector2i& labelsForClasses, const bool doEPUpdate);
 
 	void setNumberOfInducingPoints(unsigned int nr);
 
@@ -33,16 +32,20 @@ public:
 
 	double predict(const Vector& input) const;
 
-	Kernel& getKernel(){ return m_kernel; };
+	GaussianKernel& getKernel(){ return m_kernel; };
 
 	const List<int>& getSelectedInducingPoints(){ return m_I; };
 
 	void setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ);
 
+	unsigned int getLabelForOne() const;
+
+	unsigned int getLabelForMinusOne() const;
+
 	virtual ~IVM();
 
 	double m_logZ;
-	Vector m_derivLogZ;
+	GaussianKernelParams m_derivLogZ;
 
 private:
 
@@ -59,7 +62,7 @@ private:
 
 	void calcLogZ();
 
-	Matrix m_dataMat;
+	ClassData m_data;
 	Matrix m_M;
 	Matrix m_K;
 	Matrix m_L;
@@ -77,10 +80,11 @@ private:
 	bool m_calcLogZ;
 	bool m_calcDerivLogZ;
 	List<int> m_J, m_I;
+	Eigen::Vector2i m_labelsForClasses;
 
 	Eigen::LLT<Eigen::MatrixXd> m_choleskyLLT;
 
-	Kernel m_kernel;
+	GaussianKernel m_kernel;
 	boost::math::normal m_logisticNormal;
 
 

@@ -20,9 +20,15 @@ public:
 
 	static unsigned int amountOfClasses();
 
+	static unsigned int amountOfDims();
+
+	static void setAmountOfDims(unsigned int value);
+
 private:
 
 	static std::vector<std::string> m_names;
+
+	static unsigned int m_amountOfDims;
 
 	ClassKnowledge();
 	virtual ~ClassKnowledge();

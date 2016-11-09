@@ -315,7 +315,7 @@ std::cout << "One: " << oneCounter << std::endl;
 				getchar();
 			}
 		}while(hasError);
-		actGp->getKernel().setHyperParams(result[0], result[1], actGp->getKernel().sigmaN());
+		actGp->getKernel().setHyperParams(result[0], result[1]);
 
 		actGp->init(testDataMat,testYGpInit);
 		actGp->trainWithoutKernelOptimize();
@@ -349,7 +349,7 @@ std::cout << "One: " << oneCounter << std::endl;
 	m_output.printSwitchingColor("Finish optimizing with " + number2String(len) + ", " + number2String(sigmaF) + " in: " + sw.elapsedAsPrettyTime() + ", with: " + number2String(bestRight / (double)size * 100.0) + betweenNames);
 	sw.startTime();
 	// train on whole data set
-	actGp->getKernel().setHyperParams(len, sigmaF, actGp->getKernel().sigmaN());
+	actGp->getKernel().setHyperParams(len, sigmaF);
 	actGp->init(dataMat,yGpInit);
 	m_output.printSwitchingColor("Finish init in: " + sw.elapsedAsPrettyTime() + betweenNames );
 	sw.startTime();

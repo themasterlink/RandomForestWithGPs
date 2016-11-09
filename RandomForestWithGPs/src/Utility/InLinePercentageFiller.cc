@@ -24,7 +24,7 @@ void InLinePercentageFiller::setActValueAndPrintLine(const int iAct){
 	if(iAct <= m_max && iAct >= 0){
 		setActPercentageAndPrintLine((double) iAct / (double) m_max * 100.0, iAct == m_max);
 	}else{
-		printError("Something went wrong!");
+		printError("Something went wrong:" << iAct);
 	}
 }
 

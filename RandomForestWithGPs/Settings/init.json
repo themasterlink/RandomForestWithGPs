@@ -15,19 +15,24 @@
     	"testingAmount": 200
     },
     "Forest": {
-        "amountOfTrees": 100,
+        "amountOfTrees": 200,
         "Trees": {
-            "height": 2
+            "height": 10
         }
     },
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
         "nrOfInducingPoints": 8,
-        "desiredFraction": 0.45
+        "desiredFraction": 0.45,
+        "hasLengthMoreThanParam" : "false",
+        "Training": {
+        	"useSavedHyperParams": "true",
+        	"overwriteExistingHyperParams": "false"
+        }
     },
     "TotalStorage": {
-        "folderLocReal": "..\/bigTest\/",
+        "folderLocReal": "..\/realTest\/",
         "folderLocFake": "..\/fakeData\/"
     },
     "OnlineRandomForest": {

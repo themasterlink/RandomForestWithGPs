@@ -8,14 +8,14 @@
 
 #include "Tests/tests.h"
 #include <boost/program_options.hpp>
-
+#include "Base/CommandSettings.h"
 #include "Base/Settings.h"
 /*#include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/xfeatures2d.hpp>
 */
 #include "Data/DataBinaryWriter.h"
-
+/*
 void compress(const std::string& path){
 	StopWatch sw;
 	// read in Settings
@@ -31,9 +31,31 @@ void compress(const std::string& path){
 		DataBinaryWriter::toFile(it->second, outPath);
 	}
 	std::cout << "Time needed for compressing: " << sw.elapsedAsPrettyTime() << std::endl;
+}*/
+
+void handleProgrammOptions(int ac, char* av[]){
+	CommandSettings::init();
+	boost::program_options::options_description desc("Allowed options");
+	desc.add_options()
+	        		("help", "produce help message")
+					("useFakeData", "use fake data")
+					("visuRes", boost::program_options::value<int>()->default_value(0), "visualize something, if possible")
+					("visuResSimple", boost::program_options::value<int>()->default_value(0), "visualize something, if possible")
+					;
+	boost::program_options::variables_map vm;
+	try{
+		boost::program_options::store(boost::program_options::parse_command_line(ac, av, desc), vm);
+	} catch (std::exception& e) {
+		std::cout << "The given program options are wrong: " << e.what() << std::endl;
+	};
+	CommandSettings::setValues(vm);
+	boost::program_options::notify(vm);
+	if (vm.count("help")) {
+		std::cout << desc << "\n";
+		exit(0);
+	}
 }
 
-int main(int ac, char* av[]){
 	/*const cv::Mat input = cv::imread("../dog.jpg", CV_LOAD_IMAGE_COLOR);
 	std::vector<cv::KeyPoint> keypoints;
 	cv::Ptr<cv::xfeatures2d::SiftFeatureDetector> detector = cv::xfeatures2d::SiftFeatureDetector::create();
@@ -44,28 +66,12 @@ int main(int ac, char* av[]){
 	cv::drawKeypoints(input, keypoints, output);
 	cv::imwrite("../sift_result.jpg", output);
 */
-	boost::program_options::options_description desc("Allowed options");
-    desc.add_options()
-        ("help", "produce help message")
-        ("compress", "set compression level")
-        ("useFakeData", "use fake data")
-        ("visu", "visualize something, if possible")
-    ;
-    boost::program_options::variables_map vm;
-    boost::program_options::store(boost::program_options::parse_command_line(ac, av, desc), vm);
-    boost::program_options::notify(vm);
-    if (vm.count("help")) {
-    	std::cout << desc << "\n";
-    	return 0;
-    }
-	std::cout << RESET << "Start" << std::endl;
+
+int main(int ac, char* av[]){
+	handleProgrammOptions(ac,av);
 	Settings::init("../Settings/init.json");
-    std::string path;
-    Settings::getValue("RealData.folderPath", path);
-    if(vm.count("compress")){
-    	compress(path);
-    	return 0;
-    }
+	std::cout << RESET << "Start" << std::endl;
+
 /*
     const int nr = 300;
     Eigen::MatrixXd Sigma, controlSigma;
@@ -116,13 +122,13 @@ int main(int ac, char* av[]){
 	bool useGP;
 	Settings::getValue("OnlyGp.useGP", useGP);
 	if(useGP){
-		//StopWatch sw;
-		//executeForBinaryClassIVM(path, !vm.count("useFakeData"), vm.count("visu"));
-		//std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
 		StopWatch sw;
-		executeForBinaryClassORF(path, !vm.count("useFakeData"), vm.count("visu"));
+		executeForBinaryClassIVM();
 		std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
-
+		/*StopWatch sw;
+		executeForBinaryClassORF(path);
+		std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
+		 */
 		/*sw.startTime();
 		executeForBinaryClass(path, !vm.count("useFakeData"));
 		std::cout << "For GP: " << sw.elapsedAsTimeFrame() << std::endl;*/

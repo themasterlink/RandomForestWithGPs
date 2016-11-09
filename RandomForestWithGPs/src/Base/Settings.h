@@ -32,6 +32,8 @@ public:
 
 	static void getValue(const std::string& nameOfValue, bool& value);
 
+	static bool getDirectBoolValue(const std::string& nameOfValue);
+
 
 private:
 	Settings();

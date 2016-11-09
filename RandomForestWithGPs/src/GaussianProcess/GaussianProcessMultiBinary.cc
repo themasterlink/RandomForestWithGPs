@@ -132,7 +132,7 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 	// set hyper params
 	double len, sigmaF;
 	bestHyperParams.getBestHypParams(len,sigmaF);
-	actGp->getKernel().setHyperParams(len, sigmaF, actGp->getKernel().sigmaN());
+	actGp->getKernel().setHyperParams(len, sigmaF);
 	// train on whole data set
 	actGp->init(dataMat,yGpInit);
 	m_output.printInColor("Finish init for " + number2String(yGpInit.rows()) + " elements in: " + sw.elapsedAsPrettyTime() + betweenNames, MAGENTA);
@@ -221,7 +221,7 @@ std::cout << "One: " << oneCounter << std::endl;
 			m_output.printSwitchingColor(e.what() + betweenNames);
 			continue;
 		}
-		usedGp.getKernel().setHyperParams(result[0], result[1], usedGp.getKernel().sigmaN());
+		usedGp.getKernel().setHyperParams(result[0], result[1]);
 		bestHyperParams->getFinishDuring(isFinished); // only if one result is above the testing mark
 		if(isFinished){ break; }
 		usedGp.init(testDataMat, testYGpInit);

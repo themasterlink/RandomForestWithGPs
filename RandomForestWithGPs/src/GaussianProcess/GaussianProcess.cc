@@ -56,7 +56,7 @@ void GaussianProcess::train(){
 			srand(nanCounter);
 			m_kernel.newRandHyperParams();
 			std::cout << "\rNan or inf case: " << nanCounter << std::endl;
-			std::cout << "len: " << m_kernel.len() << "\t, sigF: " << m_kernel.sigmaF() << "\t, sigN: " << m_kernel.sigmaN() << std::endl;
+			std::cout << m_kernel.prettyString() << std::endl;
 			++nanCounter;
 			m_kernel.init(m_dataMat);
 			m_choleskyLLT.compute(Eigen::MatrixXd::Identity(2,2));
@@ -124,25 +124,18 @@ GaussianProcess::Status GaussianProcess::trainLM(double& logZ, std::vector<doubl
 	const Eigen::MatrixXd R = WSqrt * m_choleskyLLT.solve( m_choleskyLLT.solve(WSqrt.toDenseMatrix()));
 	Eigen::MatrixXd C = m_choleskyLLT.solve(WSqrt * K);
 	const Eigen::VectorXd s2 = -0.5 * (K.diagonal() - (C.transpose() * C).diagonal()) + (2.0 * m_pi - ones); // (2.0 * m_pi - ones) == dddLogPi
-	int i = 0;
-	for(int type = Kernel::LENGTH; type != Kernel::NNOISE; ++type){
-		const Kernel::ParamType paramType = static_cast<Kernel::ParamType>(type);
-		m_kernel.calcCovarianceDerivative(C, paramType);
-		const double s1 = 0.5 * ((double) m_a.dot(C * m_a)) - (double) (R * C).trace();
-		const Eigen::VectorXd b = C * m_dLogPi;
-		const Eigen::VectorXd s3 = b - (K * (R * b));
-		dLogZ[i] = s1 + s2.dot(s3);
-		if(isnan(dLogZ[i])){
-			std::cout << "dlogZ["<< i << "] is nan" << std::endl;
-			std::cout << "s1: " << s1 << std::endl;
-			std::cout << "s1: " << s1 << std::endl;
-			std::cout << "s2: " << s2.transpose() << std::endl;
-			std::cout << "s3: " << s3.transpose() << std::endl;
-			std::cout << "b: " << b.transpose() << std::endl;
-			return NANORINFERROR;
-		}
-		++i;
-	}
+	GaussianKernelElementLength len(m_kernel.hasLengthMoreThanOneDim());
+	m_kernel.calcCovarianceDerivative(C, &len);
+	double s1 = 0.5 * ((double) m_a.dot(C * m_a)) - (double) (R * C).trace();
+	Eigen::VectorXd b = C * m_dLogPi;
+	Eigen::VectorXd s3 = b - (K * (R * b));
+	dLogZ[0] = s1 + s2.dot(s3);
+	GaussianKernelElementFNoise fNoise;
+	m_kernel.calcCovarianceDerivative(C, &fNoise);
+	s1 = 0.5 * ((double) m_a.dot(C * m_a)) - (double) (R * C).trace();
+	b = C * m_dLogPi;
+	s3 = b - (K * (R * b));
+	dLogZ[1] = s1 + s2.dot(s3);
 	return ALLFINE;
 }
 
@@ -191,20 +184,17 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 	dLogZ.reserve(3);
 	double logZ;
 	const int amountOfFirstSamples = 30;
-	std::vector<double> val;
-	val.reserve(3);
-	val[0] = val[1] = val[2] = 0;
+	GaussianKernelParams bestParams(true);
 	double bestLogZ = -10000000000;
 	for(int i = 0; i < amountOfFirstSamples; ++i){
 		m_kernel.newRandHyperParams();
-		m_kernel.setHyperParams(m_kernel.len(),m_kernel.sigmaF(),0.95);
+		m_kernel.setSNoise(0.95);
 		Status status = trainLM(logZ, dLogZ);
-		std::cout << "logZ: " << logZ << ", status: " << status << ", bestlogZ: " << bestLogZ << ", " << (bestLogZ > fabs(logZ)) << ", with len: " << m_kernel.len() << ", sigmaF: " << m_kernel.sigmaF() <<std::endl;
+		std::cout << "logZ: " << logZ << ", status: " << status << ", bestlogZ: " << bestLogZ << ", " << (bestLogZ > fabs(logZ)) << ", with " << m_kernel.prettyString() << std::endl;
 		if(bestLogZ < logZ && status != NANORINFERROR && logZ < 1000){
 			bestLogZ = logZ;
-			m_kernel.getHyperParams(val);
-			std::cout << "\rnew optimal len: " << m_kernel.len() << "\t, sigF: "
-						<< m_kernel.sigmaF() << "\t, sigN: " << m_kernel.sigmaN() << "\tavg time; " << m_sw.elapsedAvgAsPrettyTime() << "          ";
+			m_kernel.getCopyOfParams(bestParams);
+			std::cout << "\rnew optimal " << m_kernel.prettyString() << "\tavg time; " << m_sw.elapsedAvgAsPrettyTime() << "          ";
 			flush(std::cout);
 			std::cout << std::endl;
 		}else if(status == NANORINFERROR && bestLogZ == -10000000000){
@@ -212,18 +202,17 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 		}
 	}
 	std::cout << std::endl;
-	m_kernel.setHyperParams(val);
+	m_kernel.setHyperParamsWith(bestParams);
 	//return ALLFINE;
 	if(bestLogZ == 0){
 		return NANORINFERROR;
 	}
-	std::cout << "\nstart guess len: " << m_kernel.len() << "\t, sigF: " << m_kernel.sigmaF()<< "\t, sigN: " << m_kernel.sigmaN() << std::endl;
+	std::cout << "\nstart guess: " << m_kernel.prettyString() << std::endl;
 	int counter = 0;
 	bool converged = false;
 	//double stepSize = 0.0001 / (m_dataPoints * m_dataPoints) * m_repetitionStepFactor;
 	std::vector<double> stepSize;
 	stepSize.reserve(3);
-	double lastSumHypParams = 0;
 	double lastDLogZ = 0.0;
 
 	std::vector<double> gradient;
@@ -238,7 +227,6 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 			return NANORINFERROR;
 		}
 		const double dLogZSum = fabs(dLogZ[0]) + fabs(dLogZ[1]); // + fabs(dLogZ[2]);
-		const double sumHyperParams = fabs(m_kernel.len()) + fabs(m_kernel.sigmaF());
 		std::cout << std::endl;
 		//flush(std::cout);
 		for(int j = 0; j < 3; ++j){
@@ -253,16 +241,15 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 			}
 			gradient[j] = stepSize[j] * dLogZ[j];
 		}
-		m_kernel.addHyperParams(gradient);
+		m_kernel.addHyperParams(gradient[0], gradient[1], gradient[2]);
 		//std::cout << "\r                                                                                                                                 ";
 		std::cout << "gradient: " << gradient[0] << ",\t" << gradient[1] << ",\t" << gradient[2] << std::endl;
 		std::cout << "\rLogZ: " << logZ << ",\tdLogZ: " << dLogZ[0] << ",\t" << dLogZ[1]
-				  << ",\t" << dLogZ[2] << " \tlen: " << m_kernel.len() << "\t, sigF: "
-				  << m_kernel.sigmaF()<< "\t, sigN: " << m_kernel.sigmaN()  << "\tavg time; "
+				  << ",\t" << dLogZ[2] << " \t" << m_kernel.prettyString() << "\tavg time; "
 				  << m_sw.elapsedAvgAsPrettyTime() << "\tstepsize len: " << stepSize[0] << "\tstepsize sigmaF: " << stepSize[1] <<"         " << std::endl;
 
 		if(lastDLogZ * 0.9 > dLogZSum){
-			m_kernel.setHyperParams(val);
+			m_kernel.setHyperParamsWith(bestParams); // start again!
 			break;
 		}
 		if(dLogZSum < 0.01){
@@ -287,9 +274,8 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 			stepSize *= 2;
 		}*/
 		counter++;
-		lastSumHypParams = sumHyperParams;
 		lastDLogZ = dLogZSum;
-		m_kernel.getHyperParams(val);
+		m_kernel.getCopyOfParams(bestParams);
 	}
 	return ALLFINE;
 }
@@ -394,7 +380,7 @@ double GaussianProcess::predict(const DataPoint& newPoint, const int sampleSize)
 		vFStar = m_fastPredictVFStar;
 	}else{
 		const double vNorm = m_choleskyLLT.solve(m_sqrtDDLogPi.cwiseProduct(kXStar)).squaredNorm();
-		const double leftTermVFStar = fabs(m_kernel.sigmaN() * m_kernel.sigmaN() + 1);
+		const double leftTermVFStar = fabs(m_kernel.getHyperParams().m_sNoise.getSquaredValue() + 1);
 		vFStar = leftTermVFStar - vNorm;
 		if(fabs(vNorm / leftTermVFStar) < 0.01){ // is vNorm smaller than 1 % of the whole term, than just forget it -> speeds it up!
 			m_fastPredict = true;
@@ -429,7 +415,15 @@ double GaussianProcess::predict(const DataPoint& newPoint, const int sampleSize)
 	return prob;
 }
 
-
 double GaussianProcess::predict(const DataPoint& point) const{
 	return predict(point, 5000);
 }
+
+void GaussianProcess::setKernelParams(const double len, const double fNoise, const double sNoise){
+	m_kernel.setHyperParams(len, fNoise, sNoise);
+}
+
+void GaussianProcess::setKernelParams(const std::vector<double>& lens, const double fNoise, const double sNoise){
+	m_kernel.setHyperParams(lens, fNoise, sNoise);
+}
+

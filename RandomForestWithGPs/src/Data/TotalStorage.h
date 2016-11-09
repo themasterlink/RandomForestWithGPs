@@ -24,7 +24,7 @@ public:
 
 	static ClassPoint* getDefaultEle();
 
-	static void readData(const int amountOfData, const bool useRealData = true);
+	static void readData(const int amountOfData);
 
 	static unsigned int getTotalSize();
 
@@ -37,6 +37,8 @@ public:
 	static void getOnlineStorageCopy(OnlineStorage<ClassPoint*>& storage);
 
 	static void getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train, OnlineStorage<ClassPoint*>& test, const int amountOfPointsForTraining);
+
+	static InternalStorage& getStorage(){ return m_storage; };
 
 private:
 

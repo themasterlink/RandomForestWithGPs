@@ -15,7 +15,7 @@ BayesOptimizerIVM::BayesOptimizerIVM(IVM& ivm, bayesopt::Parameters param) :
 
 
 double BayesOptimizerIVM::evaluateSample(const vectord& x){
-	m_ivm.getKernel().setHyperParams(x[0], x[1], m_ivm.getKernel().sigmaN());
+	m_ivm.getKernel().setHyperParams(x[0], x[1]);
 	std::cout << "x: " << x[0] << ", " << x[1] << std::endl; // << " with: " << (int) x[2] << std::endl;
 	StopWatch sw;
 	m_ivm.train();

@@ -19,6 +19,10 @@ IVM::IVM(): m_logZ(0), m_derivLogZ(2), m_dataPoints(0),
 	m_numberOfInducingPoints(0), m_bias(0), m_lambda(0),
 	m_doEPUpdate(false), m_desiredFraction(0),
 	m_calcLogZ(false), m_calcDerivLogZ(false) {
+	bool hasLengthMoreThanParam;
+	Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
+	m_kernel.changeKernelConfig(hasLengthMoreThanParam);
+	m_kernel.newRandHyperParams();
 }
 
 IVM::~IVM() {
@@ -29,25 +33,34 @@ void IVM::setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ){
 	m_calcLogZ = doLogZ;
 }
 
-void IVM::init(const Matrix& dataMat, const Vector& y, const unsigned int numberOfInducingPoints, const bool doEPUpdate){
-	m_dataMat = dataMat;
-	m_y = y;
-	m_doEPUpdate = doEPUpdate;
-	if(m_y.rows() != m_dataMat.cols()){
-		printError("Amount of data points and labels must be the same!");
-		return;
+void IVM::init(const ClassData& data, const unsigned int numberOfInducingPoints, const Eigen::Vector2i& labelsForClasses, const bool doEPUpdate){
+	if(data.size() == 0){
+		printError("No data given!"); return;
 	}
-	m_dataPoints = m_dataMat.cols();
-	setNumberOfInducingPoints(numberOfInducingPoints);
-	StopWatch sw;
-	m_kernel.init(m_dataMat);
-	std::cout << "Time: " << sw.elapsedAsPrettyTime() << std::endl;
+	m_labelsForClasses = labelsForClasses;
+	if(m_labelsForClasses[0] == m_labelsForClasses[1]){
+		printError("The labels for the two different classes are the same!");
+	}
+	m_data = data; // just the copy of the pointers (acceptable)
+	m_y = Vector(data.size());
 	int amountOfOneClass = 0;
-	for(unsigned int i = 0; i < m_dataPoints; ++i){
-		if(m_y[i] == -1){
+	for(unsigned int i = 0; i < m_y.rows(); ++i){ // convert usuall mutli class labels in 1 and -1
+		if(m_data[i]->getLabel() == m_labelsForClasses[0]){
+			m_y[i] = 1;
 			++amountOfOneClass;
+		}else if(m_data[i]->getLabel() == m_labelsForClasses[1]){
+			m_y[i] = -1;
+		}else{
+			printError("This IVM contains data, which does not belong to one of the two classes!");
+			return;
 		}
 	}
+	m_doEPUpdate = doEPUpdate;
+	m_dataPoints = m_data.size();
+	setNumberOfInducingPoints(numberOfInducingPoints);
+	StopWatch sw;
+	m_kernel.init(m_data);
+	std::cout << "Time: " << sw.elapsedAsPrettyTime() << std::endl;
 	//std::cout << "Frac: " << (double) amountOfOneClass / (double) m_dataPoints << std::endl;
 	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (double) amountOfOneClass / (double) m_dataPoints));
 	Settings::getValue("IVM.lambda", m_lambda);
@@ -70,7 +83,7 @@ double IVM::cumulativeLog(const double x){
 }
 
 bool IVM::train(bool clearActiveSet, const int verboseLevel){
-	if(m_kernel.calcDiagElement() == 0){
+	if(m_kernel.calcDiagElement(0) == 0){
 		if(verboseLevel != 0)
 			printError("The kernel diagonal is 0, this kernel params are invalid:" << m_kernel.prettyString());
 		return false;
@@ -80,7 +93,7 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 			printError("The number of inducing points is equal or below zero: " << m_numberOfInducingPoints);
 		return false;
 	}
-	if(!m_kernel.isInit() || isnan(m_kernel.kernelFunc(0,0)) || m_kernel.calcDiagElement() != m_kernel.kernelFunc(0,0)){
+	if(!m_kernel.isInit() || isnan(m_kernel.kernelFunc(0,0)) || m_kernel.calcDiagElement(0) != m_kernel.kernelFunc(0,0)){
 		if(verboseLevel != 0)
 			printError("The kernel was not initalized!");
 		return false;
@@ -104,7 +117,7 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 	Eigen::Vector2i amountOfPointsPerClass;
 	amountOfPointsPerClass[0] = amountOfPointsPerClass[1] = 0;
 	for(unsigned int i = 0; i < m_dataPoints; ++i){
-		zeta[i] = m_kernel.calcDiagElement();
+		zeta[i] = m_kernel.calcDiagElement(i);
 		m_J.push_back(i);
 		++amountOfPointsPerClass[(m_y[i] == 1 ? 0 : 1)];
 	}
@@ -118,6 +131,7 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 	List<int>::const_iterator itOfActiveSet = m_I.begin();
 	List<double> deltaValues;
 	List<std::string> colors;
+	List<double> informationOfUsedValues;
 	for(unsigned int k = 0; k < m_numberOfInducingPoints; ++k){
 		int argmax = -1;
 		//List<Pair<int, double> > pointEntropies;
@@ -125,7 +139,14 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		if(clearActiveSet){
 			for(List<int>::const_iterator itOfJ = m_J.begin(); itOfJ != m_J.end(); ++itOfJ){
 				double gForJ, nuForJ;
-				const double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, verboseLevel);
+				double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, verboseLevel);
+				unsigned int informationCounter = 0;
+				for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
+					if(m_y[informationCounter] == m_y[*itOfJ]){ // only of they have the same class
+						const double similiarty = m_kernel.kernelFunc(*itOfI, *itOfJ);
+						deltaForJ -= similiarty * delta[informationCounter];
+					}
+				}
 				if(deltaForJ > delta[k]){
 					argmax = *itOfJ;
 					delta[k] = deltaForJ;
@@ -255,7 +276,7 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		if(k==0){
 			if(m_doEPUpdate){
 				m_K = Matrix(m_numberOfInducingPoints, m_numberOfInducingPoints); // init at beginning to avoid realloc
-				m_K(0,0) = m_kernel.calcDiagElement();
+				m_K(0,0) = m_kernel.calcDiagElement(0);
 			}
 			m_L = Matrix::Zero(m_numberOfInducingPoints, m_numberOfInducingPoints);
 			m_L(0,0) = 1.0 / sqrtNu;
@@ -270,7 +291,7 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 					m_K(lastRowAndCol, t) = temp;
 					m_K(t, lastRowAndCol) = temp;
 				}
-				m_K(lastRowAndCol, lastRowAndCol) = m_kernel.calcDiagElement();
+				m_K(lastRowAndCol, lastRowAndCol) = m_kernel.calcDiagElement(lastRowAndCol);
 			}
 			// update L
 			if(argmax < m_M.cols()){
@@ -282,7 +303,6 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 				printError("The argmax value is bigger than the amount of columns in M!"); return false;
 			}
 		}
-		updateMat.startTime();
 		// update M
 		/*if(k == 0){
 			m_M = Matrix(m_numberOfInducingPoints, m_dataPoints);
@@ -298,7 +318,6 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		for(unsigned int i = 0; i < m_dataPoints; ++i){
 			m_M(k,i) = sqrtNu * s_nk[i];
 		}
-		updateMat.recordActTime();
 		if(clearActiveSet){
 			m_I.push_back(argmax);
 		}
@@ -306,7 +325,6 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		--amountOfPointsPerClass[m_y[argmax] == 1 ? 0 : 1];
 	}
 	std::cout << "Fraction in including points is: " << fraction * 100. << " %"<< std::endl;
-	std::cout << "Upd M: " << updateMat.elapsedAvgAsPrettyTime() << std::endl;
 	std::cout << "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime() << std::endl;
 	//DataWriterForVisu::writeSvg("deltas.svg", deltaValues, colors);
 	//openFileInViewer("deltas.svg");
@@ -474,16 +492,65 @@ void IVM::calcLogZ(){
 }
 
 void IVM::calcDerivatives(const Vector& muL1){
-	Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(m_eye) * 0.5;
-	Matrix CLen;
-	m_kernel.calcCovarianceDerivativeForInducingPoints(CLen, m_I, Kernel::LENGTH);
-	Matrix CFNoise;
-	m_kernel.calcCovarianceDerivativeForInducingPoints(CFNoise, m_I, Kernel::FNOISE);
-	m_derivLogZ[0] = m_derivLogZ[1] = 0;
-	for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
-		for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
-			m_derivLogZ[0] += Z2(i,j) * CLen(i,j);
-			m_derivLogZ[1] += Z2(i,j) * CFNoise(i,j);
+	m_derivLogZ.m_length.changeAmountOfDims(m_kernel.hasLengthMoreThanOneDim());
+	m_derivLogZ.setAllValuesTo(0);
+	if(!m_kernel.hasLengthMoreThanOneDim()){
+		std::vector<Matrix> CMatrix(m_kernel.getHyperParams().paramsAmount);
+		Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(m_eye) * 0.5;
+		int i = 0;
+		for(std::vector<unsigned int>::const_iterator it = m_kernel.getHyperParams().usedParamTypes.begin();
+				it != m_kernel.getHyperParams().usedParamTypes.end(); ++it, ++i){
+			const GaussianKernelElement* type = (const GaussianKernelElement*) KernelTypeGenerator::getKernelFor(*it);
+			if(!type->isDerivativeOnlyDiag()){
+				m_kernel.calcCovarianceDerivativeForInducingPoints(CMatrix[i], m_I, type);
+			}
+			delete type;
+		}
+		for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
+			for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
+				const double z2Value = Z2(i,j);
+				for(unsigned int u = 0; u < m_kernel.getHyperParams().paramsAmount; ++u){ // for every kernel param
+					if(!m_kernel.getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
+						m_derivLogZ.m_params[u]->getValues()[0] += z2Value * CMatrix[u](i,j);
+					}
+				}
+			}
+		}
+	}else{
+		std::vector<Matrix> cMatrix(ClassKnowledge::amountOfDims() + m_kernel.getHyperParams().paramsAmount - 1);
+		const Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(m_eye) * 0.5;
+		int i = 0;
+		for(unsigned int u = 0; u < m_kernel.getHyperParams().paramsAmount; ++u){ // for every kernel param
+			if(!m_kernel.getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
+				if(m_kernel.getHyperParams().m_params[u]->hasMoreThanOneDim()){
+					for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
+						m_kernel.calcCovarianceDerivativeForInducingPoints(cMatrix[i], m_I, m_kernel.getHyperParams().m_params[u], k);
+						++i;
+					}
+				}else{
+					m_kernel.calcCovarianceDerivativeForInducingPoints(cMatrix[i], m_I, m_kernel.getHyperParams().m_params[u]);
+					++i;
+				}
+			}
+		}
+		for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
+			for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
+				const double z2Value = Z2(i,j);
+				int t = 0;
+				for(unsigned int u = 0; u < m_kernel.getHyperParams().paramsAmount; ++u){ // for every kernel param
+					if(!m_kernel.getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
+						if(m_kernel.getHyperParams().m_params[u]->hasMoreThanOneDim()){
+							for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
+								m_derivLogZ.m_params[u]->getValues()[k] += z2Value * cMatrix[t](i,j);
+								++t;
+							}
+						}else{
+							m_derivLogZ.m_params[u]->getValues()[0] += z2Value * cMatrix[t](i,j);
+							++t;
+						}
+					}
+				}
+			}
 		}
 	}
 }
@@ -532,14 +599,14 @@ double IVM::predict(const Vector& input) const{
 	Vector k_star(n);
 	unsigned int i = 0;
 	for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-		k_star[i] = m_kernel.kernelFuncVec(input, m_dataMat.col(*itOfI));
+		k_star[i] = m_kernel.kernelFuncVec(input, *m_data[*itOfI]);
 	}
 	const Vector v = m_choleskyLLT.solve(k_star);
 	/*
 	const Vector mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 	double mu_star = (mu_tilde + (m_bias * Vector::Ones(n))).dot(v);*/
 	double mu_star = m_muTildePlusBias.dot(v);
-	double sigma_star = (m_kernel.calcDiagElement() - k_star.dot(v));
+	double sigma_star = (m_kernel.calcDiagElement(0) - k_star.dot(v));
 	//std::cout << "mu_start: " << mu_star << std::endl;
 	//std::cout << "sigma_star: " << sigma_star << std::endl;
 	double contentOfSig = 0;
@@ -549,4 +616,12 @@ double IVM::predict(const Vector& input) const{
 		contentOfSig = (mu_star / sqrt(1.0 / (m_lambda * m_lambda) + sigma_star));
 	}
 	return boost::math::erfc(-contentOfSig / SQRT2) / 2.0;
+}
+
+unsigned int IVM::getLabelForOne() const{
+	return m_labelsForClasses[0];
+}
+
+unsigned int IVM::getLabelForMinusOne() const{
+	return m_labelsForClasses[1];
 }

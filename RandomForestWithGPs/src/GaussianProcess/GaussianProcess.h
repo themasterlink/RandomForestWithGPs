@@ -12,7 +12,7 @@
 #include <cmath>
 #include <Eigen/Cholesky>
 #include <Eigen/Dense>
-#include "Kernel.h"
+#include "Kernel/GaussianKernel.h"
 #include "../Data/DataPoint.h"
 #include "../Base/Predictor.h"
 
@@ -42,9 +42,11 @@ public:
 
 	double predict(const DataPoint& point) const;
 
-	Kernel& getKernel(){ return m_kernel; };
+	void setKernelParams(const double len, const double fNoise, const double sNoise);
 
-	double getLenMean() const {return m_kernel.getLenMean();};
+	void setKernelParams(const std::vector<double>& lens, const double fNoise, const double sNoise);
+
+	GaussianKernel& getKernel(){ return m_kernel; };
 
 	const StopWatch& getTrainFWatch(){return m_sw;};
 
@@ -81,7 +83,7 @@ private:
 	bool m_trained;
 	mutable bool m_fastPredict;
 	mutable double m_fastPredictVFStar;
-	Kernel m_kernel;
+	GaussianKernel m_kernel;
 
 
 };

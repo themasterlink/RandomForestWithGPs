@@ -9,6 +9,7 @@
 #include "ClassKnowledge.h"
 #include "DataReader.h"
 #include "../Base/Settings.h"
+#include "../Base/CommandSettings.h"
 #include "../Data/DataConverter.h"
 
 TotalStorage::InternalStorage TotalStorage::m_storage;
@@ -31,12 +32,12 @@ ClassPoint* TotalStorage::getData(unsigned int classNr, unsigned int elementNr){
 	return &m_defaultEle;
 }
 
-void TotalStorage::readData(const int amountOfData, const bool useRealData){
+void TotalStorage::readData(const int amountOfData){
 	std::string folderLocation;
-	if(useRealData){
-		Settings::getValue("TotalStorage.folderLocReal", folderLocation);
-	}else{
+	if(CommandSettings::get_useFakeData()){
 		Settings::getValue("TotalStorage.folderLocFake", folderLocation);
+	}else{
+		Settings::getValue("TotalStorage.folderLocReal", folderLocation);
 	}
 	const bool readTxt = false;
 	DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt);

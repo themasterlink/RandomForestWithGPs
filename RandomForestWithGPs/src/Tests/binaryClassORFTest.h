@@ -11,6 +11,7 @@
 #include "../RandomForests/OnlineRandomForest.h"
 #include "../Utility/Util.h"
 #include "../Data/TotalStorage.h"
+#include "../Base/CommandSettings.h"
 
 void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 	int amountOfCorrect = 0;
@@ -27,11 +28,11 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 	std::cout << RESET;
 }
 
-void executeForBinaryClassORF(const std::string& path, const bool useRealData, const bool visu){
+void executeForBinaryClassORF(){
 	ClassData data;
 	ClassData testData;
 	DataSets datas;
-	TotalStorage::readData(200, useRealData);
+	TotalStorage::readData(200);
 	std::cout << "Finish reading " << std::endl;
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;
@@ -46,15 +47,14 @@ void executeForBinaryClassORF(const std::string& path, const bool useRealData, c
 	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 	performTest(orf, train);
 
-	for(unsigned int k = 0; k < 100; ++k){
-		bool done = orf.update();
-		performTest(orf, test);
-		if(!done){break;};
-	}
+	performTest(orf, test);
+	orf.update();
+	performTest(orf, test);
+
 	std::cout << "Amount of Classes: " << TotalStorage::getAmountOfClass() << std::endl;
-	if(!useRealData && visu){
-		DataWriterForVisu::writeSvg("orf.svg", &orf, 150, train.storage());
-		openFileInViewer("orf.svg");
+	if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+		DataWriterForVisu::writeImg("orf.png", &orf, train.storage());
+		openFileInViewer("orf.png");
 	}
 }
 

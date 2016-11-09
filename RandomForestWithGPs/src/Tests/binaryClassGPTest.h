@@ -148,7 +148,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		std::cout << "Amount of right: " << (double) right / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "Amount of above: " << (double) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
-		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
+		std::cout << gp.getKernel().prettyString() << std::endl;
 		std::cout << RESET;
 		/*
 		right = 0;
@@ -243,7 +243,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		std::cout << RESET;
 		ConfusionMatrixPrinter::print(confusion);
 		if(datas.size() == 2){
-			DataWriterForVisu::writeSvg("out.svg", &gp, 75, data);
+			DataWriterForVisu::writeSvg("out.svg", &gp, data);
 			system("open out.svg &");
 		}
 	}else{
@@ -325,7 +325,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		bayOpt.setBoundingBox(lowerBound, upperBound);
 		bayOpt.optimize(result);
 		gp.getKernel().setHyperParams(result[0], result[1], 1e-16);
-		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
+		std::cout << gp.getKernel().prettyString() << std::endl;
 		}
 		gp.getKernel().setHyperParams(0.6,0.4, 0.1);
 		StopWatch sw;
@@ -355,9 +355,9 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		std::cout << "Amount of right: " << (double) right / data.size() * 100.0 << "%" << std::endl;
 		std::cout << "Amount of above: " << (double) amountOfAbove / data.size() * 100.0 << "%" << std::endl;
 		std::cout << "Amount of below: " << (double) amountOfBelow / data.size() * 100.0 << "%" << std::endl;
-		std::cout << "len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
+		std::cout << gp.getKernel().prettyString() << std::endl;
 		std::cout << RESET;
-		DataWriterForVisu::writeSvg("out.svg", &gp, 100, data);
+		DataWriterForVisu::writeSvg("out.svg", &gp, data);
 		system("open out.svg &");
 	}
 	//DataReader::readFromFile(data, labels, path);

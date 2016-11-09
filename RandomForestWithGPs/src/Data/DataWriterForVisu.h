@@ -25,14 +25,16 @@ public:
 			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const PredictorBinaryClass* predictor,
-			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
+			const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const PredictorMultiClass* predictor,
-			const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax, const int x = 0, const int y = 1);
+			const ClassData& dataForMinMax, const int x = 0, const int y = 1);
+
+	static void writeImg(const std::string& fileName, const PredictorMultiClass* predictor,
+			const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const IVM& ivm, const std::list<int>& selectedInducingPoints,
-			const Eigen::VectorXd& yVec, const double amountOfPointsOnOneAxis, const ClassData& dataForMinMax,
-			const int x = 0, const int y = 1);
+			const ClassData& data, const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const Eigen::MatrixXd mat);
 
@@ -42,7 +44,7 @@ public:
 
 	static void writeSvg(const std::string& fileName, const std::list<double> vec, const std::list<std::string>& colors);
 
-	static void writeHisto(const std::string&fileName, const std::list<double> list, const unsigned int nrOfBins = 40);
+	static void writeHisto(const std::string&fileName, const std::list<double> list, const unsigned int nrOfBins = 40, const double minValue = -1, const double maxValue = -1);
 
 private:
 

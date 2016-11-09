@@ -7,8 +7,13 @@
 
 #include "RandomGaussianNr.h"
 
-RandomGaussianNr::RandomGaussianNr(const double mean, const double sd):
-	m_normalGenerator(m_generator, normal_distribution(mean, sd)), m_mean(mean), m_sd(sd){
+int RandomGaussianNr::counter = 0;
+
+RandomGaussianNr::RandomGaussianNr(const double mean, const double sd, const int seed):
+	m_generator((seed == -1 ? (counter++ * 137937): seed)),
+	m_normalGenerator(m_generator, normal_distribution(mean, sd)),
+	m_mean(mean),
+	m_sd(sd){
 }
 
 RandomGaussianNr::~RandomGaussianNr(){

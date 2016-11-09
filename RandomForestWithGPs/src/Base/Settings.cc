@@ -75,6 +75,27 @@ void Settings::getValue(const std::string& nameOfValue, bool& value){
 	}
 }
 
+bool Settings::getDirectBoolValue(const std::string& nameOfValue){
+	bool value = false;
+	if(m_init){
+		m_mutex.lock();
+		if(boost::optional<std::string> ret = m_root.get_optional<std::string>(nameOfValue)){
+			if(*ret == "true" || *ret == "1"){
+				value = true;
+			}else if(*ret == "false" || *ret == "0"){
+				value = false;
+			}else{
+				printWarning("This bool was wrong formatted: " << nameOfValue << ", this formatting is not supported: " << *ret << ", value is now false!");
+				value = false;
+			}
+		}else{
+			printWarning("This name was not in the init file: " << nameOfValue);
+		}
+		m_mutex.unlock();
+	}
+	return value;
+}
+
 void Settings::writeDefaultFile(const std::string& settingsfile){
 	boost::property_tree::ptree root;
 	root.put("Forest.amountOfTrees", 200);

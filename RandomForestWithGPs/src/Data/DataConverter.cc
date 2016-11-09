@@ -159,21 +159,37 @@ void DataConverter::toDataMatrix(const ClassData& data, Eigen::MatrixXd& result,
 
 void DataConverter::toDataMatrix(const DataSets& datas, Eigen::MatrixXd& result,
 		Eigen::VectorXd& labels, Eigen::MatrixXd& testResult, Eigen::VectorXd& testLabels, const int trainAmount){
+	if(datas.size() <= 1){
+		printError("The amount of data sets must be bigger than 1!"); return;
+	}
 	int eleCount = 0;
 	const int classAmount = 2;
 	int labelCounter = 0;
 	for(DataSetsConstIterator itData = datas.begin(); itData != datas.end(); ++itData, ++labelCounter){
+		if(itData->second.size() == 0){
+			printError("The class \"" << itData->first << "\" has no elements!"); return;
+		}
 		if(classAmount == labelCounter){
 			break;
 		}
 		eleCount += itData->second.size();
 	}
+	const int dim = datas.begin()->second[0]->rows();
+	if(dim == 0){
+		printError("The first element of the class \"" << datas.begin()->first << "\" has no values!"); return;
+	}
+	if(trainAmount == 0){
+		printError("The train amount can not be zero!"); return;
+	}
 	labelCounter = 0;
 	int trainCounter = 0;
 	int testCounter = 0;
-	result.conservativeResize(datas.begin()->second[0]->rows(), trainAmount * 2);
+	result.conservativeResize(dim, trainAmount * 2);
 	labels.conservativeResize(trainAmount * 2);
-	testResult.conservativeResize(datas.begin()->second[0]->rows(), eleCount - trainAmount);
+	if(eleCount <= trainAmount){
+		printError("The train amount is to high!"); return;
+	}
+	testResult.conservativeResize(dim, eleCount - trainAmount);
 	testLabels.conservativeResize(eleCount - trainAmount);
 	for(DataSetsConstIterator itData = datas.begin(); itData != datas.end(); ++itData, ++labelCounter){
 		if(classAmount == labelCounter){

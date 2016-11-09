@@ -9,6 +9,7 @@
 #include "../Utility/Util.h"
 
 std::vector<std::string> ClassKnowledge::m_names;
+unsigned int ClassKnowledge::m_amountOfDims(0);
 
 ClassKnowledge::ClassKnowledge() {
 }
@@ -36,7 +37,14 @@ std::string ClassKnowledge::getNameFor(unsigned int nr){
 	return "undefined";
 }
 
-
 unsigned int ClassKnowledge::amountOfClasses(){
 	return m_names.size();
+}
+
+unsigned int ClassKnowledge::amountOfDims(){
+	return m_amountOfDims;
+}
+
+void ClassKnowledge::setAmountOfDims(unsigned int value){
+	m_amountOfDims = value;
 }

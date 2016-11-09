@@ -229,11 +229,6 @@ int DynamicDecisionTree::predict(const DataPoint& point) const{
 	int iActNode = 1; // start in root
 	if(m_splitDim[1] != NODE_IS_NOT_USED && m_splitDim[1] != NODE_CAN_BE_USED){
 		while(iActNode <= m_maxInternalNodeNr){
-			const bool right = m_splitValues[iActNode] < point[m_splitDim[iActNode]];
-			iActNode *= 2; // get to next level
-			if(right){ // point is on right side of split
-				++iActNode; // go to right node
-			}
 			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
@@ -246,6 +241,11 @@ int DynamicDecisionTree::predict(const DataPoint& point) const{
 					iActNode *= 2;
 				}
 				break;
+			}
+			const bool right = m_splitValues[iActNode] < point[m_splitDim[iActNode]];
+			iActNode *= 2; // get to next level
+			if(right){ // point is on right side of split
+				++iActNode; // go to right node
 			}
 		}
 		return m_labelsOfWinningClassesInLeaves[iActNode - pow(2, m_maxDepth)];
@@ -264,11 +264,6 @@ void DynamicDecisionTree::adjustToNewData(){
 	for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 		int iActNode = 1; // start in root
 		while(iActNode <= m_maxInternalNodeNr){
-			const bool right = m_splitValues[iActNode] < (**it)[m_splitDim[iActNode]];
-			iActNode *= 2; // get to next level
-			if(right){ // point is on right side of split
-				++iActNode; // go to right node
-			}
 			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
@@ -282,6 +277,12 @@ void DynamicDecisionTree::adjustToNewData(){
 				}
 				break;
 			}
+			const bool right = m_splitValues[iActNode] < (**it)[m_splitDim[iActNode]];
+			iActNode *= 2; // get to next level
+			if(right){ // point is on right side of split
+				++iActNode; // go to right node
+			}
+
 		}
 		++histo[iActNode - leafAmount][(*it)->getLabel()];
 	}

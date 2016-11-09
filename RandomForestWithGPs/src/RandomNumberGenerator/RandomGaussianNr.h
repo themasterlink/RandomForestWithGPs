@@ -21,7 +21,7 @@ public:
 	typedef boost::random::normal_distribution<> normal_distribution;
 	typedef boost::random::variate_generator<base_generator_type&, normal_distribution > variante_generator;
 
-	RandomGaussianNr(const double mean = 0.0, const double sd = 1.0);
+	RandomGaussianNr(const double mean = 0.0, const double sd = 1.0, const int seed = -1);
 	virtual ~RandomGaussianNr();
 
 	void reset(const double mean, const double sd);
@@ -30,6 +30,8 @@ public:
 	double operator()();
 
 private:
+	static int counter;
+
 	base_generator_type m_generator;
 	variante_generator m_normalGenerator;
 	double m_mean;

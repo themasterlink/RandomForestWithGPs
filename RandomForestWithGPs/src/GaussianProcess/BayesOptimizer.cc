@@ -20,7 +20,7 @@ double BayesOptimizer::evaluateSample(const vectord& x) {
 	double logZ = 0.0;
 	const double upperBound = 10000;
 	if(x[0] * x[1] < 50){ // avoid overfitting!
-		m_gp.getKernel().setHyperParams(x[0], x[1], m_gp.getKernel().sigmaN());
+		m_gp.getKernel().setHyperParams(x[0], x[1]);
 		status = m_gp.trainBayOpt(logZ,1);
 		if(logZ > upperBound){
 			printError("The upper bound is to low, the result of the Bayessian Optimiziation can be wrong!");
@@ -47,7 +47,7 @@ double BayesOptimizer::evaluateSample(const vectord& x) {
 
 
 bool BayesOptimizer::checkReachability(const vectord& query) {
-	if(query[0] > 0.0 && query[0] < 5 * fabs(m_gp.getLenMean()) && query[1] > 0.0){
+	if(query[0] > 0.0 && query[1] > 0.0){
 		return true;
 	}
 	return false;

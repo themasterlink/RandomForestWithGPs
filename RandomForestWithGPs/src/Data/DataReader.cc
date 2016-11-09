@@ -9,6 +9,7 @@
 #include "DataBinaryWriter.h"
 #include <iostream>
 #include "../Utility/ReadWriterHelper.h"
+#include "ClassKnowledge.h"
 
 DataReader::DataReader(){
 }
@@ -35,6 +36,9 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName, con
 			if(data.size() == amountOfData){
 				break;
 			}
+		}
+		if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
+			ClassKnowledge::setAmountOfDims(data[0]->rows());
 		}
 		input.close();
 	}else{
@@ -91,6 +95,9 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		}
 	}else{
 		printError("File was not found for .txt or .binary: " << inputName);
+	}
+	if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
+		ClassKnowledge::setAmountOfDims(data[0]->rows());
 	}
 }
 

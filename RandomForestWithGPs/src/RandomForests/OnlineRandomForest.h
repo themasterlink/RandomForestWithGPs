@@ -18,9 +18,9 @@
 class OnlineRandomForest : public Observer, public PredictorMultiClass, public Subject {
 public:
 
-	typedef std::list<DynamicDecisionTree> DecisionTreesContainer;
-	typedef std::list<DynamicDecisionTree>::iterator DecisionTreeIterator;
-	typedef std::list<DynamicDecisionTree>::const_iterator DecisionTreeConstIterator;
+	typedef typename std::list<DynamicDecisionTree> DecisionTreesContainer;
+	typedef typename std::list<DynamicDecisionTree>::iterator DecisionTreeIterator;
+	typedef typename std::list<DynamicDecisionTree>::const_iterator DecisionTreeConstIterator;
 
 	OnlineRandomForest(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfTrees, const int amountOfUsedClasses);
 
@@ -52,6 +52,9 @@ public:
 
 private:
 
+	typedef typename std::pair<DecisionTreeIterator, double> SortedDecisionTreePair;
+	typedef typename std::list<SortedDecisionTreePair > SortedDecisionTreeList;
+
 	void predictDataInParallel(const Data& points, Labels* labels, const int start, const int end) const;
 
 	void predictClassDataInParallel(const ClassData& points, Labels* labels, const int start, const int end) const;
@@ -60,9 +63,12 @@ private:
 
 	void trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT& generator, TreeCounter* counter);
 
-	void sortTreesAfterPerformance(std::list<std::pair<DecisionTreeIterator, double> >& list);
+	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
-	void updateInParallel(std::list<std::pair<DecisionTreeIterator, double> >* list, const int amountOfSteps, boost::mutex* mutex);
+	void internalAppendToSortedList(SortedDecisionTreeList* list, DecisionTreeIterator& itTree, double correctVal);
+
+	void updateInParallel(SortedDecisionTreeList* list, const int amountOfSteps,
+			boost::mutex* mutex, unsigned int threadNr, int* counter);
 
 	const int m_amountOfTrees;
 
