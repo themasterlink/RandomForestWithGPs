@@ -46,7 +46,7 @@ public:
 
 	void newRandHyperParams();
 
-	void setGaussianRandomVariables(std::vector<double>& means, std::vector<double> sds);
+	void setGaussianRandomVariables(const std::vector<double>& means, const std::vector<double> sds);
 
 	void addToHyperParams(const KernelType& params, const double factor = 1.0);
 

@@ -10,9 +10,23 @@
 
 const std::vector<unsigned int> GaussianKernelParams::usedParamTypes = {LengthParam, FNoiseParam, SNoiseParam};
 
-KernelElement::KernelElement(unsigned int kernelNr): m_kernelNr(kernelNr), m_values(nullptr), m_hasMoreThanOneDim(true){
+KernelElement::KernelElement(unsigned int kernelNr): m_kernelNr(kernelNr), m_values(nullptr), m_hasMoreThanOneDim(false){
 };
 
+KernelElement::KernelElement(const KernelElement& ele):
+		m_kernelNr(ele.m_kernelNr), m_values(nullptr), m_hasMoreThanOneDim(ele.m_hasMoreThanOneDim){
+	std::cout << "Copy of " << ele.m_kernelNr << std::endl;
+	if(ele.m_hasMoreThanOneDim){
+		const int dim = ClassKnowledge::amountOfDims();
+		m_values = new double[dim];
+		for(unsigned int i = 0; i < dim; ++i){
+			m_values[i] = ele.m_values[i];
+		}
+	}else{
+		m_values = new double;
+		m_values[0] = ele.m_values[0];
+	}
+}
 
 KernelElement::~KernelElement(){
 	delete[] m_values;
@@ -109,6 +123,30 @@ KernelElement* KernelTypeGenerator::getKernelFor(unsigned int kernelNr){
 	}
 	return ret;
 }
+
+
+GaussianKernelParams::GaussianKernelParams(const GaussianKernelParams& params):
+		m_length(params.m_length), m_fNoise(params.m_fNoise), m_sNoise(params.m_sNoise) {
+	m_params[0] = &m_length;
+	m_params[1] = &m_fNoise;
+	m_params[2] = &m_sNoise;
+}
+
+GaussianKernelParams& GaussianKernelParams::operator=(const GaussianKernelParams& params){
+	const bool hasMoreThanOne = params.m_length.hasMoreThanOneDim();
+    m_length.changeAmountOfDims(hasMoreThanOne);
+	if(hasMoreThanOne){
+		for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
+			m_length.getValues()[i] = params.m_length.getValues()[i];
+		}
+	}else{
+		m_length.getValues()[0] = params.m_length.getValues()[0];
+	}
+	m_fNoise.setAllValuesTo(params.m_fNoise.getValue());
+	m_sNoise.setAllValuesTo(params.m_sNoise.getValue());
+	return *this;
+}
+
 
 void GaussianKernelParams::writeToFile(const std::string& filePath){
 	std::fstream file;

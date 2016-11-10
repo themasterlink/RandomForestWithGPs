@@ -87,7 +87,7 @@ private:
 	GaussianKernel m_kernel;
 	boost::math::normal m_logisticNormal;
 
-
+	bool m_useNeighbourComparison;
 };
 
 #endif /* GAUSSIANPROCESS_IVM_H_ */

@@ -14,6 +14,8 @@ class KernelElement {
 public:
 	KernelElement(unsigned int kernelNr);
 
+	KernelElement(const KernelElement& ele);
+
 	virtual ~KernelElement();
 
 	virtual bool hasMoreThanOneDim() const = 0;
@@ -76,7 +78,7 @@ public:
 
 	GaussianKernelElementFNoise();
 
-	virtual ~GaussianKernelElementFNoise(){};
+	virtual ~GaussianKernelElementFNoise(){m_hasMoreThanOneDim = false;};
 
 	bool hasMoreThanOneDim() const{ return false; };
 
@@ -89,7 +91,7 @@ public:
 
 	GaussianKernelElementSNoise();
 
-	virtual ~GaussianKernelElementSNoise(){};
+	virtual ~GaussianKernelElementSNoise(){m_hasMoreThanOneDim = false;};
 
 	bool hasMoreThanOneDim() const{ return false; };
 
@@ -121,6 +123,10 @@ public:
 	static const std::vector<unsigned int> usedParamTypes;
 
 	GaussianKernelParams(const OwnKernelInitParams& initParams);
+
+	GaussianKernelParams(const GaussianKernelParams& params);
+
+	GaussianKernelParams& operator=(const GaussianKernelParams& params);
 
 	GaussianKernelParams(bool simpleLength = true);
 

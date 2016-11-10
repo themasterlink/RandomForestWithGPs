@@ -18,7 +18,8 @@
 IVM::IVM(): m_logZ(0), m_derivLogZ(2), m_dataPoints(0),
 	m_numberOfInducingPoints(0), m_bias(0), m_lambda(0),
 	m_doEPUpdate(false), m_desiredFraction(0),
-	m_calcLogZ(false), m_calcDerivLogZ(false) {
+	m_calcLogZ(false), m_calcDerivLogZ(false),
+	m_useNeighbourComparison(false) {
 	bool hasLengthMoreThanParam;
 	Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
 	m_kernel.changeKernelConfig(hasLengthMoreThanParam);
@@ -65,6 +66,7 @@ void IVM::init(const ClassData& data, const unsigned int numberOfInducingPoints,
 	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (double) amountOfOneClass / (double) m_dataPoints));
 	Settings::getValue("IVM.lambda", m_lambda);
 	Settings::getValue("IVM.desiredFraction", m_desiredFraction);
+	Settings::getValue("IVM.useNeighbourComparison", m_useNeighbourComparison);
 }
 
 void IVM::setNumberOfInducingPoints(unsigned int nr){
@@ -140,11 +142,13 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 			for(List<int>::const_iterator itOfJ = m_J.begin(); itOfJ != m_J.end(); ++itOfJ){
 				double gForJ, nuForJ;
 				double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, verboseLevel);
-				unsigned int informationCounter = 0;
-				for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
-					if(m_y[informationCounter] == m_y[*itOfJ]){ // only of they have the same class
-						const double similiarty = m_kernel.kernelFunc(*itOfI, *itOfJ);
-						deltaForJ -= similiarty * delta[informationCounter];
+				if(m_useNeighbourComparison){
+					unsigned int informationCounter = 0;
+					for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
+						if(m_y[informationCounter] == m_y[*itOfJ]){ // only of they have the same class
+							const double similiarty = m_kernel.kernelFunc(*itOfI, *itOfJ);
+							deltaForJ -= similiarty * delta[informationCounter];
+						}
 					}
 				}
 				if(deltaForJ > delta[k]){
@@ -324,8 +328,10 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		m_J.remove(argmax);
 		--amountOfPointsPerClass[m_y[argmax] == 1 ? 0 : 1];
 	}
-	std::cout << "Fraction in including points is: " << fraction * 100. << " %"<< std::endl;
-	std::cout << "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime() << std::endl;
+	if(verboseLevel == 2){
+		std::cout << "Fraction in including points is: " << fraction * 100. << " %"<< std::endl;
+		std::cout << "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime() << std::endl;
+	}
 	//DataWriterForVisu::writeSvg("deltas.svg", deltaValues, colors);
 	//openFileInViewer("deltas.svg");
 	if(m_I.size() != m_numberOfInducingPoints){

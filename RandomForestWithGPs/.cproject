@@ -111,7 +111,7 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.1160047076" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.167902769" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/usr/local/include/boost_1_61_0/"/>
-									<listOptionValue builtIn="false" value="/usr/local/Cellar/opencv/2.4.13.1/include"/>
+									<listOptionValue builtIn="false" value="/usr/local/Cellar/opencv3/3.1.0_4/include"/>
 									<listOptionValue builtIn="false" value="/usr/local/include/"/>
 									<listOptionValue builtIn="false" value="/usr/local/include/eigen3/"/>
 									<listOptionValue builtIn="false" value="/usr/local/include/bayesopt/"/>
@@ -138,9 +138,10 @@
 									<listOptionValue builtIn="false" value="opencv_features2d"/>
 									<listOptionValue builtIn="false" value="opencv_flann"/>
 									<listOptionValue builtIn="false" value="opencv_imgproc"/>
+									<listOptionValue builtIn="false" value="opencv_imgcodecs"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.200698983" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/usr/local/Cellar/opencv/2.4.13.1/lib&#10;"/>
+									<listOptionValue builtIn="false" value="/usr/local/Cellar/opencv3/3.1.0_4/lib"/>
 									<listOptionValue builtIn="false" value="/usr/local/lib/"/>
 									<listOptionValue builtIn="false" value="/usr/local/include/boost_1_61_0/stage/lib"/>
 								</option>

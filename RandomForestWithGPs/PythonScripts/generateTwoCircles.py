@@ -16,7 +16,7 @@ with open("../Settings/init.json") as data_file:
     data = json.load(data_file)
 
 dim = data["Training"]["dim"]
-stretch = 5
+stretch = 3
 def generateData(dim, amountOfPoints):
     text = ""
     if dim == 0:

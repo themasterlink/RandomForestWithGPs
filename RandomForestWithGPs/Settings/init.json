@@ -25,7 +25,8 @@
         "lambda": 0.5,
         "nrOfInducingPoints": 8,
         "desiredFraction": 0.45,
-        "hasLengthMoreThanParam" : "true",
+        "hasLengthMoreThanParam" : "false",
+        "useNeighbourComparison": "true",
         "Training": {
         	"useSavedHyperParams": "false",
         	"overwriteExistingHyperParams": "true"
@@ -47,7 +48,7 @@
     },
     "Training": {
         "path": "..\/fakeData\/",
-        "amount": 200,
+        "amount": 400,
         "dim": 2
     },
     "RealData": {

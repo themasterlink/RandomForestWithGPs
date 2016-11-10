@@ -153,7 +153,7 @@ const KernelType& KernelBase<KernelType, nrOfParams>::getHyperParams() const {
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::setGaussianRandomVariables(std::vector<double>& means, std::vector<double> sds){
+void KernelBase<KernelType, nrOfParams>::setGaussianRandomVariables(const std::vector<double>& means, const std::vector<double> sds){
 	if(means.size() == sds.size() && means.size() == nrOfParams){
 		for(unsigned int i = 0; i < nrOfParams; ++i){
 			m_randomGaussians[i]->reset(means[i], sds[i]);
