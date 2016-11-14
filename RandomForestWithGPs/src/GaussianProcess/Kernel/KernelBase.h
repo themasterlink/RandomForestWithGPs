@@ -24,9 +24,9 @@ public:
 	KernelBase(const OwnKernelInitParams& initParams);
 	virtual ~KernelBase() = 0;
 
-	void init(const Eigen::MatrixXd& dataMat);
+	void init(const Eigen::MatrixXd& dataMat, const bool calcDifferenceMatrix = true);
 
-	void init(const ClassData& data);
+	void init(const ClassData& data, const bool calcDifferenceMatrix = true);
 
 	bool isInit() const { return m_init; };
 
@@ -75,6 +75,8 @@ protected:
 	ClassData* m_pData;
 
 	bool m_init;
+
+	bool m_calcedDifferenceMatrix;
 
 	int m_dataPoints;
 

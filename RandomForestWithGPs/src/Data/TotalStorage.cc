@@ -41,7 +41,9 @@ void TotalStorage::readData(const int amountOfData){
 	}
 	const bool readTxt = false;
 	DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt);
-	m_totalSize = m_storage.size();
+	for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
+		m_totalSize += it->second.size();
+	}
 	if(Settings::getDirectBoolValue("TotalStorage.normalizeData")){
 		DataConverter::centerAndNormalizeData(m_storage, m_center, m_var);
 	}

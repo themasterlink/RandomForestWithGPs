@@ -16,7 +16,7 @@ with open("../Settings/init.json") as data_file:
     data = json.load(data_file)
 
 dim = data["Training"]["dim"]
-stretch = 3
+stretch = 5
 def generateData(dim, amountOfPoints):
     text = ""
     if dim == 0:
@@ -24,7 +24,7 @@ def generateData(dim, amountOfPoints):
             a = []
             x = random.uniform(0, 1)
             y = random.uniform(0, 1)
-            dist = math.cos(2.0 * math.pi * x)*math.sqrt(-2 * math.log(y)) * 0.15
+            dist = math.cos(2.0 * math.pi * x)*math.sqrt(-2 * math.log(y)) * 0.1
             angle = random.uniform(0, math.pi * 2)
             xVal = math.cos(angle) * dist * stretch
             yVal = math.sin(angle) * dist
@@ -34,7 +34,7 @@ def generateData(dim, amountOfPoints):
             a = []
             x = random.uniform(0, 1)
             y = random.uniform(0, 1)
-            dist = math.cos(2.0 * math.pi * x)*math.sqrt(-2 * math.log(y)) * 0.25
+            dist = math.cos(2.0 * math.pi * x)*math.sqrt(-2 * math.log(y)) * 0.1
             angle = random.uniform(0, math.pi * 2)
             outerAngle = random.uniform(0, math.pi * 2)
             xVal = math.cos(angle) * dist * stretch + math.cos(outerAngle)  * stretch

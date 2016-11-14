@@ -41,6 +41,9 @@ void handleProgrammOptions(int ac, char* av[]){
 					("useFakeData", "use fake data")
 					("visuRes", boost::program_options::value<int>()->default_value(0), "visualize something, if possible")
 					("visuResSimple", boost::program_options::value<int>()->default_value(0), "visualize something, if possible")
+					("onlyDataView", "only visualize the data, no training performed")
+					("samplingAndTraining", boost::program_options::value<double>()->default_value(0), "sample and train the hyper params, else just use be configured params")
+					("plotHistos", "should some histogramms be plotted")
 					;
 	boost::program_options::variables_map vm;
 	try{
@@ -71,6 +74,19 @@ int main(int ac, char* av[]){
 	handleProgrammOptions(ac,av);
 	Settings::init("../Settings/init.json");
 	std::cout << RESET << "Start" << std::endl;
+
+	if(CommandSettings::get_onlyDataView()){
+		const int firstPoints = 10000000; // all points
+		TotalStorage::readData(firstPoints);
+		OnlineStorage<ClassPoint*> train;
+		OnlineStorage<ClassPoint*> test;
+		// starts the training by its own
+		TotalStorage::getOnlineStorageCopyWithTest(train, test, TotalStorage::getTotalSize());
+		std::cout << "TotalStorage::getTotalSize(): " << TotalStorage::getTotalSize() << std::endl;
+		DataWriterForVisu::writeSvg("justData.svg", train.storage());
+		system("open justData.svg");
+		exit(0);
+	}
 
 /*
     const int nr = 300;
@@ -122,13 +138,12 @@ int main(int ac, char* av[]){
 	bool useGP;
 	Settings::getValue("OnlyGp.useGP", useGP);
 	if(useGP){
+//		StopWatch sw;
+//		executeForBinaryClassIVM();
+//		std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
 		StopWatch sw;
-		executeForBinaryClassIVM();
-		std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
-		/*StopWatch sw;
-		executeForBinaryClassORF(path);
-		std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
-		 */
+		executeForBinaryClassORF();
+		std::cout << "For ORF: " << sw.elapsedAsTimeFrame() << std::endl;
 		/*sw.startTime();
 		executeForBinaryClass(path, !vm.count("useFakeData"));
 		std::cout << "For GP: " << sw.elapsedAsTimeFrame() << std::endl;*/

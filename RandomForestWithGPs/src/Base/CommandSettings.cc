@@ -13,6 +13,9 @@ std::list<Param> CommandSettings::m_params;
 DEFINE_PARAM(bool, useFakeData);
 DEFINE_PARAM(int, visuRes);
 DEFINE_PARAM(int, visuResSimple);
+DEFINE_PARAM(bool, onlyDataView);
+DEFINE_PARAM(double, samplingAndTraining);
+DEFINE_PARAM(bool, plotHistos);
 
 Param::Param(std::string name, const std::string (*type)(), void* ref){
 	this->name = name;
@@ -24,6 +27,9 @@ void CommandSettings::init(){
 	INIT_PARAM(bool, useFakeData);
 	INIT_PARAM(int, visuRes);
 	INIT_PARAM(int, visuResSimple);
+	INIT_PARAM(bool, onlyDataView);
+	INIT_PARAM(double, samplingAndTraining);
+	INIT_PARAM(bool, plotHistos);
 }
 
 void CommandSettings::setValues(boost::program_options::variables_map& vm){
@@ -38,6 +44,8 @@ void CommandSettings::setValues(boost::program_options::variables_map& vm){
 					*(bool*)itParam->ref = !*(bool*)(itParam->ref); // it is there -> flip default
 				}else if(type == "int"){
 					*(int*)itParam->ref = (int) vm[itParam->name].as<int>();
+				}else if(type == "double"){
+					*(double*)itParam->ref = (double) vm[itParam->name].as<double>();
 				}else if(type == "string" || type == "std::string"){
 					*(std::string*)itParam->ref = (std::string) vm[itParam->name].as<std::string>();
 				}

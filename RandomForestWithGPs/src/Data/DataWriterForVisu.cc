@@ -264,7 +264,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeHisto(const std::string&fileName, const std::list<double> list, const unsigned int nrOfBins, const double minValue, const double maxValue){
+void DataWriterForVisu::writeHisto(const std::string&fileName, const std::list<double>& list, const unsigned int nrOfBins, const double minValue, const double maxValue){
 	if(list.size() == 0){
 		printError("No data is given!");
 		return;
@@ -300,7 +300,7 @@ void DataWriterForVisu::writeHisto(const std::string&fileName, const std::list<d
 }
 
 void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, const std::list<int>& selectedInducingPoints,
-		const ClassData& data, const int x, const int y){
+		const ClassData& data, const int x, const int y, const int type){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
@@ -330,7 +330,41 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 	std::vector< std::vector<double> > colors(2, std::vector<double>(3));
 	ColorConverter::RGB2LAB(1,0,0, colors[0][0], colors[0][1], colors[0][2]);
 	ColorConverter::RGB2LAB(0,0,1, colors[1][0], colors[1][1], colors[1][2]);
-
+	double minMu = DBL_MAX, minSigma = DBL_MAX, maxMu = -DBL_MAX, maxSigma = -DBL_MAX;
+	if(type == 1 || type == 2){
+		for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+			for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+				DataPoint ele(dim);
+				for(int i = 0; i < dim; ++i){
+					if(i == x){
+						ele[i] = xVal;
+					}else if(i == y){
+						ele[i] = yVal;
+					}else{
+						ele[i] = 0;
+					}
+				}
+				double prob = 0;
+				if(type == 1){
+					prob = ivm.predictMu(ele);
+					if(prob < minMu){
+						minMu = prob;
+					}
+					if(prob > maxMu){
+						maxMu = prob;
+					}
+				}else if(type == 2){
+					prob = ivm.predictSigma(ele);
+					if(prob < minSigma){
+						minSigma = prob;
+					}
+					if(prob > maxSigma){
+						maxSigma = prob;
+					}
+				}
+			}
+		}
+	}
 	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 	//for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
 		iY = 0;
@@ -345,7 +379,14 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 					ele[i] = 0;
 				}
 			}
-			double prob = ivm.predict(ele);
+			double prob;
+			if(type == 0){
+				prob = ivm.predict(ele);
+			}else if(type == 1){
+				prob = (ivm.predictMu(ele) - minMu) / (maxMu - minMu);
+			}else if(type == 2){
+				prob = (ivm.predictSigma(ele) - minSigma) / (maxSigma - minSigma);
+			}
 			if(!complex){
 				prob = prob > 0.5 ? 1 : 0;
 			}
@@ -364,6 +405,23 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 		++iX;
 	}
 	drawSvgDataPoints(file, data, min, max, dimVec, selectedInducingPoints);
+	closeSvgFile(file);
+}
+
+void DataWriterForVisu::writeSvg(const std::string& fileName, const ClassData& data, const int x, const int y){
+	Eigen::Vector2i dimVec;
+	dimVec << x,y;
+	Eigen::Vector2d min, max;
+	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
+	const Eigen::Vector2d diff = max - min;
+	max[0] += diff[0] * 0.2;
+	max[1] += diff[1] * 0.2;
+	min[0] -= diff[0] * 0.2;
+	min[1] -= diff[1] * 0.2;
+	std::list<int> empty;
+	std::ofstream file;
+	openSvgFile(fileName, 820., (double) (max[0] - min[0]), (double) (max[1] - min[1]), file);
+	drawSvgDataPoints(file, data, min, max, dimVec, empty);
 	closeSvgFile(file);
 }
 
@@ -460,7 +518,6 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 		}
 		++iX;
 	}
-	printLine();
 	cv::Scalar black(0,0,0);
 	for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it, ++counter){
 		const int dx = ((**it)[x] - min[0]) / (max[0] - min[0]) * elementInX * fac;
@@ -533,7 +590,7 @@ void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& 
 	}
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::MatrixXd mat){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::MatrixXd& mat){
 	std::ofstream file;
 	openSvgFile(fileName, 1920, mat.cols(), mat.rows(), file);
 	double min, max;
@@ -554,7 +611,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::Matri
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<double> list, const std::list<std::string>& colors){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<double>& list, const std::list<std::string>& colors){
 	if(list.size() == 0 || list.size() != colors.size()){
 		return;
 	}
@@ -572,7 +629,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<do
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::VectorXd vec, const bool drawLine){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::VectorXd& vec, const bool drawLine){
 	if(vec.rows() == 0){
 		return;
 	}
@@ -589,7 +646,56 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::Vecto
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<double> list, const bool drawLine){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<Eigen::VectorXd>& vecs, const bool drawLine){
+	if(vecs.size() == 0){
+		return;
+	}
+	const int size = vecs.begin()->rows();
+	for(std::list<Eigen::VectorXd>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
+		if(size != it->rows()){
+			return;
+		}
+	}
+	double min = DBL_MAX, max = -DBL_MAX;
+	for(std::list<Eigen::VectorXd>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
+		double minAct, maxAct;
+		DataConverter::getMinMax(*it, minAct, maxAct);
+		if(minAct < min){
+			min = minAct;
+		}
+		if(maxAct > max){
+			max = maxAct;
+		}
+	}
+	std::ofstream file;
+	openSvgFile(fileName, 820., 1.0, 1.0, file);
+	drawSvgCoords(file, 7.5, 7.5, 10, 10, size, max - min, min, max, 820., 820.);
+	std::vector<std::string> colors(4);
+	colors[0] = "red";
+	colors[1] = "blue";
+	colors[2] = "green";
+	colors[3] = "black";
+	std::vector<std::string>::const_iterator itColor = colors.begin();
+	if(drawLine){
+		for(std::list<Eigen::VectorXd>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
+			drawSvgLine(file, *it, 10., 10., min, max, 820., 820., *itColor);
+			++itColor;
+			if(itColor == colors.end())
+				itColor = colors.begin();
+		}
+	}else{
+		for(std::list<Eigen::VectorXd>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
+			drawSvgDots(file, *it, 10., 10., min, max, 820., 820.,  *itColor);
+			++itColor;
+			if(itColor == colors.end())
+				itColor = colors.begin();
+		}
+	}
+	closeSvgFile(file);
+}
+
+
+void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<double>& list, const bool drawLine){
 	if(list.size() == 0){
 		return;
 	}

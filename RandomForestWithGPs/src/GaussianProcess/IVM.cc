@@ -59,9 +59,10 @@ void IVM::init(const ClassData& data, const unsigned int numberOfInducingPoints,
 	m_doEPUpdate = doEPUpdate;
 	m_dataPoints = m_data.size();
 	setNumberOfInducingPoints(numberOfInducingPoints);
-	StopWatch sw;
-	m_kernel.init(m_data);
-	std::cout << "Time: " << sw.elapsedAsPrettyTime() << std::endl;
+//	StopWatch sw;
+	const bool calcDifferenceMatrix = !m_kernel.hasLengthMoreThanOneDim();
+	m_kernel.init(m_data, calcDifferenceMatrix);
+//	std::cout << "Time: " << sw.elapsedAsPrettyTime() << std::endl;
 	//std::cout << "Frac: " << (double) amountOfOneClass / (double) m_dataPoints << std::endl;
 	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (double) amountOfOneClass / (double) m_dataPoints));
 	Settings::getValue("IVM.lambda", m_lambda);
@@ -144,10 +145,11 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 				double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, verboseLevel);
 				if(m_useNeighbourComparison){
 					unsigned int informationCounter = 0;
+					const double labelOfJ = m_y[*itOfJ] ;
 					for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
-						if(m_y[informationCounter] == m_y[*itOfJ]){ // only of they have the same class
+						if(labelOfJ == m_y[*itOfI]){ // only if they have the same class
 							const double similiarty = m_kernel.kernelFunc(*itOfI, *itOfJ);
-							deltaForJ -= similiarty * delta[informationCounter];
+							deltaForJ += similiarty * delta[informationCounter]; // plus, because all values are negative
 						}
 					}
 				}
@@ -332,8 +334,8 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		std::cout << "Fraction in including points is: " << fraction * 100. << " %"<< std::endl;
 		std::cout << "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime() << std::endl;
 	}
-	//DataWriterForVisu::writeSvg("deltas.svg", deltaValues, colors);
-	//openFileInViewer("deltas.svg");
+//	DataWriterForVisu::writeSvg("deltas.svg", deltaValues, colors);
+//	openFileInViewer("deltas.svg");
 	if(m_I.size() != m_numberOfInducingPoints){
 		if(verboseLevel != 0)
 			printError("The active set has not the desired amount of points");
@@ -351,6 +353,9 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 	//std::cout << "m_K: \n" << m_K << std::endl;
 	//std::cout << "m_M: \n" << m_M << std::endl;
 	m_choleskyLLT.compute(m_L);
+//	std::cout << "before m_L: \n" << m_L << std::endl;
+//	m_muTildePlusBias = m_nuTilde.cwiseQuotient(m_tauTilde) + (m_bias * Vector::Ones(m_numberOfInducingPoints));
+//	std::cout << "mu tilde before: " << m_muTildePlusBias.transpose() << std::endl;
 	if(m_doEPUpdate){ // EP update
 		Matrix Sigma = m_K * (m_eye - m_choleskyLLT.solve(m_K));
 		//Matrix controlSigma = m_K * (I - m_choleskyLLT.solve(m_K));
@@ -362,9 +367,13 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		StopWatch updateEP;
 		StopWatch sigmaUp, sigmaUpNew;
 		unsigned int counter = 0;
+//		std::cout << "Sigma: \n" << Sigma << std::endl;
+//		std::cout << "m_K: \n" << m_K << std::endl;
+//		std::cout << "(m_eye - m_choleskyLLT.solve(m_K)): \n" << (m_eye - m_choleskyLLT.solve(m_K)) << std::endl;
 		for(; counter < maxEpCounter && deltaMax > epThreshold; ++counter){
 			updateEP.startTime();
 			Vector deltaTau(m_numberOfInducingPoints);
+//			std::cout << "<<< " << counter << " <<<" << std::endl;
 			unsigned int i = 0;
 			for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 				const double tauMin = 1. / Sigma(i,i) - m_tauTilde[i];
@@ -390,6 +399,13 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 				m_tauTilde[i] = std::max(d2lZ / denom, 0.);
 				m_nuTilde[i]  = (dlZ + nuMin / tauMin * d2lZ) / denom;
 				deltaTau[i]  = m_tauTilde[i] - oldTauTilde;
+//				std::cout << "Label of " << (*itOfI) << " is: " << label
+//						<< ", has " << m_muTildePlusBias[i] << ", old tau: "
+//						<< oldTauTilde << ", new tau: " << m_tauTilde[i]
+//						<< ", new new: " << m_nuTilde[i] << ", Sigma(i,i): " << Sigma(i,i) << std::endl;
+													  /*<< ", dlZ: " << dlZ
+						<< ", d2lZ: " << d2lZ << ", c: " << c << ", tauMin: " << tauMin <<", inner denom: "
+						<< std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + 1.0)))) << std::endl;*/
 
 				// update approximate posterior
 				/*
@@ -445,8 +461,8 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		std::cout << "Total ep time: " << updateEP.elapsedAvgAsTimeFrame() * (double) counter << std::endl;
 		//std::cout << "Min delta: " << minDelta << std::endl;
 
-		//DataWriterForVisu::writeSvg("deltas.svg", listToPrint, true);
-		//system("open deltas.svg");
+		DataWriterForVisu::writeSvg("deltas.svg", listToPrint, true);
+		system("open deltas.svg");
 	/*	Matrix temp = m_K;
 		for(unsigned int i = 0; i < m_tauTilde.rows(); ++i){
 			temp(i,i) += 1. / (double) m_tauTilde[i];
@@ -457,15 +473,57 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		m_choleskyLLT.compute(m_L);
 		// compute log z
 	}
-	//std::cout << "m_L: \n" << m_L << std::endl;
 	if(m_calcLogZ){
 		calcLogZ();
 	}else if(m_calcDerivLogZ){
 		printError("The derivative can not be calculated without the log!");
 	}
 	m_muTildePlusBias = m_nuTilde.cwiseQuotient(m_tauTilde) + (m_bias * Vector::Ones(m_numberOfInducingPoints));
+//	std::cout << "after m_L: \n" << m_choleskyLLT.matrixL().toDenseMatrix() << std::endl;
+//	std::cout << "mu tilde before flipping: " << m_muTildePlusBias.transpose() << std::endl;
+	//unsigned int t = 0;
+	/*for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++t){
+		if(m_y[*itOfI] < 0 ? m_muTildePlusBias[t] > 0 : m_muTildePlusBias[t] < 0){
+			m_muTildePlusBias[t] *= -1.;
+		}
+	}*/
+//	std::cout << "mu tilde after: " << m_muTildePlusBias.transpose() << std::endl;
 	return true;
 }
+
+bool IVM::trainOptimizeStep(const int verboseLevel){
+	if(m_I.size() > 0){
+//		std::list<Vector> vecs;
+//		vecs.push_back(m_muTildePlusBias);
+		Vector oldMuTildeBias(m_muTildePlusBias);
+		m_I.reverse(); // flip order!
+		const bool ret = train(false, verboseLevel);
+		if(ret){
+//			vecs.push_back(m_muTildePlusBias);
+//			vecs.rbegin()->reverse();
+//			Vector diff(m_muTildePlusBias);
+			for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
+				m_muTildePlusBias[i] += oldMuTildeBias[m_numberOfInducingPoints - i - 1];
+				m_muTildePlusBias[i] *= 0.5;
+//				diff[i] -= oldMuTildeBias[m_numberOfInducingPoints - i - 1];
+//				diff[i] = fabs(diff[i]);
+			}
+//			DataWriterForVisu::writeSvg("muTildeBias.svg", vecs, false);
+//			openFileInViewer("muTildeBias.svg");
+//			DataWriterForVisu::writeSvg("muTildeBiasDiff.svg", diff, false);
+//			openFileInViewer("muTildeBiasDiff.svg");
+			return true;
+		}else{
+			m_I.reverse(); // flip order!
+			return false;
+		}
+
+	}else{
+		printError("This function can only be called, if the initial training was performed!");
+		return false;
+	}
+}
+
 
 void IVM::calcLogZ(){
 	m_logZ = 0.0;
@@ -622,6 +680,34 @@ double IVM::predict(const Vector& input) const{
 		contentOfSig = (mu_star / sqrt(1.0 / (m_lambda * m_lambda) + sigma_star));
 	}
 	return boost::math::erfc(-contentOfSig / SQRT2) / 2.0;
+}
+
+double IVM::predictMu(const Vector& input) const{
+	const unsigned int n = m_I.size();
+	Vector k_star(n);
+	unsigned int i = 0;
+	for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+		k_star[i] = m_kernel.kernelFuncVec(input, *m_data[*itOfI]);
+	}
+	const Vector v = m_choleskyLLT.solve(k_star);
+	/*
+		const Vector mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
+		double mu_star = (mu_tilde + (m_bias * Vector::Ones(n))).dot(v);*/
+	return m_muTildePlusBias.dot(v);
+}
+
+double IVM::predictSigma(const Vector& input) const{
+	const unsigned int n = m_I.size();
+	Vector k_star(n);
+	unsigned int i = 0;
+	for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+		k_star[i] = m_kernel.kernelFuncVec(input, *m_data[*itOfI]);
+	}
+	const Vector v = m_choleskyLLT.solve(k_star);
+	/*
+		const Vector mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
+		double mu_star = (mu_tilde + (m_bias * Vector::Ones(n))).dot(v);*/
+	return (m_kernel.calcDiagElement(0) - k_star.dot(v));
 }
 
 unsigned int IVM::getLabelForOne() const{

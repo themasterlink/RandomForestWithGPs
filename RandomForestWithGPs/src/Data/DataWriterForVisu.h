@@ -34,17 +34,21 @@ public:
 			const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const IVM& ivm, const std::list<int>& selectedInducingPoints,
-			const ClassData& data, const int x = 0, const int y = 1);
+			const ClassData& data, const int x = 0, const int y = 1, const int type = 0);
 
-	static void writeSvg(const std::string& fileName, const Eigen::MatrixXd mat);
+	static void writeSvg(const std::string& fileName, const ClassData& data, const int x = 0, const int y = 1);
 
-	static void writeSvg(const std::string& fileName, const Eigen::VectorXd vec, const bool drawLine = false);
+	static void writeSvg(const std::string& fileName, const Eigen::MatrixXd& mat);
 
-	static void writeSvg(const std::string& fileName, const std::list<double> vec, const bool drawLine = false);
+	static void writeSvg(const std::string& fileName, const Eigen::VectorXd& vec, const bool drawLine = false);
 
-	static void writeSvg(const std::string& fileName, const std::list<double> vec, const std::list<std::string>& colors);
+	static void writeSvg(const std::string& fileName, const std::list<double>& vec, const bool drawLine = false);
 
-	static void writeHisto(const std::string&fileName, const std::list<double> list, const unsigned int nrOfBins = 40, const double minValue = -1, const double maxValue = -1);
+	static void writeSvg(const std::string& fileName, const std::list<Eigen::VectorXd>& vec, const bool drawLine = false);
+
+	static void writeSvg(const std::string& fileName, const std::list<double>& vec, const std::list<std::string>& colors);
+
+	static void writeHisto(const std::string&fileName, const std::list<double>& list, const unsigned int nrOfBins = 40, const double minValue = -1, const double maxValue = -1);
 
 private:
 

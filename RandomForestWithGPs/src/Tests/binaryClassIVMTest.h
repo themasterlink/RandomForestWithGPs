@@ -22,16 +22,25 @@
 
 void testIvm(IVM& ivm, const ClassData& data){
 	int right = 0;
+	Eigen::Vector2i rightPerClass;
+	rightPerClass[0] = rightPerClass[1] = 0;
 	int amountOfBelow = 0;
 	int amountOfAbove = 0;
 	const int amountOfTestPoints = data.size();
 	std::list<double> probs;
+	Eigen::Vector2i amountPerClass;
+	amountPerClass[0] = amountPerClass[1] = 0;
 	for(int i = 0; i < amountOfTestPoints; ++i){
 		double prob = ivm.predict(*data[i]);
+		if(data[i]->getLabel() == ivm.getLabelForOne()){
+			++amountPerClass[0];
+		}else if(data[i]->getLabel() == ivm.getLabelForMinusOne()){
+			++amountPerClass[1];
+		}
 		if(prob > 0.5 && data[i]->getLabel() == ivm.getLabelForOne()){
-			++right;
+			++right; ++rightPerClass[0];
 		}else if(prob < 0.5 && data[i]->getLabel() == ivm.getLabelForMinusOne()){
-			++right;
+			++right; ++rightPerClass[1];
 		}
 		if(prob > 0.5){
 			++amountOfAbove;
@@ -40,7 +49,7 @@ void testIvm(IVM& ivm, const ClassData& data){
 		}
 		probs.push_back(prob);
 	}
-	if(amountOfTestPoints > 0){
+	if(amountOfTestPoints > 0 && CommandSettings::get_plotHistos()){
 		DataWriterForVisu::writeHisto("histo.svg", probs, 14, 0, 1);
 		openFileInViewer("histo.svg");
 	}
@@ -48,20 +57,26 @@ void testIvm(IVM& ivm, const ClassData& data){
 	std::cout << "Amount of right: " << (double) right / amountOfTestPoints * 100.0 << "%" << std::endl;
 	std::cout << "Amount of above: " << (double) amountOfAbove / amountOfTestPoints * 100.0 << "%" << std::endl;
 	std::cout << "Amount of below: " << (double) amountOfBelow / amountOfTestPoints * 100.0 << "%" << std::endl;
+	std::cout << "Recall for  1: " << (double) rightPerClass[0] / (double) amountPerClass[0] * 100.0 << "%" << std::endl;
+	std::cout << "Recall for -1: " << (double) rightPerClass[1] / (double) amountPerClass[1] * 100.0 << "%" << std::endl;
+	std::cout << "Precision for  1: " << (double) rightPerClass[0] / right * 100.0 << "%" << std::endl;
+	std::cout << "Precision for -1: " << (double) rightPerClass[1] / right * 100.0 << "%" << std::endl;
+	std::cout << "Amount of 1 in total: " << (double) amountPerClass[0] / amountOfTestPoints * 100.0 << "%" << std::endl;
 	std::cout << ivm.getKernel().prettyString() << std::endl;
 	std::cout << RESET;
 }
 
-void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, double* bestLogZ, boost::mutex* mutex, const int amountOfTrainings){
-	for(int i = 0; i < amountOfTrainings; ++i){
+void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, double* bestLogZ, boost::mutex* mutex, const double durationOfTraining, int* counter){
+	StopWatch sw;
+	while(sw.elapsedSeconds() < durationOfTraining){
 		ivm->getKernel().newRandHyperParams();
 		ivm->train();
 		mutex->lock();
 		if(*bestLogZ < ivm->m_logZ){
 			ivm->getKernel().getCopyOfParams(*bestParams);
 			*bestLogZ = ivm->m_logZ;
-			std::cout << "bestLogZ:" << *bestLogZ << ", for: " << *bestParams << std::endl;
 		}
+		++(*counter);
 		mutex->unlock();
 	}
 }
@@ -72,19 +87,28 @@ GaussianKernelParams sampleParams(ClassData& data, int number, const Eigen::Vect
 	boost::mutex mutex;
 	const int nrOfParallel = boost::thread::hardware_concurrency();
 	double bestLogZ = -DBL_MAX;
-	const int amountOfTrainings = 500;
+	const double durationOfTraining = CommandSettings::get_samplingAndTraining();
 	std::vector<IVM*> ivms(nrOfParallel);
 	bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 	GaussianKernelParams bestParams(!hasMoreThanOneLengthValue);
+	int counter = 0;
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
 		ivms[i] = new IVM();
 		ivms[i]->getKernel().changeKernelConfig(hasMoreThanOneLengthValue);
 		ivms[i]->getKernel().setGaussianRandomVariables(means, sds);
 		ivms[i]->setDerivAndLogZFlag(true, false);
 		ivms[i]->init(data, number, usedClasses, doEpUpdate);
-		group.add_thread(new boost::thread(boost::bind(&sampleInParallel, ivms[i], &bestParams, &bestLogZ, &mutex, amountOfTrainings)));
+		group.add_thread(new boost::thread(boost::bind(&sampleInParallel, ivms[i], &bestParams, &bestLogZ, &mutex, durationOfTraining, &counter)));
+	}
+	InLinePercentageFiller::setActMaxTime(durationOfTraining);
+	std::cout << "It will take: " << durationOfTraining << std::endl;
+	StopWatch sw;
+	while(sw.elapsedSeconds() < durationOfTraining){
+		InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter);
+		usleep(0.1 * 1e6);
 	}
 	group.join_all();
+	InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
 	return bestParams;
 }
 
@@ -106,16 +130,16 @@ void executeForBinaryClassIVM(){
 	Eigen::Vector2i usedClasses;
 	usedClasses[0] = 0;
 	usedClasses[1] = 1;
-	const double sNoise = 0.2;
-	if(true){
-		std::vector<double> means = {10, 1.6, 1};
-		std::vector<double> sds = {8, 0.8, 1};
-		int number = 30;
+	double sNoise = 0.2;
+	if(CommandSettings::get_samplingAndTraining() > 0.){
+		std::vector<double> means = {10, 1.2, 0.5};
+		std::vector<double> sds = {8, 0.8, 0.4};
+		int number = 100;
 		if(CommandSettings::get_useFakeData()){
 			means[0] = 1.2;
 			sds[0] = 0.8;
-			number = 60;
 		}
+		Settings::getValue("IVM.nrOfInducingPoints", number);
 		bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 		if(true){
 			IVM ivm;
@@ -147,13 +171,13 @@ void executeForBinaryClassIVM(){
 			}
 			const TimeFrame timeTry = swTry.elapsedAsTimeFrame();
 			StopWatch swGrad;
-			ivm.setDerivAndLogZFlag(true, true);
 			ivm.getKernel().setHyperParamsWith(bestParams);
 			bool t = ivm.train();
 			if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0) && t){
 				DataWriterForVisu::writeSvg("before.svg", ivm, ivm.getSelectedInducingPoints(), data);
 				system("open before.svg");
 			}
+			ivm.setDerivAndLogZFlag(true, true);
 			double fac = 0.0001;
 			double smallestLog = -DBL_MAX;
 			const int amountOfTrainingSteps = 0;
@@ -232,8 +256,10 @@ void executeForBinaryClassIVM(){
 				DataWriterForVisu::writeSvg("withTest.svg", ivm, emptyList, testData);
 				system("open withTest.svg");
 			}
-			DataWriterForVisu::writeSvg("result.svg", list, true);
-			system("open result.svg");
+			if(amountOfTrainingSteps > 0){
+				DataWriterForVisu::writeSvg("result.svg", list, true);
+				system("open result.svg");
+			}
 
 		}else{
 			bool doEpUpdate;
@@ -341,8 +367,9 @@ void executeForBinaryClassIVM(){
 		double bestResult = 0;
 		double bestX = 0.888651, bestY = 1.6983;
 		if(!CommandSettings::get_useFakeData()){
-			bestX = 14.9957;
-			bestY = 0.0357228;
+			bestX = 32.5579;
+			bestY = 1.24258;
+			sNoise = 1.33968;
 		}
 		double worstX = 0.57, worstY = 0.84;
 		double worstResult = DBL_MAX;
@@ -438,21 +465,24 @@ void executeForBinaryClassIVM(){
 		Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 		ivm.init(data, nrOfInducingPoints, usedClasses, doEpUpdate);
 		ivm.setDerivAndLogZFlag(true, true);
+		bestY = 1.24258; //1.67215;
 		if(Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam")){
-			std::vector<double> bestXs = {0.469127, 0.844515};
-			//double bestY = 1.45861;
+			std::vector<double> bestXs = {1.72188, 0.209048};//{1.03035, -0.280561};
 			if(!CommandSettings::get_useFakeData()){
 				bestXs = {13.469127, 12.469127};
 				bestY = 0.0357228;
+				sNoise = 0.979355;
 			}
 			ivm.getKernel().setHyperParams(bestXs, bestY, sNoise);
 		}else{
 			ivm.getKernel().setHyperParams(bestX, bestY, sNoise);
 		}
 		std::cout << "Start training" << std::endl;
-
-		ivm.setNumberOfInducingPoints(std::min((int)(data.size() * 0.25), 100));
+		StopWatch swTraining;
+	//	ivm.setNumberOfInducingPoints(std::min((int)(data.size() * 0.25), 100));
 		ivm.train(true, 1);
+		ivm.trainOptimizeStep(1);
+		std::cout << "Needed for training: " << swTraining.elapsedAsTimeFrame() << std::endl;
 		/*
 		std::list<double> times;
 		for(unsigned int k = 2; k < 350; k += 2){
@@ -467,13 +497,34 @@ void executeForBinaryClassIVM(){
 		DataWriterForVisu::writeHisto("timeLineHisto.svg", times);
 		openFileInViewer("timeLineHisto.svg");
 		*/
-		if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
-			DataWriterForVisu::writeSvg("out3.svg", ivm, ivm.getSelectedInducingPoints(), data);
-			openFileInViewer("out3.svg");
+		if((CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+			int x = 0, y = 1;
+			if(!CommandSettings::get_useFakeData() && ivm.getKernel().hasLengthMoreThanOneDim()){
+				double highestVal = -DBL_MAX, secondHighestVal = -DBL_MAX;
+				for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
+					const double len = ivm.getKernel().getHyperParams().m_length.getValues()[i];
+					if(len > highestVal){
+						secondHighestVal = highestVal;
+						y = x;
+						highestVal = len;
+						x = i;
+					}else if(len > secondHighestVal){
+						secondHighestVal = len;
+						y = i;
+					}
+				}
+			}else if(CommandSettings::get_useFakeData()){
+				DataWriterForVisu::writeSvg("out3.svg", ivm, ivm.getSelectedInducingPoints(), data, x, y);
+				openFileInViewer("out3.svg");
+//				DataWriterForVisu::writeSvg("mu.svg", ivm, ivm.getSelectedInducingPoints(), data, x, y, 1);
+//				openFileInViewer("mu.svg");
+//				DataWriterForVisu::writeSvg("sigma.svg", ivm, ivm.getSelectedInducingPoints(), data, x, y, 2);
+//				openFileInViewer("sigma.svg");
+			}
 		}
-		std::cout << "On trainings data:" << std::endl;
+		std::cout << "On " << data.size() << " points from trainings data:" << std::endl;
 		testIvm(ivm, data);
-		std::cout << "On real test data:" << std::endl;
+		std::cout << "On " << testData.size() << " points from real test data:" << std::endl;
 		testIvm(ivm, testData);
 		return;
 	}

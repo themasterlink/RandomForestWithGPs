@@ -40,12 +40,18 @@ struct Param {
 	void* ref;
 };
 
+/* Always ADD, DEFINE and INIT, for adding new params
+ */
+
 class CommandSettings {
 public:
 
 	ADD_PARAM(bool, useFakeData, false, "Uses fake data for the test");
 	ADD_PARAM(int, visuRes, 0, "If possible visualize the data, zero means no visualization");
 	ADD_PARAM(int, visuResSimple, 0, "If possible visualize the data in a simple manner, zero means no visualization");
+	ADD_PARAM(bool, onlyDataView, false, "Only visualizes the data, without any training");
+	ADD_PARAM(double, samplingAndTraining, false, "The training and sampling is performed, if the value in seconds is bigger than 0.");
+	ADD_PARAM(bool, plotHistos, false, "Should some histogramms be plotted");
 
 	static void init();
 

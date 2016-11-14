@@ -30,7 +30,13 @@ public:
 
 	bool train(bool clearActiveSet = true, const int verboseLevel = 0);
 
+	bool trainOptimizeStep(const int verboseLevel = 0);
+
 	double predict(const Vector& input) const;
+
+	double predictMu(const Vector& input) const;
+
+	double predictSigma(const Vector& input) const;
 
 	GaussianKernel& getKernel(){ return m_kernel; };
 
