@@ -243,7 +243,7 @@ void KernelBase<KernelType, nrOfParams>::newRandHyperParams(){
 template<typename KernelType, unsigned int nrOfParams>
 void KernelBase<KernelType, nrOfParams>::setSeed(const int seed){
 	for(unsigned int i = 0; i < nrOfParams; ++i){
-		m_randomGaussians[i]->setSeed(seed * i);
+		m_randomGaussians[i]->setSeed(seed * (i+1));
 	}
 }
 

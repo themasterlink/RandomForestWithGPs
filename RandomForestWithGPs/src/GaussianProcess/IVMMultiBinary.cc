@@ -38,13 +38,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 				}
 				m_ivms.resize(classCounter.size());
 				for(unsigned int i = 0; i < m_ivms.size(); ++i){
-					Eigen::Vector2i usedClasses;
-					usedClasses << m_classOfIVMs[i], -1;
 					m_ivms[i] = new IVM();
-					m_ivms[i]->init(m_storage.storage(),
-							m_numberOfInducingPointsPerIVM, usedClasses, m_doEpUpdate);
-					m_ivms[i]->getKernel().setSeed(i * 1389293);
-					m_ivms[i]->getKernel().setHyperParams(0.888651, 1.6983, 0.8);
 				}
 				m_init = true;
 				train();
@@ -74,7 +68,7 @@ void IVMMultiBinary::train(){
 		StopWatch sw;
 		std::vector<int> counterRes(amountOfClasses(), 0);
 		std::vector<bool> stillWorking(amountOfClasses(), true);
-//		double durationOfWholeTraining = durationOfTraining * amountOfClasses() / (double) nrOfParallel;
+		double durationOfWholeTraining = durationOfTraining * amountOfClasses() / (double) nrOfParallel;
 		if(amountOfClasses() <= nrOfParallel){
 			const bool fitParams = CommandSettings::get_samplingAndTraining();
 			if(fitParams){
@@ -116,13 +110,66 @@ void IVMMultiBinary::train(){
 			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
 			group.join_all();
 		}else{
-			printError("Not implemented yet!");
+			const bool fitParams = CommandSettings::get_samplingAndTraining();
+			if(fitParams){
+				InLinePercentageFiller::setActMaxTime(durationOfWholeTraining);
+			}else{
+				InLinePercentageFiller::setActMaxTime(5); // max time for sampling
+			}
+			// initial start of nrOfParallel threads
+			int runningCounter = 0;
+			int counterForClass = 0;
+			for(; counterForClass < nrOfParallel; ++counterForClass){
+				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, fitParams)));
+				++runningCounter;
+			}
+			unsigned int counter = 0;
+			while(true){
+				counter = 0;
+				bool stillOneRunning = false;
+				for(unsigned int i = 0; i < amountOfClasses(); ++i){
+					if(stillWorking[i]){
+						const int c = m_ivms[i]->getSampleCounter();
+						if(c > -1){
+							stillOneRunning = true;
+							counter += c;
+							counterRes[i] = c;
+						}else{
+							stillWorking[i] = false;
+							--runningCounter;
+						}
+					}else{
+						counter += counterRes[i];
+					}
+				}
+				if(!stillOneRunning){
+					break;
+				}
+				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
+				if(runningCounter < nrOfParallel - 1 && counterForClass < amountOfClasses()){
+					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, fitParams)));
+					++counterForClass;
+					++runningCounter;
+				}
+				usleep(0.1 * 1e6);
+			}
+			counter = 0;
+			for(unsigned int i = 0; i < amountOfClasses(); ++i){
+				counter += m_ivms[i]->getSampleCounter();
+			}
+			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
+			group.join_all();
 		}
 		m_firstTraining = false;
 	}
 }
 
 void IVMMultiBinary::trainInParallel(const int usedIvm, const bool fitParams){
+	Eigen::Vector2i usedClasses;
+	usedClasses << m_classOfIVMs[usedIvm], -1;
+	m_ivms[usedIvm]->init(m_storage.storage(),
+			m_numberOfInducingPointsPerIVM, usedClasses, m_doEpUpdate);
+	m_ivms[usedIvm]->getKernel().setSeed(usedIvm * 1389293);
 	m_ivms[usedIvm]->train(fitParams);
 }
 

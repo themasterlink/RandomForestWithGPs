@@ -15,15 +15,15 @@
     	"testingAmount": 200
     },
     "Forest": {
-        "amountOfTrees": 250,
+        "amountOfTrees": 100,
         "Trees": {
-            "height": 8
+            "height": 18
         }
     },
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 80,
+        "nrOfInducingPoints": 100,
         "desiredFractionOfPart": 0.95,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
@@ -70,9 +70,9 @@
         "printY": 1
     },
     "MinMaxUsedData": {
-    	"useFixedValuesForMinMaxUsedData": "false", 
-    	"minValue": 100,
-    	"maxValue": 300,
+    	"useFixedValuesForMinMaxUsedData": "true", 
+    	"minValue": 20,
+    	"maxValue": 100,
     	"minValueFraction": 0.2,
     	"maxValueFraction": 0.6
     },

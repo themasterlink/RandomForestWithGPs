@@ -54,12 +54,24 @@ void OnlineRandomForest::train(){
 	}
 	std::vector<int> values(m_amountOfClasses, 0);
 	const int seed = 0;
-	const Eigen::Vector2i minMax = getMinMaxData();
+	bool useFixedValuesForMinMaxUsedData = Settings::getDirectBoolValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData");
+	Eigen::Vector2i minMaxUsedData;
+	if(useFixedValuesForMinMaxUsedData){
+		int minVal = 0, maxVal = 0;
+		Settings::getValue("MinMaxUsedData.minValue", minVal);
+		Settings::getValue("MinMaxUsedData.maxValue", maxVal);
+		minMaxUsedData << minVal, maxVal;
+	}else{
+		double minVal = 0, maxVal = 0;
+		Settings::getValue("MinMaxUsedData.minValueFraction", minVal);
+		Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
+		minMaxUsedData << (int) (minVal * m_storage.size()),  (int) (maxVal * m_storage.size());
+	}
 	const unsigned int amountOfThreads = 8;
 	m_generators.resize(amountOfThreads);
 	for(unsigned int i = 0; i < amountOfThreads; ++i){
-		m_generators[i] = new RandomNumberGeneratorForDT(m_storage.dim(), minMax[0],
-				minMax[1], m_storage.size(), i * 82734879237);
+		m_generators[i] = new RandomNumberGeneratorForDT(m_storage.dim(), minMaxUsedData[0],
+				minMaxUsedData[1], m_storage.size(), i * 82734879237);
 		attach(m_generators[i]);
 		m_generators[i]->update(this, OnlineStorage<ClassPoint*>::APPENDBLOCK); // init training with just one element is not useful
 	}
