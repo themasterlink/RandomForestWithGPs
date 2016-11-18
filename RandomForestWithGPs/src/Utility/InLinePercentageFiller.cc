@@ -33,7 +33,7 @@ void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const int amoun
 	std::cout << "\r                                                                                                                                                                               ";
 	std::cout << "\r";
 	const double seconds = m_sw.elapsedSeconds();
-	const double dAct = std::min(seconds / m_dMax * 100., 100.);
+	const double dAct = !lastElement ? std::min(seconds / m_dMax * 100., 100.) : 100.;
 	for(int i = 0; i < 100; ++i){
 		if(i <= dAct){
 			std::cout << "#";

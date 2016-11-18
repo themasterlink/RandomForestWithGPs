@@ -420,8 +420,15 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const ClassData& d
 	min[1] -= diff[1] * 0.2;
 	std::list<int> empty;
 	std::ofstream file;
+	std::map<unsigned int, unsigned int> classCounter;
+	for(ClassData::const_iterator it = data.begin(); it != data.end(); ++it){
+		std::map<unsigned int, unsigned int>::iterator itClass = classCounter.find((*it)->getLabel());
+		if(itClass == classCounter.end()){
+			classCounter.insert(std::pair<unsigned int, unsigned int>((*it)->getLabel(), 0));
+		}
+	}
 	openSvgFile(fileName, 820., (double) (max[0] - min[0]), (double) (max[1] - min[1]), file);
-	drawSvgDataPoints(file, data, min, max, dimVec, empty);
+	drawSvgDataPoints(file, data, min, max, dimVec, empty, classCounter.size());
 	closeSvgFile(file);
 }
 
@@ -483,7 +490,6 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 		ColorConverter::HSV2LAB((i + 1) / (double) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
 	}
 	int fac = 32;
-	printLine();
 	cv::Mat img(elementInY * fac + fac, elementInX * fac + fac, CV_8UC3, cv::Scalar(0, 0, 0));
 	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 		iY = 0;
@@ -492,10 +498,20 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 			double r, g, b_;
 			if(complex){
 				double l = 0, a = 0, b = 0;
+				double sum = 0;
 				for(unsigned int i = 0; i < classAmount; ++i){
-					l += probs[counter][i] * colors[i][0];
-					a += probs[counter][i] * colors[i][1];
-					b += probs[counter][i] * colors[i][2];
+					sum += probs[counter][i];
+				}
+				if(sum > 0){
+					for(unsigned int i = 0; i < classAmount; ++i){
+						probs[counter][i] /= sum;
+//						probs[counter][i] = -(probs[counter][i] * probs[counter][i]) + 2. * probs[counter][i]; // strech more
+					}
+					for(unsigned int i = 0; i < classAmount; ++i){
+						l += probs[counter][i] * colors[i][0];
+						a += probs[counter][i] * colors[i][1];
+						b += probs[counter][i] * colors[i][2];
+					}
 				}
 				ColorConverter::LAB2RGB(l, a, b, r, g, b_);
 			}else{

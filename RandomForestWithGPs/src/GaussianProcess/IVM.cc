@@ -7,9 +7,10 @@
 
 #include "IVM.h"
 #include <boost/math/special_functions/erf.hpp>
-
+#include "../Base/CommandSettings.h"
 #include "../Base/Settings.h"
 #include "../Data/DataWriterForVisu.h"
+#include "../Utility/Util.h"
 
 #define LOG2   0.69314718055994528623
 #define LOG2PI 1.8378770664093453391
@@ -19,7 +20,8 @@ IVM::IVM(): m_logZ(0), m_derivLogZ(2), m_dataPoints(0),
 	m_numberOfInducingPoints(0), m_bias(0), m_lambda(0),
 	m_doEPUpdate(false), m_desiredFraction(0),
 	m_calcLogZ(false), m_calcDerivLogZ(false),
-	m_useNeighbourComparison(false) {
+	m_useNeighbourComparison(false),
+	m_sampleCounter(0) {
 	bool hasLengthMoreThanParam;
 	Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
 	m_kernel.changeKernelConfig(hasLengthMoreThanParam);
@@ -34,11 +36,13 @@ void IVM::setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ){
 	m_calcLogZ = doLogZ;
 }
 
-void IVM::init(const ClassData& data, const unsigned int numberOfInducingPoints, const Eigen::Vector2i& labelsForClasses, const bool doEPUpdate){
+void IVM::init(const ClassData& data,
+		const unsigned int numberOfInducingPoints, const Eigen::Vector2i& labelsForClasses, const bool doEPUpdate){
 	if(data.size() == 0){
 		printError("No data given!"); return;
 	}
 	m_labelsForClasses = labelsForClasses;
+	const bool oneVsAllCase = m_labelsForClasses[1] == -1;
 	if(m_labelsForClasses[0] == m_labelsForClasses[1]){
 		printError("The labels for the two different classes are the same!");
 	}
@@ -49,7 +53,7 @@ void IVM::init(const ClassData& data, const unsigned int numberOfInducingPoints,
 		if(m_data[i]->getLabel() == m_labelsForClasses[0]){
 			m_y[i] = 1;
 			++amountOfOneClass;
-		}else if(m_data[i]->getLabel() == m_labelsForClasses[1]){
+		}else if(((int) m_data[i]->getLabel() == m_labelsForClasses[1]) || oneVsAllCase){
 			m_y[i] = -1;
 		}else{
 			printError("This IVM contains data, which does not belong to one of the two classes!");
@@ -64,9 +68,11 @@ void IVM::init(const ClassData& data, const unsigned int numberOfInducingPoints,
 	m_kernel.init(m_data, calcDifferenceMatrix);
 //	std::cout << "Time: " << sw.elapsedAsPrettyTime() << std::endl;
 	//std::cout << "Frac: " << (double) amountOfOneClass / (double) m_dataPoints << std::endl;
+
 	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (double) amountOfOneClass / (double) m_dataPoints));
 	Settings::getValue("IVM.lambda", m_lambda);
-	Settings::getValue("IVM.desiredFraction", m_desiredFraction);
+	Settings::getValue("IVM.desiredFractionOfPart", m_desiredFraction);
+	m_desiredFraction *= (double) amountOfOneClass / (double) m_dataPoints;
 	Settings::getValue("IVM.useNeighbourComparison", m_useNeighbourComparison);
 }
 
@@ -85,22 +91,81 @@ double IVM::cumulativeLog(const double x){
 	return boost::math::erfc(-x / SQRT2) - LOG2;
 }
 
-bool IVM::train(bool clearActiveSet, const int verboseLevel){
-	if(m_kernel.calcDiagElement(0) == 0){
-		if(verboseLevel != 0)
-			printError("The kernel diagonal is 0, this kernel params are invalid:" << m_kernel.prettyString());
-		return false;
-	}
+bool IVM::train(bool findFittingParams, const int verboseLevel){
+//	if(m_kernel.calcDiagElement(0) == 0){
+//		if(verboseLevel != 0)
+//			printError("The kernel diagonal is 0, this kernel params are invalid:" << m_kernel.prettyString());
+//		return false;
+//	}
+//	if(!m_kernel.isInit() || isnan(m_kernel.kernelFunc(0,0)) || m_kernel.calcDiagElement(0) != m_kernel.kernelFunc(0,0)){
+//		if(verboseLevel != 0)
+//			printError("The kernel was not initalized!");
+//		return false;
+//	}
 	if(m_numberOfInducingPoints <= 0){
 		if(verboseLevel != 0)
 			printError("The number of inducing points is equal or below zero: " << m_numberOfInducingPoints);
 		return false;
 	}
-	if(!m_kernel.isInit() || isnan(m_kernel.kernelFunc(0,0)) || m_kernel.calcDiagElement(0) != m_kernel.kernelFunc(0,0)){
-		if(verboseLevel != 0)
-			printError("The kernel was not initalized!");
-		return false;
+	if(findFittingParams){
+		bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
+		m_kernel.changeKernelConfig(hasMoreThanOneLengthValue);
+		std::vector<double> means = {10, 1.0, 0.4};
+		std::vector<double> sds = {8, 0.5, 0.4};
+		if(CommandSettings::get_useFakeData()){
+			means[0] = 0.888651;
+			sds[0] = 0.4;
+		}
+		m_kernel.setGaussianRandomVariables(means, sds);
+		setDerivAndLogZFlag(true, false);
+		double durationOfTraining = CommandSettings::get_samplingAndTraining();
+		StopWatch sw;
+		GaussianKernelParams bestParams;
+		double bestLogZ = -DBL_MAX;
+		StopWatch swAvg;
+		m_sampleCounter = 0;
+		std::string folderLocation;
+		if(CommandSettings::get_useFakeData()){
+			Settings::getValue("TotalStorage.folderLocFake", folderLocation);
+		}else{
+			Settings::getValue("TotalStorage.folderLocReal", folderLocation);
+		}
+		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses[0]) + ".binary";
+		if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
+			bestParams.readFromFile(kernelFilePath);
+		}else{
+			while(sw.elapsedSeconds() < durationOfTraining){
+				m_kernel.newRandHyperParams();
+				internalTrain(true, 0);
+				if(bestLogZ < m_logZ){
+					m_kernel.getCopyOfParams(bestParams);
+					bestLogZ = m_logZ;
+				}
+				swAvg.recordActTime();
+				if(m_sampleCounter > 1 && durationOfTraining - (sw.elapsedSeconds() + 2 * swAvg.elapsedAvgAsTimeFrame().getSeconds()) < 0.){
+					break;
+				}
+				++m_sampleCounter;
+			}
+			if(Settings::getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
+				bestParams.writeToFile(kernelFilePath);
+			}
+		}
+		std::cout << "logZ: " << bestLogZ << ", "<< bestParams << std::endl;
+		m_kernel.setHyperParamsWith(bestParams);
+		setDerivAndLogZFlag(false, false);
+		const bool ret = internalTrain(true, verboseLevel);
+		m_sampleCounter = -1; // for checking if the training is finished!
+		return ret;
+	}else{
+		setDerivAndLogZFlag(false, false);
+		const bool ret = internalTrain(true, verboseLevel);
+		m_sampleCounter = -1; // for checking if the training is finished!
+		return ret;
 	}
+}
+
+bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	if(verboseLevel == 2)
 		std::cout << "Diff: " << m_kernel.getDifferences(0,0) << ", " << m_kernel.getDifferences(1,0) << std::endl;
 	Vector m = Vector::Zero(m_dataPoints);
@@ -140,10 +205,19 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 		//List<Pair<int, double> > pointEntropies;
 		delta[k] = -DBL_MAX;
 		if(clearActiveSet){
-			for(List<int>::const_iterator itOfJ = m_J.begin(); itOfJ != m_J.end(); ++itOfJ){
+			int increaseValue = 1;
+			if(k > 10 && rand() / (double) RAND_MAX < 0.3){
+				increaseValue = m_J.size() / 100; // get through it in 100 steps
+			}
+			List<int>::const_iterator itOfJ = m_J.begin();
+			const int start = rand() / (double) RAND_MAX * increaseValue;
+			for(unsigned int i = 0; i < start; ++i){
+				++itOfJ;
+			}
+			for(; itOfJ != m_J.end();){
 				double gForJ, nuForJ;
 				double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, verboseLevel);
-				if(m_useNeighbourComparison){
+				if(m_useNeighbourComparison && deltaForJ > -DBL_MAX){
 					unsigned int informationCounter = 0;
 					const double labelOfJ = m_y[*itOfJ] ;
 					for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
@@ -158,6 +232,12 @@ bool IVM::train(bool clearActiveSet, const int verboseLevel){
 					delta[k] = deltaForJ;
 					g[k] = gForJ;
 					nu[k] = nuForJ;
+				}
+				for(unsigned int i = 0; i < increaseValue; ++i){
+					++itOfJ;
+					if(itOfJ == m_J.end()){
+						break;
+					}
 				}
 			}
 		}else{

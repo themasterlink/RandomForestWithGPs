@@ -28,7 +28,7 @@ public:
 
 	void setNumberOfInducingPoints(unsigned int nr);
 
-	bool train(bool clearActiveSet = true, const int verboseLevel = 0);
+	bool train(bool findFittingParams = true, const int verboseLevel = 0);
 
 	bool trainOptimizeStep(const int verboseLevel = 0);
 
@@ -47,6 +47,8 @@ public:
 	unsigned int getLabelForOne() const;
 
 	unsigned int getLabelForMinusOne() const;
+
+	int getSampleCounter() const{ return m_sampleCounter; };
 
 	virtual ~IVM();
 
@@ -67,6 +69,8 @@ private:
 	void calcDerivatives(const Vector& muL1);
 
 	void calcLogZ();
+
+	bool internalTrain(bool clearActiveSet = true, const int verboseLevel = 0);
 
 	ClassData m_data;
 	Matrix m_M;
@@ -94,6 +98,7 @@ private:
 	boost::math::normal m_logisticNormal;
 
 	bool m_useNeighbourComparison;
+	int m_sampleCounter;
 };
 
 #endif /* GAUSSIANPROCESS_IVM_H_ */

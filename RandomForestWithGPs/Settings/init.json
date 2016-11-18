@@ -15,21 +15,21 @@
     	"testingAmount": 200
     },
     "Forest": {
-        "amountOfTrees": 2500,
+        "amountOfTrees": 250,
         "Trees": {
-            "height": 10
+            "height": 8
         }
     },
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 100,
-        "desiredFraction": 0.45,
+        "nrOfInducingPoints": 80,
+        "desiredFractionOfPart": 0.95,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
         "Training": {
         	"useSavedHyperParams": "false",
-        	"overwriteExistingHyperParams": "false"
+        	"overwriteExistingHyperParams": "true"
         }
     },
     "TotalStorage": {
@@ -48,7 +48,7 @@
     },
     "Training": {
         "path": "..\/fakeData\/",
-        "amount": 400,
+        "amount": 200,
         "dim": 2
     },
     "RealData": {

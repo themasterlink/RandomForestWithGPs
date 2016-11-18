@@ -141,9 +141,12 @@ int main(int ac, char* av[]){
 //		StopWatch sw;
 //		executeForBinaryClassIVM();
 //		std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
+//		StopWatch sw;
+//		executeForMutliClassIVM();
+//		std::cout << "For IVMs: " << sw.elapsedAsTimeFrame() << std::endl;
 		StopWatch sw;
 		executeForBinaryClassORF();
-		std::cout << "For ORF: " << sw.elapsedAsTimeFrame() << std::endl;
+		std::cout << "For ORFs: " << sw.elapsedAsTimeFrame() << std::endl;
 		/*sw.startTime();
 		executeForBinaryClass(path, !vm.count("useFakeData"));
 		std::cout << "For GP: " << sw.elapsedAsTimeFrame() << std::endl;*/

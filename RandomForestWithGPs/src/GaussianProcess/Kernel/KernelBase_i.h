@@ -241,6 +241,13 @@ void KernelBase<KernelType, nrOfParams>::newRandHyperParams(){
 }
 
 template<typename KernelType, unsigned int nrOfParams>
+void KernelBase<KernelType, nrOfParams>::setSeed(const int seed){
+	for(unsigned int i = 0; i < nrOfParams; ++i){
+		m_randomGaussians[i]->setSeed(seed * i);
+	}
+}
+
+template<typename KernelType, unsigned int nrOfParams>
 void KernelBase<KernelType, nrOfParams>::addToHyperParams(const KernelType& params, const double factor){
 	for(unsigned int i = 0; i < m_kernelParams.paramsAmount; ++i){
 		if(m_kernelParams.m_params[i]->hasMoreThanOneDim() && params.m_params[i]->hasMoreThanOneDim()){

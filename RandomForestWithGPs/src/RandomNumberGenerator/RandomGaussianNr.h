@@ -29,6 +29,8 @@ public:
 	// get next Number
 	double operator()();
 
+	void setSeed(const int seed){ m_generator.seed(seed); };
+
 private:
 	static int counter;
 
