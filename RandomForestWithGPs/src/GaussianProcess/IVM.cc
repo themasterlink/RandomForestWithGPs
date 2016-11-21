@@ -143,6 +143,7 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 		if(!loadBestParams){
 			while(sw.elapsedSeconds() < durationOfTraining){
 				m_kernel.newRandHyperParams();
+				std::cout << "new rand hyper params" << m_kernel.getHyperParams() << std::endl;
 				m_uniformNr.setMinAndMax(1, 1);
 				const bool trained = internalTrain(true, 0);
 				if(!trained){
@@ -362,10 +363,10 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		double min1, max1;
 		DataConverter::getMinMax(s_nk, min1, max1);
 		if(min1 == max1){
-			std::cout << "min and max of s_nk are the same" << std::endl;
+			std::cout << "min and max of s_nk are the same: " << min1 << std::endl;
 			DataConverter::getMinMax(k_nk, min1, max1);
 			if(k > 0 && min1 == max1){
-				std::cout << "min and max of k_nk are the same with: " << m_kernel.getHyperParams() << std::endl;
+				std::cout << "min and max of k_nk are the same with: " << m_kernel.getHyperParams() << ", k_nk[i]: " << min1 << std::endl;
 			}
 		}
 //		std::cout << "s_nk: " << min1 << ", " << max1 << std::endl;
@@ -387,7 +388,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		 */
 		if(nu[k] < 0.0){
 			if(verboseLevel != 0){
-				printError("The actual nu is below zero: " << nu[k]);
+				printError("The actual nu is below zero: " <<  (double) nu[k]);
 				for(List<int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
 					std::cout << "(" << *it << ", " << (double) m_y[*it] << ")" << std::endl;
 				}

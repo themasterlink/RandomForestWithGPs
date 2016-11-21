@@ -77,7 +77,7 @@ double GaussianKernel::kernelFunc(const int row, const int col) const{
 }
 
 double GaussianKernel::kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const {
-	if(!m_calcedDifferenceMatrix){
+	if(hasLengthMoreThanOneDim()){
 		double squaredNorm = 0;
 		for(unsigned int i = 0; i < lhs.rows(); ++i){
 			const double temp = (lhs[i] - rhs[i]) * 1. / m_kernelParams.m_length.getValues()[i];

@@ -149,9 +149,9 @@ void IVMMultiBinary::train(){
 					break;
 				}
 				if(fitParams){
-					InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
+//					InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
 				}else{
-					InLinePercentageFiller::setActValueAndPrintLine(finished);
+//					InLinePercentageFiller::setActValueAndPrintLine(finished);
 				}
 				if(runningCounter < nrOfParallel - 1 && counterForClass < amountOfClasses()){
 					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, fitParams)));
