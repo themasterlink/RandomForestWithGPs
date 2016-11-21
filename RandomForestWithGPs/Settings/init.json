@@ -23,12 +23,12 @@
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 25,
-        "desiredFractionOfPart": 0.95,
+        "nrOfInducingPoints": 50,
+        "desiredMargin": 0.01,
         "hasLengthMoreThanParam" : "false",
-        "useNeighbourComparison": "true",
+        "useNeighbourComparison": "false",
         "Training": {
-        	"useSavedHyperParams": "true",
+        	"useSavedHyperParams": "false",
         	"overwriteExistingHyperParams": "false"
         }
     },
@@ -46,9 +46,14 @@
     "Kernel": {
         "path": "..\/realTest\/kernelData.kernel"
     },
+    "KernelParam": {
+    	"len": 1.4,
+    	"fNoise": 1.2,
+    	"sNoise": 0.01
+    },
     "Training": {
         "path": "..\/fakeData\/",
-        "amount": 200,
+        "amount": 400,
         "dim": 2
     },
     "RealData": {
@@ -78,5 +83,10 @@
     },
     "OnlyGp": {
     	"useGP": "true"
+    },
+    
+    "main": {
+    	"type": "multiIvm"
     }
+    
 }

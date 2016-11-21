@@ -105,15 +105,16 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 	boost::filesystem::path targetDir(folderLocation);
 	boost::filesystem::directory_iterator end_itr;
 	// cycle through the directory
-	unsigned int label = 0;
+	unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
 	for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 		if(boost::filesystem::is_directory(itr->path())){
 			const std::string name(itr->path().filename().c_str());
 			ClassData data;
 			std::string filePath(itr->path().c_str());
 			filePath += "/vectors";
-			readFromFile(data, filePath, amountOfData, label, readTxt);
-			++label;
+			readFromFile(data, filePath, amountOfData, amountOfClasses, readTxt);
+			ClassKnowledge::setNameFor(name, amountOfClasses);
+			++amountOfClasses;
 			dataSets.insert( DataSetPair(name, data));
 		}
 	}

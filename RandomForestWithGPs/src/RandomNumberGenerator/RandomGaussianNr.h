@@ -29,20 +29,20 @@ public:
 	// get next Number
 	double operator()();
 
-	void setSeed(const int seed){ m_generator.seed(seed); };
+	void setSeed(const int seed);
 
 private:
 	static int counter;
 
 	base_generator_type m_generator;
-	variante_generator m_normalGenerator;
+	variante_generator* m_normalGenerator;
 	double m_mean;
 	double m_sd;
 };
 
 inline
 double RandomGaussianNr::operator()(){
-	return m_normalGenerator();
+	return (*m_normalGenerator)();
 }
 
 #endif /* RANDOMNUMBERGENERATOR_RANDOMGAUSSIANNR_H_ */

@@ -236,10 +236,16 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 			double r, g, b_;
 			if(complex){
 				double l = 0, a = 0, b = 0;
+				double sum = 0;
 				for(unsigned int i = 0; i < classAmount; ++i){
-					l += probs[counter][i] * colors[i][0];
-					a += probs[counter][i] * colors[i][1];
-					b += probs[counter][i] * colors[i][2];
+					sum += probs[counter][i];
+				}
+				if(sum > 0){
+					for(unsigned int i = 0; i < classAmount; ++i){
+						l += probs[counter][i] / sum * colors[i][0];
+						a += probs[counter][i] / sum * colors[i][1];
+						b += probs[counter][i] / sum * colors[i][2];
+					}
 				}
 				ColorConverter::LAB2RGB(l, a, b, r, g, b_);
 			}else{
@@ -477,7 +483,6 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	const bool complex = CommandSettings::get_visuRes() > 0;
 	Labels result;
 	std::vector< std::vector<double> > probs;
-	printLine();
 	if(complex){
 		predictor->predictData(points, result, probs);
 	}else{

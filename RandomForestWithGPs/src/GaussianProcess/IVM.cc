@@ -11,6 +11,7 @@
 #include "../Base/Settings.h"
 #include "../Data/DataWriterForVisu.h"
 #include "../Utility/Util.h"
+#include "../Data/DataConverter.h"
 
 #define LOG2   0.69314718055994528623
 #define LOG2PI 1.8378770664093453391
@@ -18,10 +19,11 @@
 
 IVM::IVM(): m_logZ(0), m_derivLogZ(2), m_dataPoints(0),
 	m_numberOfInducingPoints(0), m_bias(0), m_lambda(0),
-	m_doEPUpdate(false), m_desiredFraction(0),
+	m_doEPUpdate(false), m_desiredPoint(0.5), m_desiredMargin(0.05),
 	m_calcLogZ(false), m_calcDerivLogZ(false),
 	m_useNeighbourComparison(false),
-	m_sampleCounter(0) {
+	m_sampleCounter(0),
+	m_uniformNr(0, 10, 0){
 	bool hasLengthMoreThanParam;
 	Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
 	m_kernel.changeKernelConfig(hasLengthMoreThanParam);
@@ -42,6 +44,8 @@ void IVM::init(const ClassData& data,
 		printError("No data given!"); return;
 	}
 	m_labelsForClasses = labelsForClasses;
+	m_uniformNr.setSeed((int)labelsForClasses[0] * 74739); // TODO better way if class is used multiple times
+	m_uniformNr.setMinAndMax(1, std::max((int) data.size() / 100, 1));
 	const bool oneVsAllCase = m_labelsForClasses[1] == -1;
 	if(m_labelsForClasses[0] == m_labelsForClasses[1]){
 		printError("The labels for the two different classes are the same!");
@@ -71,8 +75,8 @@ void IVM::init(const ClassData& data,
 
 	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (double) amountOfOneClass / (double) m_dataPoints));
 	Settings::getValue("IVM.lambda", m_lambda);
-	Settings::getValue("IVM.desiredFractionOfPart", m_desiredFraction);
-	m_desiredFraction *= (double) amountOfOneClass / (double) m_dataPoints;
+	Settings::getValue("IVM.desiredMargin", m_desiredMargin);
+	m_desiredPoint = (double) amountOfOneClass / (double) m_dataPoints;
 	Settings::getValue("IVM.useNeighbourComparison", m_useNeighbourComparison);
 }
 
@@ -123,11 +127,11 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 	if(findFittingParams){
 		bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 		m_kernel.changeKernelConfig(hasMoreThanOneLengthValue);
-		std::vector<double> means = {10, 1.0, 0.4};
-		std::vector<double> sds = {8, 0.5, 0.4};
+		std::vector<double> means = {10, 1.7, 0.1};
+		std::vector<double> sds = {8, 0.5, 0.01};
 		if(CommandSettings::get_useFakeData()){
-			means[0] = 0.888651;
-			sds[0] = 0.4;
+			means[0] = 1.7; //0.888651;
+			sds[0] = 0.5;
 		}
 		m_kernel.setGaussianRandomVariables(means, sds);
 		setDerivAndLogZFlag(true, false);
@@ -139,10 +143,16 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 		if(!loadBestParams){
 			while(sw.elapsedSeconds() < durationOfTraining){
 				m_kernel.newRandHyperParams();
-				internalTrain(true, 0);
-				if(bestLogZ < m_logZ){
+				m_uniformNr.setMinAndMax(1, 1);
+				const bool trained = internalTrain(true, 0);
+				if(!trained){
+					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
+					const bool trained = internalTrain(true, 1);
+				}
+				if(trained && bestLogZ < m_logZ){
 					m_kernel.getCopyOfParams(bestParams);
 					bestLogZ = m_logZ;
+//					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
 				}
 				swAvg.recordActTime();
 				if(m_sampleCounter > 1 && durationOfTraining - (sw.elapsedSeconds() + 2 * swAvg.elapsedAvgAsTimeFrame().getSeconds()) < 0.){
@@ -157,15 +167,23 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 		std::cout << "logZ: " << bestLogZ << ", "<< bestParams << std::endl;
 		m_kernel.setHyperParamsWith(bestParams);
 		setDerivAndLogZFlag(false, false);
+		m_uniformNr.setMinAndMax(1, 1);
 		const bool ret = internalTrain(true, verboseLevel);
+		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
+		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+		m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 		m_sampleCounter = -1; // for checking if the training is finished!
 		return ret;
 	}else{
-		setDerivAndLogZFlag(false, false);
+//		setDerivAndLogZFlag(false, false);
 		if(loadBestParams){
 			m_kernel.setHyperParamsWith(bestParams);
 		}
+		m_uniformNr.setMinAndMax(1, 1);
 		const bool ret = internalTrain(true, verboseLevel);
+//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
+//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+		m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 		m_sampleCounter = -1; // for checking if the training is finished!
 		return ret;
 	}
@@ -206,46 +224,72 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	List<double> deltaValues;
 	List<std::string> colors;
 	List<double> informationOfUsedValues;
+	m_J.reverse();
 	for(unsigned int k = 0; k < m_numberOfInducingPoints; ++k){
 		int argmax = -1;
 		//List<Pair<int, double> > pointEntropies;
 		delta[k] = -DBL_MAX;
 		if(clearActiveSet){
-			int increaseValue = 1;
-			List<int>::const_iterator itOfJ = m_J.begin();
-//			if(k > 10 && rand() / (double) RAND_MAX < 0.3){
-//				increaseValue = m_J.size() / 100; // get through it in 100 steps
+			List<double> deltasValue;
+//			List<std::string> colorForDeltas;
+
+//			int increaseValue = 1;
+//			if(k > 10){
+//				increaseValue = m_uniformNr(); // get through it in 100 steps
 //			}
-//			const int start = rand() / (double) RAND_MAX * increaseValue;
+//			const int start = m_uniformNr();
 //			for(unsigned int i = 0; i < start; ++i){
 //				++itOfJ;
 //			}
-			for(; itOfJ != m_J.end();){
+			for(List<int>::const_iterator itOfJ = m_J.begin(); itOfJ != m_J.end(); ++itOfJ){
 				double gForJ, nuForJ;
 				double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, verboseLevel);
-				if(m_useNeighbourComparison && deltaForJ > -DBL_MAX){
-					unsigned int informationCounter = 0;
-					const double labelOfJ = m_y[*itOfJ] ;
-					for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
-						if(labelOfJ == m_y[*itOfI]){ // only if they have the same class
-							const double similiarty = m_kernel.kernelFunc(*itOfI, *itOfJ);
-							deltaForJ += similiarty * delta[informationCounter]; // plus, because all values are negative
+				if(deltaForJ > -DBL_MAX){
+					if(m_useNeighbourComparison && nuForJ > 0.){ // if nuForJ is smaller 0 it shouldn't be considered at all
+						unsigned int informationCounter = 0;
+						const double labelOfJ = m_y[*itOfJ] ;
+						for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
+							if(labelOfJ == m_y[*itOfI]){ // only if they have the same class
+								const double similiarty = m_kernel.kernelFunc(*itOfI, *itOfJ);
+								deltaForJ += similiarty * delta[informationCounter]; // plus, because all values are negative
+							}
 						}
 					}
+
+					if(deltaForJ > delta[k] && nuForJ > 0.){
+						argmax = *itOfJ;
+						delta[k] = deltaForJ;
+						g[k] = gForJ;
+						nu[k] = nuForJ;
+					}
+					deltasValue.push_back(deltaForJ);
+//					colorForDeltas.push_back(std::string(m_y[*itOfJ] == 1 ? "red" : "blue"));
+
 				}
-				if(deltaForJ > delta[k] && nuForJ > 0.0){
-					argmax = *itOfJ;
-					delta[k] = deltaForJ;
-					g[k] = gForJ;
-					nu[k] = nuForJ;
-				}
-				for(unsigned int i = 0; i < increaseValue; ++i){
-					++itOfJ;
-					if(itOfJ == m_J.end()){
-						break;
+//				for(unsigned int i = 0; i < increaseValue; ++i){
+//					++itOfJ;
+//					if(itOfJ == m_J.end()){
+//						break;
+//					}
+//				}
+			}
+			if(k > 0){
+//				std::cout << "g[k] is " << g[k] << std::endl;
+				double min, max;
+				DataConverter::getMinMax(deltasValue, min, max);
+				if(min == max){
+					// problem
+					DataConverter::getMinMax(mu, min, max);
+					if(min == max){
+						std::cout << "the complete mu is the same!" << std::endl;
 					}
 				}
 			}
+//			std::cout << "min: " << min << ", max: " << max << std::endl;
+//			std::cout << "mu: " << mu.transpose() << std::endl;
+//			DataWriterForVisu::writeSvg("deltas1.svg", deltasValue, colorForDeltas);
+//			openFileInViewer("deltas1.svg");
+//			sleep(1);
 		}else{
 			argmax = *itOfActiveSet;
 			double gForArgmax, nuForArgmax;
@@ -254,8 +298,6 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			nu[k] = nuForArgmax;
 			++itOfActiveSet;
 		}
-		deltaValues.push_back((double) delta[k]);
-		colors.push_back(std::string(m_y[argmax] == 1 ? "red" : "blue"));
 		if(argmax == -1 && m_J.size() > 0){
 			if(verboseLevel != 0){
 				for(List<int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
@@ -270,6 +312,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 						<< m_numberOfInducingPoints << ", size: " << m_dataPoints);
 			return false;
 		}
+//		deltaValues.push_back((double) delta[k]);
+//		colors.push_back(std::string(m_y[argmax] == 1 ? "red" : "blue"));
 		fraction = ((fraction * k) + (m_y[argmax] == 1 ? 1 : 0)) / (double) (k + 1);
 		if(verboseLevel == 2)
 			printDebug("Next i is: " << argmax << " has label: " << (double) m_y[argmax]);
@@ -315,6 +359,16 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		}
 		//zeta -= ((double) nu[k]) * s_nk.cwiseProduct(s_nk);
 		//mu += ((double) g[k]) * s_nk; // <=> mu += g[k] * s_nk;
+		double min1, max1;
+		DataConverter::getMinMax(s_nk, min1, max1);
+		if(min1 == max1){
+			std::cout << "min and max of s_nk are the same" << std::endl;
+			DataConverter::getMinMax(k_nk, min1, max1);
+			if(k > 0 && min1 == max1){
+				std::cout << "min and max of k_nk are the same with: " << m_kernel.getHyperParams() << std::endl;
+			}
+		}
+//		std::cout << "s_nk: " << min1 << ", " << max1 << std::endl;
 		for(unsigned int i = 0; i < m_dataPoints; ++i){ // TODO for known active set only the relevant values have to been updated!
 			zeta[i] -= nu[k] * (s_nk[i] * s_nk[i]); // <=> zeta -= nu[k] * s_nk.cwiseProduct(s_nk); // <=> diag(A^new) = diag(A) - (u^2)_j
 			mu[i] += g[k] * s_nk[i]; // <=> mu += g[k] * s_nk; // h += alpha_i * ( K_.,i - M_.,i^T * M_.,i) <=> alpha_i * (k_nk - s_nk)
@@ -417,7 +471,13 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		--amountOfPointsPerClass[m_y[argmax] == 1 ? 0 : 1];
 	}
 	if(verboseLevel == 2){
-		std::cout << "Fraction in including points is: " << fraction * 100. << " %"<< std::endl;
+		int classOneCounter = 0;
+		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI){
+			if(m_y[*itOfI] == 1){
+				++classOneCounter;
+			}
+		}
+		std::cout << "Fraction in including points is: " << classOneCounter / (double) m_I.size() * 100. << " %"<< std::endl;
 		std::cout << "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime() << std::endl;
 	}
 //	DataWriterForVisu::writeSvg("deltas.svg", deltaValues, colors);
@@ -568,7 +628,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		printError("The derivative can not be calculated without the log!");
 	}
 	m_muTildePlusBias = m_nuTilde.cwiseQuotient(m_tauTilde) + (m_bias * Vector::Ones(m_numberOfInducingPoints));
-	std::cout << "m_muTildePlusBias: " << m_muTildePlusBias.transpose() << std::endl;
+//	std::cout << "m_muTildePlusBias: " << m_muTildePlusBias.transpose() << std::endl;
 //	std::cout << "after m_L: \n" << m_choleskyLLT.matrixL().toDenseMatrix() << std::endl;
 //	std::cout << "mu tilde before flipping: " << m_muTildePlusBias.transpose() << std::endl;
 	//unsigned int t = 0;
@@ -712,7 +772,7 @@ void IVM::calcDerivatives(const Vector& muL1){
 double IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, const Vector& zeta, const Vector& mu, double& g_kn, double& nu_kn, const double fraction, const Eigen::Vector2i& amountOfPointsPerClassLeft, const int verboseLevel){
 	const double label = m_y[j];
 	if(amountOfPointsPerClassLeft[0] > 0 && amountOfPointsPerClassLeft[1] > 0){
-		if((fraction < m_desiredFraction && label == -1) || (fraction > (1. - m_desiredFraction) && label == 1)){
+		if((fraction < m_desiredPoint - m_desiredMargin && label == -1) || (fraction > m_desiredPoint - m_desiredMargin && label == 1)){
 			// => only less than 20 % of data is 1 choose 1
 			return -DBL_MAX; // or only less than 20 % of data is -1 choose -1
 		}
@@ -758,13 +818,7 @@ double IVM::predict(const Vector& input) const{
 
 //	std::cout << "L: \n" << m_choleskyLLT.matrixL().toDenseMatrix() << std::endl;
 //	std::cout << "llt: \n" << m_choleskyLLT.matrixLLT() << std::endl;
-	Vector v;
-	try{
-		v = m_choleskyLLT.solve(k_star);
-	}catch(std::exception& e){
-		printError(e.what());
-		return 0.;
-	}
+	const Vector v = m_choleskyLLT.solve(k_star);
 	/*
 	const Vector mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 	double mu_star = (mu_tilde + (m_bias * Vector::Ones(n))).dot(v);*/

@@ -138,18 +138,23 @@ int main(int ac, char* av[]){
 	bool useGP;
 	Settings::getValue("OnlyGp.useGP", useGP);
 	if(useGP){
-//		StopWatch sw;
-//		executeForBinaryClassIVM();
-//		std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
+		std::string type;
+		Settings::getValue("main.type", type);
+		if(type == "binaryIvm"){
 		StopWatch sw;
-		executeForMutliClassIVM();
-		std::cout << "For IVMs: " << sw.elapsedAsTimeFrame() << std::endl;
-//		StopWatch sw;
-//		executeForBinaryClassORF();
-//		std::cout << "For ORFs: " << sw.elapsedAsTimeFrame() << std::endl;
-		/*sw.startTime();
-		executeForBinaryClass(path, !vm.count("useFakeData"));
-		std::cout << "For GP: " << sw.elapsedAsTimeFrame() << std::endl;*/
+		executeForBinaryClassIVM();
+		std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
+		}else if(type == "multiIvm"){
+			StopWatch sw;
+			executeForMutliClassIVM();
+			std::cout << "For IVMs: " << sw.elapsedAsTimeFrame() << std::endl;
+		}else if(type == "ORF"){
+			StopWatch sw;
+			executeForBinaryClassORF();
+			std::cout << "For ORFs: " << sw.elapsedAsTimeFrame() << std::endl;
+		}else{
+			printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
+		}
 		return 0;
 	}
 

@@ -64,7 +64,7 @@ void IVMMultiBinary::train(){
 	}else{
 		double durationOfTraining = CommandSettings::get_samplingAndTraining();
 		boost::thread_group group;
-		const int nrOfParallel = boost::thread::hardware_concurrency();
+		const int nrOfParallel = 1; //boost::thread::hardware_concurrency();
 		StopWatch sw;
 		std::vector<int> counterRes(amountOfClasses(), 0);
 		std::vector<bool> stillWorking(amountOfClasses(), true);
@@ -138,6 +138,7 @@ void IVMMultiBinary::train(){
 						}else{
 							stillWorking[i] = false;
 							--runningCounter;
+							counter += counterRes[i];
 						}
 					}else{
 						++finished;
@@ -179,24 +180,28 @@ void IVMMultiBinary::trainInParallel(const int usedIvm, const bool fitParams){
 	usedClasses << m_classOfIVMs[usedIvm], -1;
 	m_ivms[usedIvm]->init(m_storage.storage(),
 			m_numberOfInducingPointsPerIVM, usedClasses, m_doEpUpdate);
-	m_ivms[usedIvm]->getKernel().setSeed(usedIvm * 1389293);
+	m_ivms[usedIvm]->getKernel().setSeed((usedIvm + 1) * 459486);
 	const bool ret = m_ivms[usedIvm]->train(fitParams,1);
+//	m_ivms[usedIvm]->getKernel().setHyperParams(
+//			Settings::getDirectDoubleValue("KernelParam.len"),
+//			Settings::getDirectDoubleValue("KernelParam.fNoise"),
+//			Settings::getDirectDoubleValue("KernelParam.sNoise"));
+//	const bool ret = m_ivms[usedIvm]->train(false,1);
 	if(!ret){
 		printError("The ivm: " << usedIvm << ", could not be trained!");
 	}
-	static boost::mutex mutex;
-	mutex.lock();
-	DataPoint p(2);
-	p << 0,0;
-	std::cout << "Used: " << usedIvm << std::endl;
-	m_ivms[usedIvm]->predict(p);
-	mutex.unlock();
+//	static boost::mutex mutex;
+//	mutex.lock();
+//	DataPoint p(2);
+//	p << 0,0;
+//	std::cout << "Used: " << usedIvm << std::endl;
+//	m_ivms[usedIvm]->predict(p);
+//	mutex.unlock();
 }
 
 int IVMMultiBinary::predict(const DataPoint& point) const{
 	std::vector<double> probs(amountOfClasses());
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
-		std::cout << "i: " << i << std::endl;
 		probs[i] = m_ivms[i]->predict(point);
 	}
 	return m_classOfIVMs[std::distance(probs.cbegin(), std::max_element(probs.cbegin(), probs.cend()))];

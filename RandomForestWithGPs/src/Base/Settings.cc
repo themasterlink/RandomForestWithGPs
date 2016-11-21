@@ -96,6 +96,14 @@ bool Settings::getDirectBoolValue(const std::string& nameOfValue){
 	return value;
 }
 
+
+bool Settings::getDirectDoubleValue(const std::string& nameOfValue){
+	double value;
+	getValue(nameOfValue, value);
+	return value;
+}
+
+
 void Settings::writeDefaultFile(const std::string& settingsfile){
 	boost::property_tree::ptree root;
 	root.put("Forest.amountOfTrees", 200);

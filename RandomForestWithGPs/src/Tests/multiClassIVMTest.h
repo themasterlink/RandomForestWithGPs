@@ -30,11 +30,13 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 //	std::list<double> probs;
 //	Eigen::Vector2i amountPerClass;
 //	amountPerClass[0] = amountPerClass[1] = 0;
+	Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(ivms.amountOfClasses(), ivms.amountOfClasses());
 	for(int i = 0; i < amountOfTestPoints; ++i){
 		const int label = ivms.predict(*data[i]);
 		if(label == data[i]->getLabel()){
 			++right;
 		}
+		conv(data[i]->getLabel(), label) += 1;
 		/*if(data[i]->getLabel() == label){
 			++amountPerClass[label];
 		}else if(data[i]->getLabel() == ivms.getLabelForMinusOne()){
@@ -56,6 +58,7 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 //		DataWriterForVisu::writeHisto("histo.svg", probs, 14, 0, 1);
 //		openFileInViewer("histo.svg");
 //	}
+	ConfusionMatrixPrinter::print(conv, std::cout);
 	std::cout << RED;
 	std::cout << "Amount of right: " << (double) right / amountOfTestPoints * 100.0 << "%" << std::endl;
 //	std::cout << "Amount of above: " << (double) amountOfAbove / amountOfTestPoints * 100.0 << "%" << std::endl;
@@ -95,6 +98,8 @@ void executeForMutliClassIVM(){
 	testIvm(ivms, test.storage());
 
 	if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+		DataWriterForVisu::writeSvg("ivms.svg", &ivms, train.storage());
+		system("open ivms.svg");
 		DataWriterForVisu::writeImg("ivms.png", &ivms, train.storage());
 		system("open ivms.png");
 	}

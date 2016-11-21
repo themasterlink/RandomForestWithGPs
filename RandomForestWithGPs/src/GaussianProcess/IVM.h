@@ -12,6 +12,7 @@
 #include <boost/math/distributions/normal.hpp> // for normal_distribution
 #include <list>
 #include "Kernel/GaussianKernel.h"
+#include "../RandomNumberGenerator/RandomUniformNr.h"
 
 class IVM {
 public:
@@ -86,7 +87,8 @@ private:
 	double m_bias;
 	double m_lambda;
 	bool m_doEPUpdate;
-	double m_desiredFraction;
+	double m_desiredPoint;
+	double m_desiredMargin;
 	bool m_calcLogZ;
 	bool m_calcDerivLogZ;
 	List<int> m_J, m_I;
@@ -96,6 +98,8 @@ private:
 
 	GaussianKernel m_kernel;
 	boost::math::normal m_logisticNormal;
+
+	RandomUniformNr m_uniformNr;
 
 	bool m_useNeighbourComparison;
 	int m_sampleCounter;

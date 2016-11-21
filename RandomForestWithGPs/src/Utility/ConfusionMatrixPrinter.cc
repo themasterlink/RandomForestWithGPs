@@ -21,7 +21,8 @@ ConfusionMatrixPrinter::~ConfusionMatrixPrinter() {
 
 void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv, std::ostream& stream){
 	if(conv.rows() != ClassKnowledge::amountOfClasses() || conv.cols() != ClassKnowledge::amountOfClasses()){
-		printError("The amount of rows or cols does not correspond to the amount of names!");
+		printError("The amount of rows or cols does not correspond to the amount of names: ("
+				<< conv.rows() << "," << conv.cols() << ") != " << ClassKnowledge::amountOfClasses());
 		return;
 	}
 	int maxLength = 0;

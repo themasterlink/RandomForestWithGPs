@@ -70,7 +70,7 @@ void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, double* bestLo
 	StopWatch sw;
 	while(sw.elapsedSeconds() < durationOfTraining){
 		ivm->getKernel().newRandHyperParams();
-		ivm->train();
+		ivm->train(false);
 		mutex->lock();
 		if(*bestLogZ < ivm->m_logZ){
 			ivm->getKernel().getCopyOfParams(*bestParams);
@@ -130,7 +130,7 @@ void executeForBinaryClassIVM(){
 	Eigen::Vector2i usedClasses;
 	usedClasses[0] = 0;
 	usedClasses[1] = 1;
-	double sNoise = 0.2;
+	double sNoise = Settings::getDirectDoubleValue("KernelParam.sNoise");
 	if(CommandSettings::get_samplingAndTraining() > 0.){
 		std::vector<double> means = {10, 1.2, 0.5};
 		std::vector<double> sds = {8, 0.8, 0.4};
@@ -172,7 +172,7 @@ void executeForBinaryClassIVM(){
 			const TimeFrame timeTry = swTry.elapsedAsTimeFrame();
 			StopWatch swGrad;
 			ivm.getKernel().setHyperParamsWith(bestParams);
-			bool t = ivm.train();
+			bool t = ivm.train(false);
 			if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0) && t){
 				DataWriterForVisu::writeSvg("before.svg", ivm, ivm.getSelectedInducingPoints(), data);
 				system("open before.svg");
@@ -188,7 +188,7 @@ void executeForBinaryClassIVM(){
 				//system("open logZValues.svg");
 				//ivm.getKernel().setHyperParamsWith(bestParams);
 				StopWatch sw;
-				bool train = ivm.train(i % 10 == 0, 1);
+				bool train = ivm.train(false, 1);
 				if(train && !isnan(ivm.m_logZ)){
 					std::cout << "Time for training: " << sw.elapsedAsPrettyTime() << std::endl;
 					/*int right = 0;
@@ -233,7 +233,7 @@ void executeForBinaryClassIVM(){
 				}
 			}
 			ivm.getKernel().setHyperParamsWith(bestParams);
-			t = ivm.train(true);
+			t = ivm.train(false);
 			std::cout << "T: " << t << std::endl;
 			const TimeFrame timeGrad = swGrad.elapsedAsTimeFrame();
 			if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
@@ -365,7 +365,8 @@ void executeForBinaryClassIVM(){
 	}else{
 		Eigen::MatrixXd finalMat;
 		double bestResult = 0;
-		double bestX = 0.888651, bestY = 1.6983;
+		double bestX = Settings::getDirectDoubleValue("KernelParam.len");
+		double bestY = Settings::getDirectDoubleValue("KernelParam.fNoise");
 		if(!CommandSettings::get_useFakeData()){
 			bestX = 32.5579;
 			bestY = 1.24258;
@@ -388,7 +389,7 @@ void executeForBinaryClassIVM(){
 					ivm.init(data, 0.33333 * data.size(), usedClasses, doEpUpdate);
 					ivm.setDerivAndLogZFlag(true, false);
 					ivm.getKernel().setHyperParams(x, y2, sNoise);
-					bool trained = ivm.train(2);
+					bool trained = ivm.train(false);
 					if(trained){
 						int right = 0;
 						int amountOfBelow = 0;
@@ -465,8 +466,8 @@ void executeForBinaryClassIVM(){
 		Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 		ivm.init(data, nrOfInducingPoints, usedClasses, doEpUpdate);
 		ivm.setDerivAndLogZFlag(true, true);
-		bestY = 1.24258; //1.67215;
 		if(Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam")){
+			bestY = 1.24258; //1.67215;
 			std::vector<double> bestXs = {1.72188, 0.209048};//{1.03035, -0.280561};
 			if(!CommandSettings::get_useFakeData()){
 				bestXs = {13.469127, 12.469127};
@@ -480,7 +481,7 @@ void executeForBinaryClassIVM(){
 		std::cout << "Start training" << std::endl;
 		StopWatch swTraining;
 	//	ivm.setNumberOfInducingPoints(std::min((int)(data.size() * 0.25), 100));
-		ivm.train(true, 1);
+		ivm.train(false, 1);
 		ivm.trainOptimizeStep(1);
 		std::cout << "Needed for training: " << swTraining.elapsedAsTimeFrame() << std::endl;
 		/*
