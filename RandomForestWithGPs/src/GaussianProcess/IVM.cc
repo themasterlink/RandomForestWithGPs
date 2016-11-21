@@ -64,7 +64,7 @@ void IVM::init(const ClassData& data,
 	m_dataPoints = m_data.size();
 	setNumberOfInducingPoints(numberOfInducingPoints);
 //	StopWatch sw;
-	const bool calcDifferenceMatrix = !m_kernel.hasLengthMoreThanOneDim();
+	const bool calcDifferenceMatrix = false; // !m_kernel.hasLengthMoreThanOneDim();
 	m_kernel.init(m_data, calcDifferenceMatrix);
 //	std::cout << "Time: " << sw.elapsedAsPrettyTime() << std::endl;
 	//std::cout << "Frac: " << (double) amountOfOneClass / (double) m_dataPoints << std::endl;
@@ -107,6 +107,19 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 			printError("The number of inducing points is equal or below zero: " << m_numberOfInducingPoints);
 		return false;
 	}
+	GaussianKernelParams bestParams;
+	std::string folderLocation;
+	if(CommandSettings::get_useFakeData()){
+		Settings::getValue("TotalStorage.folderLocFake", folderLocation);
+	}else{
+		Settings::getValue("TotalStorage.folderLocReal", folderLocation);
+	}
+	const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses[0]) + ".binary";
+	bool loadBestParams = false;
+	if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
+		bestParams.readFromFile(kernelFilePath);
+		loadBestParams = true;
+	}
 	if(findFittingParams){
 		bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 		m_kernel.changeKernelConfig(hasMoreThanOneLengthValue);
@@ -120,20 +133,10 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 		setDerivAndLogZFlag(true, false);
 		double durationOfTraining = CommandSettings::get_samplingAndTraining();
 		StopWatch sw;
-		GaussianKernelParams bestParams;
 		double bestLogZ = -DBL_MAX;
 		StopWatch swAvg;
 		m_sampleCounter = 0;
-		std::string folderLocation;
-		if(CommandSettings::get_useFakeData()){
-			Settings::getValue("TotalStorage.folderLocFake", folderLocation);
-		}else{
-			Settings::getValue("TotalStorage.folderLocReal", folderLocation);
-		}
-		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses[0]) + ".binary";
-		if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
-			bestParams.readFromFile(kernelFilePath);
-		}else{
+		if(!loadBestParams){
 			while(sw.elapsedSeconds() < durationOfTraining){
 				m_kernel.newRandHyperParams();
 				internalTrain(true, 0);
@@ -159,6 +162,9 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 		return ret;
 	}else{
 		setDerivAndLogZFlag(false, false);
+		if(loadBestParams){
+			m_kernel.setHyperParamsWith(bestParams);
+		}
 		const bool ret = internalTrain(true, verboseLevel);
 		m_sampleCounter = -1; // for checking if the training is finished!
 		return ret;
@@ -166,7 +172,7 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 }
 
 bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
-	if(verboseLevel == 2)
+	if(verboseLevel == 2 && m_kernel.wasDifferenceCalced())
 		std::cout << "Diff: " << m_kernel.getDifferences(0,0) << ", " << m_kernel.getDifferences(1,0) << std::endl;
 	Vector m = Vector::Zero(m_dataPoints);
 	Vector beta = Vector::Zero(m_dataPoints);
@@ -206,14 +212,14 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		delta[k] = -DBL_MAX;
 		if(clearActiveSet){
 			int increaseValue = 1;
-			if(k > 10 && rand() / (double) RAND_MAX < 0.3){
-				increaseValue = m_J.size() / 100; // get through it in 100 steps
-			}
 			List<int>::const_iterator itOfJ = m_J.begin();
-			const int start = rand() / (double) RAND_MAX * increaseValue;
-			for(unsigned int i = 0; i < start; ++i){
-				++itOfJ;
-			}
+//			if(k > 10 && rand() / (double) RAND_MAX < 0.3){
+//				increaseValue = m_J.size() / 100; // get through it in 100 steps
+//			}
+//			const int start = rand() / (double) RAND_MAX * increaseValue;
+//			for(unsigned int i = 0; i < start; ++i){
+//				++itOfJ;
+//			}
 			for(; itOfJ != m_J.end();){
 				double gForJ, nuForJ;
 				double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, verboseLevel);
@@ -227,7 +233,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 						}
 					}
 				}
-				if(deltaForJ > delta[k]){
+				if(deltaForJ > delta[k] && nuForJ > 0.0){
 					argmax = *itOfJ;
 					delta[k] = deltaForJ;
 					g[k] = gForJ;
@@ -327,7 +333,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		 */
 		if(nu[k] < 0.0){
 			if(verboseLevel != 0){
-				printError("The actual nu is below zero!");
+				printError("The actual nu is below zero: " << nu[k]);
 				for(List<int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
 					std::cout << "(" << *it << ", " << (double) m_y[*it] << ")" << std::endl;
 				}
@@ -429,10 +435,13 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		muSqueezed[l] = mu[*itOfI];
 	}
 	// calc m_L
-	//std::cout << "m_L: \n" << m_L << std::endl;
+//	std::cout << "m_L: \n" << m_L << std::endl;
 	//std::cout << "m_K: \n" << m_K << std::endl;
 	//std::cout << "m_M: \n" << m_M << std::endl;
 	m_choleskyLLT.compute(m_L);
+
+//	std::cout << "L: \n" << m_choleskyLLT.matrixL().toDenseMatrix() << std::endl;
+//	std::cout << "llt: \n" << m_choleskyLLT.matrixLLT() << std::endl;
 //	std::cout << "before m_L: \n" << m_L << std::endl;
 //	m_muTildePlusBias = m_nuTilde.cwiseQuotient(m_tauTilde) + (m_bias * Vector::Ones(m_numberOfInducingPoints));
 //	std::cout << "mu tilde before: " << m_muTildePlusBias.transpose() << std::endl;
@@ -559,6 +568,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		printError("The derivative can not be calculated without the log!");
 	}
 	m_muTildePlusBias = m_nuTilde.cwiseQuotient(m_tauTilde) + (m_bias * Vector::Ones(m_numberOfInducingPoints));
+	std::cout << "m_muTildePlusBias: " << m_muTildePlusBias.transpose() << std::endl;
 //	std::cout << "after m_L: \n" << m_choleskyLLT.matrixL().toDenseMatrix() << std::endl;
 //	std::cout << "mu tilde before flipping: " << m_muTildePlusBias.transpose() << std::endl;
 	//unsigned int t = 0;
@@ -745,7 +755,16 @@ double IVM::predict(const Vector& input) const{
 	for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 		k_star[i] = m_kernel.kernelFuncVec(input, *m_data[*itOfI]);
 	}
-	const Vector v = m_choleskyLLT.solve(k_star);
+
+//	std::cout << "L: \n" << m_choleskyLLT.matrixL().toDenseMatrix() << std::endl;
+//	std::cout << "llt: \n" << m_choleskyLLT.matrixLLT() << std::endl;
+	Vector v;
+	try{
+		v = m_choleskyLLT.solve(k_star);
+	}catch(std::exception& e){
+		printError(e.what());
+		return 0.;
+	}
 	/*
 	const Vector mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 	double mu_star = (mu_tilde + (m_bias * Vector::Ones(n))).dot(v);*/

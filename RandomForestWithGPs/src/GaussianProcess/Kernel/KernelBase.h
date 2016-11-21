@@ -48,6 +48,8 @@ public:
 
 	void setSeed(const int seed);
 
+	bool wasDifferenceCalced(){ return m_calcedDifferenceMatrix; };
+
 	void setGaussianRandomVariables(const std::vector<double>& means, const std::vector<double> sds);
 
 	void addToHyperParams(const KernelType& params, const double factor = 1.0);

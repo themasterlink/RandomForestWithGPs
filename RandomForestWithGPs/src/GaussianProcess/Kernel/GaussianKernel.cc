@@ -57,7 +57,7 @@ void GaussianKernel::completeInit(const Eigen::MatrixXd& dataMat){
 }*/
 
 double GaussianKernel::kernelFunc(const int row, const int col) const{
-	if(hasLengthMoreThanOneDim()){
+	if(!m_calcedDifferenceMatrix){
 		if(m_init){
 			if(m_pData != nullptr){
 				Eigen::VectorXd* lhs = (*m_pData)[row];
@@ -69,17 +69,15 @@ double GaussianKernel::kernelFunc(const int row, const int col) const{
 		}else{
 			printError("The init process failed, init was tried: " << m_init);
 		}
-	}else if(m_calcedDifferenceMatrix){
+	}else{
 		return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue()
 				* (double) m_differences(row, col)) + m_kernelParams.m_sNoise.getSquaredValue();
-	}else{
-		printError("There is only one length param but, the difference matrix was not calculated!");
 	}
 	return 0;
 }
 
 double GaussianKernel::kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const {
-	if(hasLengthMoreThanOneDim()){
+	if(!m_calcedDifferenceMatrix){
 		double squaredNorm = 0;
 		for(unsigned int i = 0; i < lhs.rows(); ++i){
 			const double temp = (lhs[i] - rhs[i]) * 1. / m_kernelParams.m_length.getValues()[i];
@@ -87,11 +85,9 @@ double GaussianKernel::kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::Ve
 		}
 		return m_kernelParams.m_fNoise.getValue() * m_kernelParams.m_fNoise.getValue() *
 				exp(-0.5 * squaredNorm) + m_kernelParams.m_sNoise.getValue() * m_kernelParams.m_sNoise.getValue();
-	}else if(m_calcedDifferenceMatrix){
+	}else{
 		return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue()
 				* (double) (lhs-rhs).squaredNorm()) + m_kernelParams.m_sNoise.getSquaredValue();
-	}else{
-		printError("There is only one length param but, the difference matrix was not calculated!");
 	}
 	return 0;
 }
@@ -124,13 +120,23 @@ double GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col,
 			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue() * dotResult)
 					* dotResult / (lenSquared * m_kernelParams.m_length.getValue()); // derivative to m_params[0]
 		}else{
-			printError("There is only one length param but, the difference matrix was not calculated!");
+			const double lenSquared = m_kernelParams.m_length.getSquaredValue();
+			double dotResult = 0;
+			if(m_pData != nullptr){
+				Eigen::VectorXd* lhs = (*m_pData)[row];
+				Eigen::VectorXd* rhs = (*m_pData)[col];
+				return (*lhs - *rhs).squaredNorm();
+			}else if(m_pDataMat != nullptr){
+				return (m_pDataMat->col(row) - m_pDataMat->col(row)).squaredNorm();
+			}
+			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue() * dotResult)
+					* dotResult / (lenSquared * m_kernelParams.m_length.getValue());
 		}
 	}else if(type->getKernelNr() == m_kernelParams.m_fNoise.getKernelNr()){
 		if(!hasLengthMoreThanOneDim() && m_calcedDifferenceMatrix){
 			return 2.0 * m_kernelParams.m_fNoise.getValue() * exp(-0.5 * (1.0/ (m_kernelParams.m_length.getValue() *
 					m_kernelParams.m_length.getValue())) * (double) m_differences(row, col)); // derivative to m_params[1]
-		}else if(hasLengthMoreThanOneDim()){
+		}else{
 			double result = 0;
 			if(m_pData != nullptr){
 				Eigen::VectorXd* lhs = (*m_pData)[row];
@@ -141,8 +147,6 @@ double GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col,
 			}
 			// subtract the sNoise divide through one fNoise and multiply with 2.0, is the easiest way to get the derivative
 			return (result - m_kernelParams.m_sNoise.getSquaredValue()) / m_kernelParams.m_fNoise.getValue() * 2.0;
-		}else{
-			printError("There is only one length param but, the difference matrix was not calculated!");
 		}
 	}else if(type->getKernelNr() == m_kernelParams.m_sNoise.getKernelNr()){
 		return 2.0 * m_kernelParams.m_sNoise.getValue();

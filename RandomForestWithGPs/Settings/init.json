@@ -23,13 +23,13 @@
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 100,
+        "nrOfInducingPoints": 25,
         "desiredFractionOfPart": 0.95,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
         "Training": {
-        	"useSavedHyperParams": "false",
-        	"overwriteExistingHyperParams": "true"
+        	"useSavedHyperParams": "true",
+        	"overwriteExistingHyperParams": "false"
         }
     },
     "TotalStorage": {
