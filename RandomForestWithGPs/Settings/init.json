@@ -17,16 +17,16 @@
     "Forest": {
         "amountOfTrees": 100,
         "Trees": {
-            "height": 18
+            "height": 6
         }
     },
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 50,
+        "nrOfInducingPoints": 100,
         "desiredMargin": 0.01,
         "hasLengthMoreThanParam" : "false",
-        "useNeighbourComparison": "false",
+        "useNeighbourComparison": "true",
         "Training": {
         	"useSavedHyperParams": "false",
         	"overwriteExistingHyperParams": "false"
@@ -86,7 +86,7 @@
     },
     
     "main": {
-    	"type": "multiIvm"
+    	"type": "ORF"
     }
     
 }

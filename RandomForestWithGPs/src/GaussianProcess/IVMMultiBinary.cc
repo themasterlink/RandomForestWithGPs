@@ -64,7 +64,7 @@ void IVMMultiBinary::train(){
 	}else{
 		double durationOfTraining = CommandSettings::get_samplingAndTraining();
 		boost::thread_group group;
-		const int nrOfParallel = 1; //boost::thread::hardware_concurrency();
+		const int nrOfParallel = boost::thread::hardware_concurrency();
 		StopWatch sw;
 		std::vector<int> counterRes(amountOfClasses(), 0);
 		std::vector<bool> stillWorking(amountOfClasses(), true);
@@ -149,11 +149,11 @@ void IVMMultiBinary::train(){
 					break;
 				}
 				if(fitParams){
-//					InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
+					InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
 				}else{
-//					InLinePercentageFiller::setActValueAndPrintLine(finished);
+					InLinePercentageFiller::setActValueAndPrintLine(finished);
 				}
-				if(runningCounter < nrOfParallel - 1 && counterForClass < amountOfClasses()){
+				if(runningCounter < nrOfParallel && counterForClass < amountOfClasses()){
 					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, fitParams)));
 					++counterForClass;
 					++runningCounter;

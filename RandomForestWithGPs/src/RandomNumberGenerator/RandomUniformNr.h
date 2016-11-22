@@ -24,12 +24,17 @@ public:
 
 	void setMinAndMax(const int min, const int max);
 
+	// returns true if min and max are not equal
+	bool isUsed() const{ return m_isUsed; };
+
 	int operator()();
 
 private:
 	base_generator_type m_generator;
 
 	uniform_distribution_int m_uniform;
+
+	bool m_isUsed;
 
 };
 

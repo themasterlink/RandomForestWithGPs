@@ -9,6 +9,7 @@
 #include "../Utility/ColorConverter.h"
 #include "DataConverter.h"
 #include <opencv2/core.hpp>
+#include <math.h>
 #include "../Base/CommandSettings.h"
 
 DataWriterForVisu::DataWriterForVisu()
@@ -410,7 +411,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 		}
 		++iX;
 	}
-	drawSvgDataPoints(file, data, min, max, dimVec, selectedInducingPoints);
+	drawSvgDataPoints(file, data, min, max, dimVec, selectedInducingPoints, 2, &ivm);
 	closeSvgFile(file);
 }
 
@@ -440,7 +441,6 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const ClassData& d
 
 void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMultiClass* predictor,
 		const ClassData& data, const int x, const int y){
-	printLine();
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
@@ -459,8 +459,8 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	int amount = 0;
 	std::vector<double> labels;
-	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
-	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
+	const double elementInX = ceil((double)(max[0] - min[0]) / stepSize[0]) + 1;
+	const double elementInY = ceil((double)(max[1] - min[1]) / stepSize[1]) + 1;
 	const int classAmount = predictor->amountOfClasses();
 	Data points;
 	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
@@ -495,10 +495,18 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 		ColorConverter::HSV2LAB((i + 1) / (double) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
 	}
 	int fac = 32;
-	cv::Mat img(elementInY * fac + fac, elementInX * fac + fac, CV_8UC3, cv::Scalar(0, 0, 0));
+	cv::Mat img(elementInY * fac, elementInX * fac, CV_8UC3, cv::Scalar(0, 0, 0));
 	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+		if(iX >= elementInX){
+			printError("This should not happen for x: " << iX);
+			continue;
+		}
 		iY = 0;
-		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+		for(double yVal = min[1]; yVal < max[1]; yVal += stepSize[1]){
+			if(iY >= elementInY){
+				printError("This should not happen for y: " << iY);
+				continue;
+			}
 			//double val = fmax(fmin(1.0,), 0.0);
 			double r, g, b_;
 			if(complex){
@@ -528,7 +536,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 			}
 			for(unsigned int t = 0; t < fac; ++t){
 				for(unsigned int l = 0; l < fac; ++l){
-					cv::Vec3b& color = img.at<cv::Vec3b>(iY * fac + t,iX * fac + l);
+					cv::Vec3b& color = img.at<cv::Vec3b>((elementInY - iY - 1) * fac + t,iX * fac + l);
 					color[0] = r * 255;
 					color[1] = g * 255;
 					color[2] = b_ * 255;
@@ -542,7 +550,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	cv::Scalar black(0,0,0);
 	for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it, ++counter){
 		const int dx = ((**it)[x] - min[0]) / (max[0] - min[0]) * elementInX * fac;
-		const int dy = ((**it)[y] - min[1]) / (max[1] - min[1]) * elementInY * fac;
+		const int dy = (1. - ((**it)[y] - min[1]) / (max[1] - min[1])) * elementInY * fac;
 		const int label = (*it)->getLabel();
 		double r, g, b;
 		ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
@@ -557,7 +565,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 }
 
 void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& points,
-		const Eigen::Vector2d& min, const Eigen::Vector2d& max, const Eigen::Vector2i& dim, const std::list<int>& selectedInducingPoints, const int amountOfClasses){
+		const Eigen::Vector2d& min, const Eigen::Vector2d& max, const Eigen::Vector2i& dim, const std::list<int>& selectedInducingPoints, const int amountOfClasses, const IVM* ivm){
 	unsigned int counter = 0;
 	if(selectedInducingPoints.size() > 0){
 		std::list<ClassDataConstIterator> inducedPoints;
@@ -575,8 +583,14 @@ void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& 
 			const double dx = ((**it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
 			const double dy = ((**it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
 			std::string color = "blue";
-			if((*it)->getLabel() == 0){
-				color = "red";
+			if(ivm != nullptr){
+				if((*it)->getLabel() == ivm->getLabelForOne()){
+					color = "red";
+				}
+			}else{
+				if((*it)->getLabel() == 0){
+					color = "red";
+				}
 			}
 			file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
 		}
@@ -585,8 +599,14 @@ void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& 
 			const double dx = ((***it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
 			const double dy = ((***it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
 			std::string color = "blue";
-			if((**it)->getLabel() == 0){
-				color = "red";
+			if(ivm != nullptr){
+				if((**it)->getLabel() == ivm->getLabelForOne()){
+					color = "red";
+				}
+			}else{
+				if((**it)->getLabel() == 0){
+					color = "red";
+				}
 			}
 			file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
 			file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"3\" fill=\"white\" /> \n";
@@ -597,8 +617,14 @@ void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& 
 			const double dy = ((**it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
 			if(amountOfClasses == 2){
 				std::string color = "blue";
-				if((*it)->getLabel() == 0){
-					color = "red";
+				if(ivm != nullptr){
+					if((*it)->getLabel() == ivm->getLabelForOne()){
+						color = "red";
+					}
+				}else{
+					if((*it)->getLabel() == 0){
+						color = "red";
+					}
 				}
 				file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
 			}else{

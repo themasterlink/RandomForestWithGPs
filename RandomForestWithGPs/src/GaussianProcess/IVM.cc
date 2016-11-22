@@ -21,9 +21,9 @@ IVM::IVM(): m_logZ(0), m_derivLogZ(2), m_dataPoints(0),
 	m_numberOfInducingPoints(0), m_bias(0), m_lambda(0),
 	m_doEPUpdate(false), m_desiredPoint(0.5), m_desiredMargin(0.05),
 	m_calcLogZ(false), m_calcDerivLogZ(false),
+	m_uniformNr(0, 10, 0),
 	m_useNeighbourComparison(false),
-	m_sampleCounter(0),
-	m_uniformNr(0, 10, 0){
+	m_sampleCounter(0){
 	bool hasLengthMoreThanParam;
 	Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
 	m_kernel.changeKernelConfig(hasLengthMoreThanParam);
@@ -45,12 +45,13 @@ void IVM::init(const ClassData& data,
 	}
 	m_labelsForClasses = labelsForClasses;
 	m_uniformNr.setSeed((int)labelsForClasses[0] * 74739); // TODO better way if class is used multiple times
-	m_uniformNr.setMinAndMax(1, std::max((int) data.size() / 100, 1));
+	m_uniformNr.setMinAndMax(1, data.size() / 100);
 	const bool oneVsAllCase = m_labelsForClasses[1] == -1;
 	if(m_labelsForClasses[0] == m_labelsForClasses[1]){
 		printError("The labels for the two different classes are the same!");
 	}
-	m_data = data; // just the copy of the pointers (acceptable)
+	m_data = data; // just the copy of the pointers (acceptable copy)
+	m_dataPoints = m_data.size();
 	m_y = Vector(data.size());
 	int amountOfOneClass = 0;
 	for(unsigned int i = 0; i < m_y.rows(); ++i){ // convert usuall mutli class labels in 1 and -1
@@ -65,7 +66,6 @@ void IVM::init(const ClassData& data,
 		}
 	}
 	m_doEPUpdate = doEPUpdate;
-	m_dataPoints = m_data.size();
 	setNumberOfInducingPoints(numberOfInducingPoints);
 //	StopWatch sw;
 	const bool calcDifferenceMatrix = false; // !m_kernel.hasLengthMoreThanOneDim();
@@ -143,20 +143,18 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 		if(!loadBestParams){
 			while(sw.elapsedSeconds() < durationOfTraining){
 				m_kernel.newRandHyperParams();
-				std::cout << "new rand hyper params" << m_kernel.getHyperParams() << std::endl;
-				m_uniformNr.setMinAndMax(1, 1);
+				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 				const bool trained = internalTrain(true, 0);
-				if(!trained){
-					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
-					const bool trained = internalTrain(true, 1);
-				}
+//				if(!trained){
+//					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
+//				}
 				if(trained && bestLogZ < m_logZ){
 					m_kernel.getCopyOfParams(bestParams);
 					bestLogZ = m_logZ;
 //					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
 				}
 				swAvg.recordActTime();
-				if(m_sampleCounter > 1 && durationOfTraining - (sw.elapsedSeconds() + 2 * swAvg.elapsedAvgAsTimeFrame().getSeconds()) < 0.){
+				if(m_sampleCounter > 1 && durationOfTraining - (sw.elapsedSeconds() + swAvg.elapsedAvgAsTimeFrame().getSeconds()) < 0.){
 					break;
 				}
 				++m_sampleCounter;
@@ -168,8 +166,15 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 		std::cout << "logZ: " << bestLogZ << ", "<< bestParams << std::endl;
 		m_kernel.setHyperParamsWith(bestParams);
 		setDerivAndLogZFlag(false, false);
-		m_uniformNr.setMinAndMax(1, 1);
+		m_uniformNr.setMinAndMax(1, 1); // final training with all points considered
 		const bool ret = internalTrain(true, verboseLevel);
+		if(ret && !m_doEPUpdate){
+			// train the whole active set again but in the oposite direction similiar to an ep step
+			const bool ret2 = trainOptimizeStep(0);
+			if(!ret2){
+				printWarning("The optimization step could not be performed!");
+			}
+		}
 		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
 		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
 		m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
@@ -182,6 +187,10 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 		}
 		m_uniformNr.setMinAndMax(1, 1);
 		const bool ret = internalTrain(true, verboseLevel);
+		if(ret && !m_doEPUpdate){
+			// train the whole active set again but in the oposite direction similiar to an ep step
+			trainOptimizeStep(verboseLevel);
+		}
 //		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
 //		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
 		m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
@@ -222,70 +231,74 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	double fraction = 0.;
 	//std::cout << "bias: " << m_bias << std::endl;
 	List<int>::const_iterator itOfActiveSet = m_I.begin();
-	List<double> deltaValues;
-	List<std::string> colors;
-	List<double> informationOfUsedValues;
-	m_J.reverse();
+//	List<double> deltaValues;
+//	List<std::string> colors;
+//	List<double> informationOfUsedValues;
 	for(unsigned int k = 0; k < m_numberOfInducingPoints; ++k){
 		int argmax = -1;
 		//List<Pair<int, double> > pointEntropies;
 		delta[k] = -DBL_MAX;
 		if(clearActiveSet){
-			List<double> deltasValue;
+//			List<double> deltasValue;
 //			List<std::string> colorForDeltas;
 
-//			int increaseValue = 1;
-//			if(k > 10){
-//				increaseValue = m_uniformNr(); // get through it in 100 steps
-//			}
-//			const int start = m_uniformNr();
-//			for(unsigned int i = 0; i < start; ++i){
-//				++itOfJ;
-//			}
-			for(List<int>::const_iterator itOfJ = m_J.begin(); itOfJ != m_J.end(); ++itOfJ){
+			unsigned int increaseValue = 1; // if no is activated this is the standart case
+			List<int>::const_iterator itOfJ = m_J.begin();
+			// do not jump over values in the first 10 iterations or
+			// if the desired amount of points for one of the classes is below 0.35
+			// and the actual fraction is below that desired point, this can be done,
+			// because in this case only 0.35 of the data has to be searched and the rest is skipped
+			if(m_uniformNr.isUsed() && k > 10 && !((m_desiredPoint < 0.35 && fraction < m_desiredPoint - m_desiredMargin)
+					|| (m_desiredPoint > 0.65 && fraction > m_desiredPoint + m_desiredMargin))){
+				increaseValue = m_uniformNr(); // returns a random value
+				const unsigned int start = m_uniformNr();
+				for(unsigned int i = 0; i < start; ++i){
+					++itOfJ;
+				}
+			}
+			while(itOfJ != m_J.end()){
 				double gForJ, nuForJ;
 				double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, verboseLevel);
-				if(deltaForJ > -DBL_MAX){
-					if(m_useNeighbourComparison && nuForJ > 0.){ // if nuForJ is smaller 0 it shouldn't be considered at all
+				// deltaForJ == -DBL_MAX means this class should not be used (fraction requirment not fullfilled!)
+				if(deltaForJ > -DBL_MAX && nuForJ > 0.){ // if nuForJ is smaller 0 it shouldn't be considered at all
+					if(m_useNeighbourComparison){
 						unsigned int informationCounter = 0;
 						const double labelOfJ = m_y[*itOfJ] ;
 						for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
+							const double similiarty = m_kernel.kernelFunc(*itOfI, *itOfJ);
 							if(labelOfJ == m_y[*itOfI]){ // only if they have the same class
-								const double similiarty = m_kernel.kernelFunc(*itOfI, *itOfJ);
-								deltaForJ += similiarty * delta[informationCounter]; // plus, because all values are negative
+								deltaForJ += similiarty * delta[informationCounter]; // plus, because all values are negative, will decrease the information
 							}
 						}
 					}
-
 					if(deltaForJ > delta[k] && nuForJ > 0.){
 						argmax = *itOfJ;
 						delta[k] = deltaForJ;
 						g[k] = gForJ;
 						nu[k] = nuForJ;
 					}
-					deltasValue.push_back(deltaForJ);
+//					deltasValue.push_back(deltaForJ);
 //					colorForDeltas.push_back(std::string(m_y[*itOfJ] == 1 ? "red" : "blue"));
-
 				}
-//				for(unsigned int i = 0; i < increaseValue; ++i){
-//					++itOfJ;
-//					if(itOfJ == m_J.end()){
-//						break;
-//					}
-//				}
-			}
-			if(k > 0){
-//				std::cout << "g[k] is " << g[k] << std::endl;
-				double min, max;
-				DataConverter::getMinMax(deltasValue, min, max);
-				if(min == max){
-					// problem
-					DataConverter::getMinMax(mu, min, max);
-					if(min == max){
-						std::cout << "the complete mu is the same!" << std::endl;
+				for(unsigned int i = 0; i < increaseValue; ++i){
+					++itOfJ; // increases the iterator
+					if(itOfJ == m_J.end()){ // controls if the loop should be ended
+						break;
 					}
 				}
 			}
+//			if(k > 0){
+////				std::cout << "g[k] is " << g[k] << std::endl;
+//				double min, max;
+//				DataConverter::getMinMax(deltasValue, min, max);
+//				if(min == max){
+//					// problem
+//					DataConverter::getMinMax(mu, min, max);
+//					if(min == max){
+//						std::cout << "the complete mu is the same!" << std::endl;
+//					}
+//				}
+//			}
 //			std::cout << "min: " << min << ", max: " << max << std::endl;
 //			std::cout << "mu: " << mu.transpose() << std::endl;
 //			DataWriterForVisu::writeSvg("deltas1.svg", deltasValue, colorForDeltas);
@@ -304,7 +317,15 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				for(List<int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
 					std::cout << "(" << *it << ", " << (double) m_y[*it] << ")" << std::endl;
 				}
-				printError("No new inducing point was found and there are still points over!");
+				std::string classRes = "";
+				if(fraction < m_desiredPoint - m_desiredMargin){
+					classRes = "1";
+				}else if(fraction > m_desiredPoint - m_desiredMargin){
+					classRes = "-1";
+				}else{
+					classRes = "1 or -1";
+				}
+				printError("No new inducing point was found and there are still points over and next point should be from class: " << classRes << "!");
 			}
 			return false;
 		}else if(argmax == -1){
@@ -648,7 +669,7 @@ bool IVM::trainOptimizeStep(const int verboseLevel){
 //		vecs.push_back(m_muTildePlusBias);
 		Vector oldMuTildeBias(m_muTildePlusBias);
 		m_I.reverse(); // flip order!
-		const bool ret = train(false, verboseLevel);
+		const bool ret = internalTrain(false, verboseLevel);
 		if(ret){
 //			vecs.push_back(m_muTildePlusBias);
 //			vecs.rbegin()->reverse();

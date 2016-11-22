@@ -41,6 +41,22 @@ void TotalStorage::readData(const int amountOfData){
 	}
 	const bool readTxt = false;
 	DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt);
+	std::string type = "";
+	Settings::getValue("main.type", type);
+	if(!type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView()){ // type starts with binary -> remove all classes
+		if(m_storage.size() > 2){
+			Iterator it = m_storage.begin();
+			++it; ++it; // go to the third element!
+			for(;it != m_storage.end();){
+				std::string name = it->first;
+				for(unsigned int i = 0; i < it->second.size(); ++i){
+					delete it->second[i];
+				}
+				++it;
+				m_storage.erase(name);
+			}
+		}
+	}
 	for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 		m_totalSize += it->second.size();
 	}

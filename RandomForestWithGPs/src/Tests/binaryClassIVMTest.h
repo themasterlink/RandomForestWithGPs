@@ -101,7 +101,7 @@ GaussianKernelParams sampleParams(ClassData& data, int number, const Eigen::Vect
 		group.add_thread(new boost::thread(boost::bind(&sampleInParallel, ivms[i], &bestParams, &bestLogZ, &mutex, durationOfTraining, &counter)));
 	}
 	InLinePercentageFiller::setActMaxTime(durationOfTraining);
-	std::cout << "It will take: " << durationOfTraining << std::endl;
+	std::cout << "It will take: " << TimeFrame(durationOfTraining) << std::endl;
 	StopWatch sw;
 	while(sw.elapsedSeconds() < durationOfTraining){
 		InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter);

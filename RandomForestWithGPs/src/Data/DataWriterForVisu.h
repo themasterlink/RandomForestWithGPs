@@ -55,7 +55,7 @@ private:
 	static void drawSvgDataPoints(std::ofstream& file, const ClassData& points,
 			const Eigen::Vector2d& min, const Eigen::Vector2d& max,
 			const Eigen::Vector2i& dim, const std::list<int>& selectedInducingPoints,
-			const int amountOfClasses = 2);
+			const int amountOfClasses = 2, const IVM* ivm = nullptr);
 
 	static void drawSvgLine(std::ofstream& file, const Eigen::VectorXd vec,
 			const double startX, const double startY, const double min,
