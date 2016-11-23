@@ -33,6 +33,9 @@ public:
 
 	static double getActTime();
 
+	// returns the counter from the avg time measurment
+	const unsigned int getAvgCounter(){ return counter; };
+
 private:
 
 	typedef boost::posix_time::ptime Time;

@@ -77,7 +77,7 @@ void IVMMultiBinary::train(){
 				InLinePercentageFiller::setActMaxTime(5); // max time for sampling
 			}
 			for(unsigned int i = 0; i < amountOfClasses(); ++i){
-				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, i, fitParams)));
+				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, i, durationOfTraining)));
 			}
 			unsigned int counter = 0;
 			while(durationOfTraining > sw.elapsedSeconds()){
@@ -120,7 +120,7 @@ void IVMMultiBinary::train(){
 			int runningCounter = 0;
 			int counterForClass = 0;
 			for(; counterForClass < nrOfParallel; ++counterForClass){
-				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, fitParams)));
+				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, durationOfTraining)));
 				++runningCounter;
 			}
 			unsigned int counter = 0;
@@ -154,7 +154,7 @@ void IVMMultiBinary::train(){
 					InLinePercentageFiller::setActValueAndPrintLine(finished);
 				}
 				if(runningCounter < nrOfParallel && counterForClass < amountOfClasses()){
-					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, fitParams)));
+					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, durationOfTraining)));
 					++counterForClass;
 					++runningCounter;
 				}
@@ -175,13 +175,13 @@ void IVMMultiBinary::train(){
 	}
 }
 
-void IVMMultiBinary::trainInParallel(const int usedIvm, const bool fitParams){
+void IVMMultiBinary::trainInParallel(const int usedIvm, const double trainTime){
 	Eigen::Vector2i usedClasses;
 	usedClasses << m_classOfIVMs[usedIvm], -1;
 	m_ivms[usedIvm]->init(m_storage.storage(),
 			m_numberOfInducingPointsPerIVM, usedClasses, m_doEpUpdate);
 	m_ivms[usedIvm]->getKernel().setSeed((usedIvm + 1) * 459486);
-	const bool ret = m_ivms[usedIvm]->train(fitParams,1);
+	const bool ret = m_ivms[usedIvm]->train(trainTime,1);
 //	m_ivms[usedIvm]->getKernel().setHyperParams(
 //			Settings::getDirectDoubleValue("KernelParam.len"),
 //			Settings::getDirectDoubleValue("KernelParam.fNoise"),

@@ -29,7 +29,7 @@ void InLinePercentageFiller::setActValueAndPrintLine(const int iAct){
 	}
 }
 
-void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const int amountOfCalcedElements, const bool lastElement){
+void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned long amountOfCalcedElements, const bool lastElement){
 	std::cout << "\r                                                                                                                                                                               ";
 	std::cout << "\r";
 	const double seconds = m_sw.elapsedSeconds();

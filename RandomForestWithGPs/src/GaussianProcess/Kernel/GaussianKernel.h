@@ -16,6 +16,7 @@
 
 class GaussianProcessWriter;
 
+
 class GaussianKernel : public KernelBase<GaussianKernelParams> {
 	friend GaussianProcessWriter;
 public:
@@ -62,6 +63,7 @@ public:
 	double kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const;
 
 	double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const;
+
 };
 
 inline

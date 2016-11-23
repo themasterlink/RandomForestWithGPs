@@ -19,7 +19,7 @@ public:
 
 	static void setActValueAndPrintLine(const int iAct);
 
-	static void printLineWithRestTimeBasedOnMaxTime(const int amountOfCalcedElements, const bool lastElement = false);
+	static void printLineWithRestTimeBasedOnMaxTime(const unsigned long amountOfCalcedElements, const bool lastElement = false);
 
 	static void setActPercentageAndPrintLine(const double dAct, const bool lastElement = false);
 

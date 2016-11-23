@@ -34,7 +34,7 @@ public:
 
 private:
 
-	void trainInParallel(const int usedIvm, const bool fitParams);
+	void trainInParallel(const int usedIvm, const double trainTime);
 
 	void predictDataInParallel(const Data& points, const int usedIvm, std::vector< std::vector<double> >* probabilities) const;
 

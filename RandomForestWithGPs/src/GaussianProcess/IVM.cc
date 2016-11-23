@@ -95,7 +95,7 @@ double IVM::cumulativeLog(const double x){
 	return boost::math::erfc(-x / SQRT2) - LOG2;
 }
 
-bool IVM::train(bool findFittingParams, const int verboseLevel){
+bool IVM::train(const double timeForTraining, const int verboseLevel){
 //	if(m_kernel.calcDiagElement(0) == 0){
 //		if(verboseLevel != 0)
 //			printError("The kernel diagonal is 0, this kernel params are invalid:" << m_kernel.prettyString());
@@ -124,7 +124,7 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 		bestParams.readFromFile(kernelFilePath);
 		loadBestParams = true;
 	}
-	if(findFittingParams){
+	if(timeForTraining > 0.){
 		bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 		m_kernel.changeKernelConfig(hasMoreThanOneLengthValue);
 		std::vector<double> means = {10, 1.7, 0.1};
@@ -135,13 +135,12 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 		}
 		m_kernel.setGaussianRandomVariables(means, sds);
 		setDerivAndLogZFlag(true, false);
-		double durationOfTraining = CommandSettings::get_samplingAndTraining();
 		StopWatch sw;
 		double bestLogZ = -DBL_MAX;
 		StopWatch swAvg;
 		m_sampleCounter = 0;
 		if(!loadBestParams){
-			while(sw.elapsedSeconds() < durationOfTraining){
+			while(sw.elapsedSeconds() < timeForTraining){
 				m_kernel.newRandHyperParams();
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 				const bool trained = internalTrain(true, 0);
@@ -154,7 +153,7 @@ bool IVM::train(bool findFittingParams, const int verboseLevel){
 //					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
 				}
 				swAvg.recordActTime();
-				if(m_sampleCounter > 1 && durationOfTraining - (sw.elapsedSeconds() + swAvg.elapsedAvgAsTimeFrame().getSeconds()) < 0.){
+				if(m_sampleCounter > 1 && timeForTraining - (sw.elapsedSeconds() + swAvg.elapsedAvgAsTimeFrame().getSeconds()) < 0.){
 					break;
 				}
 				++m_sampleCounter;
