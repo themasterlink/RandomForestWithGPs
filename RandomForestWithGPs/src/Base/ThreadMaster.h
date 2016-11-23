@@ -33,16 +33,26 @@ public:
 
 	void performedOneTrainingStep(){ ++m_amountOfTrainingsSteps; };
 
-	void setPerformTaskFlag(bool doTask){ m_performTask = doTask; };
+	int amountOfTrainingStepsPerformed() const { return m_amountOfTrainingsSteps; };
+
+	void finishedTask(){ m_performTask = true; };
+
+	bool isTaskFinished(){ return m_performTask; };
+
+	bool shouldTrainingBeAborted(){ return m_abortTraining; };
+
+	void abortTraing(){ m_abortTraining = true; };
 
 	void wait(){
 		boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(m_mutex);
 		m_condition.wait(lock);
 	};
 
-	void notify(){ m_condition.notify_all(); };
+	void notify(){ m_condition.notify_all(); m_sw.startTime(); };
 
 	InfoType getType(){ return m_type; };
+
+	StopWatch& getWatch(){return m_sw;};
 
 private:
 
@@ -54,11 +64,15 @@ private:
 
 	bool m_performTask;
 
+	bool m_abortTraining;
+
 	double m_correctlyClassified;
 
 	int m_amountOfAffectedPoints;
 
 	int m_amountOfTrainingsSteps;
+
+	StopWatch m_sw;
 
 };
 
@@ -85,7 +99,9 @@ private:
 
 	typedef std::list<InformationPackage*> PackageList;
 
-	static PackageList m_packages;
+	static PackageList m_waitingList;
+
+	static PackageList m_runningList;
 
 	static int m_counter;
 
@@ -99,20 +115,6 @@ private:
 
 };
 
-void ThreadMaster::start(){
-	if(m_mainThread == nullptr){
-		setMaxCounter();
-		m_mainThread = new boost::thread(&ThreadMaster::run);
-	}
-}
-
-void ThreadMaster::setFrequence(const double frequence){
-	m_timeToSleep = std::max(1. / frequence, 0.001);
-}
-
-void ThreadMaster::threadHasFinished(InformationPackage* package){
-
-}
 
 
 #endif /* BASE_THREADMASTER_H_ */

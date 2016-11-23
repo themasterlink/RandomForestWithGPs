@@ -23,7 +23,7 @@ IVM::IVM(): m_logZ(0), m_derivLogZ(2), m_dataPoints(0),
 	m_calcLogZ(false), m_calcDerivLogZ(false),
 	m_uniformNr(0, 10, 0),
 	m_useNeighbourComparison(false),
-	m_sampleCounter(0){
+	m_package(nullptr){
 	bool hasLengthMoreThanParam;
 	Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
 	m_kernel.changeKernelConfig(hasLengthMoreThanParam);
@@ -111,6 +111,9 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 			printError("The number of inducing points is equal or below zero: " << m_numberOfInducingPoints);
 		return false;
 	}
+	if(m_package != nullptr){
+		m_package->wait(); // wait here until the thread master tells this training to start
+	}
 	GaussianKernelParams bestParams;
 	std::string folderLocation;
 	if(CommandSettings::get_useFakeData()){
@@ -138,9 +141,8 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 		StopWatch sw;
 		double bestLogZ = -DBL_MAX;
 		StopWatch swAvg;
-		m_sampleCounter = 0;
 		if(!loadBestParams){
-			while(sw.elapsedSeconds() < timeForTraining){
+			while(m_package != nullptr){ // equals a true
 				m_kernel.newRandHyperParams();
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 				const bool trained = internalTrain(true, 0);
@@ -153,10 +155,10 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 //					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
 				}
 				swAvg.recordActTime();
-				if(m_sampleCounter > 1 && timeForTraining - (sw.elapsedSeconds() + swAvg.elapsedAvgAsTimeFrame().getSeconds()) < 0.){
+				m_package->performedOneTrainingStep(); // adds a one to the counter
+				if(m_package->shouldTrainingBeAborted()){
 					break;
 				}
-				++m_sampleCounter;
 			}
 			if(Settings::getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
 				bestParams.writeToFile(kernelFilePath);
@@ -174,10 +176,14 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 				printWarning("The optimization step could not be performed!");
 			}
 		}
-		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
-		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+		if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
+			DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
+			openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+		}
 		m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
-		m_sampleCounter = -1; // for checking if the training is finished!
+		if(m_package != nullptr){
+			m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
+		}
 		return ret;
 	}else{
 //		setDerivAndLogZFlag(false, false);
@@ -193,7 +199,9 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 //		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
 //		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
 		m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
-		m_sampleCounter = -1; // for checking if the training is finished!
+		if(m_package != nullptr){
+			m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
+		}
 		return ret;
 	}
 }

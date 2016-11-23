@@ -10,6 +10,7 @@
 #include <boost/program_options.hpp>
 #include "Base/CommandSettings.h"
 #include "Base/Settings.h"
+#include "Base/ThreadMaster.h"
 /*#include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/xfeatures2d.hpp>
@@ -73,6 +74,7 @@ void handleProgrammOptions(int ac, char* av[]){
 int main(int ac, char* av[]){
 	handleProgrammOptions(ac,av);
 	Settings::init("../Settings/init.json");
+	ThreadMaster::start(); // must be performed after Settings init!
 	std::cout << RESET << "Start" << std::endl;
 
 	if(CommandSettings::get_onlyDataView()){
@@ -87,6 +89,8 @@ int main(int ac, char* av[]){
 		system("open justData.svg");
 		exit(0);
 	}
+
+
 /*
     const int nr = 300;
     Eigen::MatrixXd Sigma, controlSigma;

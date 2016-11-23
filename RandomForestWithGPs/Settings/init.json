@@ -53,7 +53,7 @@
     },
     "Training": {
         "path": "..\/fakeData\/",
-        "amount": 400,
+        "amount": 200,
         "dim": 2
     },
     "RealData": {
@@ -86,7 +86,7 @@
     },
     
     "main": {
-    	"type": "ORF"
+    	"type": "multiIvm"
     }
     
 }

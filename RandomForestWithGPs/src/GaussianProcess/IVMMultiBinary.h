@@ -10,6 +10,7 @@
 
 #include "IVM.h"
 #include "../Base/Predictor.h"
+#include "../Base/ThreadMaster.h"
 #include "../Data/OnlineStorage.h"
 
 class IVMMultiBinary  : public PredictorMultiClass, public Observer {
@@ -34,7 +35,7 @@ public:
 
 private:
 
-	void trainInParallel(const int usedIvm, const double trainTime);
+	void trainInParallel(const int usedIvm, const double trainTime, InformationPackage* package);
 
 	void predictDataInParallel(const Data& points, const int usedIvm, std::vector< std::vector<double> >* probabilities) const;
 

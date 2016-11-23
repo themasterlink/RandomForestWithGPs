@@ -68,34 +68,35 @@ void IVMMultiBinary::train(){
 		StopWatch sw;
 		std::vector<int> counterRes(amountOfClasses(), 0);
 		std::vector<bool> stillWorking(amountOfClasses(), true);
-		double durationOfWholeTraining = durationOfTraining * amountOfClasses() / (double) nrOfParallel;
-		if(amountOfClasses() <= nrOfParallel){
+		std::vector<InformationPackage*> packages(amountOfClasses());
+		for(unsigned int i = 0; i < amountOfClasses(); ++i){
+			const double correctlyClassified = 0.; // TODO in future this value can be determined before hand!
+			packages[i] = new InformationPackage(InformationPackage::IVM_TRAIN, correctlyClassified, m_storage.size());
+		}
+		double durationOfWholeTraining = durationOfTraining;
+		if(amountOfClasses() > nrOfParallel){
+			durationOfWholeTraining *= ceil(amountOfClasses() / nrOfParallel);
+		}
+//		if(amountOfClasses() <= nrOfParallel){
 			const bool fitParams = CommandSettings::get_samplingAndTraining();
 			if(fitParams){
-				InLinePercentageFiller::setActMaxTime(durationOfTraining);
+				InLinePercentageFiller::setActMaxTime(durationOfWholeTraining);
 			}else{
 				InLinePercentageFiller::setActMaxTime(5); // max time for sampling
 			}
 			for(unsigned int i = 0; i < amountOfClasses(); ++i){
-				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, i, durationOfTraining)));
+				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, i, durationOfTraining, packages[i])));
 			}
 			unsigned int counter = 0;
-			while(durationOfTraining > sw.elapsedSeconds()){
+			while(durationOfWholeTraining > sw.elapsedSeconds()){
 				counter = 0;
 				bool stillOneRunning = false;
 				for(unsigned int i = 0; i < amountOfClasses(); ++i){
-					if(stillWorking[i]){
-						const int c = m_ivms[i]->getSampleCounter();
-						if(c > -1){
-							stillOneRunning = true;
-							counter += c;
-							counterRes[i] = c;
-						}else{
-							stillWorking[i] = false;
-						}
-					}else{
-						counter += counterRes[i];
+					if(!packages[i]->isTaskFinished()){
+						stillOneRunning = true;
 					}
+					const int c = packages[i]->amountOfTrainingStepsPerformed();
+					counter += c;
 				}
 				if(!stillOneRunning){
 					break;
@@ -105,81 +106,83 @@ void IVMMultiBinary::train(){
 			}
 			counter = 0;
 			for(unsigned int i = 0; i < amountOfClasses(); ++i){
-				counter += m_ivms[i]->getSampleCounter();
+				counter += packages[i]->amountOfTrainingStepsPerformed();
 			}
 			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
 			group.join_all();
-		}else{
-			const bool fitParams = CommandSettings::get_samplingAndTraining();
-			if(fitParams){
-				InLinePercentageFiller::setActMaxTime(durationOfWholeTraining);
-			}else{
-				InLinePercentageFiller::setActMax(amountOfClasses() + 1);
-			}
-			// initial start of nrOfParallel threads
-			int runningCounter = 0;
-			int counterForClass = 0;
-			for(; counterForClass < nrOfParallel; ++counterForClass){
-				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, durationOfTraining)));
-				++runningCounter;
-			}
-			unsigned int counter = 0;
-			while(true){
-				counter = 0;
-				unsigned int finished = 0;
-				bool stillOneRunning = false;
-				for(unsigned int i = 0; i < amountOfClasses(); ++i){
-					if(stillWorking[i]){
-						const int c = m_ivms[i]->getSampleCounter();
-						if(c > -1){
-							stillOneRunning = true;
-							counter += c;
-							counterRes[i] = c;
-						}else{
-							stillWorking[i] = false;
-							--runningCounter;
-							counter += counterRes[i];
-						}
-					}else{
-						++finished;
-						counter += counterRes[i];
-					}
-				}
-				if(!stillOneRunning){
-					break;
-				}
-				if(fitParams){
-					InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
-				}else{
-					InLinePercentageFiller::setActValueAndPrintLine(finished);
-				}
-				if(runningCounter < nrOfParallel && counterForClass < amountOfClasses()){
-					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, durationOfTraining)));
-					++counterForClass;
-					++runningCounter;
-				}
-				usleep(0.1 * 1e6);
-			}
-			counter = 0;
-			for(unsigned int i = 0; i < amountOfClasses(); ++i){
-				counter += m_ivms[i]->getSampleCounter();
-			}
-			if(fitParams){
-				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
-			}else{
-				InLinePercentageFiller::setActValueAndPrintLine(amountOfClasses());
-			}
-			group.join_all();
-		}
+//		}else{
+//			const bool fitParams = CommandSettings::get_samplingAndTraining();
+//			if(fitParams){
+//				InLinePercentageFiller::setActMaxTime(durationOfWholeTraining);
+//			}else{
+//				InLinePercentageFiller::setActMax(amountOfClasses() + 1);
+//			}
+//			// initial start of nrOfParallel threads
+//			int runningCounter = 0;
+//			int counterForClass = 0;
+//			for(; counterForClass < nrOfParallel; ++counterForClass){
+//				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, durationOfTraining)));
+//				++runningCounter;
+//			}
+//			unsigned int counter = 0;
+//			while(true){
+//				counter = 0;
+//				unsigned int finished = 0;
+//				bool stillOneRunning = false;
+//				for(unsigned int i = 0; i < amountOfClasses(); ++i){
+//					if(stillWorking[i]){
+//						const int c = m_ivms[i]->getSampleCounter();
+//						if(c > -1){
+//							stillOneRunning = true;
+//							counter += c;
+//							counterRes[i] = c;
+//						}else{
+//							stillWorking[i] = false;
+//							--runningCounter;
+//							counter += counterRes[i];
+//						}
+//					}else{
+//						++finished;
+//						counter += counterRes[i];
+//					}
+//				}
+//				if(!stillOneRunning){
+//					break;
+//				}
+//				if(fitParams){
+//					InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
+//				}else{
+//					InLinePercentageFiller::setActValueAndPrintLine(finished);
+//				}
+//				if(runningCounter < nrOfParallel && counterForClass < amountOfClasses()){
+//					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, durationOfTraining)));
+//					++counterForClass;
+//					++runningCounter;
+//				}
+//				usleep(0.1 * 1e6);
+//			}
+//			counter = 0;
+//			for(unsigned int i = 0; i < amountOfClasses(); ++i){
+//				counter += m_ivms[i]->getSampleCounter();
+//			}
+//			if(fitParams){
+//				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
+//			}else{
+//				InLinePercentageFiller::setActValueAndPrintLine(amountOfClasses());
+//			}
+//			group.join_all();
+//		}
 		m_firstTraining = false;
 	}
 }
 
-void IVMMultiBinary::trainInParallel(const int usedIvm, const double trainTime){
+void IVMMultiBinary::trainInParallel(const int usedIvm, const double trainTime, InformationPackage* package){
 	Eigen::Vector2i usedClasses;
 	usedClasses << m_classOfIVMs[usedIvm], -1;
+	m_ivms[usedIvm]->setInformationPackage(package);
 	m_ivms[usedIvm]->init(m_storage.storage(),
 			m_numberOfInducingPointsPerIVM, usedClasses, m_doEpUpdate);
+	ThreadMaster::appendThreadToList(package);
 	m_ivms[usedIvm]->getKernel().setSeed((usedIvm + 1) * 459486);
 	const bool ret = m_ivms[usedIvm]->train(trainTime,1);
 //	m_ivms[usedIvm]->getKernel().setHyperParams(

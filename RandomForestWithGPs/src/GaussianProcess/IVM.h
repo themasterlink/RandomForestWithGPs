@@ -12,6 +12,7 @@
 #include <boost/math/distributions/normal.hpp> // for normal_distribution
 #include <list>
 #include "Kernel/GaussianKernel.h"
+#include "../Base/ThreadMaster.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
 
 class IVM {
@@ -49,7 +50,7 @@ public:
 
 	unsigned int getLabelForMinusOne() const;
 
-	int getSampleCounter() const{ return m_sampleCounter; };
+	void setInformationPackage(InformationPackage* package){ m_package = package; };
 
 	virtual ~IVM();
 
@@ -102,7 +103,8 @@ private:
 	RandomUniformNr m_uniformNr;
 
 	bool m_useNeighbourComparison;
-	int m_sampleCounter;
+
+	InformationPackage* m_package;
 };
 
 #endif /* GAUSSIANPROCESS_IVM_H_ */
