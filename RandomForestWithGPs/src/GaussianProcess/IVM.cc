@@ -152,6 +152,21 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 				if(trained && bestLogZ < m_logZ){
 					m_kernel.getCopyOfParams(bestParams);
 					bestLogZ = m_logZ;
+					// perform a simple test
+					// go over a bunch of points to test it
+					int amountOfCorrectValues = 0;
+					int amountOfChecks = 0;
+					for(unsigned int i = m_uniformNr(); i < m_dataPoints; i += m_uniformNr()){
+						const int label = m_data[i]->getLabel();
+						const double prob = predict(*m_data[i]);
+						if(label == getLabelForOne() && 0.5 < prob){
+							++amountOfCorrectValues;
+						}else if((getLabelForMinusOne() == -1 || getLabelForMinusOne() == label) && 0.5 > prob){
+							++amountOfCorrectValues;
+						}
+						++amountOfChecks;
+					}
+					m_package->changeCorrectlyClassified(amountOfCorrectValues / (double) amountOfChecks * 100.);
 //					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
 				}
 				swAvg.recordActTime();
