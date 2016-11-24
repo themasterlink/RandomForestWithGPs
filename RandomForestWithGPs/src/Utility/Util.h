@@ -17,6 +17,7 @@
 #include <vector>
 #include "StopWatch.h"
 #include "InLinePercentageFiller.h"
+#include "../Base/ScreenOutput.h"
 #include "boost/filesystem.hpp"
 
 #define RESET   "\033[0m"
@@ -76,19 +77,19 @@ inline void openFileInViewer(const std::string& filename){
 		for(int i = 0; i < numArgs; ++i)\
 			resultString += p[i]; \
 		std::cout << resultString << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl; \
-	}while(0); \
+	}while(0) \
 
 #define printError(message) \
-	std::cout << RED << "Error in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << RESET << message << std::endl \
+	do{	std::stringstream str; str << "Error in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message; ScreenOutput::printErrorLine(str.str()); }while(false) \
 
 #define printWarning(message) \
-	std::cout << YELLOW << "Warning in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << RESET << message << std::endl \
+	printOnScreen("Warning in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message) \
 
 #define printLine() \
-		std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << std::endl \
+	printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__)) \
 
 #define printDebug(message) \
-	std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl \
+	printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message) \
 
 template<class T> const T& min(const T& a, const T& b){
 	return !(b < a) ? a : b;     // or: return !comp(b,a)?a:b; for version (2)

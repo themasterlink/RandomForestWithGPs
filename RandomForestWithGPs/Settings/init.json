@@ -24,7 +24,7 @@
         "doEpUpdate": "false",
         "lambda": 0.5,
         "nrOfInducingPoints": 100,
-        "desiredMargin": 0.01,
+        "desiredMargin": 0.001,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
         "Training": {
@@ -49,7 +49,13 @@
     "KernelParam": {
     	"len": 1.4,
     	"fNoise": 1.2,
-    	"sNoise": 0.01
+    	"sNoise": 0.01,
+    	"lenMean": 1.4,
+    	"lenVar": 0.5,
+    	"fNoiseMean": 1.0,
+    	"fNoiseVar": 0.5,
+    	"sNoiseMean": 0.1,
+    	"sNoiseVar": 0.01
     },
     "Training": {
         "path": "..\/fakeData\/",

@@ -130,12 +130,12 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 	if(timeForTraining > 0.){
 		bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 		m_kernel.changeKernelConfig(hasMoreThanOneLengthValue);
-		std::vector<double> means = {10, 1.7, 0.1};
-		std::vector<double> sds = {8, 0.5, 0.01};
-		if(CommandSettings::get_useFakeData()){
-			means[0] = 1.7; //0.888651;
-			sds[0] = 0.5;
-		}
+		std::vector<double> means = {Settings::getDirectDoubleValue("KernelParam.lenMean"),
+				Settings::getDirectDoubleValue("KernelParam.fNoiseMean"),
+				Settings::getDirectDoubleValue("KernelParam.sNoiseMean")};
+		std::vector<double> sds = {Settings::getDirectDoubleValue("KernelParam.lenVar"),
+				Settings::getDirectDoubleValue("KernelParam.fNoiseVar"),
+				Settings::getDirectDoubleValue("KernelParam.sNoiseVar")};
 		m_kernel.setGaussianRandomVariables(means, sds);
 		setDerivAndLogZFlag(true, false);
 		StopWatch sw;
@@ -144,6 +144,9 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 		if(!loadBestParams){
 			while(m_package != nullptr){ // equals a true
 				m_kernel.newRandHyperParams();
+				std::stringstream str;
+				str << "Try params: " << m_kernel.getHyperParams();
+				m_package->printLineToScreenForThisThread(str.str());
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 				const bool trained = internalTrain(true, 0);
 //				if(!trained){
@@ -154,39 +157,53 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 					bestLogZ = m_logZ;
 					// perform a simple test
 					// go over a bunch of points to test it
-					int amountOfCorrectValues = 0;
-					int amountOfChecks = 0;
+					int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
+					int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
 					for(unsigned int i = m_uniformNr(); i < m_dataPoints; i += m_uniformNr()){
 						const int label = m_data[i]->getLabel();
 						const double prob = predict(*m_data[i]);
-						if(label == getLabelForOne() && 0.5 < prob){
-							++amountOfCorrectValues;
-						}else if((getLabelForMinusOne() == -1 || getLabelForMinusOne() == label) && 0.5 > prob){
-							++amountOfCorrectValues;
+						if(label == getLabelForOne()){
+							if(prob < 0.5){
+								++amountOfOnesCorrect;
+							}
+							++amountOfOneChecks;
+						}else{
+							if(0.5 > prob){
+								++amountOfMinusOnesCorrect;
+							}
+							++amountOfMinusOneChecks;
 						}
-						++amountOfChecks;
 					}
-					double correctness = amountOfCorrectValues / (double) amountOfChecks * 100.;
+					 // both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
+					double correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
 					if(correctness > 90.){
 						// check all points
-						amountOfChecks = 0;
-						amountOfCorrectValues = 0;
+						amountOfOneChecks = amountOfOnesCorrect = 0;
+						amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
 						for(unsigned int i = 0; i < m_dataPoints; ++i){
 							const int label = m_data[i]->getLabel();
 							const double prob = predict(*m_data[i]);
-							if(label == getLabelForOne() && 0.6 < prob){
-								++amountOfCorrectValues;
-							}else if(label != getLabelForOne() && 0.4 > prob){ // should be not the label for one
-								++amountOfCorrectValues;
+							if(label == getLabelForOne()){
+								if(prob < 0.5){
+									++amountOfOnesCorrect;
+								}
+								++amountOfOneChecks;
+							}else{
+								if(0.5 > prob){
+									++amountOfMinusOnesCorrect;
+								}
+								++amountOfMinusOneChecks;
 							}
-							++amountOfChecks;
 						}
-						correctness = amountOfCorrectValues / (double) amountOfChecks * 100.;
+						correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
 						if(correctness > 98.){
 							m_package->abortTraing();
 						}
 					}
 					m_package->changeCorrectlyClassified(correctness);
+					std::stringstream str;
+					str << "New best params: " << bestParams << ", with correctness of: " << correctness;
+					m_package->printLineToScreenForThisThread(str.str());
 //					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
 				}
 				swAvg.recordActTime();
@@ -201,7 +218,11 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 				bestParams.writeToFile(kernelFilePath);
 			}
 		}
-		std::cout << "logZ: " << bestLogZ << ", "<< bestParams << std::endl;
+		if(bestLogZ == -DBL_MAX){
+			printError("This ivm could not find any parameter set in the given time, which could be trained without an error!");
+			return false;
+		}
+		printOnScreen("logZ: " << bestLogZ << ", "<< bestParams);
 		m_kernel.setHyperParamsWith(bestParams);
 		setDerivAndLogZFlag(false, false);
 		m_uniformNr.setMinAndMax(1, 1); // final training with all points considered
@@ -209,9 +230,9 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 		if(ret && !m_doEPUpdate){
 			// train the whole active set again but in the oposite direction similiar to an ep step
 			const bool ret2 = trainOptimizeStep(0);
-//			if(!ret2){
-//				printWarning("The optimization step could not be performed!");
-//			}
+			if(!ret2){
+				printWarning("The optimization step could not be performed!");
+			}
 		}
 		if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
 			DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
@@ -358,9 +379,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		}
 		if(argmax == -1 && m_J.size() > 0){
 			if(verboseLevel != 0){
-				for(List<int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
-					std::cout << "(" << *it << ", " << (double) m_y[*it] << ")" << std::endl;
-				}
+//				for(List<int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
+//					std::cout << "(" << *it << ", " << (double) m_y[*it] << ")" << std::endl;
+//				}
 				std::string classRes = "";
 				if(fraction < m_desiredPoint - m_desiredMargin){
 					classRes = "1";
@@ -425,15 +446,6 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		}
 		//zeta -= ((double) nu[k]) * s_nk.cwiseProduct(s_nk);
 		//mu += ((double) g[k]) * s_nk; // <=> mu += g[k] * s_nk;
-		double min1, max1;
-		DataConverter::getMinMax(s_nk, min1, max1);
-		if(min1 == max1){
-			std::cout << "min and max of s_nk are the same: " << min1 << std::endl;
-			DataConverter::getMinMax(k_nk, min1, max1);
-			if(k > 0 && min1 == max1){
-				std::cout << "min and max of k_nk are the same with: " << m_kernel.getHyperParams() << ", k_nk[i]: " << min1 << std::endl;
-			}
-		}
 //		std::cout << "s_nk: " << min1 << ", " << max1 << std::endl;
 		for(unsigned int i = 0; i < m_dataPoints; ++i){ // TODO for known active set only the relevant values have to been updated!
 			zeta[i] -= nu[k] * (s_nk[i] * s_nk[i]); // <=> zeta -= nu[k] * s_nk.cwiseProduct(s_nk); // <=> diag(A^new) = diag(A) - (u^2)_j

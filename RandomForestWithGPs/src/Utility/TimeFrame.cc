@@ -47,13 +47,19 @@ void TimeFrame::setWithSeconds(const double seconds){
 
 std::ostream& operator<<(std::ostream& stream, const TimeFrame& time){
 	if(time.m_hours > 0 && time.m_minutes > 0){
-		stream << time.m_hours << " h, " << time.m_minutes << " min and " << time.m_seconds << " sec";
+		char times[40];
+		sprintf(times, "%d h, %d min, %2.2f sec", time.m_hours, time.m_minutes, time.m_seconds);
+		stream << times;
 		return stream;
 	}else if(time.m_minutes > 0){
-		stream << time.m_minutes << " min and " << time.m_seconds << " sec";
+		char times[40];
+		sprintf(times, "%d min, %2.2f sec", time.m_minutes, time.m_seconds);
+		stream << times;
 		return stream;
 	}else{
-		stream << time.m_seconds << " sec";
+		char seconds[14];
+		sprintf(seconds, "%2.2f sec", time.m_seconds);
+		stream << seconds;
 		return stream;
 	}
 }

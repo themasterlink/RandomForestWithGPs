@@ -9,6 +9,7 @@
 #include "ClassKnowledge.h"
 #include "DataReader.h"
 #include "../Base/Settings.h"
+#include "../Base/ScreenOutput.h"
 #include "../Base/CommandSettings.h"
 #include "../Data/DataConverter.h"
 
@@ -106,7 +107,7 @@ void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& trai
 		}
 	}
 	// to guarantee that the append block update is called which invokes the training
-	std::cout << "For training: " << forTraining.size() << std::endl;
+	printOnScreen("For training: " << forTraining.size());
 	train.append(forTraining);
 	test.append(forTesting);
 }

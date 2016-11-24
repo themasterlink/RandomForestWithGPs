@@ -34,7 +34,7 @@ public:
 
 	static bool getDirectBoolValue(const std::string& nameOfValue);
 
-	static bool getDirectDoubleValue(const std::string& nameOfValue);
+	static double getDirectDoubleValue(const std::string& nameOfValue);
 
 private:
 	Settings();

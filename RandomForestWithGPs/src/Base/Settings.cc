@@ -97,7 +97,7 @@ bool Settings::getDirectBoolValue(const std::string& nameOfValue){
 }
 
 
-bool Settings::getDirectDoubleValue(const std::string& nameOfValue){
+double Settings::getDirectDoubleValue(const std::string& nameOfValue){
 	double value;
 	getValue(nameOfValue, value);
 	return value;

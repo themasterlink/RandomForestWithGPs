@@ -11,10 +11,12 @@
 #include <boost/thread.hpp>
 #include <boost/interprocess/sync/interprocess_condition.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
-#include "../Utility/Util.h"
-#include "Settings.h"
+#include "../Utility/StopWatch.h"
+
+class ScreenOutput;
 
 class InformationPackage {
+	friend ScreenOutput;
 public:
 	enum InfoType {
 		ORF_TRAIN = 0,
@@ -59,6 +61,10 @@ public:
 
 	double getWorkedAmountOfSeconds();
 
+	void printLineToScreenForThisThread(const std::string& line){ m_lineMutex.lock(); m_lines.push_back(line); m_lineMutex.unlock(); };
+
+	void setStandartInformation(const std::string& line){ m_lineMutex.lock(); m_standartInfo = line; m_lineMutex.unlock(); };
+
 private:
 
 	const InfoType m_type;
@@ -83,11 +89,18 @@ private:
 
 	double m_workedTime;
 
+	std::list<std::string> m_lines;
+
+	std::string m_standartInfo;
+
+	boost::mutex m_lineMutex;
+
 	StopWatch m_sw;
 
 };
 
 class ThreadMaster {
+	friend ScreenOutput;
 public:
 
 	typedef InformationPackage::InfoType InfoType;

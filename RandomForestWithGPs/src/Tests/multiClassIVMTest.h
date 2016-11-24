@@ -15,6 +15,7 @@
 #include "../GaussianProcess/IVMMultiBinary.h"
 #include "../GaussianProcess/BayesOptimizerIVM.h"
 #include "../Base/Settings.h"
+#include "../Base/ScreenOutput.h"
 #include "../Utility/ConfusionMatrixPrinter.h"
 #include "../Base/CommandSettings.h"
 #include <chrono>
@@ -76,11 +77,11 @@ void executeForMutliClassIVM(){
 	const int firstPoints = 10000000; // all points
 	TotalStorage::readData(firstPoints);
 	DataSets datas;
-	std::cout << "TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << std::endl;
+	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize());
 	const int trainAmount = 0.75 * TotalStorage::getSmallestClassSize() * TotalStorage::getAmountOfClass();
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;
-	std::cout << "Finish reading " << std::endl;
+	printOnScreen("Finish reading");
 
 	bool doEpUpdate;
 	Settings::getValue("IVM.doEpUpdate", doEpUpdate);
@@ -90,7 +91,7 @@ void executeForMutliClassIVM(){
 
 	// starts the training by its own
 	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
-	std::cout << "Finish training" << std::endl;
+	printOnScreen("Finish training");
 
 	std::cout << "On " << train.storage().size() << " points from trainings data:" << std::endl;
 	testIvm(ivms, train.storage());

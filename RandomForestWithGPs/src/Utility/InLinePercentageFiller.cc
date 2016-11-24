@@ -7,6 +7,7 @@
 
 #include "InLinePercentageFiller.h"
 #include "Util.h"
+#include "../Base/ScreenOutput.h"
 
 int InLinePercentageFiller::m_max = 0;
 double InLinePercentageFiller::m_dMax = 0;
@@ -30,54 +31,50 @@ void InLinePercentageFiller::setActValueAndPrintLine(const int iAct){
 }
 
 void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned long amountOfCalcedElements, const bool lastElement){
-	std::cout << "\r                                                                                                                                                                               ";
-	std::cout << "\r";
+	std::stringstream str;
 	const double seconds = m_sw.elapsedSeconds();
 	const double dAct = !lastElement ? std::min(seconds / m_dMax * 100., 100.) : 100.;
 	for(int i = 0; i < 100; ++i){
 		if(i <= dAct){
-			std::cout << "#";
+			str << "#";
 		}else{
-			std::cout << " ";
+			str << " ";
 		}
 	}
-	printf("|  %3.2f %%", dAct);
+	char buffer [20];
+	sprintf(buffer, "| %3.2f", dAct); // all other methods are ugly
+	str << buffer << " %%";
 	if(dAct > 0. && dAct < 100.){
-		std::cout << ", rest time is: " << TimeFrame(m_dMax - seconds);
+		str << ", rest time is: " << TimeFrame(m_dMax - seconds);
 	}else if(dAct >= 100.){
-		std::cout << ", done in: " << m_sw.elapsedAsTimeFrame();
+		str <<", done in: " << m_sw.elapsedAsTimeFrame();
 	}
 	if(amountOfCalcedElements > 0){
-		std::cout << ", " << amountOfCalcedElements << " calculated elements";
+		str << ", " << amountOfCalcedElements << " calculated elements";
 	}
-	flush(std::cout);
-	if(lastElement){
-		std::cout << std::endl;
-	}
+	ScreenOutput::printInProgressLine(str.str());
 }
 
 void InLinePercentageFiller::setActPercentageAndPrintLine(const double dAct, const bool lastElement){
 	if(dAct >= 0 && dAct <= 100.0){
-		std::cout << "\r                                                                                                                                                                               ";
-		std::cout << "\r";
+		std::stringstream str;
 		for(int i = 0; i < 100; ++i){
 			if(i <= dAct){
-				std::cout << "#";
+				str << "#";
 			}else{
-				std::cout << " ";
+				str << " ";
 			}
 		}
-		printf("|  %3.2f %%", dAct);
+		char buffer [20];
+		sprintf(buffer, "| %3.2f", dAct); // all other methods are ugly
+		str << buffer << " %";
 		if(dAct > 0. && dAct < 100.){
 			TimeFrame frame = m_sw.elapsedAsTimeFrame();
-			std::cout << ", rest time is: " << (frame * (1. / dAct * 100.) - frame);
+			str << ", rest time is: " << (frame * (1. / dAct * 100.) - frame);
 		}else if(dAct >= 100.){
-			std::cout << ", done in: " << m_sw.elapsedAsTimeFrame();
+			str << ", done in: " << m_sw.elapsedAsTimeFrame();
 		}
-		flush(std::cout);
-		if(lastElement){
-			std::cout << std::endl;
-		}
+		ScreenOutput::printInProgressLine(str.str());
 	}else{
 		printError("The value is not in percent: " << dAct);
 	}

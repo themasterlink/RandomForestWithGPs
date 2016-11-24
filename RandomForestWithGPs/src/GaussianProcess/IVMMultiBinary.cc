@@ -101,7 +101,7 @@ void IVMMultiBinary::train(){
 				if(!stillOneRunning){
 					break;
 				}
-//				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
+				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
 				usleep(0.15 * 1e6);
 			}
 			counter = 0;
@@ -180,6 +180,7 @@ void IVMMultiBinary::trainInParallel(const int usedIvm, const double trainTime, 
 	Eigen::Vector2i usedClasses;
 	usedClasses << m_classOfIVMs[usedIvm], -1;
 	m_ivms[usedIvm]->setInformationPackage(package);
+	package->setStandartInformation("Ivm training for class: " + number2String(usedIvm));
 	m_ivms[usedIvm]->init(m_storage.storage(),
 			m_numberOfInducingPointsPerIVM, usedClasses, m_doEpUpdate);
 	ThreadMaster::appendThreadToList(package);

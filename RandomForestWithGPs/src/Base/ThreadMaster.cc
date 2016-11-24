@@ -6,6 +6,8 @@
  */
 
 #include "ThreadMaster.h"
+#include "../Utility/Util.h"
+#include "Settings.h"
 #include "CommandSettings.h"
 
 InformationPackage::InformationPackage(InfoType type,
@@ -136,7 +138,7 @@ void ThreadMaster::run(){
 		bool selectedValueWasUsed = false;
 		if(m_counter < m_maxCounter){
 			if(selectedValue != m_waitingList.end()){
-				std::cout << "A thread was added to running!" << std::endl;
+//				std::cout << "A thread was added to running!" << std::endl;
 				selectedValueWasUsed = true;
 				m_runningList.push_back(*selectedValue); // first add to the running list
 				++m_counter; // increase the counter of running threads
@@ -149,7 +151,7 @@ void ThreadMaster::run(){
 			// for each running element check if execution is finished
 			if((*it)->getWorkedAmountOfSeconds() > 5.0){ // each training have to take at least 5 seconds!
 				if((*it)->getWorkedAmountOfSeconds() > CommandSettings::get_samplingAndTraining() && !(*it)->shouldTrainingBeAborted()){
-					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
+//					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
 					(*it)->abortTraing(); // break the training
 				}
 				if(selectedValue != m_waitingList.end() && !selectedValueWasUsed){
@@ -158,13 +160,13 @@ void ThreadMaster::run(){
 							// hold this training and start the other one
 							(*it)->pauseTheTraining(); // pause the actual training
 							selectedValueWasUsed = true;
-							std::cout << "A thread should wait!" << std::endl;
+//							std::cout << "A thread should wait!" << std::endl;
 						}
 					}
 				}
 				if((*it)->isWaiting()){
 					// there is a running thread which waits -> put him back in the waiting list
-					std::cout << "A thread was moved from waiting to paused!" << std::endl;
+//					std::cout << "A thread was moved from waiting to paused!" << std::endl;
 					PackageList::const_iterator copyIt = it;
 					m_waitingList.push_back(*it); // append at the waiting list
 					--it; // go one back, in the end of the loop the next element will be taken
@@ -173,7 +175,7 @@ void ThreadMaster::run(){
 					continue; // without continue the first element could be made to the "zero" element, which does not exists -> seg fault
 				}
 				if((*it)->isTaskFinished()){
-					std::cout << "A thread is finished!" << std::endl;
+//					std::cout << "A thread is finished!" << std::endl;
 					PackageList::const_iterator copyIt = it; // perform copy
 					--it; // go one back, in the end of the loop the next element will be taken
 					m_runningList.erase(copyIt); // erase the copied element

@@ -67,7 +67,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		}
 		input.close();
 	}else if(boost::filesystem::exists(inputName + ".txt")){
-		std::cout << "Read txt" << std::endl;
+		printOnScreen("Read txt");
 		inputPath += ".txt";
 		std::ifstream input(inputPath);
 		if(input.is_open()){

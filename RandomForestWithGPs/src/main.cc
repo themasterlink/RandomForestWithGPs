@@ -16,6 +16,7 @@
 #include <opencv2/xfeatures2d.hpp>
 */
 #include "Data/DataBinaryWriter.h"
+#include "Base/ScreenOutput.h"
 /*
 void compress(const std::string& path){
 	StopWatch sw;
@@ -71,11 +72,18 @@ void handleProgrammOptions(int ac, char* av[]){
 	cv::imwrite("../sift_result.jpg", output);
 */
 
+void quit()
+{
+  endwin();
+}
+
+
 int main(int ac, char* av[]){
 	handleProgrammOptions(ac,av);
 	Settings::init("../Settings/init.json");
 	ThreadMaster::start(); // must be performed after Settings init!
-	std::cout << RESET << "Start" << std::endl;
+	ScreenOutput::start(); // should be started after ThreadMaster and Settings
+//	std::cout << RESET << "Start" << std::endl;
 
 	if(CommandSettings::get_onlyDataView()){
 		const int firstPoints = 10000000; // all points
@@ -84,7 +92,7 @@ int main(int ac, char* av[]){
 		OnlineStorage<ClassPoint*> test;
 		// starts the training by its own
 		TotalStorage::getOnlineStorageCopyWithTest(train, test, TotalStorage::getTotalSize());
-		std::cout << "TotalStorage::getTotalSize(): " << TotalStorage::getTotalSize() << std::endl;
+		printOnScreen("TotalStorage::getTotalSize(): " << TotalStorage::getTotalSize());
 		DataWriterForVisu::writeSvg("justData.svg", train.storage());
 		system("open justData.svg");
 		exit(0);
@@ -143,23 +151,21 @@ int main(int ac, char* av[]){
 	if(useGP){
 		std::string type;
 		Settings::getValue("main.type", type);
-		if(type == "binaryIvm"){
 		StopWatch sw;
-		executeForBinaryClassIVM();
-		std::cout << "For IVM: " << sw.elapsedAsTimeFrame() << std::endl;
+		if(type == "binaryIvm"){
+			executeForBinaryClassIVM();
+			printOnScreen("For IVM: " << sw.elapsedAsTimeFrame());
 		}else if(type == "multiIvm"){
-			StopWatch sw;
 			executeForMutliClassIVM();
-			std::cout << "For IVMs: " << sw.elapsedAsTimeFrame() << std::endl;
+			printOnScreen("For IVMs: " << sw.elapsedAsTimeFrame());
 		}else if(type == "ORF"){
-			StopWatch sw;
 			executeForBinaryClassORF();
-			std::cout << "For ORFs: " << sw.elapsedAsTimeFrame() << std::endl;
+			printOnScreen("For ORFs: " << sw.elapsedAsTimeFrame());
 		}else{
 			printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
 		}
-		return 0;
 	}
+	getchar();
 
 	return 0;
 }
