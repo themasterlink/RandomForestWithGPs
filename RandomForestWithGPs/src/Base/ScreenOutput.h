@@ -12,7 +12,6 @@
 #include "ThreadMaster.h"
 #include "../Utility/StopWatch.h"
 
-#define HEIGHT_OF_THREAD_INFO 60
 #define HEIGHT_OF_GENERAL_INFO 20
 #define MAX_HEIGHT_OF_ERROR 10
 

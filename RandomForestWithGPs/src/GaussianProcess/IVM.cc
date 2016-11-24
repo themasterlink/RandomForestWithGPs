@@ -145,12 +145,13 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 			while(m_package != nullptr){ // equals a true
 				m_kernel.newRandHyperParams();
 				std::stringstream str;
-				str << "Try params: " << m_kernel.getHyperParams() << "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est ";
-				m_package->printLineToScreenForThisThread(str.str());
-				m_package->printLineToScreenForThisThread(str.str());
+				str << "Try params: " << m_kernel.getHyperParams();
 				m_package->printLineToScreenForThisThread(str.str());
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 				const bool trained = internalTrain(true, 0);
+				if(m_uniformNr() % 10 == 0){
+					printError("Just a test Error");
+				}
 //				if(!trained){
 //					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
 //				}

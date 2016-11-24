@@ -27,6 +27,7 @@ ScreenOutput::~ScreenOutput() {
 }
 
 void ScreenOutput::quitForScreenMode(){
+	clear();
 	endwin();
 }
 
@@ -49,11 +50,20 @@ void ScreenOutput::run(){
 	std::string mode;
 	Settings::getValue("main.type", mode);
 	const std::string firstLine = "Online Random Forest with IVMs, mode: " + mode;
-	int deepestActLineForProgress = 0;
 	while(true){
-		int actLine = 3;
 		clear();
-		attron(COLOR_PAIR(1));
+		const int progressBar = LINES - 3;
+		const int heightOfThreadInfo = LINES * 0.7;
+		const int restOfLines = LINES - 7 - heightOfThreadInfo;
+		if(heightOfThreadInfo < 25 && restOfLines > 3 && COLS < 80){
+			mvprintw(1,0, firstLine.c_str());
+			mvprintw(2,0, "There is not enough room to fill the rest with information!");
+			refresh();
+			usleep(m_timeToSleep * 1e6);
+			continue;
+		}
+
+		int actLine = 1;
 		mvprintw(actLine++,5, firstLine.c_str());
 		const std::string amountOfThreadsString = "Amount of running Threads: ";
 		mvprintw(actLine,5, amountOfThreadsString.c_str());
@@ -68,14 +78,15 @@ void ScreenOutput::run(){
 		int rowCounter = 0;
 		const int col = COLS - 6; // 3 on both sides
 		const int startOfRight = COLS / 2 + 2;
-		const int amountOfLinesPerThread =  m_runningThreads->size() > 1 ?  HEIGHT_OF_THREAD_INFO / ceil(m_runningThreads->size() / 2.0) : HEIGHT_OF_THREAD_INFO;
+		const int amountOfLinesPerThread =  m_runningThreads->size() > 1 ?  heightOfThreadInfo / ceil(m_runningThreads->size() / 2.0) : heightOfThreadInfo;
 		for(ThreadMaster::PackageList::const_iterator it = m_runningThreads->begin(); it != m_runningThreads->end(); ++it, ++rowCounter){
 			(*it)->m_lineMutex.lock();
 			const bool isLeft = rowCounter % 2 == 0;
 			const int colWidth = col / 2 - 6; // -2 on both sides
 			const int row = rowCounter / 2; // for 0 and 1 the first and so on
 			std::string drawLine = "";
-			for(unsigned int i = 0; i < colWidth + 3; ++i){
+
+			for(unsigned int i = 0; i < colWidth + (isLeft ? 4 : 3); ++i){
 				drawLine += "-";
 			}
 			mvprintw(row * amountOfLinesPerThread + actLine - 1, isLeft ? 2 : startOfRight - 1, drawLine.c_str()); //  isLeft ? 3 : startOfRight
@@ -97,7 +108,7 @@ void ScreenOutput::run(){
 				int amountOfNeededLines = 0;
 				for(std::list<std::string>::const_iterator itLine = (*it)->m_lines.begin(); itLine != (*it)->m_lines.end(); ++itLine){
 					if(itLine->length() > colWidth){
-						amountOfNeededLines += (itLine->length() - colWidth) / (colWidth - 2) + 1;
+						amountOfNeededLines += ceil((itLine->length() - colWidth) / (double) (colWidth - 2)) + 1;
 					}else{
 						++amountOfNeededLines;
 					}
@@ -123,31 +134,33 @@ void ScreenOutput::run(){
 						}
 					}
 				}else{
-					attron(COLOR_PAIR(2));
 					counter += 2;
 					for(std::list<std::string>::reverse_iterator itLine = (*it)->m_lines.rbegin(); itLine != (*it)->m_lines.rend(); ++itLine, ++counter){
 						if(itLine->length() < colWidth){
-							mvprintw((row + 1) * amountOfLinesPerThread - counter + actLine, isLeft ? 4 : startOfRight + 1, itLine->c_str());
+							if(counter < amountOfLinesPerThread){ // -1 for the start line
+								mvprintw((row + 1) * amountOfLinesPerThread - counter + actLine, isLeft ? 4 : startOfRight + 1, itLine->c_str());
+							}
 						}else{
 							std::string line = *itLine;
+							counter += ceil((itLine->length() - colWidth) / (double) (colWidth - 2));
+							int diff = 0;
 							while(line.length() > colWidth){
-								mvprintw((row + 1) * amountOfLinesPerThread - counter + actLine, isLeft ? 4 : startOfRight + 1, line.substr(0, colWidth).c_str());
-								line = line.substr(colWidth, line.length() - colWidth);
-								++counter;
-								if(counter > amountOfLinesPerThread - 2){ // -1 for the start line
-									break;
+								if(counter < amountOfLinesPerThread){ // -1 for the start line
+									mvprintw((row + 1) * amountOfLinesPerThread - counter + actLine, isLeft ? 4 + diff : startOfRight + 1 + diff, line.substr(0, colWidth - diff).c_str());
 								}
+								diff = 2;
+								line = line.substr(colWidth, line.length() - colWidth);
+								--counter;
 							}
-							mvprintw((row + 1) * amountOfLinesPerThread - counter + actLine, isLeft ? 4 : startOfRight + 1, line.substr(0, colWidth).c_str());
-							++counter;
-						}
-						if(counter > amountOfLinesPerThread - 2){ // -1 for the start line
-							break;
+							if(counter < amountOfLinesPerThread){ // -1 for the start line
+								mvprintw((row + 1) * amountOfLinesPerThread - counter + actLine, isLeft ? 4  + diff : startOfRight + 1  + diff, line.substr(0, colWidth - diff).c_str());
+							}
+							counter += ceil((itLine->length() - colWidth) / (double) (colWidth - 2));
 						}
 					}
 				}
 				attron(COLOR_PAIR(1));
-				const int diff = (*it)->m_lines.size() - HEIGHT_OF_THREAD_INFO;
+				const int diff = (*it)->m_lines.size() - heightOfThreadInfo;
 				for(int i = 0; i < diff; ++i){
 					(*it)->m_lines.pop_front(); // to reduce it to HEIGHT OF THREAD INFO is the maximal which can be displayed so the rest can be erased
 				}
@@ -157,17 +170,20 @@ void ScreenOutput::run(){
 		ThreadMaster::m_mutex.unlock();
 		m_lineMutex.lock();
 
-		actLine += HEIGHT_OF_THREAD_INFO;
-
+		actLine += amountOfLinesPerThread * ceil(m_runningThreads->size() / 2.0) ;
 		int maxSize = 0;
 		for(std::list<std::string>::const_iterator it = m_lines.begin(); it != m_lines.end(); ++it){
 			if(it->length() > maxSize){
 				maxSize = it->length();
 			}
 		}
-		for(std::list<std::string>::const_iterator it = m_lines.begin(); it != m_lines.end(); ++it){
-			mvprintw(actLine++, 6, it->c_str());
+		int iLineCounter = std::min((int) LINES - actLine - 7 - (int) m_errorLines.size(), (int) m_lines.size());
+		for(std::list<std::string>::reverse_iterator it = m_lines.rbegin(); it != m_lines.rend() && iLineCounter >= 0; ++it){
+			mvprintw(actLine + iLineCounter, 6, it->c_str());
+			--iLineCounter;
 		}
+		actLine += std::min((int) LINES - actLine - 7 - (int) m_errorLines.size(), (int) m_lines.size()) + 1;
+
 		if(m_errorLines.size() > 0){
 			attron(COLOR_PAIR(2));
 			mvprintw(actLine++, 3, "-------------------------------------------------------------------------------------------");
@@ -184,10 +200,7 @@ void ScreenOutput::run(){
 			mvprintw(actLine++, 3, "-------------------------------------------------------------------------------------------");
 			attron(COLOR_PAIR(1));
 		}
-		if(actLine + 2> deepestActLineForProgress){
-			deepestActLineForProgress = actLine + 2;
-		}
-		mvprintw(deepestActLineForProgress, 4, m_progressLine.c_str());
+		mvprintw(progressBar, 4, m_progressLine.c_str());
 		m_lineMutex.unlock();
 		refresh();
 		usleep(m_timeToSleep * 1e6);
