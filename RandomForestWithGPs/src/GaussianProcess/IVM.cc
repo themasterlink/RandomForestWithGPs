@@ -166,13 +166,35 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 						}
 						++amountOfChecks;
 					}
-					m_package->changeCorrectlyClassified(amountOfCorrectValues / (double) amountOfChecks * 100.);
+					double correctness = amountOfCorrectValues / (double) amountOfChecks * 100.;
+					if(correctness > 90.){
+						// check all points
+						amountOfChecks = 0;
+						amountOfCorrectValues = 0;
+						for(unsigned int i = 0; i < m_dataPoints; ++i){
+							const int label = m_data[i]->getLabel();
+							const double prob = predict(*m_data[i]);
+							if(label == getLabelForOne() && 0.6 < prob){
+								++amountOfCorrectValues;
+							}else if(label != getLabelForOne() && 0.4 > prob){ // should be not the label for one
+								++amountOfCorrectValues;
+							}
+							++amountOfChecks;
+						}
+						correctness = amountOfCorrectValues / (double) amountOfChecks * 100.;
+						if(correctness > 98.){
+							m_package->abortTraing();
+						}
+					}
+					m_package->changeCorrectlyClassified(correctness);
 //					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
 				}
 				swAvg.recordActTime();
 				m_package->performedOneTrainingStep(); // adds a one to the counter
 				if(m_package->shouldTrainingBeAborted()){
 					break;
+				}else if(m_package->shouldTrainingBePaused()){
+					m_package->wait(); // will hold this process
 				}
 			}
 			if(Settings::getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
@@ -187,9 +209,9 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 		if(ret && !m_doEPUpdate){
 			// train the whole active set again but in the oposite direction similiar to an ep step
 			const bool ret2 = trainOptimizeStep(0);
-			if(!ret2){
-				printWarning("The optimization step could not be performed!");
-			}
+//			if(!ret2){
+//				printWarning("The optimization step could not be performed!");
+//			}
 		}
 		if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
 			DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);

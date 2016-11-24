@@ -75,7 +75,7 @@ void IVMMultiBinary::train(){
 		}
 		double durationOfWholeTraining = durationOfTraining;
 		if(amountOfClasses() > nrOfParallel){
-			durationOfWholeTraining *= ceil(amountOfClasses() / nrOfParallel);
+			durationOfWholeTraining *= ceil(amountOfClasses() / (double) nrOfParallel);
 		}
 //		if(amountOfClasses() <= nrOfParallel){
 			const bool fitParams = CommandSettings::get_samplingAndTraining();
@@ -101,7 +101,7 @@ void IVMMultiBinary::train(){
 				if(!stillOneRunning){
 					break;
 				}
-				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
+//				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
 				usleep(0.15 * 1e6);
 			}
 			counter = 0;

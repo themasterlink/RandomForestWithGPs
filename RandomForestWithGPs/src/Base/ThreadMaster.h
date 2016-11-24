@@ -43,16 +43,21 @@ public:
 
 	void abortTraing(){ m_abortTraining = true; };
 
-	void wait(){
-		boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(m_mutex);
-		m_condition.wait(lock);
-	};
+	void pauseTheTraining(){ m_shouldTrainingBeHold = true; };
 
-	void notify(){ m_condition.notify_all(); m_sw.startTime(); };
+	bool shouldTrainingBePaused(){ return m_shouldTrainingBeHold; }
+
+	double calcAttractionLevel(const int minAmountOfPoints, const int maxAmountOfPoints);
+
+	bool isWaiting(){ return m_isWaiting; };
+
+	void wait();
+
+	void notify();
 
 	InfoType getType(){ return m_type; };
 
-	StopWatch& getWatch(){return m_sw;};
+	double getWorkedAmountOfSeconds();
 
 private:
 
@@ -66,11 +71,17 @@ private:
 
 	bool m_abortTraining;
 
+	bool m_isWaiting;
+
+	bool m_shouldTrainingBeHold;
+
 	double m_correctlyClassified;
 
 	int m_amountOfAffectedPoints;
 
 	int m_amountOfTrainingsSteps;
+
+	double m_workedTime;
 
 	StopWatch m_sw;
 
