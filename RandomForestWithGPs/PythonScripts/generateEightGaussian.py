@@ -34,7 +34,7 @@ def generateData(dim, amountOfPoints, center0X, center0Y):
 ele = 0
 centers = []
 i = 0
-while(i < 8):
+while(i < 10):
     x = random.uniform(0, 1)
     y = random.uniform(0, 1)
     dist = math.cos(2.0 * math.pi * x)*math.sqrt(-2 * math.log(y)) * 0.15

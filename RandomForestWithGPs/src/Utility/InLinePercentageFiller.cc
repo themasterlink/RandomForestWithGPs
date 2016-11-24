@@ -67,7 +67,7 @@ void InLinePercentageFiller::setActPercentageAndPrintLine(const double dAct, con
 		}
 		char buffer [20];
 		sprintf(buffer, "| %3.2f", dAct); // all other methods are ugly
-		str << buffer << " %";
+		str << buffer << " %%";
 		if(dAct > 0. && dAct < 100.){
 			TimeFrame frame = m_sw.elapsedAsTimeFrame();
 			str << ", rest time is: " << (frame * (1. / dAct * 100.) - frame);

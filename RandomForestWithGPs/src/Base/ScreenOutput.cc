@@ -72,29 +72,81 @@ void ScreenOutput::run(){
 		for(ThreadMaster::PackageList::const_iterator it = m_runningThreads->begin(); it != m_runningThreads->end(); ++it, ++rowCounter){
 			(*it)->m_lineMutex.lock();
 			const bool isLeft = rowCounter % 2 == 0;
-			const int colWidth = col / 2 - 2;
+			const int colWidth = col / 2 - 6; // -2 on both sides
 			const int row = rowCounter / 2; // for 0 and 1 the first and so on
+			std::string drawLine = "";
+			for(unsigned int i = 0; i < colWidth + 3; ++i){
+				drawLine += "-";
+			}
+			mvprintw(row * amountOfLinesPerThread + actLine - 1, isLeft ? 2 : startOfRight - 1, drawLine.c_str()); //  isLeft ? 3 : startOfRight
+			mvprintw((row + 1) * amountOfLinesPerThread + actLine - 2, isLeft ? 2 : startOfRight - 1, drawLine.c_str()); //  isLeft ? 3 : startOfRigh
+			for(unsigned int i = 1; i < amountOfLinesPerThread - 1; ++i){
+				mvprintw(row * amountOfLinesPerThread + actLine - 1 + i, isLeft ? 2 : startOfRight - 1, "|");
+				mvprintw(row * amountOfLinesPerThread + actLine - 1 + i, isLeft ? 6 + colWidth: startOfRight + colWidth + 2, "|");
+			}
+
+			mvprintw(row * amountOfLinesPerThread + actLine - 1, isLeft ? 2 : startOfRight - 1, "+");
+			mvprintw(row * amountOfLinesPerThread + actLine - 1, isLeft ? 6 + colWidth: startOfRight + colWidth + 2, "+");
+			mvprintw((row + 1) * amountOfLinesPerThread + actLine - 2, isLeft ? 2 : startOfRight - 1, "+");
+			mvprintw((row + 1) * amountOfLinesPerThread + actLine - 2, isLeft ? 6 + colWidth: startOfRight + colWidth + 2, "+");
 			if((*it)->m_standartInfo.length() < colWidth && (*it)->m_standartInfo.length() > 0){
-				mvprintw(row * amountOfLinesPerThread + actLine, isLeft ? 3 : startOfRight, (*it)->m_standartInfo.c_str()); //  isLeft ? 3 : startOfRight
+				attron(COLOR_PAIR(6));
+				mvprintw(row * amountOfLinesPerThread + actLine, isLeft ? 4 : startOfRight + 1, (*it)->m_standartInfo.c_str()); //  isLeft ? 3 : startOfRight
+				attron(COLOR_PAIR(1));
 				int counter = 1;
-				std::list<std::string>::const_iterator itLine = (*it)->m_lines.begin();
-				for(int i = 0; i <= (int) (*it)->m_lines.size() - amountOfLinesPerThread + 1; ++i){
-					++itLine; // jump over elements in the list which are no needed at the moment
-				}
-				for(; itLine != (*it)->m_lines.end(); ++itLine, ++counter){
-					if(itLine->length() < colWidth){
-						mvprintw(row * amountOfLinesPerThread + counter + actLine, isLeft ? 3 : startOfRight, itLine->c_str());
+				int amountOfNeededLines = 0;
+				for(std::list<std::string>::const_iterator itLine = (*it)->m_lines.begin(); itLine != (*it)->m_lines.end(); ++itLine){
+					if(itLine->length() > colWidth){
+						amountOfNeededLines += (itLine->length() - colWidth) / (colWidth - 2) + 1;
 					}else{
-						std::string line = *itLine;
-						while(line.length() > colWidth){
-							mvprintw(row * amountOfLinesPerThread + counter + actLine, isLeft ? 3 : startOfRight, line.substr(0, colWidth).c_str());
-							line = line.substr(colWidth, line.length() - colWidth);
-							++counter;
-						}
-						mvprintw(row * amountOfLinesPerThread + counter + actLine, isLeft ? 3 : startOfRight, line.substr(0, colWidth).c_str());
-						++counter;
+						++amountOfNeededLines;
 					}
 				}
+				if(amountOfNeededLines < amountOfLinesPerThread - 2){
+					std::list<std::string>::const_iterator itLine = (*it)->m_lines.begin();
+					for(int i = 0; i <= (int) (*it)->m_lines.size() - amountOfLinesPerThread + 2; ++i){
+						++itLine; // jump over elements in the list which are no needed at the moment
+					}
+					for(; itLine != (*it)->m_lines.end(); ++itLine, ++counter){
+						if(itLine->length() < colWidth){
+							mvprintw(row * amountOfLinesPerThread + counter + actLine, isLeft ? 4 : startOfRight + 1, itLine->c_str());
+						}else{
+							std::string line = *itLine;
+							int diff = 0;
+							while(line.length() > colWidth){
+								mvprintw(row * amountOfLinesPerThread + counter + actLine, isLeft ? 4 + diff: startOfRight + 1 + diff, line.substr(0, colWidth - diff).c_str());
+								++counter;
+								line = line.substr(colWidth, line.length() - colWidth);
+								diff = 2;
+							}
+							mvprintw(row * amountOfLinesPerThread + counter + actLine, isLeft ? 4 + diff: startOfRight + 1 + diff, line.substr(0, colWidth - diff).c_str());
+						}
+					}
+				}else{
+					attron(COLOR_PAIR(2));
+					counter += 2;
+					for(std::list<std::string>::reverse_iterator itLine = (*it)->m_lines.rbegin(); itLine != (*it)->m_lines.rend(); ++itLine, ++counter){
+						if(itLine->length() < colWidth){
+							mvprintw((row + 1) * amountOfLinesPerThread - counter + actLine, isLeft ? 4 : startOfRight + 1, itLine->c_str());
+						}else{
+							std::string line = *itLine;
+							while(line.length() > colWidth){
+								mvprintw((row + 1) * amountOfLinesPerThread - counter + actLine, isLeft ? 4 : startOfRight + 1, line.substr(0, colWidth).c_str());
+								line = line.substr(colWidth, line.length() - colWidth);
+								++counter;
+								if(counter > amountOfLinesPerThread - 2){ // -1 for the start line
+									break;
+								}
+							}
+							mvprintw((row + 1) * amountOfLinesPerThread - counter + actLine, isLeft ? 4 : startOfRight + 1, line.substr(0, colWidth).c_str());
+							++counter;
+						}
+						if(counter > amountOfLinesPerThread - 2){ // -1 for the start line
+							break;
+						}
+					}
+				}
+				attron(COLOR_PAIR(1));
 				const int diff = (*it)->m_lines.size() - HEIGHT_OF_THREAD_INFO;
 				for(int i = 0; i < diff; ++i){
 					(*it)->m_lines.pop_front(); // to reduce it to HEIGHT OF THREAD INFO is the maximal which can be displayed so the rest can be erased
