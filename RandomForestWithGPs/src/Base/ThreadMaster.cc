@@ -88,7 +88,27 @@ void ThreadMaster::setFrequence(const double frequence){
 }
 
 void ThreadMaster::threadHasFinished(InformationPackage* package){
-
+	m_mutex.lock();
+	package->finishedTask();
+	m_mutex.unlock();
+	bool found = false;
+	do{
+		found = false;
+		m_mutex.lock();
+		for(PackageList::const_iterator it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
+			if(*it == package){
+				found = true;
+				break;
+			}
+		}
+		for(PackageList::const_iterator it = m_runningList.begin(); it != m_runningList.end(); ++it){
+			if(*it == package){
+				found = true;
+				break;
+			}
+		}
+		m_mutex.unlock();
+	}while(found); // until it is not found anymore
 }
 
 void ThreadMaster::run(){
@@ -111,6 +131,9 @@ void ThreadMaster::run(){
 			}
 		}
 		for(PackageList::const_iterator it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
+			if(!(*it)->isWaiting()){
+				continue; // hasn't reached the waiting point so the thread should be added to the running list
+			}
 			const int amount = (*it)->amountOfAffectedPoints();
 			const double correct = (*it)->correctlyClassified();
 			switch((*it)->getType()){
@@ -128,6 +151,26 @@ void ThreadMaster::run(){
 				}
 				break;
 			case InfoType::ORF_TRAIN:
+				if(selectedValue == m_waitingList.end()){
+					selectedValue = it;
+				}else{
+					const double attractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
+					if(attractionLevel > bestAttractionLevel){
+						bestAttractionLevel = attractionLevel;
+						selectedValue = it;
+					}
+				}
+				break;
+			case InfoType::IVM_PREDICT:
+				if(selectedValue == m_waitingList.end()){
+					selectedValue = it;
+				}else{
+					const int diff = (*selectedValue)->amountOfTrainingStepsPerformed() - (*it)->amountOfTrainingStepsPerformed();
+					const int amountOfPoints = ((*it)->amountOfAffectedPoints() + (*selectedValue)->amountOfAffectedPoints()) * 0.5;
+					if(diff > 0.1 * amountOfPoints){
+						selectedValue = it;
+					}
+				}
 				break;
 			default:
 				printError("This type is not supported here!");
@@ -149,7 +192,7 @@ void ThreadMaster::run(){
 		}
 		for(PackageList::const_iterator it = m_runningList.begin(); it != m_runningList.end(); ++it){
 			// for each running element check if execution is finished
-			if((*it)->getWorkedAmountOfSeconds() > 5.0){ // each training have to take at least 5 seconds!
+			if((*it)->getWorkedAmountOfSeconds() > 5.0 || (*it)->isTaskFinished()){ // each training have to take at least 5 seconds!
 				if((*it)->getWorkedAmountOfSeconds() > CommandSettings::get_samplingAndTraining() && !(*it)->shouldTrainingBeAborted()){
 //					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
 					(*it)->abortTraing(); // break the training

@@ -140,6 +140,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 		setDerivAndLogZFlag(true, false);
 		StopWatch sw;
 		double bestLogZ = -DBL_MAX;
+		double bestCorrectness = 0;
 		StopWatch swAvg;
 		if(!loadBestParams){
 			while(m_package != nullptr){ // equals a true
@@ -156,8 +157,6 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 //					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
 //				}
 				if(trained && bestLogZ < m_logZ){
-					m_kernel.getCopyOfParams(bestParams);
-					bestLogZ = m_logZ;
 					// perform a simple test
 					// go over a bunch of points to test it
 					int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
@@ -166,12 +165,12 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 						const int label = m_data[i]->getLabel();
 						const double prob = predict(*m_data[i]);
 						if(label == getLabelForOne()){
-							if(prob < 0.5){
+							if(prob > 0.75){
 								++amountOfOnesCorrect;
 							}
 							++amountOfOneChecks;
 						}else{
-							if(0.5 > prob){
+							if(prob < 0.25){
 								++amountOfMinusOnesCorrect;
 							}
 							++amountOfMinusOneChecks;
@@ -179,7 +178,9 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 					}
 					 // both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
 					double correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
-					if(correctness > 90.){
+					bool didCompleteCheck = false;
+					if(correctness > 70.){
+						didCompleteCheck = true;
 						// check all points
 						amountOfOneChecks = amountOfOnesCorrect = 0;
 						amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
@@ -187,12 +188,12 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 							const int label = m_data[i]->getLabel();
 							const double prob = predict(*m_data[i]);
 							if(label == getLabelForOne()){
-								if(prob < 0.5){
+								if(prob > 0.75){
 									++amountOfOnesCorrect;
 								}
 								++amountOfOneChecks;
 							}else{
-								if(0.5 > prob){
+								if(prob < 0.25){
 									++amountOfMinusOnesCorrect;
 								}
 								++amountOfMinusOneChecks;
@@ -202,11 +203,31 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 						if(correctness > 98.){
 							m_package->abortTraing();
 						}
+
 					}
-					m_package->changeCorrectlyClassified(correctness);
-					std::stringstream str;
-					str << "New best params: " << bestParams << ", with correctness of: " << correctness;
-					m_package->printLineToScreenForThisThread(str.str());
+					if(didCompleteCheck){
+						// even for the first best correctness case is this valid, because here the simple correctness was above the threshold the first time
+						if(correctness > bestCorrectness){
+							// only take the params if the full check on the
+							// trainingsdata provided a better value than the last full check
+							bestCorrectness = correctness;
+							m_kernel.getCopyOfParams(bestParams);
+							bestLogZ = m_logZ;
+							m_package->changeCorrectlyClassified(correctness);
+							std::stringstream str;
+							str << "New best params: " << bestParams << ", with correctness of: " << correctness;
+							m_package->printLineToScreenForThisThread(str.str());
+						}
+					}else if(bestCorrectness == 0){ // for the starting cases	// in this case only the simple check was performed and the values
+						// are not good enough to guarantee that these params are better
+						// so always take the params with the lower logZ
+						m_kernel.getCopyOfParams(bestParams);
+						bestLogZ = m_logZ;
+						m_package->changeCorrectlyClassified(correctness);
+						std::stringstream str;
+						str << "New best params: " << bestParams << ", with simple correctness of: " << correctness;
+						m_package->printLineToScreenForThisThread(str.str());
+					}
 //					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
 				}
 				swAvg.recordActTime();

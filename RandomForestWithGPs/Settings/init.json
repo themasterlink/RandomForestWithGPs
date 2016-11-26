@@ -15,7 +15,7 @@
     	"testingAmount": 200
     },
     "Forest": {
-        "amountOfTrees": 100,
+        "amountOfTrees": 1000,
         "Trees": {
             "height": 6
         }
@@ -23,7 +23,7 @@
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 100,
+        "nrOfInducingPoints": 40,
         "desiredMargin": 0.001,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
@@ -50,10 +50,10 @@
     	"len": 1.4,
     	"fNoise": 1.2,
     	"sNoise": 0.01,
-    	"lenMean": 1.4,
-    	"lenVar": 0.5,
-    	"fNoiseMean": 1.0,
-    	"fNoiseVar": 0.5,
+    	"lenMean": 0.5,
+    	"lenVar": 0.3,
+    	"fNoiseMean": 2.2,
+    	"fNoiseVar": 1.2,
     	"sNoiseMean": 0.1,
     	"sNoiseVar": 0.01
     },
@@ -61,6 +61,10 @@
         "path": "..\/fakeData\/",
         "amount": 200,
         "dim": 2
+    },
+    "Logger": {
+        "useLogger": "true",
+        "filePath": "log.txt"
     },
     "RealData": {
         "folderPath": "..\/realTest\/"

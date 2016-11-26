@@ -7,6 +7,7 @@
 
 #include "ConfusionMatrixPrinter.h"
 #include "../Data/ClassKnowledge.h"
+#include "../Base/ScreenOutput.h"
 
 ConfusionMatrixPrinter::ConfusionMatrixPrinter() {
 	// TODO Auto-generated constructor stub
@@ -19,7 +20,7 @@ ConfusionMatrixPrinter::~ConfusionMatrixPrinter() {
 
 
 
-void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv, std::ostream& stream){
+void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv){
 	if(conv.rows() != ClassKnowledge::amountOfClasses() || conv.cols() != ClassKnowledge::amountOfClasses()){
 		printError("The amount of rows or cols does not correspond to the amount of names: ("
 				<< conv.rows() << "," << conv.cols() << ") != " << ClassKnowledge::amountOfClasses());
@@ -43,6 +44,7 @@ void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv, std::ostream& st
 		maxSize[i] += 2;
 	}
 	maxLength += 2;
+	std::stringstream stream;
 	// offset before the first name
 	for(int i = 0; i < maxLength; ++i){
 		stream << " ";
@@ -54,22 +56,22 @@ void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv, std::ostream& st
 		stream << ClassKnowledge::getNameFor(t);
 		++l;
 	}
-	stream << "\n";
+	ScreenOutput::print(stream.str());
 	for(int i = 0; i < conv.cols(); ++i){
-		stream << ClassKnowledge::getNameFor(i);
+		std::stringstream stream2;
+		stream2 << ClassKnowledge::getNameFor(i);
 		for(int k = ClassKnowledge::getNameFor(i).length(); k < maxLength; ++k)
-			stream << " ";
+			stream2 << " ";
 		for(int j = 0; j < conv.rows(); ++j){
 			const int covMaxSize = max(maxSize[j], (int) ClassKnowledge::getNameFor(j).length());
 			const int amountOfAct = amountOfDigits((int)conv(i,j));
 			for(int k = 0; k < covMaxSize - amountOfAct; ++k){
-				stream << " ";
+				stream2 << " ";
 			}
-			stream << (int) conv(i,j);
+			stream2 << (int) conv(i,j);
 		}
-		stream << "\n";
+		ScreenOutput::print(stream2.str());
 	}
-	flush(stream);
 }
 
 int ConfusionMatrixPrinter::amountOfDigits(int x) {

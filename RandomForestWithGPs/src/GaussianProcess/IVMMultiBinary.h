@@ -37,7 +37,8 @@ private:
 
 	void trainInParallel(const int usedIvm, const double trainTime, InformationPackage* package);
 
-	void predictDataInParallel(const Data& points, const int usedIvm, std::vector< std::vector<double> >* probabilities) const;
+	void predictDataInParallel(const Data& points, const int usedIvm,
+			std::vector< std::vector<double> >* probabilities, InformationPackage* package) const;
 
 
 	OnlineStorage<ClassPoint*>& m_storage;

@@ -1,5 +1,4 @@
 /*
- * DynamicDecisionTree.cc
  *
  *  Created on: 17.10.2016
  *      Author: Max

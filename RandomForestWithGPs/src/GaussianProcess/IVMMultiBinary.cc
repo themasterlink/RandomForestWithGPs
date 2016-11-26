@@ -110,6 +110,10 @@ void IVMMultiBinary::train(){
 			}
 			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
 			group.join_all();
+			for(unsigned int i = 0; i < amountOfClasses(); ++i){
+				ThreadMaster::threadHasFinished(packages[i]);
+				delete packages[i];
+			}
 //		}else{
 //			const bool fitParams = CommandSettings::get_samplingAndTraining();
 //			if(fitParams){
@@ -225,58 +229,54 @@ void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector
 	for(unsigned int i = 0; i < points.size(); ++i){
 		probabilities[i].resize(amountOfClasses());
 	}
-	if(amountOfClasses() <= nrOfParallel){
-		boost::thread_group group;
-		for(unsigned int i = 0; i < amountOfClasses(); ++i){
-			group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::predictDataInParallel, this, points, i, &probabilities)));
-		}
-		group.join_all();
-		for(unsigned int i = 0; i < points.size(); ++i){
-//			double sum = 0;
-//			for(unsigned int j = 0; j < amountOfClasses(); ++j){
-//				sum += probabilities[i][j];
-//			}
-//			if(sum > 0.0){
-			double highestValue;
-			int highestArg;
-			for(unsigned int j = 0; j < amountOfClasses(); ++j){
-//				probabilities[i][j] /= sum;
-				if(probabilities[i][j] > highestValue){
-					highestValue = probabilities[i][j];
-					highestArg = j;
-				}
-			}
-			labels[i] = highestArg;
-//			}
-		}
-	}else{
-		for(unsigned int i = 0; i < points.size(); ++i){
-			probabilities[i].resize(amountOfClasses());
-			double sum = 0;
-			for(unsigned int j = 0; j < amountOfClasses(); ++j){
-				probabilities[i][j] = m_ivms[j]->predict(*points[i]);
-				sum += probabilities[i][j];
-			}
-			if(sum > 1.0){
-				double highestValue;
-				int highestArg;
-				for(unsigned int j = 0; j < amountOfClasses(); ++j){
-					probabilities[i][j] /= sum;
-					if(probabilities[i][j] > highestValue){
-						highestValue = probabilities[i][j];
-						highestArg = j;
-					}
-				}
-				labels[i] = highestArg;
+	boost::thread_group group;
+	std::vector<InformationPackage*> packages(amountOfClasses(), nullptr);
+	for(unsigned int i = 0; i < amountOfClasses(); ++i){
+		packages[i] = new InformationPackage(InformationPackage::IVM_PREDICT, 0, points.size());
+		group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::predictDataInParallel, this, points, i, &probabilities, packages[i])));
+	}
+	group.join_all();
+	for(unsigned int i = 0; i < amountOfClasses(); ++i){
+		ThreadMaster::threadHasFinished(packages[i]);
+		delete packages[i];
+	}
+	for(unsigned int i = 0; i < points.size(); ++i){
+//		double sum = 0;
+//		for(unsigned int j = 0; j < amountOfClasses(); ++j){
+//			sum += probabilities[i][j];
+//		}
+//		if(sum > 0.0){
+		double highestValue;
+		int highestArg;
+		for(unsigned int j = 0; j < amountOfClasses(); ++j){
+			//				probabilities[i][j] /= sum;
+			if(probabilities[i][j] > highestValue){
+				highestValue = probabilities[i][j];
+				highestArg = j;
 			}
 		}
+		labels[i] = highestArg;
+		//			}
 	}
 }
 
-void IVMMultiBinary::predictDataInParallel(const Data& points, const int usedIvm, std::vector< std::vector<double> >* probabilities) const{
+void IVMMultiBinary::predictDataInParallel(const Data& points, const int usedIvm, std::vector< std::vector<double> >* probabilities, InformationPackage* package) const{
+	package->setStandartInformation("Thread for ivm: " + number2String(usedIvm));
+	ThreadMaster::appendThreadToList(package);
+	package->wait();
 	for(unsigned int i = 0; i < points.size(); ++i){
 		(*probabilities)[i][usedIvm] = m_ivms[usedIvm]->predict(*points[i]);
+		if(i % 100 == 0){
+			package->printLineToScreenForThisThread("One hundret points predicted");
+		}
+		package->performedOneTrainingStep();
+		if(package->shouldTrainingBePaused()){
+			package->wait();
+		}else if(package->shouldTrainingBeAborted()){
+			printError("The prediciton can not be aborted!");
+		}
 	}
+	package->finishedTask();
 }
 
 int IVMMultiBinary::amountOfClasses() const{

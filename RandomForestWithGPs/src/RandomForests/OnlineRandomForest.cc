@@ -44,7 +44,7 @@ void OnlineRandomForest::train(){
 		return;
 	}
 	m_amountOfUsedDims = m_factorForUsedDims * m_storage.dim();
-	std::cout << "amount of used dims: " << m_amountOfUsedDims << std::endl;
+	printOnScreen("amount of used dims: " << m_amountOfUsedDims);
 	if(m_amountOfUsedDims > m_storage.dim()){
 		printError("Amount of dims can't be bigger than the dimension size!");
 		return;
@@ -53,7 +53,7 @@ void OnlineRandomForest::train(){
 		return;
 	}
 	std::vector<int> values(m_amountOfClasses, 0);
-	const int seed = 0;
+//	const int seed = 0;
 	bool useFixedValuesForMinMaxUsedData = Settings::getDirectBoolValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData");
 	Eigen::Vector2i minMaxUsedData;
 	if(useFixedValuesForMinMaxUsedData){
@@ -85,13 +85,25 @@ void OnlineRandomForest::train(){
 	DecisionTreeIterator oldIt = m_trees.begin();
 	TreeCounter treeCounter;
 	InLinePercentageFiller::setActMax(m_amountOfTrees + 1);
+	std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
+	for(unsigned int i = 0; i < nrOfParallel; ++i){
+		packages[i] = new InformationPackage(InformationPackage::ORF_TRAIN, 0, (m_trees.size() / (double) nrOfParallel * threadCounter));
+	}
 	for(DecisionTreeIterator it = m_trees.begin(); it != m_trees.end(); ++it, ++counter){
 		if(threadCounter == nrOfParallel){
-			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, oldIt, m_trees.end(), *m_generators[threadCounter - 1], &treeCounter)));
+			packages[threadCounter - 1]->setStandartInformation("Orf training for thread: " +
+					number2String(threadCounter - 1) + ", from " +
+					number2String((int) (m_trees.size() / (double) nrOfParallel * (threadCounter - 1))) + " to " +
+					number2String((int) (m_trees.size() / (double) nrOfParallel * threadCounter)));
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, oldIt, m_trees.end(), *m_generators[threadCounter - 1], packages[threadCounter - 1], &treeCounter)));
 			break;
 		}
 		if(counter == (int) (m_trees.size() / (double) nrOfParallel * threadCounter)){
-			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, oldIt, it, *m_generators[threadCounter - 1], &treeCounter)));
+			packages[threadCounter - 1]->setStandartInformation("Orf training for thread: " +
+					number2String(threadCounter - 1) + ", from " +
+					number2String((int) (m_trees.size() / (double) nrOfParallel * (threadCounter - 1))) + " to " +
+					number2String((int) (m_trees.size() / (double) nrOfParallel * threadCounter)));
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, oldIt, it, *m_generators[threadCounter - 1], packages[threadCounter - 1], &treeCounter)));
 			oldIt = it;
 			++threadCounter;
 		}
@@ -101,14 +113,28 @@ void OnlineRandomForest::train(){
 		InLinePercentageFiller::setActValueAndPrintLine(treeCounter.getCounter());
 	}
 	group.join_all();
+	for(unsigned int i = 0; i < nrOfParallel; ++i){
+		ThreadMaster::threadHasFinished(packages[i]);
+		delete packages[i];
+	}
 	m_firstTrainingDone = true;
 }
 
-void OnlineRandomForest::trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT& generator, TreeCounter* counter){
+void OnlineRandomForest::trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT& generator, InformationPackage* package, TreeCounter* counter){
+	ThreadMaster::appendThreadToList(package);
+	package->wait();
+	int i = 0;
 	for(DecisionTreeIterator it = start; it != end; ++it){
 		it->train(m_amountOfUsedDims, generator);
 		counter->addOneToCounter();
+		package->printLineToScreenForThisThread("Number " + number2String(i++) + " was calculated");
+		if(package->shouldTrainingBePaused()){
+			package->wait();
+		}else if(package->shouldTrainingBeAborted()){
+			break;
+		}
 	}
+	package->finishedTask();
 }
 
 void OnlineRandomForest::update(Subject* caller, unsigned int event){
@@ -162,14 +188,20 @@ bool OnlineRandomForest::update(){
 		const int totalAmount = m_trees.size() / nrOfParallel * nrOfParallel;
 		const int amountOfElements = totalAmount / nrOfParallel;
 		InLinePercentageFiller::setActMax(totalAmount + 1);
+		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
-			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::updateInParallel, this, list, amountOfElements, mutex, i, &counter)));
+			packages[i] = new InformationPackage(InformationPackage::ORF_TRAIN, 0., amountOfElements);
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::updateInParallel, this, list, amountOfElements, mutex, i, packages[i], &counter)));
 		}
 		while(counter < totalAmount){
 			usleep(0.1 * 1e6);
 			InLinePercentageFiller::setActValueAndPrintLine(counter);
 		}
 		group.join_all();
+		for(unsigned int i = 0; i < nrOfParallel; ++i){
+			ThreadMaster::threadHasFinished(packages[i]);
+			delete packages[i];
+		}
 		delete mutex;
 		delete list;
 	}
@@ -177,7 +209,6 @@ bool OnlineRandomForest::update(){
 }
 
 void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list){
-
 	for(DecisionTreeIterator itTree = m_trees.begin(); itTree != m_trees.end(); ++itTree){
 		int correct = 0;
 		for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
@@ -191,12 +222,18 @@ void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list)
 	}
 }
 
-void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const int amountOfSteps, boost::mutex* mutex, unsigned int threadNr, int* counter){
+void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const int amountOfSteps, boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, int* counter){
+	if(package == nullptr){
+		printError("This thread has no valid information package: " + number2String(threadNr));
+		return;
+	}
+	package->setStandartInformation("Orf updating thread Nr: " + number2String(threadNr));
+	ThreadMaster::appendThreadToList(package);
+	package->wait();
 	mutex->lock();
 	SortedDecisionTreePair pair = *list->begin(); // copy of the first element
 	list->pop_front(); // remove it
 	mutex->unlock();
-
 	for(unsigned int i = 0; i < amountOfSteps; ++i){
 		pair.first->train(m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
 		int correct = 0;
@@ -206,16 +243,22 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const in
 				++correct;
 			}
 		}
-
 		// add to list again!
 		mutex->lock();
-		*counter += 1; // is already protected in mutex lock
 		const double correctVal = correct / (double) m_storage.size() * 100.;
+		package->printLineToScreenForThisThread("Performed new step with correctness: " + number2String(correctVal, 2));
+		*counter += 1; // is already protected in mutex lock
 		internalAppendToSortedList(list, pair.first, correctVal); // insert decision tree again in the list
 		pair = *list->begin(); // get new element
 		list->pop_front(); // remove it
 		mutex->unlock();
+		if(package->shouldTrainingBePaused()){
+			package->wait();
+		}else if(package->shouldTrainingBeAborted()){
+			break;
+		}
 	}
+	package->finishedTask();
 }
 
 void OnlineRandomForest::internalAppendToSortedList(SortedDecisionTreeList* list, DecisionTreeIterator& itTree, double correctVal){
@@ -253,7 +296,7 @@ OnlineRandomForest::DecisionTreeIterator OnlineRandomForest::findWorstPerforming
 		}
 	}
 	correctAmount = minCorrect / (double) m_storage.size() * 100.;
-	std::cout << "Worst correct is: " << correctAmount << std::endl;
+	printOnScreen("Worst correct is: " << correctAmount);
 	return itWorst;
 }
 

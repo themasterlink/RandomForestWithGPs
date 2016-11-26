@@ -165,6 +165,7 @@ int main(int ac, char* av[]){
 			printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
 		}
 	}
+	printOnScreen("Finished everthing Press enter to finish the program!");
 	getchar();
 
 	return 0;

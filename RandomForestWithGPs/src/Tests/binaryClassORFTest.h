@@ -22,10 +22,8 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 			++amountOfCorrect;
 		}
 	}
-	std::cout << RED;
-	std::cout << "Test size: " << test.size() << std::endl;
-	std::cout << "Result:    " << amountOfCorrect / (double) test.size() * 100. << " %" << std::endl;
-	std::cout << RESET;
+	printOnScreen("Test size: " << test.size());
+	printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %");
 }
 
 void executeForBinaryClassORF(){
@@ -33,12 +31,12 @@ void executeForBinaryClassORF(){
 	ClassData testData;
 	DataSets datas;
 	TotalStorage::readData(200);
-	std::cout << "Finish reading " << std::endl;
+	printOnScreen("Finish reading ");
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;
-	std::cout << "TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << std::endl;
+	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize());
 	const int trainAmount = 0.75 * TotalStorage::getSmallestClassSize() * TotalStorage::getAmountOfClass();
-	std::cout << "Train amount: " << trainAmount << std::endl;
+	printOnScreen("Train amount: " << trainAmount);
 	int amountOfTrees, height;
 	Settings::getValue("Forest.amountOfTrees", amountOfTrees);
 	Settings::getValue("Forest.Trees.height", height);
@@ -51,7 +49,7 @@ void executeForBinaryClassORF(){
 	orf.update();
 	performTest(orf, test);
 
-	std::cout << "Amount of Classes: " << TotalStorage::getAmountOfClass() << std::endl;
+	printOnScreen("Amount of Classes: " << TotalStorage::getAmountOfClass());
 	if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 		DataWriterForVisu::writeImg("orf.png", &orf, train.storage());
 		openFileInViewer("orf.png");

@@ -20,7 +20,8 @@ class InformationPackage {
 public:
 	enum InfoType {
 		ORF_TRAIN = 0,
-		IVM_TRAIN = 1
+		IVM_TRAIN = 1,
+		IVM_PREDICT = 2
 	};
 
 	InformationPackage(InfoType type, double correctlyClassified, int amountOfPoints);

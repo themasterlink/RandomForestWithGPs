@@ -12,7 +12,7 @@
 #include "ThreadMaster.h"
 #include "../Utility/StopWatch.h"
 
-#define HEIGHT_OF_GENERAL_INFO 20
+#define HEIGHT_OF_GENERAL_INFO 100
 #define MAX_HEIGHT_OF_ERROR 10
 
 class ScreenOutput {

@@ -61,14 +61,14 @@ private:
 
 	void predictDataProbInParallel(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const int start, const int end) const;
 
-	void trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT& generator, TreeCounter* counter);
+	void trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT& generator, InformationPackage* package, TreeCounter* counter);
 
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
 	void internalAppendToSortedList(SortedDecisionTreeList* list, DecisionTreeIterator& itTree, double correctVal);
 
 	void updateInParallel(SortedDecisionTreeList* list, const int amountOfSteps,
-			boost::mutex* mutex, unsigned int threadNr, int* counter);
+			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, int* counter);
 
 	const int m_amountOfTrees;
 

@@ -7,6 +7,7 @@
 
 #include "ScreenOutput.h"
 #include "Settings.h"
+#include "Logger.h"
 #include "../Utility/Util.h"
 
 std::list<std::string> ScreenOutput::m_lines;
@@ -66,6 +67,7 @@ void ScreenOutput::run(){
 		int actLine = 1;
 		mvprintw(actLine++,5, firstLine.c_str());
 		const std::string amountOfThreadsString = "Amount of running Threads: ";
+		ThreadMaster::m_mutex.lock();
 		mvprintw(actLine,5, amountOfThreadsString.c_str());
 		attron(A_BOLD);
 		attron(COLOR_PAIR(6));
@@ -74,7 +76,6 @@ void ScreenOutput::run(){
 		attron(COLOR_PAIR(1));
 		actLine++;
 
-		ThreadMaster::m_mutex.lock();
 		int rowCounter = 0;
 		const int col = COLS - 6; // 3 on both sides
 		const int startOfRight = COLS / 2 + 2;
@@ -214,13 +215,18 @@ void ScreenOutput::print(const std::string& line){
 	}
 	m_lines.push_back(line);
 	m_lineMutex.unlock();
+	Logger::addToFile(line);
 }
 
 void ScreenOutput::printErrorLine(const std::string& line){
 	m_lineMutex.lock();
+	if(m_errorLines.size() >= MAX_HEIGHT_OF_ERROR){
+		m_errorLines.pop_front();
+	}
 	// the stopwatch takes the time to save how long the error should be displayed
 	m_errorLines.push_back(std::pair<std::string, StopWatch>(line, StopWatch()));
 	m_lineMutex.unlock();
+	Logger::addToFile(line);
 }
 
 

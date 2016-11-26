@@ -59,7 +59,7 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 //		DataWriterForVisu::writeHisto("histo.svg", probs, 14, 0, 1);
 //		openFileInViewer("histo.svg");
 //	}
-	ConfusionMatrixPrinter::print(conv, std::cout);
+	ConfusionMatrixPrinter::print(conv);
 	std::cout << RED;
 	std::cout << "Amount of right: " << (double) right / amountOfTestPoints * 100.0 << "%" << std::endl;
 //	std::cout << "Amount of above: " << (double) amountOfAbove / amountOfTestPoints * 100.0 << "%" << std::endl;
@@ -101,8 +101,8 @@ void executeForMutliClassIVM(){
 	if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 		DataWriterForVisu::writeSvg("ivms.svg", &ivms, train.storage());
 		system("open ivms.svg");
-		DataWriterForVisu::writeImg("ivms.png", &ivms, train.storage());
-		system("open ivms.png");
+//		DataWriterForVisu::writeImg("ivms.png", &ivms, train.storage());
+//		system("open ivms.png");
 	}
 }
 

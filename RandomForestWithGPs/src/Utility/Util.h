@@ -42,12 +42,11 @@
 
 inline std::string number2String(const double& in, const int precision = -1){
 	if(precision != -1){
-		double t = 1;
-		for(int i = 0; i < precision; ++i){
-			t *= 10;
-		}
+		char buffer[10 + precision];
+		std::string format = "%."+number2String(precision)+ "f";
+		sprintf(buffer,format.c_str(), in);
 		std::stringstream ss;
-		ss << ((std::trunc(in * t)) / t) ;
+		ss << buffer;
 		return ss.str();
 	}else{
 		std::stringstream ss;
