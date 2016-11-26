@@ -6,6 +6,7 @@
  */
 
 #include "InLinePercentageFiller.h"
+#include "curses.h"
 #include "Util.h"
 #include "../Base/ScreenOutput.h"
 
@@ -34,8 +35,10 @@ void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned 
 	std::stringstream str;
 	const double seconds = m_sw.elapsedSeconds();
 	const double dAct = !lastElement ? std::min(seconds / m_dMax * 100., 100.) : 100.;
-	for(int i = 0; i < 100; ++i){
-		if(i <= dAct){
+	const int amountOfElements = std::max(COLS / 2, 100);
+	for(int i = 0; i < amountOfElements; ++i){
+		const double t = i / (double) amountOfElements * 100.;
+		if(t <= dAct){
 			str << "#";
 		}else{
 			str << " ";
@@ -58,8 +61,10 @@ void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned 
 void InLinePercentageFiller::setActPercentageAndPrintLine(const double dAct, const bool lastElement){
 	if(dAct >= 0 && dAct <= 100.0){
 		std::stringstream str;
-		for(int i = 0; i < 100; ++i){
-			if(i <= dAct){
+		const int amountOfElements = std::max(COLS / 2, 100);
+		for(int i = 0; i < amountOfElements; ++i){
+			const double t = i / (double) amountOfElements * 100.;
+			if(t <= dAct){
 				str << "#";
 			}else{
 				str << " ";

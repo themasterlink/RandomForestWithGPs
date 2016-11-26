@@ -10,6 +10,7 @@
 #include <boost/program_options.hpp>
 #include "Base/CommandSettings.h"
 #include "Base/Settings.h"
+#include "Base/Logger.h"
 #include "Base/ThreadMaster.h"
 /*#include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
@@ -83,6 +84,7 @@ int main(int ac, char* av[]){
 	Settings::init("../Settings/init.json");
 	ThreadMaster::start(); // must be performed after Settings init!
 	ScreenOutput::start(); // should be started after ThreadMaster and Settings
+	Logger::start();
 //	std::cout << RESET << "Start" << std::endl;
 
 	if(CommandSettings::get_onlyDataView()){
@@ -165,7 +167,6 @@ int main(int ac, char* av[]){
 			printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
 		}
 	}
-	printOnScreen("Finished everthing Press enter to finish the program!");
 	getchar();
 
 	return 0;

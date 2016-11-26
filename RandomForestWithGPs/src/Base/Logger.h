@@ -14,7 +14,7 @@ class Logger {
 public:
 
 	// checks the values in the settings file
-	static void init();
+	static void start();
 
 	static void addToFile(const std::string& line);
 

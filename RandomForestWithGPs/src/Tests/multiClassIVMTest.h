@@ -60,8 +60,7 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 //		openFileInViewer("histo.svg");
 //	}
 	ConfusionMatrixPrinter::print(conv);
-	std::cout << RED;
-	std::cout << "Amount of right: " << (double) right / amountOfTestPoints * 100.0 << "%" << std::endl;
+	printOnScreen("Amount of right: " << (double) right / amountOfTestPoints * 100.0 << "%%");
 //	std::cout << "Amount of above: " << (double) amountOfAbove / amountOfTestPoints * 100.0 << "%" << std::endl;
 //	std::cout << "Amount of below: " << (double) amountOfBelow / amountOfTestPoints * 100.0 << "%" << std::endl;
 //	std::cout << "Recall for  1: " << (double) rightPerClass[0] / (double) amountPerClass[0] * 100.0 << "%" << std::endl;
@@ -70,7 +69,7 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 //	std::cout << "Precision for -1: " << (double) rightPerClass[1] / right * 100.0 << "%" << std::endl;
 //	std::cout << "Amount of 1 in total: " << (double) amountPerClass[0] / amountOfTestPoints * 100.0 << "%" << std::endl;
 //	std::cout << ivm.getKernel().prettyString() << std::endl;
-	std::cout << RESET;
+//	std::cout << RESET;
 }
 
 void executeForMutliClassIVM(){
@@ -93,9 +92,9 @@ void executeForMutliClassIVM(){
 	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 	printOnScreen("Finish training");
 
-	std::cout << "On " << train.storage().size() << " points from trainings data:" << std::endl;
+	printOnScreen("On " << train.storage().size() << " points from trainings data:");
 	testIvm(ivms, train.storage());
-	std::cout << "On " << test.storage().size() << " points from real test data:" << std::endl;
+	printOnScreen("On " << test.storage().size() << " points from real test data:");
 	testIvm(ivms, test.storage());
 
 	if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
