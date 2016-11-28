@@ -50,6 +50,8 @@ public:
 
 	ClassTypeSubject classType() const;
 
+	const std::vector<Eigen::Vector2d >& getMinMaxValues(){ return m_minMaxValues;};
+
 private:
 
 	typedef typename std::pair<DecisionTreeIterator, double> SortedDecisionTreePair;
@@ -61,7 +63,7 @@ private:
 
 	void predictDataProbInParallel(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const int start, const int end) const;
 
-	void trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT& generator, InformationPackage* package, TreeCounter* counter);
+	void trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT* generator, InformationPackage* package, TreeCounter* counter);
 
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
@@ -69,6 +71,8 @@ private:
 
 	void updateInParallel(SortedDecisionTreeList* list, const int amountOfSteps,
 			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, int* counter);
+
+	void updateMinMaxValues(unsigned int event);
 
 	const int m_amountOfTrees;
 
@@ -85,6 +89,9 @@ private:
 	double m_factorForUsedDims;
 
 	Eigen::Vector2d m_minMaxUsedDataFactor;
+
+	// used in all decision trees -> no copies needed!
+	std::vector<Eigen::Vector2d > m_minMaxValues;
 
 	OnlineStorage<ClassPoint*>& m_storage;
 

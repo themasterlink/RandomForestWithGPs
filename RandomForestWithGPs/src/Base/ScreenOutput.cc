@@ -71,7 +71,7 @@ void ScreenOutput::run(){
 		mvprintw(actLine,5, amountOfThreadsString.c_str());
 		attron(A_BOLD);
 		attron(COLOR_PAIR(6));
-		mvprintw(actLine++,amountOfThreadsString.length() + 5, number2String(m_runningThreads->size()).c_str());
+		mvprintw(actLine++,amountOfThreadsString.length() + 5, (number2String(m_runningThreads->size()) + ", " + number2String(ThreadMaster::m_waitingList.size())).c_str());
 		attroff(A_BOLD);
 		attron(COLOR_PAIR(1));
 		actLine++;

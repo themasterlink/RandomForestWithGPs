@@ -62,9 +62,11 @@ public:
 
 	double getWorkedAmountOfSeconds();
 
-	void printLineToScreenForThisThread(const std::string& line){ m_lineMutex.lock(); m_lines.push_back(line); m_lineMutex.unlock(); };
+	void printLineToScreenForThisThread(const std::string& line);
 
 	void setStandartInformation(const std::string& line){ m_lineMutex.lock(); m_standartInfo = line; m_lineMutex.unlock(); };
+
+	bool canBeAborted();
 
 private:
 

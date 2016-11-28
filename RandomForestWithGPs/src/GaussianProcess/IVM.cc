@@ -126,6 +126,10 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 	if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
 		bestParams.readFromFile(kernelFilePath);
 		loadBestParams = true;
+	}else{
+		bestParams.m_length.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.len"));
+		bestParams.m_fNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.fNoise"));
+		bestParams.m_sNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.sNoise"));
 	}
 	if(timeForTraining > 0.){
 		bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
@@ -143,12 +147,12 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 		double bestCorrectness = 0;
 		StopWatch swAvg;
 		if(!loadBestParams){
+			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 			while(m_package != nullptr){ // equals a true
 				m_kernel.newRandHyperParams();
 				std::stringstream str;
 				str << "Try params: " << m_kernel.getHyperParams();
 				m_package->printLineToScreenForThisThread(str.str());
-				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 				const bool trained = internalTrain(true, 0);
 				if(m_uniformNr() % 10 == 0){
 					printError("Just a test Error");
@@ -188,19 +192,22 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 							const int label = m_data[i]->getLabel();
 							const double prob = predict(*m_data[i]);
 							if(label == getLabelForOne()){
-								if(prob > 0.75){
+								if(prob > 0.85){
 									++amountOfOnesCorrect;
 								}
 								++amountOfOneChecks;
 							}else{
-								if(prob < 0.25){
+								if(prob < 0.15){
 									++amountOfMinusOnesCorrect;
 								}
 								++amountOfMinusOneChecks;
 							}
 						}
+						if(amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks) != m_desiredPoint){
+							printError("The margin for the full test is wrong, should be: " << m_desiredPoint << ", is: " << amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks));
+						}
 						correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
-						if(correctness > 98.){
+						if(correctness > 99.7){
 							m_package->abortTraing();
 						}
 
@@ -210,12 +217,24 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 						if(correctness > bestCorrectness){
 							// only take the params if the full check on the
 							// trainingsdata provided a better value than the last full check
+							// setting the means to the new bestParams
+							if(!m_kernel.hasLengthMoreThanOneDim()){
+								std::vector<double> newMeans(3);
+								for(unsigned int i = 0; i < 3; ++i){
+									newMeans[i] = m_kernel.getHyperParams().m_params[i]->getValue();
+								}
+								m_kernel.setGaussianRandomVariables(newMeans, sds);
+							}
 							bestCorrectness = correctness;
 							m_kernel.getCopyOfParams(bestParams);
 							bestLogZ = m_logZ;
 							m_package->changeCorrectlyClassified(correctness);
 							std::stringstream str;
-							str << "New best params: " << bestParams << ", with correctness of: " << correctness;
+							str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
+									<< " %%, ones: " << (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.
+									<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100.
+									<< ", amount of minues correct: " << amountOfMinusOnesCorrect << ", amount of minus ones: " << amountOfMinusOneChecks
+									<< " %%, for: " << m_dataPoints << " points";*/
 							m_package->printLineToScreenForThisThread(str.str());
 						}
 					}else if(bestCorrectness == 0){ // for the starting cases	// in this case only the simple check was performed and the values
@@ -246,7 +265,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 			printError("This ivm could not find any parameter set in the given time, which could be trained without an error!");
 			return false;
 		}
-		printOnScreen("logZ: " << bestLogZ << ", "<< bestParams);
+		printOnScreen("For IVM: " << getLabelForOne() << " logZ: " << bestLogZ << ", "<< bestParams);
 		m_kernel.setHyperParamsWith(bestParams);
 		setDerivAndLogZFlag(false, false);
 		m_uniformNr.setMinAndMax(1, 1); // final training with all points considered
@@ -269,10 +288,11 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 		return ret;
 	}else{
 //		setDerivAndLogZFlag(false, false);
-		if(loadBestParams){
-			m_kernel.setHyperParamsWith(bestParams);
-		}
+		m_kernel.setHyperParamsWith(bestParams);
 		m_uniformNr.setMinAndMax(1, 1);
+		std::stringstream str;
+		str << "Use hyperParams: " << bestParams;
+		m_package->printLineToScreenForThisThread(str.str());
 		const bool ret = internalTrain(true, verboseLevel);
 		if(ret && !m_doEPUpdate){
 			// train the whole active set again but in the oposite direction similiar to an ep step

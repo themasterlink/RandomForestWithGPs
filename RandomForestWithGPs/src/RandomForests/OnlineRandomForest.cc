@@ -44,12 +44,13 @@ void OnlineRandomForest::train(){
 		return;
 	}
 	m_amountOfUsedDims = m_factorForUsedDims * m_storage.dim();
-	printOnScreen("amount of used dims: " << m_amountOfUsedDims);
+	printOnScreen("Amount of used dims: " << m_amountOfUsedDims);
+	printOnScreen("Amount of used data: " << m_storage.size());
 	if(m_amountOfUsedDims > m_storage.dim()){
 		printError("Amount of dims can't be bigger than the dimension size!");
 		return;
 	}else if(m_amountOfUsedDims <= 0){
-		printError("Amount of dims must be bigger than the zero!");
+		printError("Amount of dims must be bigger than zero!");
 		return;
 	}
 	std::vector<int> values(m_amountOfClasses, 0);
@@ -67,11 +68,11 @@ void OnlineRandomForest::train(){
 		Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
 		minMaxUsedData << (int) (minVal * m_storage.size()),  (int) (maxVal * m_storage.size());
 	}
-	const unsigned int amountOfThreads = 8;
+	const unsigned int amountOfThreads = boost::thread::hardware_concurrency();
 	m_generators.resize(amountOfThreads);
 	for(unsigned int i = 0; i < amountOfThreads; ++i){
 		m_generators[i] = new RandomNumberGeneratorForDT(m_storage.dim(), minMaxUsedData[0],
-				minMaxUsedData[1], m_storage.size(), i * 82734879237);
+				minMaxUsedData[1], m_storage.size(), (i + 1) * 82734879237);
 		attach(m_generators[i]);
 		m_generators[i]->update(this, OnlineStorage<ClassPoint*>::APPENDBLOCK); // init training with just one element is not useful
 	}
@@ -87,7 +88,7 @@ void OnlineRandomForest::train(){
 	InLinePercentageFiller::setActMax(m_amountOfTrees + 1);
 	std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
-		packages[i] = new InformationPackage(InformationPackage::ORF_TRAIN, 0, (m_trees.size() / (double) nrOfParallel * threadCounter));
+		packages[i] = new InformationPackage(InformationPackage::ORF_TRAIN, 0, (m_trees.size() / (double) nrOfParallel));
 	}
 	for(DecisionTreeIterator it = m_trees.begin(); it != m_trees.end(); ++it, ++counter){
 		if(threadCounter == nrOfParallel){
@@ -95,21 +96,27 @@ void OnlineRandomForest::train(){
 					number2String(threadCounter - 1) + ", from " +
 					number2String((int) (m_trees.size() / (double) nrOfParallel * (threadCounter - 1))) + " to " +
 					number2String((int) (m_trees.size() / (double) nrOfParallel * threadCounter)));
-			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, oldIt, m_trees.end(), *m_generators[threadCounter - 1], packages[threadCounter - 1], &treeCounter)));
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, oldIt, m_trees.end(), m_generators[threadCounter - 1], packages[threadCounter - 1], &treeCounter)));
 			break;
 		}
-		if(counter == (int) (m_trees.size() / (double) nrOfParallel * threadCounter)){
+		if(counter == (int) (m_amountOfTrees / (double) nrOfParallel * threadCounter)){
 			packages[threadCounter - 1]->setStandartInformation("Orf training for thread: " +
 					number2String(threadCounter - 1) + ", from " +
 					number2String((int) (m_trees.size() / (double) nrOfParallel * (threadCounter - 1))) + " to " +
 					number2String((int) (m_trees.size() / (double) nrOfParallel * threadCounter)));
-			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, oldIt, it, *m_generators[threadCounter - 1], packages[threadCounter - 1], &treeCounter)));
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, oldIt, it, m_generators[threadCounter - 1], packages[threadCounter - 1], &treeCounter)));
 			oldIt = it;
 			++threadCounter;
 		}
 	}
-	while(treeCounter.getCounter() < m_amountOfTrees){
+	int stillOneRunning = 1;
+	while(treeCounter.getCounter() < m_amountOfTrees && stillOneRunning != 0){
 		usleep(0.2 * 1e6);
+		for(unsigned int i = 0; i < packages.size(); ++i){
+			if(!packages[i]->isTaskFinished()){
+				++stillOneRunning;
+			}
+		}
 		InLinePercentageFiller::setActValueAndPrintLine(treeCounter.getCounter());
 	}
 	group.join_all();
@@ -120,12 +127,12 @@ void OnlineRandomForest::train(){
 	m_firstTrainingDone = true;
 }
 
-void OnlineRandomForest::trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT& generator, InformationPackage* package, TreeCounter* counter){
+void OnlineRandomForest::trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT* generator, InformationPackage* package, TreeCounter* counter){
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
 	int i = 0;
 	for(DecisionTreeIterator it = start; it != end; ++it){
-		it->train(m_amountOfUsedDims, generator);
+		it->train(m_amountOfUsedDims, *generator);
 		counter->addOneToCounter();
 		package->printLineToScreenForThisThread("Number " + number2String(i++) + " was calculated");
 		if(package->shouldTrainingBePaused()){
@@ -138,7 +145,8 @@ void OnlineRandomForest::trainInParallel(const DecisionTreeIterator& start, cons
 }
 
 void OnlineRandomForest::update(Subject* caller, unsigned int event){
-	notify(event);
+	updateMinMaxValues(event); // first update the min and max values
+	notify(event); // this should alert the generators two adjust to the new min and max values
 	switch(event){
 		case OnlineStorage<ClassPoint*>::APPEND:{
 			if(m_counterForRetrain >= m_amountOfPointsUntilRetrain){
@@ -402,4 +410,54 @@ OnlineStorage<ClassPoint*>& OnlineRandomForest::getStorageRef(){
 
 ClassTypeSubject OnlineRandomForest::classType() const{
 	return ClassTypeSubject::ONLINERANDOMFOREST;
+}
+
+void OnlineRandomForest::updateMinMaxValues(unsigned int event){
+	if(m_storage.size() == 0){
+		return;
+	}
+	const unsigned int dim = m_storage.dim();
+	if(dim != m_minMaxValues.size()){
+		m_minMaxValues.resize(m_storage.dim());
+		for(unsigned int i = 0; i < dim; ++i){
+			m_minMaxValues[i][0] = DBL_MAX;
+			m_minMaxValues[i][1] = -DBL_MAX;
+		}
+	}
+	switch(event){
+	case OnlineStorage<ClassPoint*>::APPEND:{
+		ClassPoint& point = *m_storage.last();
+		for(unsigned int k = 0; k < dim; ++k){
+			bool change = false;
+			if(point[k] < m_minMaxValues[k][0]){
+				m_minMaxValues[k][0] = point[k];
+				change = true;
+			}
+			if(point[k] > m_minMaxValues[k][1]){
+				m_minMaxValues[k][1] = point[k];
+				change = true;
+			}
+		}
+		break;
+	}
+	case OnlineStorage<ClassPoint*>::APPENDBLOCK:{
+		const unsigned int start = m_storage.getLastUpdateIndex();
+		for(unsigned int t = start; t < m_storage.size(); ++t){
+			ClassPoint& point = *m_storage[t];
+			for(unsigned int k = 0; k < dim; ++k){
+				if(point[k] < m_minMaxValues[k][0]){
+					m_minMaxValues[k][0] = point[k];
+				}
+				if(point[k] > m_minMaxValues[k][1]){
+					m_minMaxValues[k][1] = point[k];
+				}
+			}
+		}
+		break;
+	}
+	default:{
+		printError("This event is not handled here!");
+		break;
+	}
+	}
 }

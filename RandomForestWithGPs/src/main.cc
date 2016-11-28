@@ -99,8 +99,6 @@ int main(int ac, char* av[]){
 		system("open justData.svg");
 		exit(0);
 	}
-
-
 /*
     const int nr = 300;
     Eigen::MatrixXd Sigma, controlSigma;
@@ -167,6 +165,7 @@ int main(int ac, char* av[]){
 			printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
 		}
 	}
+	printOnScreen("Press any key to quit application");
 	getchar();
 
 	return 0;

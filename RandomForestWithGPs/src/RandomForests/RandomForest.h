@@ -65,7 +65,7 @@ private:
 	DecisionTreesContainer m_trees;
 
 	void trainInParallel(const ClassData& data, const int amountOfUsedDims,
-			RandomNumberGeneratorForDT& generator, const int start, const int end,
+			RandomNumberGeneratorForDT* generator, const int start, const int end,
 			TreeCounter* counter);
 
 	void predictDataInParallel(const Data& points, Labels* labels, const int start,

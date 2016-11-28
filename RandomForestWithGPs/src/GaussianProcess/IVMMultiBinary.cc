@@ -62,6 +62,26 @@ void IVMMultiBinary::train(){
 	if(!m_firstTraining){
 		printError("Not implemented yet!");
 	}else{
+		if(!Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam")){
+			std::vector<double> means = {Settings::getDirectDoubleValue("KernelParam.lenMean"),
+					Settings::getDirectDoubleValue("KernelParam.fNoiseMean"),
+					Settings::getDirectDoubleValue("KernelParam.sNoiseMean")};
+			std::vector<double> sds = {Settings::getDirectDoubleValue("KernelParam.lenVar"),
+					Settings::getDirectDoubleValue("KernelParam.fNoiseVar"),
+					Settings::getDirectDoubleValue("KernelParam.sNoiseVar")};
+			std::stringstream stringStream;
+			stringStream << "Used means: ";
+			for(unsigned int i = 0; i < 3; ++i){
+				stringStream << means[i] << ", ";
+			}
+			stringStream << "used sds:";
+			for(unsigned int i = 0; i < 3; ++i){
+				stringStream << sds[i];
+				if(i != 2)
+					stringStream << ", ";
+			}
+			printOnScreen(stringStream.str());
+		}
 		double durationOfTraining = CommandSettings::get_samplingAndTraining();
 		boost::thread_group group;
 		const int nrOfParallel = boost::thread::hardware_concurrency();
@@ -266,8 +286,8 @@ void IVMMultiBinary::predictDataInParallel(const Data& points, const int usedIvm
 	package->wait();
 	for(unsigned int i = 0; i < points.size(); ++i){
 		(*probabilities)[i][usedIvm] = m_ivms[usedIvm]->predict(*points[i]);
-		if(i % 100 == 0){
-			package->printLineToScreenForThisThread("One hundret points predicted");
+		if(i % 5000 == 0){
+			package->printLineToScreenForThisThread("5000 points predicted");
 		}
 		package->performedOneTrainingStep();
 		if(package->shouldTrainingBePaused()){

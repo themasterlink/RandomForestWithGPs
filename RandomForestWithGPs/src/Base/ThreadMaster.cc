@@ -7,6 +7,7 @@
 
 #include "ThreadMaster.h"
 #include "../Utility/Util.h"
+#include "Logger.h"
 #include "Settings.h"
 #include "CommandSettings.h"
 
@@ -54,6 +55,27 @@ double InformationPackage::getWorkedAmountOfSeconds(){
 		return m_sw.elapsedSeconds() + m_workedTime;
 	}
 	return m_workedTime; // if it is waiting at the moment
+}
+
+void InformationPackage::printLineToScreenForThisThread(const std::string& line) {
+	m_lineMutex.lock();
+	m_lines.push_back(line);
+	Logger::addToFile(m_standartInfo+"\n\t"+line);
+	m_lineMutex.unlock();
+}
+
+bool InformationPackage::canBeAborted(){
+	switch(m_type){
+	case ORF_TRAIN:
+		return true;
+	case IVM_TRAIN:
+		return true;
+	case IVM_PREDICT:
+		return false;
+	default:
+		printError("This type is unknown!");
+		return false;
+	}
 }
 
 
@@ -193,7 +215,7 @@ void ThreadMaster::run(){
 		for(PackageList::const_iterator it = m_runningList.begin(); it != m_runningList.end(); ++it){
 			// for each running element check if execution is finished
 			if((*it)->getWorkedAmountOfSeconds() > 5.0 || (*it)->isTaskFinished()){ // each training have to take at least 5 seconds!
-				if((*it)->getWorkedAmountOfSeconds() > CommandSettings::get_samplingAndTraining() && !(*it)->shouldTrainingBeAborted()){
+				if((*it)->getWorkedAmountOfSeconds() > CommandSettings::get_samplingAndTraining() && !(*it)->shouldTrainingBeAborted() && (*it)->canBeAborted()){
 //					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
 					(*it)->abortTraing(); // break the training
 				}

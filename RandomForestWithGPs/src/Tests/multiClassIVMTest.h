@@ -76,7 +76,7 @@ void executeForMutliClassIVM(){
 	const int firstPoints = 10000000; // all points
 	TotalStorage::readData(firstPoints);
 	DataSets datas;
-	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize());
+	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << " with " << TotalStorage::getAmountOfClass() << " classes");
 	const int trainAmount = 0.75 * TotalStorage::getSmallestClassSize() * TotalStorage::getAmountOfClass();
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;

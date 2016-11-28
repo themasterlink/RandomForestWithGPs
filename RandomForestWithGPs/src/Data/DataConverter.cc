@@ -50,6 +50,9 @@ void DataConverter::centerAndNormalizeData(DataSets& datas, DataPoint& center, D
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
 				var[i] = sqrt((double) var[i]);
+				if(var[i] <= 1e-15){
+					var[i] = 1.; // no change
+				}
 			}
 		}
 		for(DataSetsIterator it = datas.begin(); it != datas.end(); ++it){
@@ -89,6 +92,9 @@ void DataConverter::centerAndNormalizeData(Data& data, DataPoint& center, DataPo
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
 				var[i] = sqrt((double) var[i]);
+				if(var[i] <= 1e-15){
+					var[i] = 1.; // no change
+				}
 			}
 		}
 		for(DataIterator it = data.begin(); it != data.end(); ++it){
@@ -126,6 +132,9 @@ void DataConverter::centerAndNormalizeData(ClassData& data, DataPoint& center, D
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
 				var[i] = sqrt((double) var[i]);
+				if(var[i] <= 1e-15){
+					var[i] = 1.; // no change
+				}
 			}
 		}
 		for(ClassDataIterator it = data.begin(); it != data.end(); ++it){

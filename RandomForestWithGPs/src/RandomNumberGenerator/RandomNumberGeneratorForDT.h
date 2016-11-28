@@ -43,6 +43,8 @@ public:
 
 	void update(Subject* caller, unsigned int event);
 
+	bool useDim(const int dim){ return m_useDim[dim]; }
+
 private:
 	base_generator_type m_generator;
 
@@ -58,7 +60,9 @@ private:
 	variante_generator m_varGenUsedData;
 	variante_generator m_varGenData;
 
-	std::vector<Eigen::Vector2d > m_minMaxValues;
+	boost::mutex m_mutex;
+
+	std::vector<bool> m_useDim;
 };
 
 inline int RandomNumberGeneratorForDT::getRandDim(){
@@ -83,7 +87,10 @@ inline int RandomNumberGeneratorForDT::getRandFromRange(){
 
 inline double RandomNumberGeneratorForDT::getRandSplitValueInDim(const unsigned int dim){
 	if(m_uniformSplitValues.size() > dim){
-		return m_uniformSplitValues[dim](m_generator);
+		m_mutex.lock();
+		const double val =  m_uniformSplitValues[dim](m_generator);
+		m_mutex.unlock();
+		return val;
 	}else{
 		printError("The rand split value generator has not been set yet!");
 		return 0.;

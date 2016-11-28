@@ -23,17 +23,17 @@
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 40,
+        "nrOfInducingPoints": 80,
         "desiredMargin": 0.001,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
         "Training": {
         	"useSavedHyperParams": "false",
-        	"overwriteExistingHyperParams": "false"
+        	"overwriteExistingHyperParams": "true"
         }
     },
     "TotalStorage": {
-        "folderLocReal": "..\/realTest\/",
+        "folderLocReal": "..\/mnist\/",
         "folderLocFake": "..\/fakeData\/",
         "normalizeData": "true"
     },
@@ -47,9 +47,9 @@
         "path": "..\/realTest\/kernelData.kernel"
     },
     "KernelParam": {
-    	"len": 1.4,
-    	"fNoise": 1.2,
-    	"sNoise": 0.01,
+    	"len": 0.732498,
+    	"fNoise": 3.51785,
+    	"sNoise": 0.0832458,
     	"lenMean": 0.5,
     	"lenVar": 0.3,
     	"fNoiseMean": 2.2,
@@ -96,7 +96,7 @@
     },
     
     "main": {
-    	"type": "multiIvm"
+    	"type": "ORF"
     }
     
 }

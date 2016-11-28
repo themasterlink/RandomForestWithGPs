@@ -98,5 +98,15 @@ template<class T> const T& max(const T& a, const T& b){
 	return !(b > a) ? a : b;     // or: return !comp(b,a)?a:b; for version (2)
 }
 
+inline int_fast32_t highEndian2LowEndian(int_fast32_t i) {
+    unsigned char c1, c2, c3, c4;
+
+    c1 = i & 255;
+    c2 = (i >> 8) & 255;
+    c3 = (i >> 16) & 255;
+    c4 = (i >> 24) & 255;
+
+    return ((int_fast32_t)c1 << 24) + ((int_fast32_t)c2 << 16) + ((int_fast32_t)c3 << 8) + c4;
+}
 
 #endif /* UTILITY_UTIL_H_ */

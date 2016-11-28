@@ -50,10 +50,10 @@ void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
 	boost::thread_group group;
 	TreeCounter counter;
 	m_counterIncreaseValue = min(max(2, m_amountOfTrees / nrOfParallel / 100), 100);
-	std::vector<RandomNumberGeneratorForDT> generators;
+	std::vector<RandomNumberGeneratorForDT*> generators;
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int seed = i;
-		generators.push_back(RandomNumberGeneratorForDT(data[0]->rows(), minMaxUsedData[0], minMaxUsedData[1], data.size(), seed));
+		generators.push_back(new RandomNumberGeneratorForDT(data[0]->rows(), minMaxUsedData[0], minMaxUsedData[1], data.size(), seed));
 		const int start = (i / (double) nrOfParallel) * m_amountOfTrees;
 		const int end = ((i + 1) / (double) nrOfParallel) * m_amountOfTrees;
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::trainInParallel, this, data, amountOfUsedDims, generators[i], start, end, &counter)));
@@ -72,15 +72,18 @@ void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
 		}
 	}
 	group.join_all(); // wait until all are finished!
+	for(int i = 0; i < nrOfParallel; ++i){
+		delete generators[i];
+	}
 	std::cout << "\rFinish training in : " << sw.elapsedSeconds() << " sec                                                                 " << std::endl;
 }
 
 void RandomForest::trainInParallel(const ClassData& data,
-		const int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const int start,
+		const int amountOfUsedDims, RandomNumberGeneratorForDT* generator, const int start,
 		const int end, TreeCounter* counter){
 	int iCounter = 0;
 	for(int i = start; i < end; ++i){
-		m_trees[i].train(data, amountOfUsedDims, generator);
+		m_trees[i].train(data, amountOfUsedDims, *generator);
 		if(i % m_counterIncreaseValue == 0 && counter != NULL){
 			counter->addToCounter(m_counterIncreaseValue); // is a thread safe add
 			iCounter += m_counterIncreaseValue;

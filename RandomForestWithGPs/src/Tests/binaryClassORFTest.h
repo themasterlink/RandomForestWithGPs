@@ -30,7 +30,7 @@ void executeForBinaryClassORF(){
 	ClassData data;
 	ClassData testData;
 	DataSets datas;
-	TotalStorage::readData(200);
+	TotalStorage::readData(600);
 	printOnScreen("Finish reading ");
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;
@@ -43,11 +43,15 @@ void executeForBinaryClassORF(){
 	OnlineRandomForest orf(train, height, amountOfTrees, TotalStorage::getAmountOfClass());
 	// starts the training by its own
 	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
+	printOnScreen("Training finished");
 	performTest(orf, train);
+	printOnScreen("First test finished");
 
 	performTest(orf, test);
+	printOnScreen("Second test finished");
 	orf.update();
 	performTest(orf, test);
+	printOnScreen("Third test after orf.update() finished");
 
 	printOnScreen("Amount of Classes: " << TotalStorage::getAmountOfClass());
 	if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
