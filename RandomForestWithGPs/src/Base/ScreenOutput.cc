@@ -178,6 +178,7 @@ void ScreenOutput::run(){
 			attron(COLOR_PAIR(1));
 		}
 		mvprintw(progressBar,0, completeWhite.c_str());
+		mvprintw(progressBar + 1,0, completeWhite.c_str());
 		mvprintw(progressBar, 4, m_progressLine.c_str());
 		m_lineMutex.unlock();
 		update_panels();
@@ -185,7 +186,6 @@ void ScreenOutput::run(){
 		refresh();
 		int ch = getch();
 		if(ch != ERR){
-			printOnScreen(ch);
 			if(ch == KEY_UP){
 				++lineOffset;
 			}else if(ch == KEY_DOWN){
@@ -214,15 +214,6 @@ void ScreenOutput::run(){
 void ScreenOutput::updateRunningPackage(ThreadMaster::PackageList::const_iterator& it, const int rowCounter, const int row, const bool isLeft, const int colWidth,
 		const int amountOfLinesPerThread, int& actLine, int startOfRight, std::vector<WINDOW*>& windows, std::vector<PANEL*>& panels){
 	(*it)->m_lineMutex.lock();
-	std::string drawLine = "";
-
-	for(unsigned int i = 0; i < colWidth + (isLeft ? 4 : 3); ++i){
-		if(i == 4){
-			drawLine += number2String(rowCounter + 1).c_str();
-		}else{
-			drawLine += "-";
-		}
-	}
 	int height, width; // in both if they are set
 	WINDOW* win;
 	if(windows[rowCounter] == nullptr){
@@ -237,7 +228,7 @@ void ScreenOutput::updateRunningPackage(ThreadMaster::PackageList::const_iterato
 		mvwaddch(win, 2, width - 1, ACS_RTEE);
 	}else{
 		getmaxyx(windows[rowCounter], height, width);
-		if(height != amountOfLinesPerThread){
+		if(height != amountOfLinesPerThread || width != colWidth){
 			// new draw!
 			del_panel(panels[rowCounter]);
 			delwin(windows[rowCounter]);
@@ -266,7 +257,11 @@ void ScreenOutput::updateRunningPackage(ThreadMaster::PackageList::const_iterato
 		mvwprintw(win, i, 1, whiteSpacesForWindow.c_str());
 	}
 	wattron(win, COLOR_PAIR(6));
-	mvwprintw(win, 1, (width - standartLine.length()) / 2, standartLine.c_str());
+	if(standartLine.length() > width){
+		mvwprintw(win, 1, 1, (standartLine.substr(0, width - 3) + "...").c_str());
+	}else{
+		mvwprintw(win, 1, (width - standartLine.length()) / 2, standartLine.c_str());
+	}
 	wattron(win, COLOR_PAIR(1));
 	int counter = 3;
 	int amountOfNeededLines = 0;

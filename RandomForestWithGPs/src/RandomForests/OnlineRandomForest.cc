@@ -186,9 +186,16 @@ bool OnlineRandomForest::update(){
 			packages[i] = new InformationPackage(InformationPackage::ORF_TRAIN, 0., amountOfElements);
 			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::updateInParallel, this, list, amountOfElements, mutex, i, packages[i], &counter)));
 		}
-		while(counter < totalAmount){
-			usleep(0.1 * 1e6);
+		int stillOneRunning = 1;
+		while(counter < totalAmount && stillOneRunning != 0){
+			stillOneRunning = 0;
+			for(unsigned int i = 0; i < nrOfParallel; ++i){
+				if(!packages[i]->isTaskFinished()){
+					stillOneRunning += 1;
+				}
+			}
 			InLinePercentageFiller::setActValueAndPrintLine(counter);
+			usleep(0.1 * 1e6);
 		}
 		group.join_all();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){

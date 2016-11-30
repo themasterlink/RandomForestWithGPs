@@ -17,13 +17,13 @@
     "Forest": {
         "amountOfTrees": 1000,
         "Trees": {
-            "height": 10
+            "height": 14
         }
     },
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 60,
+        "nrOfInducingPoints": 80,
         "desiredMargin": 0.001,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
@@ -34,8 +34,8 @@
     },
     "TotalStorage": {
     	"amountOfPointsUsedForTraining": 200,
-    	"shareForTraining": 0.9,
-        "folderLocReal": "..\/mnist\/",
+    	"shareForTraining": 0.6,
+        "folderLocReal": "..\/usps\/",
         "folderLocFake": "..\/fakeData\/",
         "normalizeData": "true"
     },
@@ -52,10 +52,10 @@
     	"len": 0.732498,
     	"fNoise": 3.51785,
     	"sNoise": 0.0832458,
-    	"lenMean": 0.4,
-    	"lenVar": 0.2,
-    	"fNoiseMean": 1.0,
-    	"fNoiseVar": 0.15,
+    	"lenMean": 14.0,
+    	"lenVar": 2,
+    	"fNoiseMean": 1.5,
+    	"fNoiseVar": 1.2,
     	"sNoiseMean": 0.1,
     	"sNoiseVar": 0.01
     },

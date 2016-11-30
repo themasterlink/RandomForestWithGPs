@@ -85,7 +85,6 @@ int main(int ac, char* av[]){
 	Settings::init("../Settings/init.json");
 	ThreadMaster::start(); // must be performed after Settings init!
 	ScreenOutput::start(); // should be started after ThreadMaster and Settings
-	Logger::start();
 //	std::cout << RESET << "Start" << std::endl;
 
 	if(CommandSettings::get_onlyDataView()){
@@ -100,7 +99,11 @@ int main(int ac, char* av[]){
 		system("open justData.svg");
 		exit(0);
 	}
-/*
+	Logger::start();
+	if(CommandSettings::get_samplingAndTraining() > 0){
+		printOnScreen("Training time: " << TimeFrame(CommandSettings::get_samplingAndTraining()));
+	}
+	/*
     const int nr = 300;
     Eigen::MatrixXd Sigma, controlSigma;
     controlSigma = Eigen::MatrixXd::Random(nr, nr);
