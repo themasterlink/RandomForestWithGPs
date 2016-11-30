@@ -12,6 +12,9 @@
 #include "Base/Settings.h"
 #include "Base/Logger.h"
 #include "Base/ThreadMaster.h"
+#include <panel.h>
+#include <form.h>
+
 /*#include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/xfeatures2d.hpp>
@@ -77,7 +80,6 @@ void quit()
 {
   endwin();
 }
-
 
 int main(int ac, char* av[]){
 	handleProgrammOptions(ac,av);
@@ -146,26 +148,24 @@ int main(int ac, char* av[]){
     std::cout << "new sigma up time: " << sigmaUpNew.elapsedAvgAsPrettyTime() << std::endl;
     std::cout << "total new sigma up time: " << sigmaUpNew.elapsedAvgAsTimeFrame() * ((double) 10)<< std::endl;
 */
-	bool useGP;
-	Settings::getValue("OnlyGp.useGP", useGP);
-	if(useGP){
-		std::string type;
-		Settings::getValue("main.type", type);
-		StopWatch sw;
-		if(type == "binaryIvm"){
-			executeForBinaryClassIVM();
-			printOnScreen("For IVM: " << sw.elapsedAsTimeFrame());
-		}else if(type == "multiIvm"){
-			executeForMutliClassIVM();
-			printOnScreen("For IVMs: " << sw.elapsedAsTimeFrame());
-		}else if(type == "ORF"){
-			executeForBinaryClassORF();
-			printOnScreen("For ORFs: " << sw.elapsedAsTimeFrame());
-		}else{
-			printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
-		}
+	std::string type;
+	Settings::getValue("main.type", type);
+	StopWatch sw;
+	if(type == "binaryIvm"){
+		executeForBinaryClassIVM();
+		printOnScreen("For IVM: " << sw.elapsedAsTimeFrame());
+	}else if(type == "multiIvm"){
+		executeForMutliClassIVM();
+		printOnScreen("For IVMs: " << sw.elapsedAsTimeFrame());
+	}else if(type == "ORF"){
+		executeForBinaryClassORF();
+		printOnScreen("For ORFs: " << sw.elapsedAsTimeFrame());
+	}else{
+		printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
 	}
+
 	printOnScreen("Press any key to quit application");
+	Logger::forcedWrite();
 	getchar();
 
 	return 0;

@@ -11,7 +11,7 @@
 
 template<typename KernelType, unsigned int nrOfParams>
 KernelBase<KernelType, nrOfParams>::KernelBase(const OwnKernelInitParams& initParams):
-	m_pDataMat(nullptr), m_pData(nullptr), m_init(false),
+	m_differences(nullptr), m_pDataMat(nullptr), m_pData(nullptr), m_init(false),
 	m_calcedDifferenceMatrix(false), m_dataPoints(0), m_kernelParams(initParams) {
 	for(unsigned int i = 0; i < nrOfParams; ++i){
 		m_randomGaussians[i] = new RandomGaussianNr(0.0, 1.0);
@@ -34,44 +34,31 @@ KernelBase<KernelType, nrOfParams>::~KernelBase(){
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, const bool calcDifferenceMatrix){
+void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, const bool shouldDifferenceMatrixBeCalculated, const bool useSharedDifferenceMatrix){
 	m_pDataMat = const_cast<Eigen::MatrixXd*>(&dataMat);
-	m_calcedDifferenceMatrix = calcDifferenceMatrix;
-	if(calcDifferenceMatrix){
+	m_calcedDifferenceMatrix = shouldDifferenceMatrixBeCalculated;
+	if(m_calcedDifferenceMatrix){
 		std::string path;
 		Settings::getValue("Kernel.path", path);
 		//const std::string path = "kernelFile_" + number2String(dataMat.rows()) + "_" + number2String(dataMat.cols()) + ".kernel";
 		bool read = false;
-		if(boost::filesystem::exists(path)){
+		if(boost::filesystem::exists(path) && m_differences == nullptr){
 			std::fstream input(path, std::ios::binary| std::ios::in);
-			ReadWriterHelper::readMatrix(input, m_differences);
+			m_differences = new Eigen::MatrixXd();
+			ReadWriterHelper::readMatrix(input, *m_differences);
 			input.close();
-			m_dataPoints = m_differences.cols();
-			read = m_differences.cols() == dataMat.cols(); // else this means the kernel data does not fit the actual load data
+			m_dataPoints = m_differences->cols();
+			read = m_differences->cols() == dataMat.cols(); // else this means the kernel data does not fit the actual load data
+			m_calcedDifferenceMatrix = true;
 		}
-		if(!read){
-			m_dataPoints = dataMat.cols();
-			m_differences = Eigen::MatrixXd(m_dataPoints , m_dataPoints);
-			//const int dim = dataMat.rows();
-			//double x;
-			for(int i = 0; i < m_dataPoints ; ++i){
-				m_differences(i,i) = 0.;
-				//const Eigen::VectorXd col = dataMat.col(i);
-				for(int j = i + 1; j < m_dataPoints ; ++j){
-					m_differences(i,j) = (dataMat.col(i) - dataMat.col(j)).squaredNorm();
-					m_differences(j,i) = m_differences(i,j);
-					/*double diff = 0;
-			for(int k = 0; k < dim; ++k){
-				x = dataMat(k,j) - dataMat(k,i);
-				diff += x * x;
-			}
-			m_differences(i,j) = diff;
-			m_differences(j,i) = diff;*/
-				}
-			}
+		if(!read && !useSharedDifferenceMatrix){
+			const int amountOfElementsInTriangluarMatrix = (m_pData->size() * m_pData->size() + m_pData->size()) / 2;
+			m_differences = new Eigen::MatrixXd();
+			calcDifferenceMatrix(0, amountOfElementsInTriangluarMatrix, m_differences);
 			std::fstream output(path, std::ios::binary | std::ios::out);
-			ReadWriterHelper::writeMatrix(output, m_differences);
+			ReadWriterHelper::writeMatrix(output, *m_differences);
 			output.close();
+			m_calcedDifferenceMatrix = true;
 		}
 	}
 	m_init = true;
@@ -79,47 +66,80 @@ void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, co
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::init(const ClassData& data, const bool calcDifferenceMatrix){
+void KernelBase<KernelType, nrOfParams>::init(const ClassData& data, const bool shouldDifferenceMatrixBeCalculated, const bool useSharedDifferenceMatrix){
 	m_pData = const_cast<ClassData*>(&data);
-	m_calcedDifferenceMatrix = calcDifferenceMatrix;
-	if(calcDifferenceMatrix){
+	m_calcedDifferenceMatrix = shouldDifferenceMatrixBeCalculated;
+	if(m_calcedDifferenceMatrix){
 		std::string path;
 		Settings::getValue("Kernel.path", path);
 		//const std::string path = "kernelFile_" + number2String(dataMat.rows()) + "_" + number2String(dataMat.cols()) + ".kernel";
 		bool read = false;
 		if(boost::filesystem::exists(path)){
 			std::fstream input(path, std::ios::binary| std::ios::in);
-			ReadWriterHelper::readMatrix(input, m_differences);
+			ReadWriterHelper::readMatrix(input, *m_differences);
 			input.close();
-			m_dataPoints = m_differences.cols();
-			read = m_differences.cols() == data.size(); // else this means the kernel data does not fit the actual load data
+			m_dataPoints = m_differences->cols();
+			read = m_differences->cols() == data.size(); // else this means the kernel data does not fit the actual load data
+			m_calcedDifferenceMatrix = true;
 		}
-		if(!read){
-			m_dataPoints = data.size();
-			m_differences = Eigen::MatrixXd(m_dataPoints, m_dataPoints);
-			//const int dim = dataMat.rows();
-			//double x;
-			for(int i = 0; i < m_dataPoints ; ++i){
-				m_differences(i,i) = 0.;
-				//const Eigen::VectorXd col = dataMat.col(i);
-				for(int j = i + 1; j < m_dataPoints ; ++j){
-					m_differences(i,j) = (*data[i] - *data[j]).squaredNorm();
-					m_differences(j,i) = m_differences(i,j);
-					/*double diff = 0;
-				for(int k = 0; k < dim; ++k){
-					x = dataMat(k,j) - dataMat(k,i);
-					diff += x * x;
-				}
-				m_differences(i,j) = diff;
-				m_differences(j,i) = diff;*/
-				}
-			}
+		if(!read && !useSharedDifferenceMatrix){
+			const int amountOfElementsInTriangluarMatrix = (m_pData->size() * m_pData->size() + m_pData->size()) / 2;
+			m_differences = new Eigen::MatrixXd(m_dataPoints, m_dataPoints);
+			calcDifferenceMatrix(0, amountOfElementsInTriangluarMatrix, m_differences);
+			m_calcedDifferenceMatrix = true;
 			std::fstream output(path, std::ios::binary | std::ios::out);
-			ReadWriterHelper::writeMatrix(output, m_differences);
+			ReadWriterHelper::writeMatrix(output, *m_differences);
 			output.close();
 		}
 	}
 	m_init = true;
+}
+
+template<typename KernelType, unsigned int nrOfParams>
+void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd* usedMatrix){
+	m_differences = usedMatrix;
+	if(m_pData != nullptr){
+		m_dataPoints = m_pData->size();
+		int counter = 0;
+		for(int i = 0; i < m_dataPoints; ++i){
+			++counter;
+			for(int j = i + 1; j < m_dataPoints; ++j){
+				if(counter >= start){
+					if(counter == end){
+						i = m_dataPoints;
+						break;
+					}
+					(*m_differences)(i,j) = (*(*m_pData)[i] - *(*m_pData)[j]).squaredNorm();
+					(*m_differences)(j,i) = (*m_differences)(i,j);
+				}
+				++counter;
+			}
+		}
+		m_calcedDifferenceMatrix = true;
+	}else if(m_pDataMat != nullptr){
+		m_dataPoints = m_pDataMat->cols();
+		int counter = 0;
+		for(int i = 0; i < m_dataPoints; ++i){
+			for(int j = i; j < m_dataPoints; ++j){
+				if(counter >= start){
+					if(counter == end){
+						i = m_dataPoints;
+						break;
+					}
+					if(i != j){
+						(*m_differences)(i,j) = (m_pDataMat->col(i) - m_pDataMat->col(j)).squaredNorm();
+						(*m_differences)(j,i) = (*m_differences)(i,j);
+					}else{
+						(*m_differences)(i,i) = 0.;
+					}
+				}
+				++counter;
+			}
+		}
+		m_calcedDifferenceMatrix = true;
+	}else{
+		printError("The difference matrix can not be calculated without a data set!");
+	}
 }
 
 template<typename KernelType, unsigned int nrOfParams>

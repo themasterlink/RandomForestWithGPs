@@ -46,7 +46,7 @@ void GaussianProcessWriter::readFromStream(std::fstream& file, GaussianProcess& 
 	ReadWriterHelper::readVector(file, gp.m_sqrtDDLogPi);
 	ReadWriterHelper::readMatrix(file, gp.m_innerOfLLT);
 	gp.m_choleskyLLT.compute(gp.m_innerOfLLT);
-	ReadWriterHelper::readMatrix(file, gp.m_kernel.m_differences);
+	ReadWriterHelper::readMatrix(file, *gp.m_kernel.m_differences);
 	bool hasMoreThanOneDim;
 	file.read((char*) &hasMoreThanOneDim, sizeof(bool));
 	if(hasMoreThanOneDim){
@@ -63,7 +63,7 @@ void GaussianProcessWriter::readFromStream(std::fstream& file, GaussianProcess& 
 		file.read((char*) &noiseS, sizeof(double));
 		gp.m_kernel.setHyperParams(len, noiseF, noiseS);
 	}
-	gp.m_kernel.init(gp.m_dataMat);
+	gp.m_kernel.init(gp.m_dataMat, false, false);
 	/*double mean, sd;
 	file.read((char*) &mean, sizeof(double));
 	file.read((char*) &sd, sizeof(double));
@@ -87,7 +87,7 @@ void GaussianProcessWriter::writeToStream(std::fstream& file, GaussianProcess& g
 	ReadWriterHelper::writeVector(file, gp.m_sqrtDDLogPi);
 	ReadWriterHelper::writeVector(file, gp.m_sqrtDDLogPi);
 	ReadWriterHelper::writeMatrix(file, gp.m_innerOfLLT);
-	ReadWriterHelper::writeMatrix(file, gp.m_kernel.m_differences);
+	ReadWriterHelper::writeMatrix(file, *gp.m_kernel.m_differences);
 	bool hasMoreThanOneLength = gp.m_kernel.hasLengthMoreThanOneDim();
 	file.write((char*) &hasMoreThanOneLength, sizeof(bool)); // order is len, sigmaF, sigmaN
 	if(hasMoreThanOneLength){

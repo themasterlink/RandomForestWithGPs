@@ -20,6 +20,12 @@ public:
 
 	static void setTimeBetweenWritingIntervals(const double timeToSleep){ m_timeToSleep = timeToSleep; };
 
+	static void forcedWrite();
+
+	static std::string nameOfLogFile(){ return m_filePath; };
+
+	static bool isUsed(){ return m_init;}
+
 private:
 
 	static void run();

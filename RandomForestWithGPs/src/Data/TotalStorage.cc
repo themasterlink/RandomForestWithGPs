@@ -106,8 +106,9 @@ void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& trai
 			++counter;
 		}
 	}
-	// to guarantee that the append block update is called which invokes the training
 	printOnScreen("For training: " << forTraining.size());
+	printOnScreen("For testing: " << forTesting.size());
+	// to guarantee that the append block update is called which invokes the training
 	train.append(forTraining);
 	test.append(forTesting);
 }

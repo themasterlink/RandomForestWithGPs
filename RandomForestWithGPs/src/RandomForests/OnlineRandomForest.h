@@ -19,10 +19,10 @@ class OnlineRandomForest : public Observer, public PredictorMultiClass, public S
 public:
 
 	typedef typename std::list<DynamicDecisionTree> DecisionTreesContainer;
-	typedef typename std::list<DynamicDecisionTree>::iterator DecisionTreeIterator;
-	typedef typename std::list<DynamicDecisionTree>::const_iterator DecisionTreeConstIterator;
+	typedef typename DecisionTreesContainer::iterator DecisionTreeIterator;
+	typedef typename DecisionTreesContainer::const_iterator DecisionTreeConstIterator;
 
-	OnlineRandomForest(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfTrees, const int amountOfUsedClasses);
+	OnlineRandomForest(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfUsedClasses);
 
 	virtual ~OnlineRandomForest();
 
@@ -63,7 +63,7 @@ private:
 
 	void predictDataProbInParallel(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const int start, const int end) const;
 
-	void trainInParallel(const DecisionTreeIterator& start, const DecisionTreeIterator& end, RandomNumberGeneratorForDT* generator, InformationPackage* package, TreeCounter* counter);
+	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package);
 
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
@@ -73,8 +73,6 @@ private:
 			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, int* counter);
 
 	void updateMinMaxValues(unsigned int event);
-
-	const int m_amountOfTrees;
 
 	const int m_maxDepth;
 
@@ -102,6 +100,8 @@ private:
 	Eigen::Vector2i getMinMaxData();
 
 	std::vector<RandomNumberGeneratorForDT*> m_generators;
+
+	boost::mutex m_treesMutex;
 
 	bool m_firstTrainingDone;
 };

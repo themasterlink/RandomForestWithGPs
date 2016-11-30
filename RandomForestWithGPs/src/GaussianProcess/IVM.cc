@@ -39,7 +39,9 @@ void IVM::setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ){
 }
 
 void IVM::init(const ClassData& data,
-		const unsigned int numberOfInducingPoints, const Eigen::Vector2i& labelsForClasses, const bool doEPUpdate){
+		const unsigned int numberOfInducingPoints,
+		const Eigen::Vector2i& labelsForClasses,
+		const bool doEPUpdate, const bool calcDifferenceMatrixAlone){
 	if(data.size() == 0){
 		printError("No data given!"); return;
 	}
@@ -68,8 +70,13 @@ void IVM::init(const ClassData& data,
 	m_doEPUpdate = doEPUpdate;
 	setNumberOfInducingPoints(numberOfInducingPoints);
 //	StopWatch sw;
-	const bool calcDifferenceMatrix = false; // !m_kernel.hasLengthMoreThanOneDim();
-	m_kernel.init(m_data, calcDifferenceMatrix);
+	if(calcDifferenceMatrixAlone){
+		const bool calcDifferenceMatrix = !m_kernel.hasLengthMoreThanOneDim();
+		m_kernel.init(m_data, calcDifferenceMatrix, false);
+	}else{
+		// in this case just init the connectin between the kernel and the data, but no calculation is performed!
+		m_kernel.init(m_data, false, false);
+	}
 //	std::cout << "Time: " << sw.elapsedAsPrettyTime() << std::endl;
 	//std::cout << "Frac: " << (double) amountOfOneClass / (double) m_dataPoints << std::endl;
 
@@ -147,6 +154,39 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 		double bestCorrectness = 0;
 		StopWatch swAvg;
 		if(!loadBestParams){
+			m_uniformNr.setMinAndMax(0, m_dataPoints - 1);
+			std::list<int> testPoints;
+			int counter = 0;
+			const int maxAmount = std::min((unsigned int) 100, m_dataPoints);
+			while(counter < maxAmount){
+				int value = -1;
+				while(value == -1){
+					int act = m_uniformNr();
+					const int label = m_data[act]->getLabel();
+					if(counter % 2 == 0){ // check that always a different label is used for the test set
+						if(label == getLabelForOne()){
+							value = act;
+						}
+					}else{
+						if(label != getLabelForOne()){
+							value = act;
+						}
+					}
+				}
+				// check if not used until now
+				bool alreadUsed = false;
+				for(std::list<int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
+					if(*it == value){
+						alreadUsed = true;
+						break;
+					}
+				}
+				if(!alreadUsed){
+					++counter;
+					testPoints.push_back(value);
+				}
+			}
+
 			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 			while(m_package != nullptr){ // equals a true
 				m_kernel.newRandHyperParams();
@@ -154,9 +194,13 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 				str << "Try params: " << m_kernel.getHyperParams();
 				m_package->printLineToScreenForThisThread(str.str());
 				const bool trained = internalTrain(true, 0);
-				if(m_uniformNr() % 10 == 0){
-					printError("Just a test Error");
+				std::stringstream str2;
+				if(trained){
+					str2 << "Params: " << m_kernel.getHyperParams() << " with success and logZ: " << m_logZ;
+				}else{
+					str2 << "Params: " << m_kernel.getHyperParams() << " failed";
 				}
+				m_package->overwriteLastLineToScreenForThisThread(str2.str());
 //				if(!trained){
 //					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
 //				}
@@ -165,16 +209,16 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 					// go over a bunch of points to test it
 					int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
 					int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
-					for(unsigned int i = m_uniformNr(); i < m_dataPoints; i += m_uniformNr()){
-						const int label = m_data[i]->getLabel();
-						const double prob = predict(*m_data[i]);
+					for(std::list<int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
+						const int label = m_data[*it]->getLabel();
+						const double prob = predict(*m_data[*it]);
 						if(label == getLabelForOne()){
-							if(prob > 0.75){
+							if(prob > 0.6){
 								++amountOfOnesCorrect;
 							}
 							++amountOfOneChecks;
 						}else{
-							if(prob < 0.25){
+							if(prob < 0.4){
 								++amountOfMinusOnesCorrect;
 							}
 							++amountOfMinusOneChecks;
@@ -192,12 +236,12 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 							const int label = m_data[i]->getLabel();
 							const double prob = predict(*m_data[i]);
 							if(label == getLabelForOne()){
-								if(prob > 0.85){
+								if(prob > 0.6){
 									++amountOfOnesCorrect;
 								}
 								++amountOfOneChecks;
 							}else{
-								if(prob < 0.15){
+								if(prob < 0.4){
 									++amountOfMinusOnesCorrect;
 								}
 								++amountOfMinusOneChecks;
@@ -207,7 +251,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 							printError("The margin for the full test is wrong, should be: " << m_desiredPoint << ", is: " << amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks));
 						}
 						correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
-						if(correctness > 99.7){
+						if(correctness > 95){
 							m_package->abortTraing();
 						}
 
@@ -229,6 +273,14 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 							m_kernel.getCopyOfParams(bestParams);
 							bestLogZ = m_logZ;
 							m_package->changeCorrectlyClassified(correctness);
+							if(!m_kernel.hasLengthMoreThanOneDim()){
+								std::stringstream str2;
+								str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
+										<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
+										<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+										<< "complex: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
+								m_package->setAdditionalInfo(str2.str());
+							}
 							std::stringstream str;
 							str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
 									<< " %%, ones: " << (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.
@@ -243,6 +295,14 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 						m_kernel.getCopyOfParams(bestParams);
 						bestLogZ = m_logZ;
 						m_package->changeCorrectlyClassified(correctness);
+						if(!m_kernel.hasLengthMoreThanOneDim()){
+							std::stringstream str2;
+							str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
+									<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
+									<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+									<< "simple: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
+							m_package->setAdditionalInfo(str2.str());
+						}
 						std::stringstream str;
 						str << "New best params: " << bestParams << ", with simple correctness of: " << correctness;
 						m_package->printLineToScreenForThisThread(str.str());

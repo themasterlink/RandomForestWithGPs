@@ -9,6 +9,7 @@
 #define BASE_SCREENOUTPUT_H_
 
 #include <curses.h>
+#include <panel.h>
 #include "ThreadMaster.h"
 #include "../Utility/StopWatch.h"
 
@@ -33,6 +34,9 @@ private:
 	static void quitForScreenMode();
 
 	static void run();
+
+	static void updateRunningPackage(ThreadMaster::PackageList::const_iterator& it, const int rowCounter, const int row, const bool isLeft, const int colWidth,
+			const int amountOfLinesPerThread, int& actLine, int startOfRight, std::vector<WINDOW*>& windows, std::vector<PANEL*>& panels);
 
 	static boost::mutex m_lineMutex;
 

@@ -26,7 +26,8 @@ public:
 
 	IVM();
 
-	void init(const ClassData& dataMat, const unsigned int numberOfInducingPoints, const Eigen::Vector2i& labelsForClasses, const bool doEPUpdate);
+	void init(const ClassData& dataMat, const unsigned int numberOfInducingPoints, const Eigen::Vector2i& labelsForClasses,
+			const bool doEPUpdate, const bool calcDifferenceMatrixAlone = true);
 
 	void setNumberOfInducingPoints(unsigned int nr);
 

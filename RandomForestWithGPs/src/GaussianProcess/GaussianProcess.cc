@@ -29,7 +29,7 @@ void GaussianProcess::init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd
 	m_repetitionStepFactor = 1.0;
 	m_init = true;
 	m_innerOfLLT = Eigen::MatrixXd(m_dataPoints,m_dataPoints);
-	m_kernel.init(m_dataMat);
+	m_kernel.init(m_dataMat, m_kernel.hasLengthMoreThanOneDim(), false);
 	m_fastPredict = false;
 }
 
@@ -58,7 +58,7 @@ void GaussianProcess::train(){
 			std::cout << "\rNan or inf case: " << nanCounter << std::endl;
 			std::cout << m_kernel.prettyString() << std::endl;
 			++nanCounter;
-			m_kernel.init(m_dataMat);
+			m_kernel.init(m_dataMat, m_kernel.hasLengthMoreThanOneDim(), false);
 			m_choleskyLLT.compute(Eigen::MatrixXd::Identity(2,2));
 			m_repetitionStepFactor *= 0.5;
 			//getchar();

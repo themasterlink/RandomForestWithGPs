@@ -73,11 +73,15 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 }
 
 void executeForMutliClassIVM(){
-	const int firstPoints = 10000000; // all points
+	int firstPoints; // all points
+	Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
+	const double share = Settings::getDirectDoubleValue("TotalStorage.shareForTraining");
+	firstPoints /= share;
+	printOnScreen("Read " << firstPoints << " points per class");
 	TotalStorage::readData(firstPoints);
 	DataSets datas;
 	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << " with " << TotalStorage::getAmountOfClass() << " classes");
-	const int trainAmount = 0.75 * TotalStorage::getSmallestClassSize() * TotalStorage::getAmountOfClass();
+	const int trainAmount = share * (std::min((int) TotalStorage::getSmallestClassSize(), firstPoints) * (double) TotalStorage::getAmountOfClass());
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;
 	printOnScreen("Finish reading");

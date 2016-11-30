@@ -40,7 +40,7 @@ void executeForMultiClass(const std::string& path){
 
 	Eigen::MatrixXd covariance;
 	GaussianKernel kernel;
-	kernel.init(dataMat);
+	kernel.init(dataMat, true, false);
 	kernel.calcCovariance(covariance);
 	f << "covariance: \n" << covariance << std::endl;
 	f << "labels: \n";

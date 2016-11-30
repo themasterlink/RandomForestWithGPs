@@ -64,9 +64,13 @@ public:
 
 	void printLineToScreenForThisThread(const std::string& line);
 
+	void overwriteLastLineToScreenForThisThread(const std::string& line);
+
 	void setStandartInformation(const std::string& line){ m_lineMutex.lock(); m_standartInfo = line; m_lineMutex.unlock(); };
 
 	bool canBeAborted();
+
+	void setAdditionalInfo(const std::string& line);
 
 private:
 
@@ -95,6 +99,8 @@ private:
 	std::list<std::string> m_lines;
 
 	std::string m_standartInfo;
+
+	std::string m_additionalInformation;
 
 	boost::mutex m_lineMutex;
 

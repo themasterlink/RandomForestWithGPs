@@ -32,8 +32,17 @@ void Logger::start(){
 		m_text = "Online Random Forest with IVMs, mode: " + mode + "\n"; // Standart Information
 		m_text += "Date: " + boost::posix_time::to_simple_string(boost::posix_time::second_clock::local_time()) + "\n";
 		m_ownThread = new boost::thread(&Logger::run);
-
 	}
+}
+
+void Logger::forcedWrite(){
+	m_mutex.lock();
+	std::fstream file;
+	file.open(m_filePath, std::fstream::out | std::fstream::trunc);
+	file.write(m_text.c_str(), m_text.length());
+	file.close();
+	m_needToWrite = false;
+	m_mutex.unlock();
 }
 
 void Logger::run(){

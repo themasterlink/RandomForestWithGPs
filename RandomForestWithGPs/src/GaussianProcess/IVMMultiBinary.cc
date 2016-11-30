@@ -37,9 +37,26 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 					}
 				}
 				m_ivms.resize(classCounter.size());
+				const bool calcDifferenceMatrixAlone = false;
 				for(unsigned int i = 0; i < m_ivms.size(); ++i){
 					m_ivms[i] = new IVM();
+					Eigen::Vector2i usedClasses;
+					usedClasses << m_classOfIVMs[i], -1;
+					m_ivms[i]->init(m_storage.storage(),
+							m_numberOfInducingPointsPerIVM, usedClasses,
+							m_doEpUpdate, calcDifferenceMatrixAlone);
 				}
+				const int nrOfParallel = boost::thread::hardware_concurrency();
+				const int size = (m_storage.size() * m_storage.size() + m_storage.size()) / 2;
+				const int sizeOfPart =  size / nrOfParallel;
+				Eigen::MatrixXd* differenceMatrix = new Eigen::MatrixXd(m_storage.size(), m_storage.size());
+				boost::thread_group group;
+				for(unsigned int i = 0; i < nrOfParallel; ++i){
+					int start = sizeOfPart * i;
+					int end = (i + 1 != nrOfParallel) ? sizeOfPart * (i + 1) : size;
+					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::initInParallel, this, i, start, end, differenceMatrix)));
+				}
+				group.join_all();
 				m_init = true;
 				train();
 			}else if(!m_init && lastUpdateIndex != 0){
@@ -89,6 +106,7 @@ void IVMMultiBinary::train(){
 		std::vector<int> counterRes(amountOfClasses(), 0);
 		std::vector<bool> stillWorking(amountOfClasses(), true);
 		std::vector<InformationPackage*> packages(amountOfClasses());
+
 		for(unsigned int i = 0; i < amountOfClasses(); ++i){
 			const double correctlyClassified = 0.; // TODO in future this value can be determined before hand!
 			packages[i] = new InformationPackage(InformationPackage::IVM_TRAIN, correctlyClassified, m_storage.size());
@@ -200,13 +218,13 @@ void IVMMultiBinary::train(){
 	}
 }
 
+void IVMMultiBinary::initInParallel(const int usedIvm, const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix){
+	m_ivms[usedIvm]->getKernel().calcDifferenceMatrix(startOfKernel, endOfKernel, differenceMatrix);
+}
+
 void IVMMultiBinary::trainInParallel(const int usedIvm, const double trainTime, InformationPackage* package){
-	Eigen::Vector2i usedClasses;
-	usedClasses << m_classOfIVMs[usedIvm], -1;
 	m_ivms[usedIvm]->setInformationPackage(package);
 	package->setStandartInformation("Ivm training for class: " + number2String(usedIvm));
-	m_ivms[usedIvm]->init(m_storage.storage(),
-			m_numberOfInducingPointsPerIVM, usedClasses, m_doEpUpdate);
 	ThreadMaster::appendThreadToList(package);
 	m_ivms[usedIvm]->getKernel().setSeed((usedIvm + 1) * 459486);
 	const bool ret = m_ivms[usedIvm]->train(trainTime,1);
@@ -243,7 +261,6 @@ void IVMMultiBinary::predictData(const Data& points, Labels& labels) const{
 }
 
 void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
-	const int nrOfParallel = boost::thread::hardware_concurrency();
 	probabilities.resize(points.size());
 	labels.resize(points.size());
 	for(unsigned int i = 0; i < points.size(); ++i){

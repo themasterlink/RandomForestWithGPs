@@ -57,11 +57,26 @@ double InformationPackage::getWorkedAmountOfSeconds(){
 	return m_workedTime; // if it is waiting at the moment
 }
 
+void InformationPackage::setAdditionalInfo(const std::string& line){
+	m_lineMutex.lock();
+	m_additionalInformation = line;
+	m_lineMutex.unlock();
+}
+
 void InformationPackage::printLineToScreenForThisThread(const std::string& line) {
 	m_lineMutex.lock();
 	m_lines.push_back(line);
 	Logger::addToFile(m_standartInfo+"\n\t"+line);
 	m_lineMutex.unlock();
+}
+
+void InformationPackage::overwriteLastLineToScreenForThisThread(const std::string& line){
+	if(m_lines.size() > 0){
+		m_lineMutex.lock();
+		m_lines.back() = line;
+		Logger::addToFile(m_standartInfo+"\n\toverwrite: "+line);
+		m_lineMutex.unlock();
+	}
 }
 
 bool InformationPackage::canBeAborted(){

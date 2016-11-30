@@ -24,9 +24,9 @@ public:
 	KernelBase(const OwnKernelInitParams& initParams);
 	virtual ~KernelBase() = 0;
 
-	void init(const Eigen::MatrixXd& dataMat, const bool calcDifferenceMatrix = true);
+	void init(const Eigen::MatrixXd& dataMat, const bool calcDifferenceMatrix, const bool useSharedDifferenceMatrix);
 
-	void init(const ClassData& data, const bool calcDifferenceMatrix = true);
+	void init(const ClassData& data, const bool calcDifferenceMatrix, const bool useSharedDifferenceMatrix);
 
 	bool isInit() const { return m_init; };
 
@@ -36,7 +36,7 @@ public:
 
 	void calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& cov, const std::list<int>& activeSet, const OwnKernelElement* type) const;
 
-	double getDifferences(const int row, const int col) const { return (double) m_differences(row, col); };
+	double getDifferences(const int row, const int col) const { return (double) (*m_differences)(row, col); };
 
 	void setHyperParamsWith(const KernelType& params);
 
@@ -64,6 +64,8 @@ public:
 
 	virtual std::string prettyString() const = 0;
 
+	void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd* usedMatrix);
+
 protected:
 
 	virtual double kernelFunc(const int row, const int col) const = 0;
@@ -72,7 +74,7 @@ protected:
 
 	virtual double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const = 0;
 
-	Eigen::MatrixXd m_differences;
+	Eigen::MatrixXd* m_differences;
 
 	Eigen::MatrixXd* m_pDataMat;
 

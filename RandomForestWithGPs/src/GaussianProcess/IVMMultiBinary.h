@@ -40,6 +40,7 @@ private:
 	void predictDataInParallel(const Data& points, const int usedIvm,
 			std::vector< std::vector<double> >* probabilities, InformationPackage* package) const;
 
+	void initInParallel(const int usedIvm, const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix);
 
 	OnlineStorage<ClassPoint*>& m_storage;
 

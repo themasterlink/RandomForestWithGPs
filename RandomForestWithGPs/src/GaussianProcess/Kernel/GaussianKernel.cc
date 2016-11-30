@@ -71,7 +71,7 @@ double GaussianKernel::kernelFunc(const int row, const int col) const{
 		}
 	}else{
 		return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue()
-				* (double) m_differences(row, col)) + m_kernelParams.m_sNoise.getSquaredValue();
+				* (double) (*m_differences)(row, col)) + m_kernelParams.m_sNoise.getSquaredValue();
 	}
 	return 0;
 }
@@ -116,7 +116,7 @@ double GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col,
 			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * squaredNorm) * squaredDerivNorm;
 		}else if(m_calcedDifferenceMatrix){
 			const double lenSquared = m_kernelParams.m_length.getSquaredValue();
-			const double dotResult = (double) m_differences(row, col);
+			const double dotResult = (double) (*m_differences)(row, col);
 			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue() * dotResult)
 					* dotResult / (lenSquared * m_kernelParams.m_length.getValue()); // derivative to m_params[0]
 		}else{
@@ -135,7 +135,7 @@ double GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col,
 	}else if(type->getKernelNr() == m_kernelParams.m_fNoise.getKernelNr()){
 		if(!hasLengthMoreThanOneDim() && m_calcedDifferenceMatrix){
 			return 2.0 * m_kernelParams.m_fNoise.getValue() * exp(-0.5 * (1.0/ (m_kernelParams.m_length.getValue() *
-					m_kernelParams.m_length.getValue())) * (double) m_differences(row, col)); // derivative to m_params[1]
+					m_kernelParams.m_length.getValue())) * (double) (*m_differences)(row, col)); // derivative to m_params[1]
 		}else{
 			double result = 0;
 			if(m_pData != nullptr){

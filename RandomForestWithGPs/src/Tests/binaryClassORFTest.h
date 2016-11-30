@@ -17,30 +17,37 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 	int amountOfCorrect = 0;
 	Labels labels;
 	orf.predictData(test.storage(), labels);
+	Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(orf.amountOfClasses(), orf.amountOfClasses());
 	for(unsigned int i = 0; i < labels.size(); ++i){
 		if(test[i]->getLabel() == labels[i]){
 			++amountOfCorrect;
 		}
+		conv(test[i]->getLabel(), labels[i]) += 1;
 	}
 	printOnScreen("Test size: " << test.size());
 	printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %");
+	ConfusionMatrixPrinter::print(conv);
 }
 
 void executeForBinaryClassORF(){
 	ClassData data;
 	ClassData testData;
 	DataSets datas;
-	TotalStorage::readData(600);
+	int trainAmount; // all points
+	Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", trainAmount);
+	const double share = Settings::getDirectDoubleValue("TotalStorage.shareForTraining");
+	int firstPoints = trainAmount / share;
+	printOnScreen("Read " << firstPoints << " points per class");
+	TotalStorage::readData(firstPoints);
 	printOnScreen("Finish reading ");
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;
 	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize());
-	const int trainAmount = 0.75 * TotalStorage::getSmallestClassSize() * TotalStorage::getAmountOfClass();
+	trainAmount = std::min((int) TotalStorage::getSmallestClassSize(), trainAmount) * TotalStorage::getAmountOfClass();
 	printOnScreen("Train amount: " << trainAmount);
-	int amountOfTrees, height;
-	Settings::getValue("Forest.amountOfTrees", amountOfTrees);
+	int height;
 	Settings::getValue("Forest.Trees.height", height);
-	OnlineRandomForest orf(train, height, amountOfTrees, TotalStorage::getAmountOfClass());
+	OnlineRandomForest orf(train, height, TotalStorage::getAmountOfClass());
 	// starts the training by its own
 	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 	printOnScreen("Training finished");
