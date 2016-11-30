@@ -13,7 +13,6 @@
 #include "Base/Logger.h"
 #include "Base/ThreadMaster.h"
 #include <panel.h>
-#include <form.h>
 
 /*#include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
