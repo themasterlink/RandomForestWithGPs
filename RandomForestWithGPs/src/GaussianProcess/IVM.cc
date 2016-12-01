@@ -113,13 +113,15 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 //			printError("The kernel was not initalized!");
 //		return false;
 //	}
+	if(m_package == nullptr){
+		printError("The IVM has no set package set!");
+		return false;
+	}
+	m_package->wait();
 	if(m_numberOfInducingPoints <= 0){
 		if(verboseLevel != 0)
 			printError("The number of inducing points is equal or below zero: " << m_numberOfInducingPoints);
 		return false;
-	}
-	if(m_package != nullptr){
-		m_package->wait(); // wait here until the thread master tells this training to start
 	}
 	GaussianKernelParams bestParams;
 	std::string folderLocation;
@@ -189,6 +191,9 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 
 			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 			while(m_package != nullptr){ // equals a true
+//				if(m_uniformNr() % 10 == 0){
+//					printError("Just an test error!" << m_uniformNr() % 2);
+//				}
 				m_kernel.newRandHyperParams();
 				std::stringstream str;
 				str << "Try params: " << m_kernel.getHyperParams();
@@ -205,6 +210,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 //					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
 //				}
 				if(trained && bestLogZ < m_logZ){
+					m_package->printLineToScreenForThisThread("Perform a simple test");
 					// perform a simple test
 					// go over a bunch of points to test it
 					int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
@@ -228,6 +234,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 					double correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
 					bool didCompleteCheck = false;
 					if(correctness > 70.){
+						m_package->overwriteLastLineToScreenForThisThread("Perform a complex test");
 						didCompleteCheck = true;
 						// check all points
 						amountOfOneChecks = amountOfOnesCorrect = 0;
@@ -312,8 +319,10 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 				swAvg.recordActTime();
 				m_package->performedOneTrainingStep(); // adds a one to the counter
 				if(m_package->shouldTrainingBeAborted()){
+					m_package->printLineToScreenForThisThread("Training should be aborted!");
 					break;
 				}else if(m_package->shouldTrainingBePaused()){
+					m_package->printLineToScreenForThisThread("Training has to wait!");
 					m_package->wait(); // will hold this process
 				}
 			}

@@ -222,7 +222,11 @@ void ThreadMaster::run(){
 				selectedValueWasUsed = true;
 				m_runningList.push_back(*selectedValue); // first add to the running list
 				++m_counter; // increase the counter of running threads
+				while(!(*selectedValue)->isWaiting()){ // if the thread is not waiting wait until it waits for reactivation -> should happen fast
+					usleep(0.05 * 1e6);
+				}
 				(*selectedValue)->notify(); // start running of the thread
+				(*selectedValue)->printLineToScreenForThisThread("This thread was selected in the beginning!");
 				m_waitingList.erase(selectedValue); // remove the selected value out of the waiting thread list
 				selectedValue = m_waitingList.end();
 			}
