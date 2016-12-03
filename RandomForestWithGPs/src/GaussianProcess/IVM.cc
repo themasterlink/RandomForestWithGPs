@@ -17,17 +17,36 @@
 #define LOG2PI 1.8378770664093453391
 #define SQRT2  1.4142135623730951455
 
-IVM::IVM(): m_logZ(0), m_derivLogZ(2), m_dataPoints(0),
+IVM::IVM(OnlineStorage<ClassPoint*>& storage):
+	m_logZ(0), m_derivLogZ(),
+	m_storage(storage),m_dataPoints(0),
 	m_numberOfInducingPoints(0), m_bias(0), m_lambda(0),
 	m_doEPUpdate(false), m_desiredPoint(0.5), m_desiredMargin(0.05),
 	m_calcLogZ(false), m_calcDerivLogZ(false),
+	m_gaussKernel(nullptr),
+	m_rfKernel(nullptr),
 	m_uniformNr(0, 10, 0),
 	m_useNeighbourComparison(false),
 	m_package(nullptr){
-	bool hasLengthMoreThanParam;
-	Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
-	m_kernel.changeKernelConfig(hasLengthMoreThanParam);
-	m_kernel.newRandHyperParams();
+	int kernelType = 0;
+	Settings::getValue("IVM.kernelType", kernelType);
+	if(m_kernelType == 0){
+		m_kernelType = GAUSS;
+		bool hasLengthMoreThanParam;
+		Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
+		m_gaussKernel = new GaussianKernel();
+		m_gaussKernel->changeKernelConfig(hasLengthMoreThanParam);
+		m_gaussKernel->newRandHyperParams();
+	}else if(m_kernelType == 1){
+		m_kernelType = RF;
+		int samplingAmount, maxDepth;
+		Settings::getValue("RandomForestKernel.samplingAmount", samplingAmount);
+		Settings::getValue("RandomForestKernel.maxDepth", maxDepth);
+		printOnScreen("Amount of classes: " << ClassKnowledge::amountOfClasses());
+		m_rfKernel = new RandomForestKernel(m_storage, maxDepth, samplingAmount, ClassKnowledge::amountOfClasses());
+	}else{
+		printError("This kernel type is not supported here!");
+	}
 }
 
 IVM::~IVM() {
@@ -38,29 +57,27 @@ void IVM::setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ){
 	m_calcLogZ = doLogZ;
 }
 
-void IVM::init(const ClassData& data,
-		const unsigned int numberOfInducingPoints,
+void IVM::init(const unsigned int numberOfInducingPoints,
 		const Eigen::Vector2i& labelsForClasses,
 		const bool doEPUpdate, const bool calcDifferenceMatrixAlone){
-	if(data.size() == 0){
-		printError("No data given!"); return;
+	if(m_storage.size() == 0){
+		printError("No data in init given!"); return;
 	}
 	m_labelsForClasses = labelsForClasses;
 	m_uniformNr.setSeed((int)labelsForClasses[0] * 74739); // TODO better way if class is used multiple times
-	m_uniformNr.setMinAndMax(1, data.size() / 100);
+	m_uniformNr.setMinAndMax(1, m_storage.size() / 100);
 	const bool oneVsAllCase = m_labelsForClasses[1] == -1;
 	if(m_labelsForClasses[0] == m_labelsForClasses[1]){
 		printError("The labels for the two different classes are the same!");
 	}
-	m_data = data; // just the copy of the pointers (acceptable copy)
-	m_dataPoints = m_data.size();
-	m_y = Vector(data.size());
+	m_dataPoints = m_storage.size();
+	m_y = Vector(m_storage.size());
 	int amountOfOneClass = 0;
 	for(unsigned int i = 0; i < m_y.rows(); ++i){ // convert usuall mutli class labels in 1 and -1
-		if(m_data[i]->getLabel() == m_labelsForClasses[0]){
+		if(m_storage[i]->getLabel() == m_labelsForClasses[0]){
 			m_y[i] = 1;
 			++amountOfOneClass;
-		}else if(((int) m_data[i]->getLabel() == m_labelsForClasses[1]) || oneVsAllCase){
+		}else if(((int) m_storage[i]->getLabel() == m_labelsForClasses[1]) || oneVsAllCase){
 			m_y[i] = -1;
 		}else{
 			printError("This IVM contains data, which does not belong to one of the two classes!");
@@ -69,13 +86,21 @@ void IVM::init(const ClassData& data,
 	}
 	m_doEPUpdate = doEPUpdate;
 	setNumberOfInducingPoints(numberOfInducingPoints);
-//	StopWatch sw;
-	if(calcDifferenceMatrixAlone){
-		const bool calcDifferenceMatrix = !m_kernel.hasLengthMoreThanOneDim();
-		m_kernel.init(m_data, calcDifferenceMatrix, false);
+	//	StopWatch sw;
+	if(m_kernelType == GAUSS){
+		if(calcDifferenceMatrixAlone){
+			const bool calcDifferenceMatrix = !m_gaussKernel->hasLengthMoreThanOneDim();
+			m_gaussKernel->init(m_storage.storage(), calcDifferenceMatrix, false);
+		}else{
+			// in this case just init the connectin between the kernel and the data, but no calculation is performed!
+			m_gaussKernel->init(m_storage.storage(), false, false);
+		}
+	}else if(m_kernelType == RF){
+		m_rfKernel->init(); // just to turn the flag
+		// to train the tree!
+		m_rfKernel->update(&m_storage, OnlineStorage<ClassPoint*>::APPENDBLOCK);
 	}else{
-		// in this case just init the connectin between the kernel and the data, but no calculation is performed!
-		m_kernel.init(m_data, false, false);
+		printError("This kernel type is not supported!");
 	}
 //	std::cout << "Time: " << sw.elapsedAsPrettyTime() << std::endl;
 	//std::cout << "Frac: " << (double) amountOfOneClass / (double) m_dataPoints << std::endl;
@@ -113,6 +138,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 //			printError("The kernel was not initalized!");
 //		return false;
 //	}
+
 	if(m_package == nullptr){
 		printError("The IVM has no set package set!");
 		return false;
@@ -123,125 +149,102 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 			printError("The number of inducing points is equal or below zero: " << m_numberOfInducingPoints);
 		return false;
 	}
-	GaussianKernelParams bestParams;
-	std::string folderLocation;
-	if(CommandSettings::get_useFakeData()){
-		Settings::getValue("TotalStorage.folderLocFake", folderLocation);
-	}else{
-		Settings::getValue("TotalStorage.folderLocReal", folderLocation);
-	}
-	const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses[0]) + ".binary";
-	bool loadBestParams = false;
-	if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
-		bestParams.readFromFile(kernelFilePath);
-		loadBestParams = true;
-	}else{
-		bestParams.m_length.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.len"));
-		bestParams.m_fNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.fNoise"));
-		bestParams.m_sNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.sNoise"));
-	}
-	if(timeForTraining > 0.){
-		bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
-		m_kernel.changeKernelConfig(hasMoreThanOneLengthValue);
-		std::vector<double> means = {Settings::getDirectDoubleValue("KernelParam.lenMean"),
-				Settings::getDirectDoubleValue("KernelParam.fNoiseMean"),
-				Settings::getDirectDoubleValue("KernelParam.sNoiseMean")};
-		std::vector<double> sds = {Settings::getDirectDoubleValue("KernelParam.lenVar"),
-				Settings::getDirectDoubleValue("KernelParam.fNoiseVar"),
-				Settings::getDirectDoubleValue("KernelParam.sNoiseVar")};
-		m_kernel.setGaussianRandomVariables(means, sds);
-		setDerivAndLogZFlag(true, false);
-		StopWatch sw;
-		double bestLogZ = -DBL_MAX;
-		double bestCorrectness = 0;
-		StopWatch swAvg;
-		if(!loadBestParams){
-			m_uniformNr.setMinAndMax(0, m_dataPoints - 1);
-			std::list<int> testPoints;
-			int counter = 0;
-			const int maxAmount = std::min((unsigned int) 100, m_dataPoints);
-			while(counter < maxAmount){
-				int value = -1;
-				while(value == -1){
-					int act = m_uniformNr();
-					const int label = m_data[act]->getLabel();
-					if(counter % 2 == 0){ // check that always a different label is used for the test set
-						if(label == getLabelForOne()){
-							value = act;
-						}
-					}else{
-						if(label != getLabelForOne()){
-							value = act;
-						}
-					}
-				}
-				// check if not used until now
-				bool alreadUsed = false;
-				for(std::list<int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
-					if(*it == value){
-						alreadUsed = true;
-						break;
-					}
-				}
-				if(!alreadUsed){
-					++counter;
-					testPoints.push_back(value);
-				}
-			}
-
-			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
-			while(m_package != nullptr){ // equals a true
-//				if(m_uniformNr() % 10 == 0){
-//					printError("Just an test error!" << m_uniformNr() % 2);
-//				}
-				m_kernel.newRandHyperParams();
-				std::stringstream str;
-				str << "Try params: " << m_kernel.getHyperParams();
-				m_package->printLineToScreenForThisThread(str.str());
-				const bool trained = internalTrain(true, 0);
-				std::stringstream str2;
-				if(trained){
-					str2 << "Params: " << m_kernel.getHyperParams() << " with success and logZ: " << m_logZ;
-				}else{
-					str2 << "Params: " << m_kernel.getHyperParams() << " failed";
-				}
-				m_package->overwriteLastLineToScreenForThisThread(str2.str());
-//				if(!trained){
-//					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
-//				}
-				if(trained && bestLogZ < m_logZ){
-					m_package->printLineToScreenForThisThread("Perform a simple test");
-					// perform a simple test
-					// go over a bunch of points to test it
-					int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
-					int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
-					for(std::list<int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
-						const int label = m_data[*it]->getLabel();
-						const double prob = predict(*m_data[*it]);
-						if(label == getLabelForOne()){
-							if(prob > 0.6){
-								++amountOfOnesCorrect;
+	if(m_kernelType == 0){
+		GaussianKernelParams bestParams;
+		std::string folderLocation;
+		if(CommandSettings::get_useFakeData()){
+			Settings::getValue("TotalStorage.folderLocFake", folderLocation);
+		}else{
+			Settings::getValue("TotalStorage.folderLocReal", folderLocation);
+		}
+		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses[0]) + ".binary";
+		bool loadBestParams = false;
+		if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
+			bestParams.readFromFile(kernelFilePath);
+			loadBestParams = true;
+		}else{
+			bestParams.m_length.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.len"));
+			bestParams.m_fNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.fNoise"));
+			bestParams.m_sNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.sNoise"));
+		}
+		if(timeForTraining > 0.){
+			bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
+			m_gaussKernel->changeKernelConfig(hasMoreThanOneLengthValue);
+			std::vector<double> means = {Settings::getDirectDoubleValue("KernelParam.lenMean"),
+					Settings::getDirectDoubleValue("KernelParam.fNoiseMean"),
+					Settings::getDirectDoubleValue("KernelParam.sNoiseMean")};
+			std::vector<double> sds = {Settings::getDirectDoubleValue("KernelParam.lenVar"),
+					Settings::getDirectDoubleValue("KernelParam.fNoiseVar"),
+					Settings::getDirectDoubleValue("KernelParam.sNoiseVar")};
+			m_gaussKernel->setGaussianRandomVariables(means, sds);
+			setDerivAndLogZFlag(true, false);
+			StopWatch sw;
+			double bestLogZ = -DBL_MAX;
+			double bestCorrectness = 0;
+			StopWatch swAvg;
+			if(!loadBestParams){
+				m_uniformNr.setMinAndMax(0, m_dataPoints - 1);
+				std::list<int> testPoints;
+				int counter = 0;
+				const int maxAmount = std::min((unsigned int) 100, m_dataPoints);
+				while(counter < maxAmount){
+					int value = -1;
+					while(value == -1){
+						int act = m_uniformNr();
+						const int label = m_storage[act]->getLabel();
+						if(counter % 2 == 0){ // check that always a different label is used for the test set
+							if(label == getLabelForOne()){
+								value = act;
 							}
-							++amountOfOneChecks;
 						}else{
-							if(prob < 0.4){
-								++amountOfMinusOnesCorrect;
+							if(label != getLabelForOne()){
+								value = act;
 							}
-							++amountOfMinusOneChecks;
 						}
 					}
-					 // both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
-					double correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
-					bool didCompleteCheck = false;
-					if(correctness > 70.){
-						m_package->overwriteLastLineToScreenForThisThread("Perform a complex test");
-						didCompleteCheck = true;
-						// check all points
-						amountOfOneChecks = amountOfOnesCorrect = 0;
-						amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
-						for(unsigned int i = 0; i < m_dataPoints; ++i){
-							const int label = m_data[i]->getLabel();
-							const double prob = predict(*m_data[i]);
+					// check if not used until now
+					bool alreadUsed = false;
+					for(std::list<int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
+						if(*it == value){
+							alreadUsed = true;
+							break;
+						}
+					}
+					if(!alreadUsed){
+						++counter;
+						testPoints.push_back(value);
+					}
+				}
+
+				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
+				while(m_package != nullptr){ // equals a true
+					//				if(m_uniformNr() % 10 == 0){
+					//					printError("Just an test error!" << m_uniformNr() % 2);
+					//				}
+					m_gaussKernel->newRandHyperParams();
+					std::stringstream str;
+					str << "Try params: " << m_gaussKernel->getHyperParams();
+					m_package->printLineToScreenForThisThread(str.str());
+					const bool trained = internalTrain(true, 0);
+					std::stringstream str2;
+					if(trained){
+						str2 << "Params: " << m_gaussKernel->getHyperParams() << " with success and logZ: " << m_logZ;
+					}else{
+						str2 << "Params: " << m_gaussKernel->getHyperParams() << " failed";
+					}
+					m_package->overwriteLastLineToScreenForThisThread(str2.str());
+					//				if(!trained){
+					//					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
+					//				}
+					if(trained && bestLogZ < m_logZ){
+						m_package->printLineToScreenForThisThread("Perform a simple test");
+						// perform a simple test
+						// go over a bunch of points to test it
+						int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
+						int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
+						for(std::list<int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
+							const int label = m_storage[*it]->getLabel();
+							const double prob = predict(*m_storage[*it]);
 							if(label == getLabelForOne()){
 								if(prob > 0.6){
 									++amountOfOnesCorrect;
@@ -254,132 +257,176 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 								++amountOfMinusOneChecks;
 							}
 						}
-						if(amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks) != m_desiredPoint){
-							printError("The margin for the full test is wrong, should be: " << m_desiredPoint << ", is: " << amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks));
-						}
-						correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
-						if(correctness > 95){
-							m_package->abortTraing();
-						}
-
-					}
-					if(didCompleteCheck){
-						// even for the first best correctness case is this valid, because here the simple correctness was above the threshold the first time
-						if(correctness > bestCorrectness){
-							// only take the params if the full check on the
-							// trainingsdata provided a better value than the last full check
-							// setting the means to the new bestParams
-							if(!m_kernel.hasLengthMoreThanOneDim()){
-								std::vector<double> newMeans(3);
-								for(unsigned int i = 0; i < 3; ++i){
-									newMeans[i] = m_kernel.getHyperParams().m_params[i]->getValue();
+						// both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
+						double correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
+						bool didCompleteCheck = false;
+						if(correctness > 70.){
+							m_package->overwriteLastLineToScreenForThisThread("Perform a complex test");
+							didCompleteCheck = true;
+							// check all points
+							amountOfOneChecks = amountOfOnesCorrect = 0;
+							amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
+							for(unsigned int i = 0; i < m_dataPoints; ++i){
+								const int label = m_storage[i]->getLabel();
+								const double prob = predict(*m_storage[i]);
+								if(label == getLabelForOne()){
+									if(prob > 0.6){
+										++amountOfOnesCorrect;
+									}
+									++amountOfOneChecks;
+								}else{
+									if(prob < 0.4){
+										++amountOfMinusOnesCorrect;
+									}
+									++amountOfMinusOneChecks;
 								}
-								m_kernel.setGaussianRandomVariables(newMeans, sds);
 							}
-							bestCorrectness = correctness;
-							m_kernel.getCopyOfParams(bestParams);
-							bestLogZ = m_logZ;
-							m_package->changeCorrectlyClassified(correctness);
-							if(!m_kernel.hasLengthMoreThanOneDim()){
-								std::stringstream str2;
-								str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
-										<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
-										<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
-										<< "complex: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
-								m_package->setAdditionalInfo(str2.str());
+							if(amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks) != m_desiredPoint){
+								printError("The margin for the full test is wrong, should be: " << m_desiredPoint << ", is: " << amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks));
 							}
-							std::stringstream str;
-							str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
+							correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
+							if(correctness > 95){
+								m_package->abortTraing();
+							}
+
+						}
+						if(didCompleteCheck){
+							// even for the first best correctness case is this valid, because here the simple correctness was above the threshold the first time
+							if(correctness > bestCorrectness){
+								// only take the params if the full check on the
+								// trainingsdata provided a better value than the last full check
+								// setting the means to the new bestParams
+								if(!m_gaussKernel->hasLengthMoreThanOneDim()){
+									std::vector<double> newMeans(3);
+									for(unsigned int i = 0; i < 3; ++i){
+										newMeans[i] = m_gaussKernel->getHyperParams().m_params[i]->getValue();
+									}
+									m_gaussKernel->setGaussianRandomVariables(newMeans, sds);
+								}
+								bestCorrectness = correctness;
+								m_gaussKernel->getCopyOfParams(bestParams);
+								bestLogZ = m_logZ;
+								m_package->changeCorrectlyClassified(correctness);
+								if(!m_gaussKernel->hasLengthMoreThanOneDim()){
+									std::stringstream str2;
+									str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
+											<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
+											<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+											<< "complex: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
+									m_package->setAdditionalInfo(str2.str());
+								}
+								std::stringstream str;
+								str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
 									<< " %%, ones: " << (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.
 									<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100.
 									<< ", amount of minues correct: " << amountOfMinusOnesCorrect << ", amount of minus ones: " << amountOfMinusOneChecks
 									<< " %%, for: " << m_dataPoints << " points";*/
+								m_package->printLineToScreenForThisThread(str.str());
+							}
+						}else if(bestCorrectness == 0){ // for the starting cases	// in this case only the simple check was performed and the values
+							// are not good enough to guarantee that these params are better
+							// so always take the params with the lower logZ
+							m_gaussKernel->getCopyOfParams(bestParams);
+							bestLogZ = m_logZ;
+							m_package->changeCorrectlyClassified(correctness);
+							if(!m_gaussKernel->hasLengthMoreThanOneDim()){
+								std::stringstream str2;
+								str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
+										<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
+										<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+										<< "simple: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
+								m_package->setAdditionalInfo(str2.str());
+							}
+							std::stringstream str;
+							str << "New best params: " << bestParams << ", with simple correctness of: " << correctness;
 							m_package->printLineToScreenForThisThread(str.str());
 						}
-					}else if(bestCorrectness == 0){ // for the starting cases	// in this case only the simple check was performed and the values
-						// are not good enough to guarantee that these params are better
-						// so always take the params with the lower logZ
-						m_kernel.getCopyOfParams(bestParams);
-						bestLogZ = m_logZ;
-						m_package->changeCorrectlyClassified(correctness);
-						if(!m_kernel.hasLengthMoreThanOneDim()){
-							std::stringstream str2;
-							str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
-									<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
-									<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
-									<< "simple: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
-							m_package->setAdditionalInfo(str2.str());
-						}
-						std::stringstream str;
-						str << "New best params: " << bestParams << ", with simple correctness of: " << correctness;
-						m_package->printLineToScreenForThisThread(str.str());
+						//					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
 					}
-//					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
+					swAvg.recordActTime();
+					m_package->performedOneTrainingStep(); // adds a one to the counter
+					if(m_package->shouldTrainingBeAborted()){
+						m_package->printLineToScreenForThisThread("Training should be aborted!");
+						break;
+					}else if(m_package->shouldTrainingBePaused()){
+						m_package->printLineToScreenForThisThread("Training has to wait!");
+						m_package->wait(); // will hold this process
+					}
 				}
-				swAvg.recordActTime();
-				m_package->performedOneTrainingStep(); // adds a one to the counter
-				if(m_package->shouldTrainingBeAborted()){
-					m_package->printLineToScreenForThisThread("Training should be aborted!");
-					break;
-				}else if(m_package->shouldTrainingBePaused()){
-					m_package->printLineToScreenForThisThread("Training has to wait!");
-					m_package->wait(); // will hold this process
+				if(Settings::getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
+					bestParams.writeToFile(kernelFilePath);
 				}
 			}
-			if(Settings::getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
-				bestParams.writeToFile(kernelFilePath);
+			if(bestLogZ == -DBL_MAX){
+				printError("This ivm could not find any parameter set in the given time, which could be trained without an error!");
+				return false;
 			}
+			printOnScreen("For IVM: " << getLabelForOne() << " logZ: " << bestLogZ << ", "<< bestParams);
+			m_gaussKernel->setHyperParamsWith(bestParams);
+			setDerivAndLogZFlag(false, false);
+			m_uniformNr.setMinAndMax(1, 1); // final training with all points considered
+			const bool ret = internalTrain(true, verboseLevel);
+			if(ret && !m_doEPUpdate){
+				// train the whole active set again but in the oposite direction similiar to an ep step
+				const bool ret2 = trainOptimizeStep(0);
+				if(!ret2){
+					printWarning("The optimization step could not be performed!");
+				}
+			}
+			if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
+				DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_storage.storage());
+				openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+			}
+			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
+			if(m_package != nullptr){
+				m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
+			}
+			return ret;
+		}else{
+			//		setDerivAndLogZFlag(false, false);
+			m_gaussKernel->setHyperParamsWith(bestParams);
+			m_uniformNr.setMinAndMax(1, 1);
+			std::stringstream str;
+			str << "Use hyperParams: " << bestParams;
+			m_package->printLineToScreenForThisThread(str.str());
+			const bool ret = internalTrain(true, verboseLevel);
+			if(ret && !m_doEPUpdate){
+				// train the whole active set again but in the oposite direction similiar to an ep step
+				trainOptimizeStep(verboseLevel);
+			}
+			//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
+			//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
+			if(m_package != nullptr){
+				m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
+			}
+			return ret;
 		}
-		if(bestLogZ == -DBL_MAX){
-			printError("This ivm could not find any parameter set in the given time, which could be trained without an error!");
-			return false;
-		}
-		printOnScreen("For IVM: " << getLabelForOne() << " logZ: " << bestLogZ << ", "<< bestParams);
-		m_kernel.setHyperParamsWith(bestParams);
-		setDerivAndLogZFlag(false, false);
-		m_uniformNr.setMinAndMax(1, 1); // final training with all points considered
+	}else if(m_kernelType == 1){
+		m_uniformNr.setMinAndMax(1, 1);
 		const bool ret = internalTrain(true, verboseLevel);
 		if(ret && !m_doEPUpdate){
 			// train the whole active set again but in the oposite direction similiar to an ep step
-			const bool ret2 = trainOptimizeStep(0);
-			if(!ret2){
-				printWarning("The optimization step could not be performed!");
-			}
+			trainOptimizeStep(verboseLevel);
 		}
-		if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
-			DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
-			openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
-		}
+		//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
+		//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
 		m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 		if(m_package != nullptr){
 			m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
 		}
 		return ret;
 	}else{
-//		setDerivAndLogZFlag(false, false);
-		m_kernel.setHyperParamsWith(bestParams);
-		m_uniformNr.setMinAndMax(1, 1);
-		std::stringstream str;
-		str << "Use hyperParams: " << bestParams;
-		m_package->printLineToScreenForThisThread(str.str());
-		const bool ret = internalTrain(true, verboseLevel);
-		if(ret && !m_doEPUpdate){
-			// train the whole active set again but in the oposite direction similiar to an ep step
-			trainOptimizeStep(verboseLevel);
-		}
-//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
-//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
-		m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
-		if(m_package != nullptr){
-			m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
-		}
-		return ret;
+		printError("This kernel type is not supported!");
 	}
+	return false;
 }
 
 bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
-	if(verboseLevel == 2 && m_kernel.wasDifferenceCalced())
-		std::cout << "Diff: " << m_kernel.getDifferences(0,0) << ", " << m_kernel.getDifferences(1,0) << std::endl;
+	if(m_kernelType == 0){
+		if(verboseLevel == 2 && m_gaussKernel->wasDifferenceCalced())
+			std::cout << "Diff: " << m_gaussKernel->getDifferences(0,0) << ", " << m_gaussKernel->getDifferences(1,0) << std::endl;
+	}
 	Vector m = Vector::Zero(m_dataPoints);
 	Vector beta = Vector::Zero(m_dataPoints);
 	Vector mu = Vector::Zero(m_dataPoints);
@@ -397,7 +444,13 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	Eigen::Vector2i amountOfPointsPerClass;
 	amountOfPointsPerClass[0] = amountOfPointsPerClass[1] = 0;
 	for(unsigned int i = 0; i < m_dataPoints; ++i){
-		zeta[i] = m_kernel.calcDiagElement(i);
+		if(m_kernelType == 0){
+			zeta[i] = m_gaussKernel->calcDiagElement(i);
+		}else if(m_kernelType == 1){
+			zeta[i] = m_rfKernel->calcDiagElement(i);
+		}else{
+			zeta[i] = 0;
+		}
 		m_J.push_back(i);
 		++amountOfPointsPerClass[(m_y[i] == 1 ? 0 : 1)];
 	}
@@ -443,7 +496,12 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 						unsigned int informationCounter = 0;
 						const double labelOfJ = m_y[*itOfJ] ;
 						for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
-							const double similiarty = m_kernel.kernelFunc(*itOfI, *itOfJ);
+							double similiarty = 0;
+							if(m_kernelType == 0){
+								similiarty = m_gaussKernel->kernelFunc(*itOfI, *itOfJ);
+							}else if(m_kernelType == 1){
+								similiarty = m_rfKernel->kernelFunc(*itOfI, *itOfJ);
+							}
 							if(labelOfJ == m_y[*itOfI]){ // only if they have the same class
 								deltaForJ += similiarty * delta[informationCounter]; // plus, because all values are negative, will decrease the information
 							}
@@ -534,7 +592,11 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		Vector a_nk;
 		if(k != 0){
 			for(unsigned int i = 0; i < m_dataPoints; ++i){
-				k_nk[i] = m_kernel.kernelFunc(i, argmax); // kernel from best point with all points
+				if(m_kernelType == 0){
+					k_nk[i] = m_gaussKernel->kernelFunc(i, argmax);
+				}else if(m_kernelType == 1){
+					k_nk[i] = m_rfKernel->kernelFunc(i, argmax);
+				}
 			}
 			for(unsigned int i = 0; i < m_dataPoints; ++i){ // TODO for known active set only the relevant values have to been updated!
 				double temp = 0.;
@@ -547,7 +609,11 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			s_nk = k_nk - (colVec.transpose() * m_M).transpose();*/
 		}else{
 			for(unsigned int i = 0; i < m_dataPoints; ++i){
-				s_nk[i] = m_kernel.kernelFunc(i, argmax); // kernel from best point with all points
+				if(m_kernelType == 0){
+					s_nk[i] = m_gaussKernel->kernelFunc(i, argmax);
+				}else if(m_kernelType == 1){
+					s_nk[i] = m_rfKernel->kernelFunc(i, argmax);
+				}
 			}
 		}
 		if(verboseLevel == 2){
@@ -613,7 +679,11 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		if(k==0){
 			if(m_doEPUpdate){
 				m_K = Matrix(m_numberOfInducingPoints, m_numberOfInducingPoints); // init at beginning to avoid realloc
-				m_K(0,0) = m_kernel.calcDiagElement(0);
+				if(m_kernelType == 0){
+					m_K(0,0) = m_gaussKernel->calcDiagElement(0);
+				}else if(m_kernelType == 1){
+					m_K(0,0) = m_rfKernel->calcDiagElement(0);
+				}
 			}
 			m_L = Matrix::Zero(m_numberOfInducingPoints, m_numberOfInducingPoints);
 			m_L(0,0) = 1.0 / sqrtNu;
@@ -628,7 +698,11 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 					m_K(lastRowAndCol, t) = temp;
 					m_K(t, lastRowAndCol) = temp;
 				}
-				m_K(lastRowAndCol, lastRowAndCol) = m_kernel.calcDiagElement(lastRowAndCol);
+				if(m_kernelType == 0){
+					m_K(lastRowAndCol, lastRowAndCol) = m_gaussKernel->calcDiagElement(lastRowAndCol);
+				}else if(m_kernelType == 1){
+					m_K(lastRowAndCol, lastRowAndCol) = m_rfKernel->calcDiagElement(lastRowAndCol);
+				}
 			}
 			// update L
 			if(argmax < m_M.cols()){
@@ -897,66 +971,70 @@ void IVM::calcLogZ(){
 }
 
 void IVM::calcDerivatives(const Vector& muL1){
-	m_derivLogZ.m_length.changeAmountOfDims(m_kernel.hasLengthMoreThanOneDim());
-	m_derivLogZ.setAllValuesTo(0);
-	if(!m_kernel.hasLengthMoreThanOneDim()){
-		std::vector<Matrix> CMatrix(m_kernel.getHyperParams().paramsAmount);
-		Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(m_eye) * 0.5;
-		int i = 0;
-		for(std::vector<unsigned int>::const_iterator it = m_kernel.getHyperParams().usedParamTypes.begin();
-				it != m_kernel.getHyperParams().usedParamTypes.end(); ++it, ++i){
-			const GaussianKernelElement* type = (const GaussianKernelElement*) KernelTypeGenerator::getKernelFor(*it);
-			if(!type->isDerivativeOnlyDiag()){
-				m_kernel.calcCovarianceDerivativeForInducingPoints(CMatrix[i], m_I, type);
+	if(m_kernelType == 0){
+		m_derivLogZ.m_length.changeAmountOfDims(m_gaussKernel->hasLengthMoreThanOneDim());
+		m_derivLogZ.setAllValuesTo(0);
+		if(!m_gaussKernel->hasLengthMoreThanOneDim()){
+			std::vector<Matrix> CMatrix(m_gaussKernel->getHyperParams().paramsAmount);
+			Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(m_eye) * 0.5;
+			int i = 0;
+			for(std::vector<unsigned int>::const_iterator it = m_gaussKernel->getHyperParams().usedParamTypes.begin();
+					it != m_gaussKernel->getHyperParams().usedParamTypes.end(); ++it, ++i){
+				const GaussianKernelElement* type = (const GaussianKernelElement*) KernelTypeGenerator::getKernelFor(*it);
+				if(!type->isDerivativeOnlyDiag()){
+					m_gaussKernel->calcCovarianceDerivativeForInducingPoints(CMatrix[i], m_I, type);
+				}
+				delete type;
 			}
-			delete type;
-		}
-		for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
-			for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
-				const double z2Value = Z2(i,j);
-				for(unsigned int u = 0; u < m_kernel.getHyperParams().paramsAmount; ++u){ // for every kernel param
-					if(!m_kernel.getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
-						m_derivLogZ.m_params[u]->getValues()[0] += z2Value * CMatrix[u](i,j);
+			for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
+				for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
+					const double z2Value = Z2(i,j);
+					for(unsigned int u = 0; u < m_gaussKernel->getHyperParams().paramsAmount; ++u){ // for every kernel param
+						if(!m_gaussKernel->getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
+							m_derivLogZ.m_params[u]->getValues()[0] += z2Value * CMatrix[u](i,j);
+						}
 					}
 				}
 			}
-		}
-	}else{
-		std::vector<Matrix> cMatrix(ClassKnowledge::amountOfDims() + m_kernel.getHyperParams().paramsAmount - 1);
-		const Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(m_eye) * 0.5;
-		int i = 0;
-		for(unsigned int u = 0; u < m_kernel.getHyperParams().paramsAmount; ++u){ // for every kernel param
-			if(!m_kernel.getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
-				if(m_kernel.getHyperParams().m_params[u]->hasMoreThanOneDim()){
-					for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
-						m_kernel.calcCovarianceDerivativeForInducingPoints(cMatrix[i], m_I, m_kernel.getHyperParams().m_params[u], k);
+		}else{
+			std::vector<Matrix> cMatrix(ClassKnowledge::amountOfDims() + m_gaussKernel->getHyperParams().paramsAmount - 1);
+			const Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(m_eye) * 0.5;
+			int i = 0;
+			for(unsigned int u = 0; u < m_gaussKernel->getHyperParams().paramsAmount; ++u){ // for every kernel param
+				if(!m_gaussKernel->getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
+					if(m_gaussKernel->getHyperParams().m_params[u]->hasMoreThanOneDim()){
+						for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
+							m_gaussKernel->calcCovarianceDerivativeForInducingPoints(cMatrix[i], m_I, m_gaussKernel->getHyperParams().m_params[u], k);
+							++i;
+						}
+					}else{
+						m_gaussKernel->calcCovarianceDerivativeForInducingPoints(cMatrix[i], m_I, m_gaussKernel->getHyperParams().m_params[u]);
 						++i;
 					}
-				}else{
-					m_kernel.calcCovarianceDerivativeForInducingPoints(cMatrix[i], m_I, m_kernel.getHyperParams().m_params[u]);
-					++i;
 				}
 			}
-		}
-		for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
-			for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
-				const double z2Value = Z2(i,j);
-				int t = 0;
-				for(unsigned int u = 0; u < m_kernel.getHyperParams().paramsAmount; ++u){ // for every kernel param
-					if(!m_kernel.getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
-						if(m_kernel.getHyperParams().m_params[u]->hasMoreThanOneDim()){
-							for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
-								m_derivLogZ.m_params[u]->getValues()[k] += z2Value * cMatrix[t](i,j);
+			for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
+				for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
+					const double z2Value = Z2(i,j);
+					int t = 0;
+					for(unsigned int u = 0; u < m_gaussKernel->getHyperParams().paramsAmount; ++u){ // for every kernel param
+						if(!m_gaussKernel->getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
+							if(m_gaussKernel->getHyperParams().m_params[u]->hasMoreThanOneDim()){
+								for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
+									m_derivLogZ.m_params[u]->getValues()[k] += z2Value * cMatrix[t](i,j);
+									++t;
+								}
+							}else{
+								m_derivLogZ.m_params[u]->getValues()[0] += z2Value * cMatrix[t](i,j);
 								++t;
 							}
-						}else{
-							m_derivLogZ.m_params[u]->getValues()[0] += z2Value * cMatrix[t](i,j);
-							++t;
 						}
 					}
 				}
 			}
 		}
+	}else if(m_kernelType == 1){
+		printError("This type has no deriviative");
 	}
 }
 
@@ -1003,8 +1081,17 @@ double IVM::predict(const Vector& input) const{
 	const unsigned int n = m_I.size();
 	Vector k_star(n);
 	unsigned int i = 0;
-	for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-		k_star[i] = m_kernel.kernelFuncVec(input, *m_data[*itOfI]);
+	double diagEle = 0;
+	if(m_kernelType == 0){
+		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+			k_star[i] = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+		}
+		diagEle = m_gaussKernel->calcDiagElement(0);
+	}else if(m_kernelType == 1){
+		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+			k_star[i] = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+		}
+		diagEle = m_rfKernel->calcDiagElement(0);
 	}
 
 //	std::cout << "L: \n" << m_choleskyLLT.matrixL().toDenseMatrix() << std::endl;
@@ -1014,7 +1101,7 @@ double IVM::predict(const Vector& input) const{
 	const Vector mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 	double mu_star = (mu_tilde + (m_bias * Vector::Ones(n))).dot(v);*/
 	double mu_star = m_muTildePlusBias.dot(v);
-	double sigma_star = (m_kernel.calcDiagElement(0) - k_star.dot(v));
+	double sigma_star = (diagEle - k_star.dot(v));
 	//std::cout << "mu_start: " << mu_star << std::endl;
 	//std::cout << "sigma_star: " << sigma_star << std::endl;
 	double contentOfSig = 0;
@@ -1030,8 +1117,14 @@ double IVM::predictMu(const Vector& input) const{
 	const unsigned int n = m_I.size();
 	Vector k_star(n);
 	unsigned int i = 0;
-	for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-		k_star[i] = m_kernel.kernelFuncVec(input, *m_data[*itOfI]);
+	if(m_kernelType == 0){
+		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+			k_star[i] = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+		}
+	}else if(m_kernelType == 1){
+		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+			k_star[i] = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+		}
 	}
 	const Vector v = m_choleskyLLT.solve(k_star);
 	/*
@@ -1044,14 +1137,23 @@ double IVM::predictSigma(const Vector& input) const{
 	const unsigned int n = m_I.size();
 	Vector k_star(n);
 	unsigned int i = 0;
-	for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-		k_star[i] = m_kernel.kernelFuncVec(input, *m_data[*itOfI]);
+	double diagEle = 0;
+	if(m_kernelType == 0){
+		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+			k_star[i] = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+		}
+		diagEle = m_gaussKernel->calcDiagElement(0);
+	}else if(m_kernelType == 1){
+		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+			k_star[i] = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+		}
+		diagEle = m_rfKernel->calcDiagElement(0);
 	}
 	const Vector v = m_choleskyLLT.solve(k_star);
 	/*
 		const Vector mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 		double mu_star = (mu_tilde + (m_bias * Vector::Ones(n))).dot(v);*/
-	return (m_kernel.calcDiagElement(0) - k_star.dot(v));
+	return (diagEle - k_star.dot(v));
 }
 
 unsigned int IVM::getLabelForOne() const{
@@ -1060,4 +1162,12 @@ unsigned int IVM::getLabelForOne() const{
 
 unsigned int IVM::getLabelForMinusOne() const{
 	return m_labelsForClasses[1];
+}
+
+void IVM::setKernelSeed(unsigned int seed){
+	if(m_kernelType == 0){
+		m_gaussKernel->setSeed(seed);
+	}else if(m_kernelType == 1){
+		m_rfKernel->setSeed(seed);
+	}
 }

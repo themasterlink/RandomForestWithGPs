@@ -35,6 +35,9 @@ KernelBase<KernelType, nrOfParams>::~KernelBase(){
 
 template<typename KernelType, unsigned int nrOfParams>
 void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, const bool shouldDifferenceMatrixBeCalculated, const bool useSharedDifferenceMatrix){
+	if(!kernelCanHaveDifferenceMatrix()){
+		printError("This function should only be called from a kernel which supports the difference matrix!");
+	}
 	m_pDataMat = const_cast<Eigen::MatrixXd*>(&dataMat);
 	m_calcedDifferenceMatrix = shouldDifferenceMatrixBeCalculated;
 	if(m_calcedDifferenceMatrix){
@@ -67,6 +70,9 @@ void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, co
 
 template<typename KernelType, unsigned int nrOfParams>
 void KernelBase<KernelType, nrOfParams>::init(const ClassData& data, const bool shouldDifferenceMatrixBeCalculated, const bool useSharedDifferenceMatrix){
+	if(!kernelCanHaveDifferenceMatrix()){
+		printError("This function should only be called from a kernel which supports the difference matrix!");
+	}
 	m_pData = const_cast<ClassData*>(&data);
 	m_calcedDifferenceMatrix = shouldDifferenceMatrixBeCalculated;
 	if(m_calcedDifferenceMatrix){
@@ -137,8 +143,6 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 			}
 		}
 		m_calcedDifferenceMatrix = true;
-	}else{
-		printError("The difference matrix can not be calculated without a data set!");
 	}
 }
 

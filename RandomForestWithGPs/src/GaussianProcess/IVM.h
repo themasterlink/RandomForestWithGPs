@@ -12,11 +12,18 @@
 #include <boost/math/distributions/normal.hpp> // for normal_distribution
 #include <list>
 #include "Kernel/GaussianKernel.h"
+#include "Kernel/RandomForestKernel.h"
 #include "../Base/ThreadMaster.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
+#include "../Data/OnlineStorage.h"
 
 class IVM {
 public:
+	enum KernelType {
+		GAUSS = 0,
+		RF = 1
+	};
+
 	typedef typename Eigen::VectorXd Vector;
 	typedef typename Eigen::MatrixXd Matrix;
 	template <typename T>
@@ -24,9 +31,9 @@ public:
 	template <typename M, typename N>
 	using Pair = std::list<M, N>;
 
-	IVM();
+	IVM(OnlineStorage<ClassPoint*>& storage);
 
-	void init(const ClassData& dataMat, const unsigned int numberOfInducingPoints, const Eigen::Vector2i& labelsForClasses,
+	void init(const unsigned int numberOfInducingPoints, const Eigen::Vector2i& labelsForClasses,
 			const bool doEPUpdate, const bool calcDifferenceMatrixAlone = true);
 
 	void setNumberOfInducingPoints(unsigned int nr);
@@ -41,8 +48,6 @@ public:
 
 	double predictSigma(const Vector& input) const;
 
-	GaussianKernel& getKernel(){ return m_kernel; };
-
 	const List<int>& getSelectedInducingPoints(){ return m_I; };
 
 	void setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ);
@@ -52,6 +57,10 @@ public:
 	unsigned int getLabelForMinusOne() const;
 
 	void setInformationPackage(InformationPackage* package){ m_package = package; };
+
+	void setKernelSeed(unsigned int seed);
+
+	GaussianKernel* getGaussianKernel(){ return m_gaussKernel; }
 
 	virtual ~IVM();
 
@@ -75,7 +84,7 @@ private:
 
 	bool internalTrain(bool clearActiveSet = true, const int verboseLevel = 0);
 
-	ClassData m_data;
+	OnlineStorage<ClassPoint*>& m_storage;
 	Matrix m_M;
 	Matrix m_K;
 	Matrix m_L;
@@ -98,7 +107,11 @@ private:
 
 	Eigen::LLT<Eigen::MatrixXd> m_choleskyLLT;
 
-	GaussianKernel m_kernel;
+	GaussianKernel* m_gaussKernel;
+	RandomForestKernel* m_rfKernel;
+
+	KernelType m_kernelType;
+
 	boost::math::normal m_logisticNormal;
 
 	RandomUniformNr m_uniformNr;

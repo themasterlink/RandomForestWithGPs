@@ -209,3 +209,39 @@ std::ostream& operator<<(std::ostream& stream, const GaussianKernelParams& param
 	stream << ", fNoise: " << params.m_fNoise.getValue() << ", sNoise: " << params.m_sNoise.getValue();
 	return stream;
 }
+
+RandomForestKernelParams::RandomForestKernelParams(const OwnKernelInitParams& initParams){
+	m_samplingAmount.setAllValuesTo(initParams.m_samplingAmount);
+	m_maxDepth.setAllValuesTo(initParams.m_maxDepth);
+	m_classAmount.setAllValuesTo(initParams.m_amountOfUsedClasses);
+	m_params[0] = &m_samplingAmount;
+	m_params[1] = &m_maxDepth;
+	m_params[2] = &m_classAmount;
+}
+
+RandomForestKernelParams::RandomForestKernelParams(const RandomForestKernelParams& params):
+	m_samplingAmount(params.m_samplingAmount), m_maxDepth(params.m_maxDepth), m_classAmount(params.m_classAmount){
+	m_params[0] = &m_samplingAmount;
+	m_params[1] = &m_maxDepth;
+	m_params[2] = &m_classAmount;
+}
+
+RandomForestKernelParams& RandomForestKernelParams::operator=(const RandomForestKernelParams& params){
+	m_samplingAmount.setAllValuesTo(params.m_samplingAmount.getValue());
+	m_maxDepth.setAllValuesTo(params.m_maxDepth.getValue());
+	m_classAmount.setAllValuesTo(params.m_classAmount.getValue());
+	return *this;
+}
+
+void RandomForestKernelParams::setAllValuesTo(const double value){
+	for(unsigned int i = 0; i < paramsAmount; ++i){
+		m_params[i]->setAllValuesTo(value);
+	}
+}
+
+std::ostream& operator<<(std::ostream& stream, const RandomForestKernelParams& params){
+	stream << "sampling amount: " << (int) params.m_samplingAmount.getValue() << ", max depth: " << (int) params.m_maxDepth.getValue();
+	return stream;
+}
+
+

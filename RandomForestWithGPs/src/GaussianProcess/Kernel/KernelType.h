@@ -53,6 +53,9 @@ protected:
 #define LengthParam 0
 #define FNoiseParam 1
 #define SNoiseParam 2
+#define MaxDepthParam 3
+#define AmountOfUsedClassesParam 4
+#define AmountOfSamplingsParam 5
 
 class GaussianKernelElement : public KernelElement { // just for nicer naming
 public:
@@ -65,8 +68,6 @@ public:
 
 	GaussianKernelElementLength(bool hasMoreThanOneDim);
 
-	virtual ~GaussianKernelElementLength(){};
-
 	bool hasMoreThanOneDim() const{ return m_hasMoreThanOneDim; };
 
 	bool isDerivativeOnlyDiag() const{ return false; };
@@ -77,8 +78,6 @@ class GaussianKernelElementFNoise : public GaussianKernelElement {
 public:
 
 	GaussianKernelElementFNoise();
-
-	virtual ~GaussianKernelElementFNoise(){m_hasMoreThanOneDim = false;};
 
 	bool hasMoreThanOneDim() const{ return false; };
 
@@ -91,7 +90,39 @@ public:
 
 	GaussianKernelElementSNoise();
 
-	virtual ~GaussianKernelElementSNoise(){m_hasMoreThanOneDim = false;};
+	bool hasMoreThanOneDim() const{ return false; };
+
+	bool isDerivativeOnlyDiag() const{ return true; };
+};
+
+class RandomForestKernelElement : public KernelElement {
+public:
+	RandomForestKernelElement(unsigned int kernelNr): KernelElement(kernelNr){};
+
+	virtual ~RandomForestKernelElement(){};
+};
+
+class RandomForestKernelElementMaxDepth : public RandomForestKernelElement {
+public:
+	RandomForestKernelElementMaxDepth(): RandomForestKernelElement(MaxDepthParam){ m_values = new double; };
+
+	bool hasMoreThanOneDim() const{ return false; };
+
+	bool isDerivativeOnlyDiag() const{ return true; };
+};
+
+class RandomForestKernelElementMaxAmountOfClasses : public RandomForestKernelElement {
+public:
+	RandomForestKernelElementMaxAmountOfClasses(): RandomForestKernelElement(AmountOfUsedClassesParam){ m_values = new double; };
+
+	bool hasMoreThanOneDim() const{ return false; };
+
+	bool isDerivativeOnlyDiag() const{ return true; };
+};
+
+class RandomForestKernelElementAmountOfSamplings : public RandomForestKernelElement {
+public:
+	RandomForestKernelElementAmountOfSamplings(): RandomForestKernelElement(AmountOfSamplingsParam){ m_values = new double; };
 
 	bool hasMoreThanOneDim() const{ return false; };
 
@@ -102,6 +133,15 @@ class GaussianKernelInitParams {
 public:
 	GaussianKernelInitParams(bool simpleLength): m_simpleLength(simpleLength){};
 	bool m_simpleLength;
+};
+
+class RandomForestKernelInitParams {
+public:
+	RandomForestKernelInitParams(const int maxDepth, const int samplingAmount, const int amountOfUsedClasses):
+		m_maxDepth(maxDepth), m_samplingAmount(samplingAmount), m_amountOfUsedClasses(amountOfUsedClasses){};
+	const int m_maxDepth;
+	const int m_samplingAmount;
+	const int m_amountOfUsedClasses;
 };
 
 class KernelTypeGenerator {
@@ -148,5 +188,36 @@ public:
 };
 
 std::ostream& operator<<(std::ostream& stream, const GaussianKernelParams& params);
+
+class RandomForestKernelParams {
+public:
+	typedef RandomForestKernelElement OwnKernelElement;
+	typedef RandomForestKernelInitParams OwnKernelInitParams;
+
+	static const unsigned int paramsAmount = 3;
+
+	RandomForestKernelParams(const OwnKernelInitParams& initParams);
+
+	RandomForestKernelParams(const RandomForestKernelParams& params);
+
+	RandomForestKernelParams& operator=(const RandomForestKernelParams& params);
+
+	OwnKernelElement* m_params[paramsAmount];
+
+	RandomForestKernelElementAmountOfSamplings m_samplingAmount;
+
+	RandomForestKernelElementMaxDepth m_maxDepth;
+
+	RandomForestKernelElementMaxAmountOfClasses m_classAmount;
+
+	void setAllValuesTo(const double value);
+
+	void writeToFile(const std::string& file){}; // read and write trees to the file
+
+	void readFromFile(const std::string& file){};
+};
+
+std::ostream& operator<<(std::ostream& stream, const RandomForestKernelParams& params);
+
 
 #endif /* GAUSSIANPROCESS_KERNEL_KERNELTYPE_H_ */

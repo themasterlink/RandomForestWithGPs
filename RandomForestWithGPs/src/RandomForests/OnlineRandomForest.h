@@ -12,6 +12,7 @@
 #include "../Data/Data.h"
 #include "../Data/OnlineStorage.h"
 #include "../Data/ClassData.h"
+#include "../RandomNumberGenerator/RandomUniformNr.h"
 #include <list>
 #include "TreeCounter.h"
 
@@ -30,6 +31,10 @@ public:
 
 	int predict(const DataPoint& point) const;
 
+	double predict(const DataPoint& point1, const DataPoint& point2, const int sampleAmount) const;
+
+	double predictPartitionEquality(const DataPoint& point1, const DataPoint& point2, RandomUniformNr& uniformNr, int amountOfSamples) const;
+
 	void predictData(const Data& points, Labels& labels) const;
 
 	void predictData(const ClassData& points, Labels& labels) const;
@@ -47,6 +52,8 @@ public:
 	int amountOfClasses() const;
 
 	OnlineStorage<ClassPoint*>& getStorageRef();
+
+	const OnlineStorage<ClassPoint*>& getStorageRef() const;
 
 	ClassTypeSubject classType() const;
 

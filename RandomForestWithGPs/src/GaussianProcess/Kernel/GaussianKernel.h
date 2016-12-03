@@ -64,6 +64,10 @@ public:
 
 	double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const;
 
+private:
+
+	bool kernelCanHaveDifferenceMatrix() const{return true;};
+
 };
 
 inline

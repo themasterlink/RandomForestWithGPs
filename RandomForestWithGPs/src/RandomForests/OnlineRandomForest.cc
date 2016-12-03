@@ -311,6 +311,43 @@ int OnlineRandomForest::predict(const DataPoint& point) const {
 	return -1;
 }
 
+double OnlineRandomForest::predict(const DataPoint& point1, const DataPoint& point2, const int sampleAmount) const{
+	if(m_firstTrainingDone){
+			if(sampleAmount > m_trees.size()){
+				printError("This should never happen, redesign to produce more trees if needed");
+			}
+			int inSameClassCounter = 0;
+			int counter = 0;
+			for(DecisionTreeConstIterator it = m_trees.cbegin(); it != m_trees.cend() && counter < sampleAmount; ++it, ++counter){
+				if(it->predict(point1) == it->predict(point2)){ // labels are the same -> in the same cluster
+					++inSameClassCounter;
+				}
+			}
+			return inSameClassCounter / (double) std::min(sampleAmount, (int) m_trees.size());
+	}
+	return -1;
+}
+
+double OnlineRandomForest::predictPartitionEquality(const DataPoint& point1, const DataPoint& point2, RandomUniformNr& uniformNr, int amountOfSamples) const{
+	if(m_firstTrainingDone){
+		if(amountOfSamples > m_trees.size() && m_maxDepth <= 3){
+			printError("This should not happen!");
+			return -1;
+		}
+		int sameLeaveCounter = 0;
+		int counter = 0;
+		for(DecisionTreesContainer::const_iterator it = m_trees.begin(); it != m_trees.end() && counter < amountOfSamples; ++it){
+			const int height = uniformNr();
+			if(it->predictIfPointsShareSameLeaveWithHeight(point1, point2, height)){
+				++sameLeaveCounter;
+			}
+			++counter;
+		}
+		return sameLeaveCounter / (double) std::min(amountOfSamples, (int) m_trees.size());
+	}
+	return -1;
+}
+
 void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 	labels.resize(points.size());
 	boost::thread_group group;
@@ -397,6 +434,10 @@ Eigen::Vector2i OnlineRandomForest::getMinMaxData(){
 }
 
 OnlineStorage<ClassPoint*>& OnlineRandomForest::getStorageRef(){
+	return m_storage;
+}
+
+const OnlineStorage<ClassPoint*>& OnlineRandomForest::getStorageRef() const{
 	return m_storage;
 }
 

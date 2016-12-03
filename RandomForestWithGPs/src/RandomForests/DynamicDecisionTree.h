@@ -38,6 +38,8 @@ public:
 
 	int predict(const DataPoint& point) const;
 
+	bool predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const;
+
 	void predictData(const Data& data, Labels& labels) const{
 		printError("This function is not implemented!");
 	}

@@ -255,6 +255,45 @@ int DynamicDecisionTree::predict(const DataPoint& point) const{
 	}
 }
 
+bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const {
+	int iActNode = 1; // start in root
+	int actLevel = 1;
+	if(m_splitDim[1] != NODE_IS_NOT_USED && m_splitDim[1] != NODE_CAN_BE_USED){
+		while(iActNode <= m_maxInternalNodeNr){
+			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
+				// if there is a node which isn't used on the way down to the leave
+				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+					iActNode *= 2;
+				}
+				break;
+			}else if(m_splitDim[iActNode] == NODE_CAN_BE_USED){
+				// if there is a node which isn't used on the way down to the leave
+				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+					iActNode *= 2;
+				}
+				break;
+			}
+			const bool firstPointRight = m_splitValues[iActNode] < point1[m_splitDim[iActNode]];
+			const bool secondPointRight = m_splitValues[iActNode] < point1[m_splitDim[iActNode]];
+			if(firstPointRight != secondPointRight){ // walk in different directions
+				return false;
+			}
+			iActNode *= 2; // get to next level
+			if(firstPointRight){ // point is on right side of split
+				++iActNode; // go to right node
+			}
+			if(actLevel == usedHeight){
+				return true; // reached height
+			}
+			++actLevel;
+		}
+		return true; // share the same node
+	}else{
+		printError("A tree must be trained before it can predict anything!");
+		return false;
+	}
+}
+
 void DynamicDecisionTree::adjustToNewData(){
 	for(std::vector<int>::iterator it = m_labelsOfWinningClassesInLeaves.begin(); it != m_labelsOfWinningClassesInLeaves.end(); ++it){
 		*it = 0;

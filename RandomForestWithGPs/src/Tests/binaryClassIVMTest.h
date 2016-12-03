@@ -20,7 +20,7 @@
 #include <chrono>
 #include <thread>
 
-void testIvm(IVM& ivm, const ClassData& data){
+void testIvm(IVM& ivm, const OnlineStorage<ClassPoint*>& data){
 	int right = 0;
 	Eigen::Vector2i rightPerClass;
 	rightPerClass[0] = rightPerClass[1] = 0;
@@ -62,18 +62,17 @@ void testIvm(IVM& ivm, const ClassData& data){
 	std::cout << "Precision for  1: " << (double) rightPerClass[0] / right * 100.0 << "%" << std::endl;
 	std::cout << "Precision for -1: " << (double) rightPerClass[1] / right * 100.0 << "%" << std::endl;
 	std::cout << "Amount of 1 in total: " << (double) amountPerClass[0] / amountOfTestPoints * 100.0 << "%" << std::endl;
-	std::cout << ivm.getKernel().prettyString() << std::endl;
 	std::cout << RESET;
 }
 
 void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, double* bestLogZ, boost::mutex* mutex, const double durationOfTraining, int* counter){
 	StopWatch sw;
-	while(sw.elapsedSeconds() < durationOfTraining){
-		ivm->getKernel().newRandHyperParams();
+	while(sw.elapsedSeconds() < durationOfTraining && ivm->getGaussianKernel() != nullptr){
+		ivm->getGaussianKernel()->newRandHyperParams();
 		ivm->train(false);
 		mutex->lock();
 		if(*bestLogZ < ivm->m_logZ){
-			ivm->getKernel().getCopyOfParams(*bestParams);
+			ivm->getGaussianKernel()->getCopyOfParams(*bestParams);
 			*bestLogZ = ivm->m_logZ;
 		}
 		++(*counter);
@@ -81,7 +80,7 @@ void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, double* bestLo
 	}
 }
 
-GaussianKernelParams sampleParams(ClassData& data, int number, const Eigen::Vector2i& usedClasses, bool doEpUpdate,
+GaussianKernelParams sampleParams(OnlineStorage<ClassPoint*>& storage, int number, const Eigen::Vector2i& usedClasses, bool doEpUpdate,
 		const std::vector<double>& means, const std::vector<double>& sds){
 	boost::thread_group group;
 	boost::mutex mutex;
@@ -93,11 +92,11 @@ GaussianKernelParams sampleParams(ClassData& data, int number, const Eigen::Vect
 	GaussianKernelParams bestParams(!hasMoreThanOneLengthValue);
 	int counter = 0;
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
-		ivms[i] = new IVM();
-		ivms[i]->getKernel().changeKernelConfig(hasMoreThanOneLengthValue);
-		ivms[i]->getKernel().setGaussianRandomVariables(means, sds);
+		ivms[i] = new IVM(storage);
+		ivms[i]->getGaussianKernel()->changeKernelConfig(hasMoreThanOneLengthValue);
+		ivms[i]->getGaussianKernel()->setGaussianRandomVariables(means, sds);
 		ivms[i]->setDerivAndLogZFlag(true, false);
-		ivms[i]->init(data, number, usedClasses, doEpUpdate);
+		ivms[i]->init(number, usedClasses, doEpUpdate);
 		group.add_thread(new boost::thread(boost::bind(&sampleInParallel, ivms[i], &bestParams, &bestLogZ, &mutex, durationOfTraining, &counter)));
 	}
 	InLinePercentageFiller::setActMaxTime(durationOfTraining);
@@ -122,8 +121,6 @@ void executeForBinaryClassIVM(){
 	OnlineStorage<ClassPoint*> test;
 	// starts the training by its own
 	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
-	ClassData& data = train.storage();
-	ClassData& testData = test.storage();
 	std::cout << "Finish reading " << std::endl;
 	Eigen::Vector2i usedClasses;
 	usedClasses[0] = 0;
@@ -133,13 +130,13 @@ void executeForBinaryClassIVM(){
 	if(true){
 		int nrOfInducingPoints;
 		Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
-		IVM ivm;
-		ivm.init(data, nrOfInducingPoints, usedClasses, doEpUpdate);
+		IVM ivm(train);
+		ivm.init(nrOfInducingPoints, usedClasses, doEpUpdate);
 		ivm.train(CommandSettings::get_samplingAndTraining());
-		std::cout << "On " << data.size() << " points from trainings data:" << std::endl;
-		testIvm(ivm, data);
-		std::cout << "On " << testData.size() << " points from real test data:" << std::endl;
-		testIvm(ivm, testData);
+		std::cout << "On " << train.size() << " points from trainings data:" << std::endl;
+		testIvm(ivm, train);
+		std::cout << "On " << test.size() << " points from real test data:" << std::endl;
+		testIvm(ivm, test);
 	}else{
 		double sNoise = Settings::getDirectDoubleValue("KernelParam.sNoise");
 		if(CommandSettings::get_samplingAndTraining() > 0.){
@@ -153,10 +150,10 @@ void executeForBinaryClassIVM(){
 			Settings::getValue("IVM.nrOfInducingPoints", number);
 			bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 			if(true){
-				IVM ivm;
-				ivm.init(data, number, usedClasses, doEpUpdate);
-				ivm.getKernel().changeKernelConfig(hasMoreThanOneLengthValue);
-				ivm.getKernel().setGaussianRandomVariables(means, sds);
+				IVM ivm(train);
+				ivm.init(number, usedClasses, doEpUpdate);
+				ivm.getGaussianKernel()->changeKernelConfig(hasMoreThanOneLengthValue);
+				ivm.getGaussianKernel()->setGaussianRandomVariables(means, sds);
 				ivm.setDerivAndLogZFlag(true, false);
 				std::list<double> list;
 				GaussianKernelParams bestParams(!hasMoreThanOneLengthValue);
@@ -174,7 +171,7 @@ void executeForBinaryClassIVM(){
 					bestParams.readFromFile(kernelFilePath);
 				}else{
 					StopWatch sw;
-					bestParams = sampleParams(data, number, usedClasses, doEpUpdate, means, sds);
+					bestParams = sampleParams(train, number, usedClasses, doEpUpdate, means, sds);
 					std::cout << "Time for sampling: " << sw.elapsedAsPrettyTime() << ", result: " << bestParams << std::endl;
 				}
 				if(Settings::getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
@@ -182,10 +179,10 @@ void executeForBinaryClassIVM(){
 				}
 				const TimeFrame timeTry = swTry.elapsedAsTimeFrame();
 				StopWatch swGrad;
-				ivm.getKernel().setHyperParamsWith(bestParams);
+				ivm.getGaussianKernel()->setHyperParamsWith(bestParams);
 				bool t = ivm.train(false);
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0) && t){
-					DataWriterForVisu::writeSvg("before.svg", ivm, ivm.getSelectedInducingPoints(), data);
+					DataWriterForVisu::writeSvg("before.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
 					system("open before.svg");
 				}
 				ivm.setDerivAndLogZFlag(true, true);
@@ -193,11 +190,11 @@ void executeForBinaryClassIVM(){
 				double smallestLog = -DBL_MAX;
 				const int amountOfTrainingSteps = 0;
 				for(int i = 0; i < amountOfTrainingSteps; ++i){
-					std::cout << "Act " << ivm.getKernel().getHyperParams() << ", logZ: " << ivm.m_logZ << ", deriv: "
+					std::cout << "Act " << ivm.getGaussianKernel()->getHyperParams() << ", logZ: " << ivm.m_logZ << ", deriv: "
 							<< ivm.m_derivLogZ << ", fac: " << fac << std::endl;
 					//DataWriterForVisu::writeSvg("logZValues.svg", bayOpt.m_logZValues, true);
 					//system("open logZValues.svg");
-					//ivm.getKernel().setHyperParamsWith(bestParams);
+					//ivm.getGaussianKernel()->setHyperParamsWith(bestParams);
 					StopWatch sw;
 					bool train = ivm.train(false, 1);
 					if(train && !isnan(ivm.m_logZ)){
@@ -222,11 +219,11 @@ void executeForBinaryClassIVM(){
 						list.push_back(ivm.m_logZ);
 						if(smallestLog < ivm.m_logZ){
 							smallestLog = ivm.m_logZ;
-							ivm.getKernel().getCopyOfParams(bestParams);
+							ivm.getGaussianKernel()->getCopyOfParams(bestParams);
 						}
-						ivm.getKernel().addToHyperParams(ivm.m_derivLogZ, -fac);
+						ivm.getGaussianKernel()->addToHyperParams(ivm.m_derivLogZ, -fac);
 						double sum = 0;
-						if(ivm.getKernel().hasLengthMoreThanOneDim()){
+						if(ivm.getGaussianKernel()->hasLengthMoreThanOneDim()){
 							for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
 								sum += fabs(ivm.m_derivLogZ.m_length.getValues()[i]);
 							}
@@ -243,20 +240,20 @@ void executeForBinaryClassIVM(){
 						break;
 					}
 				}
-				ivm.getKernel().setHyperParamsWith(bestParams);
+				ivm.getGaussianKernel()->setHyperParamsWith(bestParams);
 				t = ivm.train(false);
 				std::cout << "T: " << t << std::endl;
 				const TimeFrame timeGrad = swGrad.elapsedAsTimeFrame();
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 					if(amountOfTrainingSteps > 0){
-						DataWriterForVisu::writeSvg("after.svg", ivm, ivm.getSelectedInducingPoints(), data);
+						DataWriterForVisu::writeSvg("after.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
 						system("open after.svg");
 					}
 				}
 				std::cout << "On trainings data:" << std::endl;
-				testIvm(ivm, data);
+				testIvm(ivm, train);
 				std::cout << "On real test data:" << std::endl;
-				testIvm(ivm, testData);
+				testIvm(ivm, test);
 				std::cout << RED;
 				std::cout << "Time try: " << timeTry << std::endl;
 				std::cout << "Time gradient: " << timeGrad << std::endl;
@@ -264,7 +261,7 @@ void executeForBinaryClassIVM(){
 				std::cout << RESET;
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 					std::list<int> emptyList;
-					DataWriterForVisu::writeSvg("withTest.svg", ivm, emptyList, testData);
+					DataWriterForVisu::writeSvg("withTest.svg", ivm, emptyList, test.storage());
 					system("open withTest.svg");
 				}
 				if(amountOfTrainingSteps > 0){
@@ -325,10 +322,10 @@ void executeForBinaryClassIVM(){
 		}
 
 		return;*/
-				IVM ivm;
-				ivm.init(data, number, usedClasses, doEpUpdate);
+				IVM ivm(train);
+				ivm.init(number, usedClasses, doEpUpdate);
 				ivm.setDerivAndLogZFlag(true, false);
-				ivm.getKernel().setHyperParams(0.5, 0.8, 0.1);
+				ivm.getGaussianKernel()->setHyperParams(0.5, 0.8, 0.1);
 				bayesopt::Parameters par = initialize_parameters_to_default();
 				std::cout << "noise: " << par.noise << std::endl;
 				//par.noise = 1-6;
@@ -344,10 +341,10 @@ void executeForBinaryClassIVM(){
 				vectord result(paramsAmount);
 				vectord lowerBound(paramsAmount);
 				vectord upperBound(paramsAmount);
-				lowerBound[0] = 0.0005; // max(0.1,gp.getLenMean() - 2 * gp.getKernel().getLenVar());
+				lowerBound[0] = 0.0005; // max(0.1,gp.getLenMean() - 2 * gp.getGaussianKernel()->getLenVar());
 				lowerBound[1] = 0.001;
-				upperBound[0] = means[0] + sds[0];// + gp.getKernel().getLenVar();
-				upperBound[1] = means[1] + sds[1];//max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
+				upperBound[0] = means[0] + sds[0];// + gp.getGaussianKernel()->getLenVar();
+				upperBound[1] = means[1] + sds[1];//max(0.5,gp.getGaussianKernel()->getLenVar() / gp.getLenMean() * 0.5);
 				bayOpt.setBoundingBox(lowerBound, upperBound);
 				try{
 					bayOpt.optimize(result);
@@ -359,18 +356,18 @@ void executeForBinaryClassIVM(){
 				std::cout << "Best " << result[0] << ", " << result[1] << ", nr: " << nr << std::endl;
 				//DataWriterForVisu::writeSvg("logZValues.svg", bayOpt.m_logZValues, true);
 				//system("open logZValues.svg");
-				ivm.getKernel().setHyperParams(result[0], result[1]);
+				ivm.getGaussianKernel()->setHyperParams(result[0], result[1]);
 				StopWatch sw;
 				ivm.train();
 				std::cout << "Time for training: " << sw.elapsedAsPrettyTime() << std::endl;
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
-					DataWriterForVisu::writeSvg("new.svg", ivm, ivm.getSelectedInducingPoints(), data);
+					DataWriterForVisu::writeSvg("new.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
 					system("open new.svg");
 				}
 				std::cout << "On trainings data:" << std::endl;
-				testIvm(ivm, data);
+				testIvm(ivm, train);
 				std::cout << "On real test data:" << std::endl;
-				testIvm(ivm, testData);
+				testIvm(ivm, test);
 				return;
 			}
 		}else{
@@ -396,17 +393,17 @@ void executeForBinaryClassIVM(){
 					int j = 0;
 					for(double y2 = 0.8; y2 < 0.9; y2 += 0.005)
 					{	//double x = 955; double y2 = 0.855;
-						IVM ivm;
-						ivm.init(data, 0.33333 * data.size(), usedClasses, doEpUpdate);
+						IVM ivm(train);
+						ivm.init(0.33333 * train.size(), usedClasses, doEpUpdate);
 						ivm.setDerivAndLogZFlag(true, false);
-						ivm.getKernel().setHyperParams(x, y2, sNoise);
+						ivm.getGaussianKernel()->setHyperParams(x, y2, sNoise);
 						bool trained = ivm.train(false);
 						if(trained){
 							int right = 0;
 							int amountOfBelow = 0;
 							int amountOfAbove = 0;
-							for(int j = 0; j < testData.size(); ++j){
-								ClassPoint& ele = *testData[j];
+							for(int j = 0; j < test.size(); ++j){
+								ClassPoint& ele = *test[j];
 								double prob = ivm.predict(ele);
 								//std::cout << "Prob: " << prob << ", label is: " << labels[j] << std::endl;
 								if(prob < 0.5 && ele.getLabel() == 0){
@@ -424,28 +421,28 @@ void executeForBinaryClassIVM(){
 								bestLogZ = ivm.m_logZ;
 								bestX = x; bestY = y2;
 							}
-							if((double) right / testData.size() * 100.0  <= 90. && false){
-								bestResult = (double) right / testData.size() * 100.0;
-								DataWriterForVisu::writeSvg("out3.svg", ivm, ivm.getSelectedInducingPoints(), data);
+							if((double) right / test.size() * 100.0  <= 90. && false){
+								bestResult = (double) right / test.size() * 100.0;
+								DataWriterForVisu::writeSvg("out3.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
 								std::this_thread::sleep_for(std::chrono::milliseconds((int)(100)));
 								openFileInViewer("out3.svg");
 								//break;
 								std::this_thread::sleep_for(std::chrono::milliseconds((int)(500)));
 								std::cout << RED;
-								std::cout << "Amount of right: " << (double) right / testData.size() * 100.0 << "%" << std::endl;
-								std::cout << "Amount of above: " << (double) amountOfAbove / testData.size() * 100.0 << "%" << std::endl;
-								std::cout << "Amount of below: " << (double) amountOfBelow / testData.size() * 100.0 << "%" << std::endl;
-								std::cout << ivm.getKernel().prettyString() << std::endl;
+								std::cout << "Amount of right: " << (double) right / test.size() * 100.0 << "%" << std::endl;
+								std::cout << "Amount of above: " << (double) amountOfAbove / test.size() * 100.0 << "%" << std::endl;
+								std::cout << "Amount of below: " << (double) amountOfBelow / test.size() * 100.0 << "%" << std::endl;
+								std::cout << ivm.getGaussianKernel()->prettyString() << std::endl;
 								std::cout << RESET;
 							}
-							if(worstResult > (double) right / testData.size() * 100.0){
-								worstResult = (double) right / testData.size() * 100.0;
+							if(worstResult > (double) right / test.size() * 100.0){
+								worstResult = (double) right / test.size() * 100.0;
 								worstX = x; worstY = y2;
 							}
-							correctVec[size * i + j] = (double) right / testData.size() * 100.0;
+							correctVec[size * i + j] = (double) right / test.size() * 100.0;
 						}else{
 							correctVec[size * i + j] = -1;
-							//std::cout << "len: " << ivm.getKernel().len() << ", sigmaF: " << ivm.getKernel().sigmaF() <<std::endl;
+							//std::cout << "len: " << ivm.getGaussianKernel()->len() << ", sigmaF: " << ivm.getGaussianKernel()->sigmaF() <<std::endl;
 						}
 						InLinePercentageFiller::setActValueAndPrintLine(size * i + j);
 						++j;
@@ -471,11 +468,11 @@ void executeForBinaryClassIVM(){
 				DataWriterForVisu::writeSvg("vec2.svg", correctVec);
 				openFileInViewer("vec2.svg");
 			}
-			IVM ivm;
-			std::cout << "Size: " << data.size() << std::endl;
+			IVM ivm(train);
+			std::cout << "Size: " << train.size() << std::endl;
 			int nrOfInducingPoints;
 			Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
-			ivm.init(data, nrOfInducingPoints, usedClasses, doEpUpdate);
+			ivm.init(nrOfInducingPoints, usedClasses, doEpUpdate);
 			ivm.setDerivAndLogZFlag(true, true);
 			if(Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam")){
 				bestY = 1.24258; //1.67215;
@@ -485,9 +482,9 @@ void executeForBinaryClassIVM(){
 					bestY = 0.0357228;
 					sNoise = 0.979355;
 				}
-				ivm.getKernel().setHyperParams(bestXs, bestY, sNoise);
+				ivm.getGaussianKernel()->setHyperParams(bestXs, bestY, sNoise);
 			}else{
-				ivm.getKernel().setHyperParams(bestX, bestY, sNoise);
+				ivm.getGaussianKernel()->setHyperParams(bestX, bestY, sNoise);
 			}
 			std::cout << "Start training" << std::endl;
 			StopWatch swTraining;
@@ -510,10 +507,10 @@ void executeForBinaryClassIVM(){
 			 */
 			if((CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 				int x = 0, y = 1;
-				if(!CommandSettings::get_useFakeData() && ivm.getKernel().hasLengthMoreThanOneDim()){
+				if(!CommandSettings::get_useFakeData() && ivm.getGaussianKernel()->hasLengthMoreThanOneDim()){
 					double highestVal = -DBL_MAX, secondHighestVal = -DBL_MAX;
 					for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
-						const double len = ivm.getKernel().getHyperParams().m_length.getValues()[i];
+						const double len = ivm.getGaussianKernel()->getHyperParams().m_length.getValues()[i];
 						if(len > highestVal){
 							secondHighestVal = highestVal;
 							y = x;
@@ -525,7 +522,7 @@ void executeForBinaryClassIVM(){
 						}
 					}
 				}else if(CommandSettings::get_useFakeData()){
-					DataWriterForVisu::writeSvg("out3.svg", ivm, ivm.getSelectedInducingPoints(), data, x, y);
+					DataWriterForVisu::writeSvg("out3.svg", ivm, ivm.getSelectedInducingPoints(), train.storage(), x, y);
 					openFileInViewer("out3.svg");
 					//				DataWriterForVisu::writeSvg("mu.svg", ivm, ivm.getSelectedInducingPoints(), data, x, y, 1);
 					//				openFileInViewer("mu.svg");
@@ -533,10 +530,10 @@ void executeForBinaryClassIVM(){
 					//				openFileInViewer("sigma.svg");
 				}
 			}
-			std::cout << "On " << data.size() << " points from trainings data:" << std::endl;
-			testIvm(ivm, data);
-			std::cout << "On " << testData.size() << " points from real test data:" << std::endl;
-			testIvm(ivm, testData);
+			std::cout << "On " << train.size() << " points from trainings data:" << std::endl;
+			testIvm(ivm, train);
+			std::cout << "On " << test.size() << " points from real test data:" << std::endl;
+			testIvm(ivm, test);
 			return;
 		}
 

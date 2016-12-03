@@ -11,6 +11,7 @@
 #include "../../Data/ClassData.h"
 #include "../../Utility/Util.h"
 #include "KernelType.h"
+#include "../../RandomNumberGenerator/RandomGaussianNr.h"
 #include "../../Utility/ReadWriterHelper.h"
 #include "../../Base/Settings.h"
 #include "../../Data/ClassKnowledge.h"
@@ -46,7 +47,7 @@ public:
 
 	void newRandHyperParams();
 
-	void setSeed(const int seed);
+	virtual void setSeed(const int seed);
 
 	bool wasDifferenceCalced(){ return m_calcedDifferenceMatrix; };
 
@@ -56,6 +57,8 @@ public:
 
 	unsigned int getNrOfParams(){ return nrOfParams; };
 
+	void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd* usedMatrix);
+
 	virtual double calcDiagElement(unsigned int row) const = 0;
 
 	virtual double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const = 0;
@@ -64,9 +67,10 @@ public:
 
 	virtual std::string prettyString() const = 0;
 
-	void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd* usedMatrix);
 
 protected:
+
+	virtual bool kernelCanHaveDifferenceMatrix() const = 0;
 
 	virtual double kernelFunc(const int row, const int col) const = 0;
 
