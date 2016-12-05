@@ -15,12 +15,13 @@ IVMMultiBinary::IVMMultiBinary(OnlineStorage<ClassPoint*>& storage,
 		m_numberOfInducingPointsPerIVM(numberOfInducingPointsPerIVM),
 		m_doEpUpdate(doEPUpdate),
 		m_init(false),
-		m_firstTraining(true){
+		m_firstTraining(true),
+		m_orfForKernel(nullptr){
 	m_storage.attach(this);
 }
 
 void IVMMultiBinary::update(Subject* caller, unsigned int event){
-	if(caller->classType() == m_storage.classType()){
+	if(caller->classType() == m_storage.classType()){¸
 		if(event == OnlineStorage<ClassPoint*>::APPENDBLOCK){
 			// assumption that the correct OnlineStorage is callig and not a false one -> no check
 			const unsigned int lastUpdateIndex = m_storage.getLastUpdateIndex();
@@ -38,8 +39,22 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 				}
 				m_ivms.resize(classCounter.size());
 				const bool calcDifferenceMatrixAlone = false;
+				int kernelType = 0;
+				Settings::getValue("IVM.kernelType", kernelType);
+				if(kernelType == 1){
+					int maxDepth, samplingAmount;
+					Settings::getValue("RandomForestKernel.maxDepth", maxDepth);
+					Settings::getValue("RandomForestKernel.samplingAmount", samplingAmount);
+					m_orfForKernel = new OnlineRandomForest(m_storage, maxDepth, ClassKnowledge::amountOfClasses());
+					// train the trees before the ivms are used
+					m_orfForKernel->setDesiredAmountOfTrees(samplingAmount);
+					m_orfForKernel->update(&m_storage, OnlineStorage<ClassPoint*>::APPENDBLOCK);
+				}
 				for(unsigned int i = 0; i < m_ivms.size(); ++i){
-					m_ivms[i] = new IVM(m_storage);
+					m_ivms[i] = new IVM(m_storage, true);
+					if(m_ivms[i]->getKernelType() == IVM::RF){
+						m_ivms[i]->setOnlineRandomForest(m_orfForKernel);
+					}
 					Eigen::Vector2i usedClasses;
 					usedClasses << m_classOfIVMs[i], -1;
 					m_ivms[i]->init(m_numberOfInducingPointsPerIVM, usedClasses,
@@ -48,14 +63,16 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 				const int nrOfParallel = boost::thread::hardware_concurrency();
 				const int size = (m_storage.size() * m_storage.size() + m_storage.size()) / 2;
 				const int sizeOfPart =  size / nrOfParallel;
-				Eigen::MatrixXd* differenceMatrix = new Eigen::MatrixXd(m_storage.size(), m_storage.size());
-				boost::thread_group group;
-				for(unsigned int i = 0; i < nrOfParallel; ++i){
-					int start = sizeOfPart * i;
-					int end = (i + 1 != nrOfParallel) ? sizeOfPart * (i + 1) : size;
-					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::initInParallel, this, i, start, end, differenceMatrix)));
+				if(m_ivms[0]->getKernelType() == IVM::GAUSS){
+					Eigen::MatrixXd* differenceMatrix = new Eigen::MatrixXd(m_storage.size(), m_storage.size());
+					boost::thread_group group;
+					for(unsigned int i = 0; i < nrOfParallel; ++i){
+						int start = sizeOfPart * i;
+						int end = (i + 1 != nrOfParallel) ? sizeOfPart * (i + 1) : size;
+						group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::initInParallel, this, i, start, end, differenceMatrix)));
+					}
+					group.join_all();
 				}
-				group.join_all();
 				m_init = true;
 				train();
 			}else if(!m_init && lastUpdateIndex != 0){
@@ -72,6 +89,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 }
 
 IVMMultiBinary::~IVMMultiBinary() {
+	delete m_orfForKernel;
 }
 
 void IVMMultiBinary::train(){
@@ -218,7 +236,9 @@ void IVMMultiBinary::train(){
 }
 
 void IVMMultiBinary::initInParallel(const int usedIvm, const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix){
-//	m_ivms[usedIvm]->getKernel().calcDifferenceMatrix(startOfKernel, endOfKernel, differenceMatrix);
+	if(m_ivms[usedIvm]->getKernelType() == IVM::GAUSS){
+		m_ivms[usedIvm]->getGaussianKernel()->calcDifferenceMatrix(startOfKernel, endOfKernel, differenceMatrix);
+	}
 }
 
 void IVMMultiBinary::trainInParallel(const int usedIvm, const double trainTime, InformationPackage* package){
@@ -302,7 +322,7 @@ void IVMMultiBinary::predictDataInParallel(const Data& points, const int usedIvm
 	package->wait();
 	for(unsigned int i = 0; i < points.size(); ++i){
 		(*probabilities)[i][usedIvm] = m_ivms[usedIvm]->predict(*points[i]);
-		if(i % 5000 == 0){
+		if(i % 5000 == 0 && i > 0){
 			package->printLineToScreenForThisThread("5000 points predicted");
 		}
 		package->performedOneTrainingStep();

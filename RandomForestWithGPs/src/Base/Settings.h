@@ -71,7 +71,7 @@ void Settings::getValue(const std::string& nameOfValue, T& value){
 		if(boost::optional<T> ret = m_root.get_optional<T>(nameOfValue)){
 			value = *ret;
 		}else{
-			printWarning("This name was not in the init file: " << nameOfValue);
+			printError("This name was not in the init file: " << nameOfValue);
 		}
 		m_mutex.unlock();
 	}

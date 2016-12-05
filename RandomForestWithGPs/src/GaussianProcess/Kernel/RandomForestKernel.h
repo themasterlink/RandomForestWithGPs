@@ -16,9 +16,9 @@
 
 class RandomForestKernel : public KernelBase<RandomForestKernelParams>, public Observer {
 public:
-	RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int samplingAmount, const int amountOfUsedClasses);
+	RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int samplingAmount, const int amountOfUsedClasses, const bool createOrf);
 
-	RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const OwnKernelInitParams& initParams);
+	RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const OwnKernelInitParams& initParams, const bool createOrf);
 	virtual ~RandomForestKernel();
 
 	void init();
@@ -41,8 +41,9 @@ public:
 
 	void setSeed(const int seed);
 
-private:
+	void setOnlineRandomForest(OnlineRandomForest* forest){ m_rf = forest; }
 
+private:
 
 	bool kernelCanHaveDifferenceMatrix() const{return false;};
 
@@ -52,7 +53,7 @@ private:
 	};
 	RandomUniformNr m_heightSampler;
 
-	OnlineRandomForest m_rf;
+	OnlineRandomForest* m_rf;
 
 	KernelMode m_mode;
 };

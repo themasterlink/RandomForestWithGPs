@@ -22,7 +22,7 @@ public:
 	typedef typename KernelType::OwnKernelElement OwnKernelElement;
 	typedef typename KernelType::OwnKernelInitParams OwnKernelInitParams;
 
-	KernelBase(const OwnKernelInitParams& initParams);
+	KernelBase(const OwnKernelInitParams& initParams, const bool sampleNewParams = true);
 	virtual ~KernelBase() = 0;
 
 	void init(const Eigen::MatrixXd& dataMat, const bool calcDifferenceMatrix, const bool useSharedDifferenceMatrix);

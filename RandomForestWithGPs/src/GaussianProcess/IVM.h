@@ -31,7 +31,7 @@ public:
 	template <typename M, typename N>
 	using Pair = std::list<M, N>;
 
-	IVM(OnlineStorage<ClassPoint*>& storage);
+	IVM(OnlineStorage<ClassPoint*>& storage, const bool isPartOfMultiIvm = false);
 
 	void init(const unsigned int numberOfInducingPoints, const Eigen::Vector2i& labelsForClasses,
 			const bool doEPUpdate, const bool calcDifferenceMatrixAlone = true);
@@ -61,6 +61,12 @@ public:
 	void setKernelSeed(unsigned int seed);
 
 	GaussianKernel* getGaussianKernel(){ return m_gaussKernel; }
+
+	void setOnlineRandomForest(OnlineRandomForest* forest);
+
+	bool isTrained(){ return m_trained; }
+
+	KernelType getKernelType(){ return m_kernelType; }
 
 	virtual ~IVM();
 
@@ -102,6 +108,7 @@ private:
 	double m_desiredMargin;
 	bool m_calcLogZ;
 	bool m_calcDerivLogZ;
+	bool m_trained;
 	List<int> m_J, m_I;
 	Eigen::Vector2i m_labelsForClasses;
 
@@ -119,6 +126,8 @@ private:
 	bool m_useNeighbourComparison;
 
 	InformationPackage* m_package;
+
+	bool m_isPartOfMultiIvm;
 };
 
 #endif /* GAUSSIANPROCESS_IVM_H_ */

@@ -15,7 +15,6 @@ KernelElement::KernelElement(unsigned int kernelNr): m_kernelNr(kernelNr), m_val
 
 KernelElement::KernelElement(const KernelElement& ele):
 		m_kernelNr(ele.m_kernelNr), m_values(nullptr), m_hasMoreThanOneDim(ele.m_hasMoreThanOneDim){
-	std::cout << "Copy of " << ele.m_kernelNr << std::endl;
 	if(ele.m_hasMoreThanOneDim){
 		const int dim = ClassKnowledge::amountOfDims();
 		m_values = new double[dim];
@@ -219,8 +218,10 @@ RandomForestKernelParams::RandomForestKernelParams(const OwnKernelInitParams& in
 	m_params[2] = &m_classAmount;
 }
 
-RandomForestKernelParams::RandomForestKernelParams(const RandomForestKernelParams& params):
-	m_samplingAmount(params.m_samplingAmount), m_maxDepth(params.m_maxDepth), m_classAmount(params.m_classAmount){
+RandomForestKernelParams::RandomForestKernelParams(const RandomForestKernelParams& params){
+	m_samplingAmount.setAllValuesTo(params.m_samplingAmount.getValue());
+	m_maxDepth.setAllValuesTo(params.m_maxDepth.getValue());
+	m_classAmount.setAllValuesTo(params.m_classAmount.getValue());
 	m_params[0] = &m_samplingAmount;
 	m_params[1] = &m_maxDepth;
 	m_params[2] = &m_classAmount;

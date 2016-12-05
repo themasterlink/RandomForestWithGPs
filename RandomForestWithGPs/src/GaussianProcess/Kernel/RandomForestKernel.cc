@@ -7,18 +7,24 @@
 
 #include "RandomForestKernel.h"
 
-RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int samplingAmount, const int amountOfUsedClasses):
-	KernelBase<RandomForestKernelParams>(OwnKernelInitParams(maxDepth, samplingAmount, amountOfUsedClasses)),
+RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int samplingAmount, const int amountOfUsedClasses, const bool createOrf):
+	KernelBase<RandomForestKernelParams>(OwnKernelInitParams(maxDepth, samplingAmount, amountOfUsedClasses), false),
 	m_heightSampler(3, maxDepth, 234389),
-	m_rf(storage, maxDepth, amountOfUsedClasses),
+	m_rf(nullptr),
 	m_mode(PARTITION){
+	if(createOrf){
+		m_rf = new OnlineRandomForest(storage, maxDepth, amountOfUsedClasses);
+	}
 }
 
-RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const OwnKernelInitParams& initParams):
+RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const OwnKernelInitParams& initParams, const bool createOrf):
 	KernelBase<RandomForestKernelParams>(initParams),
 	m_heightSampler(3, initParams.m_maxDepth, 234389),
-	m_rf(storage, initParams.m_maxDepth, initParams.m_amountOfUsedClasses),
+	m_rf(nullptr),
 	m_mode(PARTITION){
+	if(createOrf){
+		m_rf = new OnlineRandomForest(storage, initParams.m_maxDepth, initParams.m_amountOfUsedClasses);
+	}
 }
 
 RandomForestKernel::~RandomForestKernel(){
@@ -34,7 +40,10 @@ void RandomForestKernel::init(){
 }
 
 void RandomForestKernel::update(Subject* subject, unsigned int event){
-	m_rf.update(subject, event);
+	if(m_init){
+		m_rf->update(subject, event);
+		m_dataPoints = m_rf->getStorageRef().size();
+	}
 }
 
 double RandomForestKernel::calcDiagElement(unsigned int row) const{
@@ -59,25 +68,25 @@ std::string RandomForestKernel::prettyString() const{
 }
 
 double RandomForestKernel::kernelFunc(const int row, const int col) const{
-	if(!m_calcedDifferenceMatrix){
+//	if(!m_calcedDifferenceMatrix){
 		if(m_init){
-			return kernelFuncVec(*m_rf.getStorageRef()[row], *m_rf.getStorageRef()[col]);
+			return kernelFuncVec(*m_rf->getStorageRef()[row], *m_rf->getStorageRef()[col]);
 		}else{
 			printError("The init process failed, init was tried: " << m_init);
 		}
-	}else{
-		return (*m_differences)(row, col);
-	}
+//	}else{
+//		return (*m_differences)(row, col);
+//	}
 	return 0;
 }
 
 double RandomForestKernel::kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const{
 	if(m_init){
 		if(m_mode == LABEL){
-			return m_rf.predict(lhs, rhs, (int) m_kernelParams.m_samplingAmount.getValue());
+			return m_rf->predict(lhs, rhs, (int) m_kernelParams.m_samplingAmount.getValue());
 		}else if(m_mode == PARTITION){
 			RandomUniformNr& sampler = const_cast<RandomUniformNr&>(m_heightSampler);
-			return m_rf.predictPartitionEquality(lhs, rhs, sampler, (int) m_kernelParams.m_samplingAmount.getValue());
+			return m_rf->predictPartitionEquality(lhs, rhs, sampler, (int) m_kernelParams.m_samplingAmount.getValue());
 		}
 	}
 	return 0;

@@ -30,7 +30,7 @@ void DataBinaryWriter::toFile(const Data& data, const std::string& filePath){
 	if(file.is_open()){
 		long size = data.size();
 		file.write((char*) &size, sizeof(long));
-		std::cout << "Write size: " << size << std::endl;
+		printOnScreen("Write size: " << size);
 		for(long i = 0; i < size; ++i){
 			ReadWriterHelper::writeVector(file, *data[i]);
 		}

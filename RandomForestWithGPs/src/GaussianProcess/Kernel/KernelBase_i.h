@@ -10,18 +10,20 @@
 #endif
 
 template<typename KernelType, unsigned int nrOfParams>
-KernelBase<KernelType, nrOfParams>::KernelBase(const OwnKernelInitParams& initParams):
+KernelBase<KernelType, nrOfParams>::KernelBase(const OwnKernelInitParams& initParams, const bool sampleNewParams):
 	m_differences(nullptr), m_pDataMat(nullptr), m_pData(nullptr), m_init(false),
 	m_calcedDifferenceMatrix(false), m_dataPoints(0), m_kernelParams(initParams) {
 	for(unsigned int i = 0; i < nrOfParams; ++i){
 		m_randomGaussians[i] = new RandomGaussianNr(0.0, 1.0);
 		m_kernelParams.m_params[i]->changeAmountOfDims(m_kernelParams.m_params[i]->hasMoreThanOneDim()); // to secure that the amount of values is there
-		if(m_kernelParams.m_params[i]->hasMoreThanOneDim()){
-			for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){
-				m_kernelParams.m_params[i]->getValues()[j] = (*m_randomGaussians[i])();
+		if(sampleNewParams){
+			if(m_kernelParams.m_params[i]->hasMoreThanOneDim()){
+				for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){
+					m_kernelParams.m_params[i]->getValues()[j] = (*m_randomGaussians[i])();
+				}
+			}else{
+				m_kernelParams.m_params[i]->getValues()[0] = (*m_randomGaussians[i])();
 			}
-		}else{
-			m_kernelParams.m_params[i]->getValues()[0] = (*m_randomGaussians[i])();
 		}
 	}
 }

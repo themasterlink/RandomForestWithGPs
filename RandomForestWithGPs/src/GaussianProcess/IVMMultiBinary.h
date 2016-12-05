@@ -56,6 +56,8 @@ private:
 
 	bool m_firstTraining;
 
+	OnlineRandomForest* m_orfForKernel;
+
 };
 
 #endif /* GAUSSIANPROCESS_IVMMULTIBINARY_H_ */

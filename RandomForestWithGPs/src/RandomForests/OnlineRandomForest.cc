@@ -20,7 +20,9 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 		m_amountOfUsedDims(0),
 		m_factorForUsedDims(0.),
 		m_storage(storage),
-		m_firstTrainingDone(false){
+		m_firstTrainingDone(false),
+		m_ownSamplingTime(-1),
+		m_desiredAmountOfTrees(0){
 	storage.attach(this);
 	Settings::getValue("OnlineRandomForest.factorAmountOfUsedDims", m_factorForUsedDims);
 	Settings::getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
@@ -28,6 +30,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	Settings::getValue("OnlineRandomForest.minUsedDataFactor", val);
 	m_minMaxUsedDataFactor[0] = val;
 	Settings::getValue("OnlineRandomForest.maxUsedDataFactor", val);
+	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	m_minMaxUsedDataFactor[1] = val;
 }
 
@@ -77,15 +80,21 @@ void OnlineRandomForest::train(){
 	}
 	boost::thread_group group;
 	const int nrOfParallel = boost::thread::hardware_concurrency();
+	const double trainingsTime = m_ownSamplingTime > 0 ? m_ownSamplingTime : CommandSettings::get_samplingAndTraining();
 	std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
-		packages[i] = new InformationPackage(InformationPackage::ORF_TRAIN, 0, (m_trees.size() / (double) nrOfParallel));
+		packages[i] = new InformationPackage(m_desiredAmountOfTrees == 0 ? InformationPackage::ORF_TRAIN : InformationPackage::ORF_TRAIN_FIX, 0, (m_trees.size() / (double) nrOfParallel));
 		packages[i]->setStandartInformation("Train trees, thread nr: " + number2String(i));
-		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i])));
+		packages[i]->setTrainingsTime(trainingsTime);
+		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i], m_desiredAmountOfTrees)));
 	}
 	int stillOneRunning = 1;
-	InLinePercentageFiller::setActMaxTime(CommandSettings::get_samplingAndTraining());
-	double nextCheck = std::min(10.,CommandSettings::get_samplingAndTraining() / 10.);
+	if(m_desiredAmountOfTrees == 0){
+		InLinePercentageFiller::setActMaxTime(trainingsTime);
+	}else{
+		InLinePercentageFiller::setActMax(m_desiredAmountOfTrees);
+	}
+//	double nextCheck = std::min(10.,m_ownSamplingTime / 10.);
 	StopWatch sw;
 	while(stillOneRunning != 0){
 		stillOneRunning = 0;
@@ -94,12 +103,20 @@ void OnlineRandomForest::train(){
 				++stillOneRunning;
 			}
 		}
-		InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size());
+		if(m_desiredAmountOfTrees == 0){
+			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size());
+		}else{
+			InLinePercentageFiller::setActValueAndPrintLine(m_trees.size());
+		}
 		usleep(0.2 * 1e6);
 	}
 	group.join_all();
 	printOnScreen("Calculated " << m_trees.size() << " trees with depth: " << m_maxDepth);
-	InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size(), true);
+	if(m_desiredAmountOfTrees == 0){
+		InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size(), true);
+	}else{
+		InLinePercentageFiller::setActValueAndPrintLine(m_trees.size());
+	}
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
 		ThreadMaster::threadHasFinished(packages[i]);
 		delete packages[i];
@@ -107,12 +124,16 @@ void OnlineRandomForest::train(){
 	m_firstTrainingDone = true;
 }
 
-void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package){
+void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const int amountOfTrees){
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
 	int i = 0;
 	while(true){ // the thread master will eventually kill this training
 		m_treesMutex.lock();
+		if(amountOfTrees > 0 && m_trees.size() == amountOfTrees){
+			m_treesMutex.unlock();
+			break;
+		}
 		// create a new element and train it
 		m_trees.push_back(DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses));
 		DynamicDecisionTree& tree = m_trees.back();
@@ -121,7 +142,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 		package->printLineToScreenForThisThread("Number " + number2String(i++) + " was calculated");
 		if(package->shouldTrainingBePaused()){
 			package->wait();
-		}else if(package->shouldTrainingBeAborted()){
+		}else if(package->shouldTrainingBeAborted()){ // if amountOfTrees == 0 -> ORF_TRAIN_FIX -> can not be aborted
 			break;
 		}
 	}
@@ -329,8 +350,8 @@ double OnlineRandomForest::predict(const DataPoint& point1, const DataPoint& poi
 }
 
 double OnlineRandomForest::predictPartitionEquality(const DataPoint& point1, const DataPoint& point2, RandomUniformNr& uniformNr, int amountOfSamples) const{
-	if(m_firstTrainingDone){
-		if(amountOfSamples > m_trees.size() && m_maxDepth <= 3){
+	if(m_firstTrainingDone && m_trees.size() > 0){
+		if(amountOfSamples > m_trees.size() || m_maxDepth <= 3 || amountOfSamples == 0){
 			printError("This should not happen!");
 			return -1;
 		}

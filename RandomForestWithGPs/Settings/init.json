@@ -23,14 +23,15 @@
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 80,
-        "desiredMargin": 0.001,
+        "nrOfInducingPoints": 45,
+        "desiredMargin": 0.01,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
         "Training": {
         	"useSavedHyperParams": "false",
         	"overwriteExistingHyperParams": "true"
-        }
+        },
+        "kernelType": 1
     },
     "TotalStorage": {
     	"amountOfPointsUsedForTraining": 200,
@@ -43,10 +44,16 @@
 		"amountOfPointsUntilRetrain": 300,
 		"minUsedDataFactor":  0.2,
 		"maxUsedDataFactor":  0.8,
-		"factorAmountOfUsedDims": 1.0
+		"factorAmountOfUsedDims": 1.0,
+		"ownSamplingTime": 2
 	},
     "Kernel": {
         "path": "..\/realTest\/kernelData.kernel"
+    },
+    "RandomForestKernel": {
+    	"samplingAmount": 400,
+    	"maxDepth": 12,
+		"usePartitionInsteadOfLabels": "true"
     },
     "KernelParam": {
     	"len": 0.732498,

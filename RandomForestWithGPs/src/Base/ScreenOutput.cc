@@ -243,8 +243,6 @@ void ScreenOutput::run(){
 		refresh();
 		int ch = getch();
 		if(ch != ERR){
-			printOnScreen(ch);
-
 			if(ch == KEY_UP){
 				++lineOffset;
 			}else if(ch == KEY_DOWN){
@@ -500,7 +498,15 @@ void ScreenOutput::print(const std::string& line){
 	if(m_lines.size() >= MAX_HEIGHT){
 		m_lines.pop_front();
 	}
-	m_lines.push_back(line);
+	if(line.find("\n")){
+		std::stringstream ss(line);
+		std::string to;
+		while(std::getline(ss,to,'\n')){
+			m_lines.push_back(to);
+		}
+	}else{
+		m_lines.push_back(line);
+	}
 	m_lineMutex.unlock();
 	Logger::addToFile(line);
 }

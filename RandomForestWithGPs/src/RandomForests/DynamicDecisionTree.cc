@@ -274,7 +274,7 @@ bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const DataPoin
 				break;
 			}
 			const bool firstPointRight = m_splitValues[iActNode] < point1[m_splitDim[iActNode]];
-			const bool secondPointRight = m_splitValues[iActNode] < point1[m_splitDim[iActNode]];
+			const bool secondPointRight = m_splitValues[iActNode] < point2[m_splitDim[iActNode]];
 			if(firstPointRight != secondPointRight){ // walk in different directions
 				return false;
 			}

@@ -17,44 +17,53 @@
 #define LOG2PI 1.8378770664093453391
 #define SQRT2  1.4142135623730951455
 
-IVM::IVM(OnlineStorage<ClassPoint*>& storage):
+IVM::IVM(OnlineStorage<ClassPoint*>& storage, const bool isPartOfMultiIvm):
 	m_logZ(0), m_derivLogZ(),
 	m_storage(storage),m_dataPoints(0),
 	m_numberOfInducingPoints(0), m_bias(0), m_lambda(0),
 	m_doEPUpdate(false), m_desiredPoint(0.5), m_desiredMargin(0.05),
-	m_calcLogZ(false), m_calcDerivLogZ(false),
+	m_calcLogZ(false), m_calcDerivLogZ(false), m_trained(false),
 	m_gaussKernel(nullptr),
 	m_rfKernel(nullptr),
 	m_uniformNr(0, 10, 0),
 	m_useNeighbourComparison(false),
-	m_package(nullptr){
+	m_package(nullptr),
+	m_isPartOfMultiIvm(isPartOfMultiIvm){
 	int kernelType = 0;
 	Settings::getValue("IVM.kernelType", kernelType);
-	if(m_kernelType == 0){
+	if(kernelType == 0){
 		m_kernelType = GAUSS;
 		bool hasLengthMoreThanParam;
 		Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
 		m_gaussKernel = new GaussianKernel();
 		m_gaussKernel->changeKernelConfig(hasLengthMoreThanParam);
 		m_gaussKernel->newRandHyperParams();
-	}else if(m_kernelType == 1){
+	}else if(kernelType == 1){
 		m_kernelType = RF;
 		int samplingAmount, maxDepth;
 		Settings::getValue("RandomForestKernel.samplingAmount", samplingAmount);
 		Settings::getValue("RandomForestKernel.maxDepth", maxDepth);
-		printOnScreen("Amount of classes: " << ClassKnowledge::amountOfClasses());
-		m_rfKernel = new RandomForestKernel(m_storage, maxDepth, samplingAmount, ClassKnowledge::amountOfClasses());
+		const bool createOrf = !isPartOfMultiIvm;
+		m_rfKernel = new RandomForestKernel(m_storage, maxDepth, samplingAmount, ClassKnowledge::amountOfClasses(), createOrf);
 	}else{
 		printError("This kernel type is not supported here!");
 	}
 }
 
-IVM::~IVM() {
+IVM::~IVM(){
 }
 
 void IVM::setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ){
 	m_calcDerivLogZ = doDerivLogZ;
 	m_calcLogZ = doLogZ;
+}
+
+void IVM::setOnlineRandomForest(OnlineRandomForest* forest){
+	if(m_rfKernel != nullptr){
+		m_rfKernel->setOnlineRandomForest(forest);
+	}else{
+		printError("The type is not the right one!");
+	}
 }
 
 void IVM::init(const unsigned int numberOfInducingPoints,
@@ -96,14 +105,18 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 			m_gaussKernel->init(m_storage.storage(), false, false);
 		}
 	}else if(m_kernelType == RF){
-		m_rfKernel->init(); // just to turn the flag
-		// to train the tree!
-		m_rfKernel->update(&m_storage, OnlineStorage<ClassPoint*>::APPENDBLOCK);
+		if(m_rfKernel != nullptr){
+			m_rfKernel->init();
+			// to train the tree!
+			if(!m_isPartOfMultiIvm){
+				m_rfKernel->update(&m_storage, OnlineStorage<ClassPoint*>::APPENDBLOCK);
+			}
+		}
 	}else{
-		printError("This kernel type is not supported!");
+		printError("This kernel type is not supported");
 	}
-//	std::cout << "Time: " << sw.elapsedAsPrettyTime() << std::endl;
-	//std::cout << "Frac: " << (double) amountOfOneClass / (double) m_dataPoints << std::endl;
+//	printInPackageOnScreen(m_package, "Time: " << sw.elapsedAsPrettyTime());
+	//printInPackageOnScreen(m_package, "Frac: " << (double) amountOfOneClass / (double) m_dataPoints);
 
 	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (double) amountOfOneClass / (double) m_dataPoints));
 	Settings::getValue("IVM.lambda", m_lambda);
@@ -138,7 +151,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 //			printError("The kernel was not initalized!");
 //		return false;
 //	}
-
+	m_trained = false;
 	if(m_package == nullptr){
 		printError("The IVM has no set package set!");
 		return false;
@@ -149,7 +162,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 			printError("The number of inducing points is equal or below zero: " << m_numberOfInducingPoints);
 		return false;
 	}
-	if(m_kernelType == 0){
+	if(m_kernelType == GAUSS){
 		GaussianKernelParams bestParams;
 		std::string folderLocation;
 		if(CommandSettings::get_useFakeData()){
@@ -341,7 +354,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 							str << "New best params: " << bestParams << ", with simple correctness of: " << correctness;
 							m_package->printLineToScreenForThisThread(str.str());
 						}
-						//					std::cout << "\nBestParams: " << bestParams << ", with: " << bestLogZ << std::endl;
+						//					printInPackageOnScreen(m_package, "\nBestParams: " << bestParams << ", with: " << bestLogZ);
 					}
 					swAvg.recordActTime();
 					m_package->performedOneTrainingStep(); // adds a one to the counter
@@ -397,17 +410,26 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 			//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
 			//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
 			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
+
 			if(m_package != nullptr){
 				m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
 			}
 			return ret;
 		}
-	}else if(m_kernelType == 1){
+	}else if(m_kernelType == RF){
+		setDerivAndLogZFlag(false, false);
 		m_uniformNr.setMinAndMax(1, 1);
 		const bool ret = internalTrain(true, verboseLevel);
+		printOnScreen("Training: " << ret);
 		if(ret && !m_doEPUpdate){
 			// train the whole active set again but in the oposite direction similiar to an ep step
-			trainOptimizeStep(verboseLevel);
+//			trainOptimizeStep(verboseLevel);
+			m_trained = true;
+		}
+		if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
+			printInPackageOnScreen(m_package, "Training finished only visu has to be done!");
+			DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_storage.storage());
+			openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
 		}
 		//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
 		//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
@@ -425,7 +447,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	if(m_kernelType == 0){
 		if(verboseLevel == 2 && m_gaussKernel->wasDifferenceCalced())
-			std::cout << "Diff: " << m_gaussKernel->getDifferences(0,0) << ", " << m_gaussKernel->getDifferences(1,0) << std::endl;
+			printInPackageOnScreen(m_package, "Diff: " << m_gaussKernel->getDifferences(0,0) << ", " << m_gaussKernel->getDifferences(1,0));
 	}
 	Vector m = Vector::Zero(m_dataPoints);
 	Vector beta = Vector::Zero(m_dataPoints);
@@ -460,12 +482,15 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	StopWatch updateMat, findPoints;
 	findPoints.startTime();
 	double fraction = 0.;
-	//std::cout << "bias: " << m_bias << std::endl;
+	//printInPackageOnScreen(m_package, "bias: " << m_bias);
 	List<int>::const_iterator itOfActiveSet = m_I.begin();
 //	List<double> deltaValues;
 //	List<std::string> colors;
 //	List<double> informationOfUsedValues;
 	for(unsigned int k = 0; k < m_numberOfInducingPoints; ++k){
+		if(m_kernelType == RF){
+			printInPackageOnScreen(m_package, "Calculation of inducing point nr: " << k);
+		}
 		int argmax = -1;
 		//List<Pair<int, double> > pointEntropies;
 		delta[k] = -DBL_MAX;
@@ -491,6 +516,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				double gForJ, nuForJ;
 				double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, verboseLevel);
 				// deltaForJ == -DBL_MAX means this class should not be used (fraction requirment not fullfilled!)
+
+//				printInPackageOnScreen(m_package, "Point: " << *itOfJ << ", with: " << deltaForJ << " and nu: " << nuForJ);
 				if(deltaForJ > -DBL_MAX && nuForJ > 0.){ // if nuForJ is smaller 0 it shouldn't be considered at all
 					if(m_useNeighbourComparison){
 						unsigned int informationCounter = 0;
@@ -524,19 +551,19 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				}
 			}
 //			if(k > 0){
-////				std::cout << "g[k] is " << g[k] << std::endl;
+////				printInPackageOnScreen(m_package, "g[k] is " << g[k]);
 //				double min, max;
 //				DataConverter::getMinMax(deltasValue, min, max);
 //				if(min == max){
 //					// problem
 //					DataConverter::getMinMax(mu, min, max);
 //					if(min == max){
-//						std::cout << "the complete mu is the same!" << std::endl;
+//						printInPackageOnScreen(m_package, "the complete mu is the same!");
 //					}
 //				}
 //			}
-//			std::cout << "min: " << min << ", max: " << max << std::endl;
-//			std::cout << "mu: " << mu.transpose() << std::endl;
+//			printInPackageOnScreen(m_package, "min: " << min << ", max: " << max);
+//			printInPackageOnScreen(m_package, "mu: " << mu.transpose());
 //			DataWriterForVisu::writeSvg("deltas1.svg", deltasValue, colorForDeltas);
 //			openFileInViewer("deltas1.svg");
 //			sleep(1);
@@ -548,10 +575,11 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			nu[k] = nuForArgmax;
 			++itOfActiveSet;
 		}
+//		printInPackageOnScreen(m_package, "New point was found: " << argmax);
 		if(argmax == -1 && m_J.size() > 0){
 			if(verboseLevel != 0){
 //				for(List<int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
-//					std::cout << "(" << *it << ", " << (double) m_y[*it] << ")" << std::endl;
+//					printInPackageOnScreen(m_package, "(" << *it << ", " << (double) m_y[*it] << ")");
 //				}
 				std::string classRes = "";
 				if(fraction < m_desiredPoint - m_desiredMargin){
@@ -617,15 +645,15 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			}
 		}
 		if(verboseLevel == 2){
-			std::cout << "Next: " << argmax << std::endl;
-			std::cout << "zeta: " << zeta.transpose() << std::endl;
-			std::cout << "mu: " << mu.transpose() << std::endl;
-			//	std::cout << "k_nk: " << k_nk.transpose() << std::endl;
-			std::cout << "s_nk: " << s_nk.transpose() << std::endl;
+			printInPackageOnScreen(m_package, "Next: " << argmax);
+			printInPackageOnScreen(m_package, "zeta: " << zeta.transpose());
+			printInPackageOnScreen(m_package, "mu: " << mu.transpose());
+			//	printInPackageOnScreen(m_package, "k_nk: " << k_nk.transpose());
+			printInPackageOnScreen(m_package, "s_nk: " << s_nk.transpose());
 		}
 		//zeta -= ((double) nu[k]) * s_nk.cwiseProduct(s_nk);
 		//mu += ((double) g[k]) * s_nk; // <=> mu += g[k] * s_nk;
-//		std::cout << "s_nk: " << min1 << ", " << max1 << std::endl;
+//		printInPackageOnScreen(m_package, "s_nk: " << min1 << ", " << max1);
 		for(unsigned int i = 0; i < m_dataPoints; ++i){ // TODO for known active set only the relevant values have to been updated!
 			zeta[i] -= nu[k] * (s_nk[i] * s_nk[i]); // <=> zeta -= nu[k] * s_nk.cwiseProduct(s_nk); // <=> diag(A^new) = diag(A) - (u^2)_j
 			mu[i] += g[k] * s_nk[i]; // <=> mu += g[k] * s_nk; // h += alpha_i * ( K_.,i - M_.,i^T * M_.,i) <=> alpha_i * (k_nk - s_nk)
@@ -646,7 +674,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			if(verboseLevel != 0){
 				printError("The actual nu is below zero: " <<  (double) nu[k]);
 				for(List<int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
-					std::cout << "(" << *it << ", " << (double) m_y[*it] << ")" << std::endl;
+					printInPackageOnScreen(m_package, "(" << *it << ", " << (double) m_y[*it] << ")");
 				}
 			}
 			return false;
@@ -742,8 +770,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				++classOneCounter;
 			}
 		}
-		std::cout << "Fraction in including points is: " << classOneCounter / (double) m_I.size() * 100. << " %"<< std::endl;
-		std::cout << "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime() << std::endl;
+		printInPackageOnScreen(m_package, "Fraction in including points is: " << classOneCounter / (double) m_I.size() * 100. << " %");
+		printInPackageOnScreen(m_package, "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime());
 	}
 //	DataWriterForVisu::writeSvg("deltas.svg", deltaValues, colors);
 //	openFileInViewer("deltas.svg");
@@ -760,16 +788,16 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		muSqueezed[l] = mu[*itOfI];
 	}
 	// calc m_L
-//	std::cout << "m_L: \n" << m_L << std::endl;
-	//std::cout << "m_K: \n" << m_K << std::endl;
-	//std::cout << "m_M: \n" << m_M << std::endl;
+//	printInPackageOnScreen(m_package, "m_L: \n" << m_L);
+	//printInPackageOnScreen(m_package, "m_K: \n" << m_K);
+	//printInPackageOnScreen(m_package, "m_M: \n" << m_M);
 	m_choleskyLLT.compute(m_L);
 
-//	std::cout << "L: \n" << m_choleskyLLT.matrixL().toDenseMatrix() << std::endl;
-//	std::cout << "llt: \n" << m_choleskyLLT.matrixLLT() << std::endl;
-//	std::cout << "before m_L: \n" << m_L << std::endl;
+//	printInPackageOnScreen(m_package, "L: \n" << m_choleskyLLT.matrixL().toDenseMatrix());
+//	printInPackageOnScreen(m_package, "llt: \n" << m_choleskyLLT.matrixLLT());
+//	printInPackageOnScreen(m_package, "before m_L: \n" << m_L);
 //	m_muTildePlusBias = m_nuTilde.cwiseQuotient(m_tauTilde) + (m_bias * Vector::Ones(m_numberOfInducingPoints));
-//	std::cout << "mu tilde before: " << m_muTildePlusBias.transpose() << std::endl;
+//	printInPackageOnScreen(m_package, "mu tilde before: " << m_muTildePlusBias.transpose());
 	if(m_doEPUpdate){ // EP update
 		Matrix Sigma = m_K * (m_eye - m_choleskyLLT.solve(m_K));
 		//Matrix controlSigma = m_K * (I - m_choleskyLLT.solve(m_K));
@@ -781,13 +809,13 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		StopWatch updateEP;
 		StopWatch sigmaUp, sigmaUpNew;
 		unsigned int counter = 0;
-//		std::cout << "Sigma: \n" << Sigma << std::endl;
-//		std::cout << "m_K: \n" << m_K << std::endl;
-//		std::cout << "(m_eye - m_choleskyLLT.solve(m_K)): \n" << (m_eye - m_choleskyLLT.solve(m_K)) << std::endl;
+//		printInPackageOnScreen(m_package, "Sigma: \n" << Sigma);
+//		printInPackageOnScreen(m_package, "m_K: \n" << m_K);
+//		printInPackageOnScreen(m_package, "(m_eye - m_choleskyLLT.solve(m_K)): \n" << (m_eye - m_choleskyLLT.solve(m_K)));
 		for(; counter < maxEpCounter && deltaMax > epThreshold; ++counter){
 			updateEP.startTime();
 			Vector deltaTau(m_numberOfInducingPoints);
-//			std::cout << "<<< " << counter << " <<<" << std::endl;
+//			printInPackageOnScreen(m_package, "<<< " << counter << " <<<");
 			unsigned int i = 0;
 			for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 				const double tauMin = 1. / Sigma(i,i) - m_tauTilde[i];
@@ -813,13 +841,13 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				m_tauTilde[i] = std::max(d2lZ / denom, 0.);
 				m_nuTilde[i]  = (dlZ + nuMin / tauMin * d2lZ) / denom;
 				deltaTau[i]  = m_tauTilde[i] - oldTauTilde;
-//				std::cout << "Label of " << (*itOfI) << " is: " << label
+//				printInPackageOnScreen(m_package, "Label of " << (*itOfI) << " is: " << label
 //						<< ", has " << m_muTildePlusBias[i] << ", old tau: "
 //						<< oldTauTilde << ", new tau: " << m_tauTilde[i]
-//						<< ", new new: " << m_nuTilde[i] << ", Sigma(i,i): " << Sigma(i,i) << std::endl;
+//						<< ", new new: " << m_nuTilde[i] << ", Sigma(i,i): " << Sigma(i,i));
 													  /*<< ", dlZ: " << dlZ
 						<< ", d2lZ: " << d2lZ << ", c: " << c << ", tauMin: " << tauMin <<", inner denom: "
-						<< std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + 1.0)))) << std::endl;*/
+						<< std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + 1.0)))));*/
 
 				// update approximate posterior
 				/*
@@ -869,11 +897,11 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			//minDelta = std::min(minDelta, deltaMax);
 			updateEP.recordActTime();
 		}
-		std::cout << "new sigma up time: " << sigmaUpNew.elapsedAvgAsPrettyTime() << std::endl;
-		std::cout << "total new sigma up time: " << sigmaUpNew.elapsedAvgAsTimeFrame() * ((double) counter * m_I.size())<< std::endl;
-		std::cout << "Ep time: " << updateEP.elapsedAvgAsPrettyTime() << std::endl;
-		std::cout << "Total ep time: " << updateEP.elapsedAvgAsTimeFrame() * (double) counter << std::endl;
-		//std::cout << "Min delta: " << minDelta << std::endl;
+		printInPackageOnScreen(m_package, "new sigma up time: " << sigmaUpNew.elapsedAvgAsPrettyTime());
+		printInPackageOnScreen(m_package, "total new sigma up time: " << sigmaUpNew.elapsedAvgAsTimeFrame() * ((double) counter * m_I.size()));
+		printInPackageOnScreen(m_package, "Ep time: " << updateEP.elapsedAvgAsPrettyTime());
+		printInPackageOnScreen(m_package, "Total ep time: " << updateEP.elapsedAvgAsTimeFrame() * (double) counter);
+		//printInPackageOnScreen(m_package, "Min delta: " << minDelta);
 
 		DataWriterForVisu::writeSvg("deltas.svg", listToPrint, true);
 		system("open deltas.svg");
@@ -893,16 +921,17 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		printError("The derivative can not be calculated without the log!");
 	}
 	m_muTildePlusBias = m_nuTilde.cwiseQuotient(m_tauTilde) + (m_bias * Vector::Ones(m_numberOfInducingPoints));
-//	std::cout << "m_muTildePlusBias: " << m_muTildePlusBias.transpose() << std::endl;
-//	std::cout << "after m_L: \n" << m_choleskyLLT.matrixL().toDenseMatrix() << std::endl;
-//	std::cout << "mu tilde before flipping: " << m_muTildePlusBias.transpose() << std::endl;
+//	printInPackageOnScreen(m_package, "m_muTildePlusBias: " << m_muTildePlusBias.transpose());
+//	printInPackageOnScreen(m_package, "after m_L: \n" << m_choleskyLLT.matrixL().toDenseMatrix());
+//	printInPackageOnScreen(m_package, "mu tilde before flipping: " << m_muTildePlusBias.transpose());
 	//unsigned int t = 0;
 	/*for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++t){
 		if(m_y[*itOfI] < 0 ? m_muTildePlusBias[t] > 0 : m_muTildePlusBias[t] < 0){
 			m_muTildePlusBias[t] *= -1.;
 		}
 	}*/
-//	std::cout << "mu tilde after: " << m_muTildePlusBias.transpose() << std::endl;
+//	printInPackageOnScreen(m_package, "mu tilde after: " << m_muTildePlusBias.transpose());
+	m_trained = true;
 	return true;
 }
 
@@ -943,7 +972,7 @@ bool IVM::trainOptimizeStep(const int verboseLevel){
 void IVM::calcLogZ(){
 	m_logZ = 0.0;
 	const Matrix& llt = m_choleskyLLT.matrixLLT();
-	//std::cout << "llt: \n" << llt << std::endl;
+	//printInPackageOnScreen(m_package, "llt: \n" << llt);
 	for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
 		m_logZ -= log((double) llt(i,i));
 	}
@@ -1064,8 +1093,8 @@ double IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, c
 	//const double delta_kn = zeta[j] * nu_kn;
 	// pointEntropies.append( (j, delta_ln));
 	if(verboseLevel == 2){
-		std::cout << (label == 1 ? RED : CYAN) << "j: " << j << ", is: " << label << ", with: "
-				<< delta_kn << ", g: " << g_kn << ", nu: " << nu_kn << ", zeta: " << (double) zeta[j] << ", c: " << c << ", u: " << u<< RESET << std::endl; }
+		printInPackageOnScreen(m_package, (label == 1 ? RED : CYAN) << "j: " << j << ", is: " << label << ", with: "
+				<< delta_kn << ", g: " << g_kn << ", nu: " << nu_kn << ", zeta: " << (double) zeta[j] << ", c: " << c << ", u: " << u<< RESET); }
 	/*if(delta_kn > delta[k]){ // nu_kn > EPSILON avoids that the ivm is not trained
 		//if(k == j){
 		//if(nu_kn < 0.)
@@ -1094,16 +1123,16 @@ double IVM::predict(const Vector& input) const{
 		diagEle = m_rfKernel->calcDiagElement(0);
 	}
 
-//	std::cout << "L: \n" << m_choleskyLLT.matrixL().toDenseMatrix() << std::endl;
-//	std::cout << "llt: \n" << m_choleskyLLT.matrixLLT() << std::endl;
+//	printInPackageOnScreen(m_package, "L: \n" << m_choleskyLLT.matrixL().toDenseMatrix());
+//	printInPackageOnScreen(m_package, "llt: \n" << m_choleskyLLT.matrixLLT());
 	const Vector v = m_choleskyLLT.solve(k_star);
 	/*
 	const Vector mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 	double mu_star = (mu_tilde + (m_bias * Vector::Ones(n))).dot(v);*/
 	double mu_star = m_muTildePlusBias.dot(v);
 	double sigma_star = (diagEle - k_star.dot(v));
-	//std::cout << "mu_start: " << mu_star << std::endl;
-	//std::cout << "sigma_star: " << sigma_star << std::endl;
+	//printInPackageOnScreen(m_package, "mu_start: " << mu_star);
+	//printInPackageOnScreen(m_package, "sigma_star: " << sigma_star);
 	double contentOfSig = 0;
 	if(1.0 / (m_lambda * m_lambda) + sigma_star < 0){
 		contentOfSig = mu_star;

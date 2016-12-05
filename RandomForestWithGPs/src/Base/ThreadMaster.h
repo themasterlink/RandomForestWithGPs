@@ -20,8 +20,9 @@ class InformationPackage {
 public:
 	enum InfoType {
 		ORF_TRAIN = 0,
-		IVM_TRAIN = 1,
-		IVM_PREDICT = 2
+		ORF_TRAIN_FIX = 1, // can not be aborted
+		IVM_TRAIN = 2,
+		IVM_PREDICT = 3
 	};
 
 	InformationPackage(InfoType type, double correctlyClassified, int amountOfPoints);
@@ -72,6 +73,10 @@ public:
 
 	void setAdditionalInfo(const std::string& line);
 
+	void setTrainingsTime(const double maxTrainingsTime){ m_maxTrainingsTime = maxTrainingsTime; }
+
+	double getMaxTrainingsTime(){ return m_maxTrainingsTime;}
+
 private:
 
 	const InfoType m_type;
@@ -106,6 +111,7 @@ private:
 
 	StopWatch m_sw;
 
+	double m_maxTrainingsTime;
 };
 
 class ThreadMaster {

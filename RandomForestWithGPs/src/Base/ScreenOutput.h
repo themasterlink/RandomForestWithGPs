@@ -65,4 +65,8 @@ private:
 #define printOnScreen(message) \
 		do{std::stringstream str; str << message; ScreenOutput::print(str.str()); }while(false) \
 
+#define printInPackageOnScreen(package, message) \
+		do{std::stringstream str; str << message; package->printLineToScreenForThisThread(str.str()); }while(false) \
+
+
 #endif /* BASE_SCREENOUTPUT_H_ */

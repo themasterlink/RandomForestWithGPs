@@ -21,7 +21,8 @@ InformationPackage::InformationPackage(InfoType type,
 		m_correctlyClassified(correctlyClassified),
 		m_amountOfAffectedPoints(amountOfPoints),
 		m_amountOfTrainingsSteps(0),
-		m_workedTime(0){
+		m_workedTime(0),
+		m_maxTrainingsTime(-1){
 };
 
 
@@ -83,6 +84,8 @@ bool InformationPackage::canBeAborted(){
 	switch(m_type){
 	case ORF_TRAIN:
 		return true;
+	case ORF_TRAIN_FIX:
+		return false;
 	case IVM_TRAIN:
 		return true;
 	case IVM_PREDICT:
@@ -188,6 +191,7 @@ void ThreadMaster::run(){
 				}
 				break;
 			case InfoType::ORF_TRAIN:
+			case InformationPackage::ORF_TRAIN_FIX:
 				if(selectedValue == m_waitingList.end()){
 					selectedValue = it;
 				}else{
@@ -233,8 +237,9 @@ void ThreadMaster::run(){
 		}
 		for(PackageList::const_iterator it = m_runningList.begin(); it != m_runningList.end(); ++it){
 			// for each running element check if execution is finished
-			if((*it)->getWorkedAmountOfSeconds() > 5.0 || (*it)->isTaskFinished()){ // each training have to take at least 5 seconds!
-				if((*it)->getWorkedAmountOfSeconds() > CommandSettings::get_samplingAndTraining() && !(*it)->shouldTrainingBeAborted() && (*it)->canBeAborted()){
+			const int maxTrainingsTime = (*it)->getMaxTrainingsTime() > 0 ? (*it)->getMaxTrainingsTime() : CommandSettings::get_samplingAndTraining();
+			if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime * 0.05 || (*it)->isTaskFinished()){ // each training have to take at least 5 seconds!
+				if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime && !(*it)->shouldTrainingBeAborted() && (*it)->canBeAborted()){
 //					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
 					(*it)->abortTraing(); // break the training
 				}

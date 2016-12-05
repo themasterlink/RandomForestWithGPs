@@ -29,6 +29,9 @@ public:
 
 	void train();
 
+	// if amountOfTrees == 0 -> the samplingTime is used
+	void setDesiredAmountOfTrees(const int desiredAmountOfTrees){ m_desiredAmountOfTrees = desiredAmountOfTrees; }
+
 	int predict(const DataPoint& point) const;
 
 	double predict(const DataPoint& point1, const DataPoint& point2, const int sampleAmount) const;
@@ -70,7 +73,7 @@ private:
 
 	void predictDataProbInParallel(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const int start, const int end) const;
 
-	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package);
+	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const int amountOfTrees);
 
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
@@ -111,6 +114,10 @@ private:
 	boost::mutex m_treesMutex;
 
 	bool m_firstTrainingDone;
+
+	double m_ownSamplingTime;
+
+	int m_desiredAmountOfTrees;
 };
 
 
