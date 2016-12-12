@@ -199,7 +199,8 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 				m_uniformNr.setMinAndMax(0, m_dataPoints - 1);
 				std::list<int> testPoints;
 				int counter = 0;
-				const int maxAmount = std::min((unsigned int) 100, m_dataPoints);
+				const int minAmountOfDataPoints = std::min(m_dataPoints * m_desiredPoint, m_dataPoints * (1. - m_desiredPoint));
+				const int maxAmount = std::min((int) 100, minAmountOfDataPoints);
 				while(counter < maxAmount){
 					int value = -1;
 					while(value == -1){
@@ -228,7 +229,6 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 						testPoints.push_back(value);
 					}
 				}
-
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 				while(m_package != nullptr){ // equals a true
 					//				if(m_uniformNr() % 10 == 0){
@@ -238,7 +238,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 					std::stringstream str;
 					str << "Try params: " << m_gaussKernel->getHyperParams();
 					m_package->printLineToScreenForThisThread(str.str());
-					const bool trained = internalTrain(true, 0);
+					const bool trained = internalTrain(true, 1);
 					std::stringstream str2;
 					if(trained){
 						str2 << "Params: " << m_gaussKernel->getHyperParams() << " with success and logZ: " << m_logZ;
@@ -301,7 +301,6 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 							if(correctness > 95){
 								m_package->abortTraing();
 							}
-
 						}
 						if(didCompleteCheck){
 							// even for the first best correctness case is this valid, because here the simple correctness was above the threshold the first time
@@ -467,14 +466,14 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	amountOfPointsPerClass[0] = amountOfPointsPerClass[1] = 0;
 	for(unsigned int i = 0; i < m_dataPoints; ++i){
 		if(m_kernelType == 0){
-			zeta[i] = m_gaussKernel->calcDiagElement(i);
+			zeta.coeffRef(i) = m_gaussKernel->calcDiagElement(i);
 		}else if(m_kernelType == 1){
-			zeta[i] = m_rfKernel->calcDiagElement(i);
+			zeta.coeffRef(i) = m_rfKernel->calcDiagElement(i);
 		}else{
-			zeta[i] = 0;
+			zeta.coeffRef(i) = 0;
 		}
 		m_J.push_back(i);
-		++amountOfPointsPerClass[(m_y[i] == 1 ? 0 : 1)];
+		++amountOfPointsPerClass[(m_y.coeff(i) == 1 ? 0 : 1)];
 	}
 	Vector g = Vector(m_numberOfInducingPoints);
 	Vector nu = Vector(m_numberOfInducingPoints);
@@ -484,6 +483,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	double fraction = 0.;
 	//printInPackageOnScreen(m_package, "bias: " << m_bias);
 	List<int>::const_iterator itOfActiveSet = m_I.begin();
+	Vector s_nk = Vector(m_dataPoints), k_nk = Vector(m_dataPoints); // k_nk is not filled for k == 0!!!!
 //	List<double> deltaValues;
 //	List<std::string> colors;
 //	List<double> informationOfUsedValues;
@@ -493,7 +493,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		}
 		int argmax = -1;
 		//List<Pair<int, double> > pointEntropies;
-		delta[k] = -DBL_MAX;
+		delta.coeffRef(k) = -DBL_MAX;
 		if(clearActiveSet){
 //			List<double> deltasValue;
 //			List<std::string> colorForDeltas;
@@ -521,24 +521,24 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				if(deltaForJ > -DBL_MAX && nuForJ > 0.){ // if nuForJ is smaller 0 it shouldn't be considered at all
 					if(m_useNeighbourComparison){
 						unsigned int informationCounter = 0;
-						const double labelOfJ = m_y[*itOfJ] ;
+						const double labelOfJ = m_y.coeff(*itOfJ);
 						for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
-							double similiarty = 0;
-							if(m_kernelType == 0){
-								similiarty = m_gaussKernel->kernelFunc(*itOfI, *itOfJ);
-							}else if(m_kernelType == 1){
-								similiarty = m_rfKernel->kernelFunc(*itOfI, *itOfJ);
-							}
-							if(labelOfJ == m_y[*itOfI]){ // only if they have the same class
-								deltaForJ += similiarty * delta[informationCounter]; // plus, because all values are negative, will decrease the information
+							if(labelOfJ == m_y.coeff(*itOfI)){ // only if they have the same class
+								double similiarty = 0;
+								if(m_kernelType == 0){
+									similiarty = m_gaussKernel->kernelFunc(*itOfI, *itOfJ);
+								}else if(m_kernelType == 1){
+									similiarty = m_rfKernel->kernelFunc(*itOfI, *itOfJ);
+								}
+								deltaForJ += similiarty * delta.coeff(informationCounter); // plus, because all values are negative, will decrease the information
 							}
 						}
 					}
-					if(deltaForJ > delta[k] && nuForJ > 0.){
+					if(deltaForJ > delta.coeff(k) && nuForJ > 0.){
 						argmax = *itOfJ;
-						delta[k] = deltaForJ;
-						g[k] = gForJ;
-						nu[k] = nuForJ;
+						delta.coeffRef(k) = deltaForJ;
+						g.coeffRef(k) = gForJ;
+						nu.coeffRef(k) = nuForJ;
 					}
 //					deltasValue.push_back(deltaForJ);
 //					colorForDeltas.push_back(std::string(m_y[*itOfJ] == 1 ? "red" : "blue"));
@@ -570,9 +570,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		}else{
 			argmax = *itOfActiveSet;
 			double gForArgmax, nuForArgmax;
-			delta[k] = calcInnerOfFindPointWhichDecreaseEntropyMost(argmax, zeta, mu, gForArgmax, nuForArgmax, fraction, amountOfPointsPerClass, verboseLevel);
-			g[k] = gForArgmax;
-			nu[k] = nuForArgmax;
+			delta.coeffRef(k) = calcInnerOfFindPointWhichDecreaseEntropyMost(argmax, zeta, mu, gForArgmax, nuForArgmax, fraction, amountOfPointsPerClass, verboseLevel);
+			g.coeffRef(k) = gForArgmax;
+			nu.coeffRef(k) = nuForArgmax;
 			++itOfActiveSet;
 		}
 //		printInPackageOnScreen(m_package, "New point was found: " << argmax);
@@ -589,6 +589,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				}else{
 					classRes = "1 or -1";
 				}
+				printInPackageOnScreen(m_package, "m_desiredPoint: " << m_desiredPoint << ", fraction: " << fraction);
 				printError("No new inducing point was found and there are still points over and next point should be from class: " << classRes << "!");
 			}
 			return false;
@@ -600,47 +601,46 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		}
 //		deltaValues.push_back((double) delta[k]);
 //		colors.push_back(std::string(m_y[argmax] == 1 ? "red" : "blue"));
-		fraction = ((fraction * k) + (m_y[argmax] == 1 ? 1 : 0)) / (double) (k + 1);
+		fraction = ((fraction * k) + (m_y.coeff(argmax) == 1 ? 1 : 0)) / (double) (k + 1);
 		if(verboseLevel == 2)
-			printDebug("Next i is: " << argmax << " has label: " << (double) m_y[argmax]);
+			printDebug("Next i is: " << argmax << " has label: " << (double) m_y.coeff(argmax));
 		// refine site params, posterior params & M, L, K
-		if(fabs((double)g[k]) < EPSILON){
-			m[argmax] = mu[argmax];
-		}else if(fabs((double)nu[k]) > EPSILON){
-			m[argmax] = g[k] / nu[k] + mu[argmax];
+		if(fabs((double)g.coeff(k)) < EPSILON){
+			m.coeffRef(argmax) = mu.coeff(argmax);
+		}else if(fabs((double)nu.coeff(k)) > EPSILON){
+			m.coeffRef(argmax) = g.coeff(k) / nu.coeff(k) + mu.coeff(argmax);
 		}else{
 			printError("G is zero and nu is not!");
 			return false;
 		}
-		beta[argmax] = nu[k] / (1.0 - nu[k] * zeta[argmax]);
-		if(beta[argmax] < EPSILON){
-			beta[argmax] = EPSILON;
+		beta.coeffRef(argmax) = nu.coeff(k) / (1.0 - nu.coeff(k) * zeta.coeff(argmax));
+		if(beta.coeff(argmax) < EPSILON){
+			beta.coeffRef(argmax) = EPSILON;
 		}
-		Vector s_nk = Vector(m_dataPoints), k_nk = Vector(m_dataPoints); // k_nk is not filled for k == 0!!!!
-		Vector a_nk;
+//		Vector a_nk;
 		if(k != 0){
 			for(unsigned int i = 0; i < m_dataPoints; ++i){
 				if(m_kernelType == 0){
-					k_nk[i] = m_gaussKernel->kernelFunc(i, argmax);
+					k_nk.coeffRef(i) = m_gaussKernel->kernelFunc(i, argmax);
 				}else if(m_kernelType == 1){
-					k_nk[i] = m_rfKernel->kernelFunc(i, argmax);
+					k_nk.coeffRef(i) = m_rfKernel->kernelFunc(i, argmax);
 				}
 			}
 			for(unsigned int i = 0; i < m_dataPoints; ++i){ // TODO for known active set only the relevant values have to been updated!
 				double temp = 0.;
 				for(unsigned int j = 0; j < k; ++j){
-					temp += m_M(j, argmax) * m_M(j,i);
+					temp += m_M.coeff(j, argmax) * m_M.coeff(j,i);
 				}
-				s_nk[i] = k_nk[i] - temp; // s_nk = k_nk - temp;
+				s_nk.coeffRef(i) = k_nk.coeff(i) - temp; // s_nk = k_nk - temp;
 			}
 			/*Vector colVec = m_M.col(argmax);
 			s_nk = k_nk - (colVec.transpose() * m_M).transpose();*/
 		}else{
 			for(unsigned int i = 0; i < m_dataPoints; ++i){
 				if(m_kernelType == 0){
-					s_nk[i] = m_gaussKernel->kernelFunc(i, argmax);
+					s_nk.coeffRef(i) = m_gaussKernel->kernelFunc(i, argmax);
 				}else if(m_kernelType == 1){
-					s_nk[i] = m_rfKernel->kernelFunc(i, argmax);
+					s_nk.coeffRef(i) = m_rfKernel->kernelFunc(i, argmax);
 				}
 			}
 		}
@@ -655,8 +655,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		//mu += ((double) g[k]) * s_nk; // <=> mu += g[k] * s_nk;
 //		printInPackageOnScreen(m_package, "s_nk: " << min1 << ", " << max1);
 		for(unsigned int i = 0; i < m_dataPoints; ++i){ // TODO for known active set only the relevant values have to been updated!
-			zeta[i] -= nu[k] * (s_nk[i] * s_nk[i]); // <=> zeta -= nu[k] * s_nk.cwiseProduct(s_nk); // <=> diag(A^new) = diag(A) - (u^2)_j
-			mu[i] += g[k] * s_nk[i]; // <=> mu += g[k] * s_nk; // h += alpha_i * ( K_.,i - M_.,i^T * M_.,i) <=> alpha_i * (k_nk - s_nk)
+			zeta.coeffRef(i) -= nu.coeff(k) * (s_nk.coeff(i) * s_nk.coeff(i)); // <=> zeta -= nu[k] * s_nk.cwiseProduct(s_nk); // <=> diag(A^new) = diag(A) - (u^2)_j
+			mu.coeffRef(i) += g.coeff(k) * s_nk.coeff(i); // <=> mu += g[k] * s_nk; // h += alpha_i * ( K_.,i - M_.,i^T * M_.,i) <=> alpha_i * (k_nk - s_nk)
 		}
 		/* IVM script:
 		 * h += alpha_i * l / sqrt(p_i) * ->mu
@@ -670,16 +670,16 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		 * for: s_nk = (K_.,i - M_.,i^T * M_.,i)
 		 * diag(A) -= p_i * s_nk.cwiseProduct(s_nk)
 		 */
-		if(nu[k] < 0.0){
+		if(nu.coeff(k) < 0.0){
 			if(verboseLevel != 0){
-				printError("The actual nu is below zero: " <<  (double) nu[k]);
+				printError("The actual nu is below zero: " <<  (double) nu.coeff(k));
 				for(List<int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
-					printInPackageOnScreen(m_package, "(" << *it << ", " << (double) m_y[*it] << ")");
+					printInPackageOnScreen(m_package, "(" << *it << ", " << (double) m_y.coeff(*it) << ")");
 				}
 			}
 			return false;
 		}
-		const double sqrtNu = sqrt((double)nu[k]);
+		const double sqrtNu = sqrt((double)nu.coeff(k));
 		// update K and L
 		/*
 		if(k == 0){
@@ -708,13 +708,13 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			if(m_doEPUpdate){
 				m_K = Matrix(m_numberOfInducingPoints, m_numberOfInducingPoints); // init at beginning to avoid realloc
 				if(m_kernelType == 0){
-					m_K(0,0) = m_gaussKernel->calcDiagElement(0);
+					m_K.coeffRef(0,0) = m_gaussKernel->calcDiagElement(0);
 				}else if(m_kernelType == 1){
-					m_K(0,0) = m_rfKernel->calcDiagElement(0);
+					m_K.coeffRef(0,0) = m_rfKernel->calcDiagElement(0);
 				}
 			}
 			m_L = Matrix::Zero(m_numberOfInducingPoints, m_numberOfInducingPoints);
-			m_L(0,0) = 1.0 / sqrtNu;
+			m_L.coeffRef(0,0) = 1.0 / sqrtNu;
 			m_M = Matrix(m_numberOfInducingPoints, m_dataPoints);
 		}else{
 			if(m_doEPUpdate){
@@ -722,22 +722,22 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				const unsigned int lastRowAndCol = k;
 				for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end() && t < lastRowAndCol; ++itOfI, ++t){
 					// uses the kernel matrix from the actual element with all other elements in the active set
-					const double temp = k_nk[*itOfI]; // <=> is the same: m_kernel.kernelFunc(*itOfI, argmax); saves recalc
-					m_K(lastRowAndCol, t) = temp;
-					m_K(t, lastRowAndCol) = temp;
+					const double temp = k_nk.coeff(*itOfI); // <=> is the same: m_kernel.kernelFunc(*itOfI, argmax); saves recalc
+					m_K.coeffRef(lastRowAndCol, t) = temp;
+					m_K.coeffRef(t, lastRowAndCol) = temp;
 				}
 				if(m_kernelType == 0){
-					m_K(lastRowAndCol, lastRowAndCol) = m_gaussKernel->calcDiagElement(lastRowAndCol);
+					m_K.coeffRef(lastRowAndCol, lastRowAndCol) = m_gaussKernel->calcDiagElement(lastRowAndCol);
 				}else if(m_kernelType == 1){
-					m_K(lastRowAndCol, lastRowAndCol) = m_rfKernel->calcDiagElement(lastRowAndCol);
+					m_K.coeffRef(lastRowAndCol, lastRowAndCol) = m_rfKernel->calcDiagElement(lastRowAndCol);
 				}
 			}
 			// update L
 			if(argmax < m_M.cols()){
 				for(unsigned int i = 0; i < k; ++i){
-					m_L(k,i) = m_M(i, argmax); // a_nk[i]; with a_nk = m_M.col(argmax);
+					m_L.coeffRef(k,i) = m_M.coeff(i, argmax); // a_nk[i]; with a_nk = m_M.col(argmax);
 				}
-				m_L(k, k) = 1. / sqrtNu;
+				m_L.coeffRef(k, k) = 1. / sqrtNu;
 			}else{
 				printError("The argmax value is bigger than the amount of columns in M!"); return false;
 			}
@@ -755,18 +755,18 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			m_M = D;
 		}*/
 		for(unsigned int i = 0; i < m_dataPoints; ++i){
-			m_M(k,i) = sqrtNu * s_nk[i];
+			m_M.coeffRef(k,i) = sqrtNu * s_nk.coeff(i);
 		}
 		if(clearActiveSet){
 			m_I.push_back(argmax);
 		}
 		m_J.remove(argmax);
-		--amountOfPointsPerClass[m_y[argmax] == 1 ? 0 : 1];
+		amountOfPointsPerClass.coeffRef(m_y.coeff(argmax) == 1 ? 0 : 1) -= 1;
 	}
 	if(verboseLevel == 2){
 		int classOneCounter = 0;
 		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI){
-			if(m_y[*itOfI] == 1){
+			if(m_y.coeff(*itOfI) == 1){
 				++classOneCounter;
 			}
 		}
@@ -783,9 +783,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	unsigned int l = 0;
 	Vector muSqueezed(m_numberOfInducingPoints);
 	for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++l){
-		m_nuTilde[l] = m[*itOfI] * beta[*itOfI];
-		m_tauTilde[l] = beta[*itOfI];
-		muSqueezed[l] = mu[*itOfI];
+		m_nuTilde.coeffRef(l) = m.coeff(*itOfI) * beta.coeff(*itOfI);
+		m_tauTilde.coeffRef(l) = beta.coeff(*itOfI);
+		muSqueezed.coeffRef(l) = mu.coeff(*itOfI);
 	}
 	// calc m_L
 //	printInPackageOnScreen(m_package, "m_L: \n" << m_L);
@@ -818,10 +818,10 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 //			printInPackageOnScreen(m_package, "<<< " << counter << " <<<");
 			unsigned int i = 0;
 			for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-				const double tauMin = 1. / Sigma(i,i) - m_tauTilde[i];
-				const double nuMin  = muSqueezed[i] / Sigma(i,i) - m_nuTilde[i];
+				const double tauMin = 1. / Sigma.coeff(i,i) - m_tauTilde.coeff(i);
+				const double nuMin  = muSqueezed.coeff(i) / Sigma.coeff(i,i) - m_nuTilde.coeff(i);
 				const unsigned int index = (*itOfI);
-				const double label = m_y[index];
+				const double label = m_y.coeff(index);
 
 				const std::complex<double> tau_c(tauMin, 0);
 				//double denom = std::max(abs(sqrt(tau_c * (tau_c / (lambda * lambda) + 1.))), EPSILON);
@@ -836,11 +836,11 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				const double dlZ = c * exp(cumulativeDerivLog(u) - cumulativeLog(u));
 				const double d2lZ  = dlZ * (dlZ + u * c);
 
-				const double oldTauTilde = m_tauTilde[i];
+				const double oldTauTilde = m_tauTilde.coeff(i);
 				denom = 1.0 - d2lZ / tauMin;
-				m_tauTilde[i] = std::max(d2lZ / denom, 0.);
-				m_nuTilde[i]  = (dlZ + nuMin / tauMin * d2lZ) / denom;
-				deltaTau[i]  = m_tauTilde[i] - oldTauTilde;
+				m_tauTilde.coeffRef(i) = std::max(d2lZ / denom, 0.);
+				m_nuTilde.coeffRef(i)  = (dlZ + nuMin / tauMin * d2lZ) / denom;
+				deltaTau.coeffRef(i)  = m_tauTilde.coeff(i) - oldTauTilde;
 //				printInPackageOnScreen(m_package, "Label of " << (*itOfI) << " is: " << label
 //						<< ", has " << m_muTildePlusBias[i] << ", old tau: "
 //						<< oldTauTilde << ", new tau: " << m_tauTilde[i]
@@ -860,15 +860,15 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				 */
 				sigmaUpNew.startTime();
 				const Vector oldSigmaCol = Sigma.col(i);
-				denom = 1.0 + deltaTau[i] * oldSigmaCol[i]; // <=> 1.0 + deltaTau[i] * si[i] for si = Sigma.col(i)
-				const double fac = deltaTau[i] / denom;
+				denom = 1.0 + deltaTau.coeff(i) * oldSigmaCol.coeff(i); // <=> 1.0 + deltaTau[i] * si[i] for si = Sigma.col(i)
+				const double fac = deltaTau.coeff(i) / denom;
 				// is the same as Sigma -= (deltaTau[i] / denom) * (si * si.transpose()); but faster
 				for(int p = 0; p < m_I.size(); ++p){
-					Sigma(p,p) -= fac * oldSigmaCol[p] * oldSigmaCol[p];
+					Sigma.coeffRef(p,p) -= fac * oldSigmaCol.coeff(p) * oldSigmaCol.coeff(p);
 					for(int q = p + 1; q < m_I.size(); ++q){
-						const double sub = fac * oldSigmaCol[p] * oldSigmaCol[q];
-						Sigma(p,q) -= sub;
-						Sigma(q,p) -= sub;
+						const double sub = fac * oldSigmaCol.coeff(p) * oldSigmaCol.coeff(q);
+						Sigma.coeffRef(p,q) -= sub;
+						Sigma.coeffRef(q,p) -= sub;
 					}
 				}
 				sigmaUpNew.recordActTime();
@@ -947,8 +947,8 @@ bool IVM::trainOptimizeStep(const int verboseLevel){
 //			vecs.rbegin()->reverse();
 //			Vector diff(m_muTildePlusBias);
 			for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
-				m_muTildePlusBias[i] += oldMuTildeBias[m_numberOfInducingPoints - i - 1];
-				m_muTildePlusBias[i] *= 0.5;
+				m_muTildePlusBias.coeffRef(i) += oldMuTildeBias.coeff(m_numberOfInducingPoints - i - 1);
+				m_muTildePlusBias.coeffRef(i) *= 0.5;
 //				diff[i] -= oldMuTildeBias[m_numberOfInducingPoints - i - 1];
 //				diff[i] = fabs(diff[i]);
 			}
@@ -974,24 +974,24 @@ void IVM::calcLogZ(){
 	const Matrix& llt = m_choleskyLLT.matrixLLT();
 	//printInPackageOnScreen(m_package, "llt: \n" << llt);
 	for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
-		m_logZ -= log((double) llt(i,i));
+		m_logZ -= log((double) llt.coeff(i,i));
 	}
 	const Vector muTilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 	Vector muL0 = Vector::Zero(m_numberOfInducingPoints);
 	for(uint i=0; i<m_numberOfInducingPoints; ++i){
-		double sum = muTilde[i];
+		double sum = muTilde.coeff(i);
 		for(int k = (int)i-1; k >= 0; --k){
-			sum -= (double)llt(i,k) * muL0[k];
+			sum -= (double)llt.coeff(i,k) * muL0.coeff(k);
 		}
-		muL0[i] = sum / (double) llt(i,i);
+		muL0.coeffRef(i) = sum / (double) llt.coeff(i,i);
 	}
 	Vector muL1 = Vector::Zero(m_numberOfInducingPoints);
 	for(int i= (int) m_numberOfInducingPoints - 1; i >= 0; --i){
-		double sum = muL0[i];
+		double sum = muL0.coeff(i);
 		for(int k = i+1; k < m_numberOfInducingPoints; ++k){
-			sum -= (double)llt(k,i) * muL1[k];
+			sum -= (double)llt.coeff(k,i) * muL1.coeff(k);
 		}
-		muL1[i] = sum / (double)llt(i,i);
+		muL1.coeffRef(i) = sum / (double)llt.coeff(i,i);
 	}
 	m_logZ -= 0.5 * muTilde.dot(muL1);
 	if(m_calcDerivLogZ){
@@ -1020,7 +1020,7 @@ void IVM::calcDerivatives(const Vector& muL1){
 					const double z2Value = Z2(i,j);
 					for(unsigned int u = 0; u < m_gaussKernel->getHyperParams().paramsAmount; ++u){ // for every kernel param
 						if(!m_gaussKernel->getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
-							m_derivLogZ.m_params[u]->getValues()[0] += z2Value * CMatrix[u](i,j);
+							m_derivLogZ.m_params[u]->getValues()[0] += z2Value * CMatrix[u].coeff(i,j);
 						}
 					}
 				}
@@ -1044,17 +1044,17 @@ void IVM::calcDerivatives(const Vector& muL1){
 			}
 			for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
 				for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
-					const double z2Value = Z2(i,j);
+					const double z2Value = Z2.coeff(i,j);
 					int t = 0;
 					for(unsigned int u = 0; u < m_gaussKernel->getHyperParams().paramsAmount; ++u){ // for every kernel param
 						if(!m_gaussKernel->getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
 							if(m_gaussKernel->getHyperParams().m_params[u]->hasMoreThanOneDim()){
 								for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
-									m_derivLogZ.m_params[u]->getValues()[k] += z2Value * cMatrix[t](i,j);
+									m_derivLogZ.m_params[u]->getValues()[k] += z2Value * cMatrix[t].coeff(i,j);
 									++t;
 								}
 							}else{
-								m_derivLogZ.m_params[u]->getValues()[0] += z2Value * cMatrix[t](i,j);
+								m_derivLogZ.m_params[u]->getValues()[0] += z2Value * cMatrix[t].coeff(i,j);
 								++t;
 							}
 						}
@@ -1068,19 +1068,19 @@ void IVM::calcDerivatives(const Vector& muL1){
 }
 
 double IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, const Vector& zeta, const Vector& mu, double& g_kn, double& nu_kn, const double fraction, const Eigen::Vector2i& amountOfPointsPerClassLeft, const int verboseLevel){
-	const double label = m_y[j];
-	if(amountOfPointsPerClassLeft[0] > 0 && amountOfPointsPerClassLeft[1] > 0){
+	const double label = m_y.coeff(j);
+	if(amountOfPointsPerClassLeft.coeff(0) > 0 && amountOfPointsPerClassLeft.coeff(1) > 0){
 		if((fraction < m_desiredPoint - m_desiredMargin && label == -1) || (fraction > m_desiredPoint - m_desiredMargin && label == 1)){
 			// => only less than 20 % of data is 1 choose 1
 			return -DBL_MAX; // or only less than 20 % of data is -1 choose -1
 		}
 	}
-	const double tau = 1.0 / zeta[j];
+	const double tau = 1.0 / zeta.coeff(j);
 	const std::complex<double> tau_c(tau, 0);
 	//double denom = std::max(abs(sqrt(tau_c * (tau_c / (lambda * lambda) + 1.))), EPSILON);
 	const double denom = std::max(std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + 1.0)))), EPSILON);
 	const double c = label * tau / denom;
-	nu_kn = mu[j] / zeta[j];
+	nu_kn = mu.coeff(j) / zeta.coeff(j);
 	double u;
 	if(fabs(nu_kn) < EPSILON){
 		u = c * m_bias;
@@ -1089,12 +1089,12 @@ double IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, c
 	}
 	g_kn = c * exp(cumulativeDerivLog(u) - cumulativeLog(u));
 	nu_kn = g_kn * (g_kn + u * c);
-	const double delta_kn = log(1.0 - nu_kn * (double) zeta[j]) / (2.0 * LOG2);
+	const double delta_kn = log(1.0 - nu_kn * (double) zeta.coeff(j)) / (2.0 * LOG2);
 	//const double delta_kn = zeta[j] * nu_kn;
 	// pointEntropies.append( (j, delta_ln));
 	if(verboseLevel == 2){
 		printInPackageOnScreen(m_package, (label == 1 ? RED : CYAN) << "j: " << j << ", is: " << label << ", with: "
-				<< delta_kn << ", g: " << g_kn << ", nu: " << nu_kn << ", zeta: " << (double) zeta[j] << ", c: " << c << ", u: " << u<< RESET); }
+				<< delta_kn << ", g: " << g_kn << ", nu: " << nu_kn << ", zeta: " << (double) zeta.coeff(j) << ", c: " << c << ", u: " << u<< RESET); }
 	/*if(delta_kn > delta[k]){ // nu_kn > EPSILON avoids that the ivm is not trained
 		//if(k == j){
 		//if(nu_kn < 0.)
@@ -1113,12 +1113,12 @@ double IVM::predict(const Vector& input) const{
 	double diagEle = 0;
 	if(m_kernelType == 0){
 		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-			k_star[i] = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+			k_star.coeffRef(i) = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_gaussKernel->calcDiagElement(0);
 	}else if(m_kernelType == 1){
 		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-			k_star[i] = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+			k_star.coeffRef(i) = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_rfKernel->calcDiagElement(0);
 	}
@@ -1148,11 +1148,11 @@ double IVM::predictMu(const Vector& input) const{
 	unsigned int i = 0;
 	if(m_kernelType == 0){
 		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-			k_star[i] = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+			k_star.coeffRef(i) = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 	}else if(m_kernelType == 1){
 		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-			k_star[i] = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+			k_star.coeffRef(i) = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 	}
 	const Vector v = m_choleskyLLT.solve(k_star);
@@ -1169,12 +1169,12 @@ double IVM::predictSigma(const Vector& input) const{
 	double diagEle = 0;
 	if(m_kernelType == 0){
 		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-			k_star[i] = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+			k_star.coeffRef(i) = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_gaussKernel->calcDiagElement(0);
 	}else if(m_kernelType == 1){
 		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-			k_star[i] = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+			k_star.coeffRef(i) = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_rfKernel->calcDiagElement(0);
 	}
@@ -1186,11 +1186,11 @@ double IVM::predictSigma(const Vector& input) const{
 }
 
 unsigned int IVM::getLabelForOne() const{
-	return m_labelsForClasses[0];
+	return m_labelsForClasses.coeff(0);
 }
 
 unsigned int IVM::getLabelForMinusOne() const{
-	return m_labelsForClasses[1];
+	return m_labelsForClasses.coeff(1);
 }
 
 void IVM::setKernelSeed(unsigned int seed){

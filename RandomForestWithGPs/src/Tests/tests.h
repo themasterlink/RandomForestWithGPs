@@ -15,6 +15,7 @@
 #include "multiClassIVMTest.h"
 #include "binaryClassORFTest.h"
 #include "multiClassGPTest.h"
+#include "multiClassORFIVMTest.h"
 #include "performanceMeasurement.h"
 
 #endif /* TESTS_TESTS_H_ */

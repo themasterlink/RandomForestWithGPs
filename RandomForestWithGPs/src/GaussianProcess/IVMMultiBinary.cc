@@ -21,11 +21,12 @@ IVMMultiBinary::IVMMultiBinary(OnlineStorage<ClassPoint*>& storage,
 }
 
 void IVMMultiBinary::update(Subject* caller, unsigned int event){
-	if(caller->classType() == m_storage.classType()){¸
+	if(caller->classType() == m_storage.classType()){
 		if(event == OnlineStorage<ClassPoint*>::APPENDBLOCK){
 			// assumption that the correct OnlineStorage is callig and not a false one -> no check
 			const unsigned int lastUpdateIndex = m_storage.getLastUpdateIndex();
 			if(!m_init && lastUpdateIndex == 0){
+				// to find out the amount of used classes in this ivm look at the data
 				std::map<unsigned int, unsigned int> classCounter;
 				for(ClassData::const_iterator it = m_storage.begin(); it != m_storage.end(); ++it){
 					const unsigned int label = (**it).getLabel();
@@ -37,44 +38,63 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 						itClass->second += 1;
 					}
 				}
-				m_ivms.resize(classCounter.size());
-				const bool calcDifferenceMatrixAlone = false;
-				int kernelType = 0;
-				Settings::getValue("IVM.kernelType", kernelType);
-				if(kernelType == 1){
-					int maxDepth, samplingAmount;
-					Settings::getValue("RandomForestKernel.maxDepth", maxDepth);
-					Settings::getValue("RandomForestKernel.samplingAmount", samplingAmount);
-					m_orfForKernel = new OnlineRandomForest(m_storage, maxDepth, ClassKnowledge::amountOfClasses());
-					// train the trees before the ivms are used
-					m_orfForKernel->setDesiredAmountOfTrees(samplingAmount);
-					m_orfForKernel->update(&m_storage, OnlineStorage<ClassPoint*>::APPENDBLOCK);
-				}
-				for(unsigned int i = 0; i < m_ivms.size(); ++i){
-					m_ivms[i] = new IVM(m_storage, true);
-					if(m_ivms[i]->getKernelType() == IVM::RF){
-						m_ivms[i]->setOnlineRandomForest(m_orfForKernel);
+				int amountOfUsedClasses = 0;
+				m_isClassUsed.resize(classCounter.size());
+				const int minimumNeededAmountOfElements = 0.75 * m_numberOfInducingPointsPerIVM;
+				int t = 0;
+				for (std::map<unsigned int, unsigned int>::const_iterator it = classCounter.begin(); it != classCounter.end(); ++it, ++t){
+					m_isClassUsed[t] = it->second > minimumNeededAmountOfElements;
+					if(m_isClassUsed[t]){
+						++amountOfUsedClasses;
 					}
-					Eigen::Vector2i usedClasses;
-					usedClasses << m_classOfIVMs[i], -1;
-					m_ivms[i]->init(m_numberOfInducingPointsPerIVM, usedClasses,
-							m_doEpUpdate, calcDifferenceMatrixAlone);
 				}
-				const int nrOfParallel = boost::thread::hardware_concurrency();
-				const int size = (m_storage.size() * m_storage.size() + m_storage.size()) / 2;
-				const int sizeOfPart =  size / nrOfParallel;
-				if(m_ivms[0]->getKernelType() == IVM::GAUSS){
-					Eigen::MatrixXd* differenceMatrix = new Eigen::MatrixXd(m_storage.size(), m_storage.size());
-					boost::thread_group group;
-					for(unsigned int i = 0; i < nrOfParallel; ++i){
-						int start = sizeOfPart * i;
-						int end = (i + 1 != nrOfParallel) ? sizeOfPart * (i + 1) : size;
-						group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::initInParallel, this, i, start, end, differenceMatrix)));
+				m_ivms.resize(amountOfUsedClasses);
+				if(amountOfUsedClasses > 0){
+					const bool calcDifferenceMatrixAlone = false;
+					int kernelType = 0;
+					Settings::getValue("IVM.kernelType", kernelType);
+					if(kernelType == 1){
+						int maxDepth, samplingAmount;
+						Settings::getValue("RandomForestKernel.maxDepth", maxDepth);
+						Settings::getValue("RandomForestKernel.samplingAmount", samplingAmount);
+						m_orfForKernel = new OnlineRandomForest(m_storage, maxDepth, ClassKnowledge::amountOfClasses());
+						// train the trees before the ivms are used
+						m_orfForKernel->setDesiredAmountOfTrees(samplingAmount);
+						m_orfForKernel->update(&m_storage, OnlineStorage<ClassPoint*>::APPENDBLOCK);
 					}
-					group.join_all();
+					std::list<IVM*> usedIvms;
+					for(unsigned int i = 0; i < m_ivms.size(); ++i){
+						if(m_isClassUsed[i]){
+							m_ivms[i] = new IVM(m_storage, true);
+							usedIvms.push_back(m_ivms[i]);
+							if(m_ivms[i]->getKernelType() == IVM::RF){
+								m_ivms[i]->setOnlineRandomForest(m_orfForKernel);
+							}
+							Eigen::Vector2i usedClasses;
+							usedClasses << m_classOfIVMs[i], -1;
+							m_ivms[i]->init(m_numberOfInducingPointsPerIVM, usedClasses,
+									m_doEpUpdate, calcDifferenceMatrixAlone);
+						}
+					}
+					const int nrOfParallel = (int) boost::thread::hardware_concurrency();
+					const int size = (m_storage.size() * m_storage.size() + m_storage.size()) / 2;
+					const int sizeOfPart =  size / nrOfParallel;
+					if(kernelType == 0 && usedIvms.size() > 0){ // GAUSS, calc the kernel matrix
+						Eigen::MatrixXd* differenceMatrix = new Eigen::MatrixXd(m_storage.size(), m_storage.size());
+						boost::thread_group group;
+						for(unsigned int i = 0; i < nrOfParallel; ++i){
+							int start = sizeOfPart * i;
+							int end = (i + 1 != nrOfParallel) ? sizeOfPart * (i + 1) : size;
+							group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::initInParallel, this, start, end, differenceMatrix)));
+						}
+						group.join_all();
+						for(std::list<IVM*>::iterator itIvm = usedIvms.begin(); itIvm != usedIvms.end(); ++itIvm){
+							(*itIvm)->getGaussianKernel()->setDifferenceMatrix(differenceMatrix);
+						}
+					}
+					m_init = true;
+					train();
 				}
-				m_init = true;
-				train();
 			}else if(!m_init && lastUpdateIndex != 0){
 				printError("The IVMMultiBinary was not constructed with an empty online storage!");
 			}else if(m_init){
@@ -125,8 +145,10 @@ void IVMMultiBinary::train(){
 		std::vector<InformationPackage*> packages(amountOfClasses());
 
 		for(unsigned int i = 0; i < amountOfClasses(); ++i){
-			const double correctlyClassified = 0.; // TODO in future this value can be determined before hand!
-			packages[i] = new InformationPackage(InformationPackage::IVM_TRAIN, correctlyClassified, m_storage.size());
+			if(m_isClassUsed[i]){
+				const double correctlyClassified = 0.; // TODO in future this value can be determined before hand!
+				packages[i] = new InformationPackage(InformationPackage::IVM_TRAIN, correctlyClassified, m_storage.size());
+			}
 		}
 		double durationOfWholeTraining = durationOfTraining;
 		if(amountOfClasses() > nrOfParallel){
@@ -140,18 +162,22 @@ void IVMMultiBinary::train(){
 				InLinePercentageFiller::setActMaxTime(5); // max time for sampling
 			}
 			for(unsigned int i = 0; i < amountOfClasses(); ++i){
-				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, i, durationOfTraining, packages[i])));
+				if(m_isClassUsed[i]){
+					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, i, durationOfTraining, packages[i])));
+				}
 			}
 			unsigned int counter = 0;
 			while(durationOfWholeTraining > sw.elapsedSeconds()){
 				counter = 0;
 				bool stillOneRunning = false;
 				for(unsigned int i = 0; i < amountOfClasses(); ++i){
-					if(!packages[i]->isTaskFinished()){
-						stillOneRunning = true;
+					if(m_isClassUsed[i]){
+						if(!packages[i]->isTaskFinished()){
+							stillOneRunning = true;
+						}
+						const int c = packages[i]->amountOfTrainingStepsPerformed();
+						counter += c;
 					}
-					const int c = packages[i]->amountOfTrainingStepsPerformed();
-					counter += c;
 				}
 				if(!stillOneRunning){
 					break;
@@ -161,13 +187,17 @@ void IVMMultiBinary::train(){
 			}
 			counter = 0;
 			for(unsigned int i = 0; i < amountOfClasses(); ++i){
-				counter += packages[i]->amountOfTrainingStepsPerformed();
+				if(m_isClassUsed[i]){
+					counter += packages[i]->amountOfTrainingStepsPerformed();
+				}
 			}
 			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
 			group.join_all();
 			for(unsigned int i = 0; i < amountOfClasses(); ++i){
-				ThreadMaster::threadHasFinished(packages[i]);
-				delete packages[i];
+				if(m_isClassUsed[i]){
+					ThreadMaster::threadHasFinished(packages[i]);
+					delete packages[i];
+				}
 			}
 //		}else{
 //			const bool fitParams = CommandSettings::get_samplingAndTraining();
@@ -235,10 +265,8 @@ void IVMMultiBinary::train(){
 	}
 }
 
-void IVMMultiBinary::initInParallel(const int usedIvm, const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix){
-	if(m_ivms[usedIvm]->getKernelType() == IVM::GAUSS){
-		m_ivms[usedIvm]->getGaussianKernel()->calcDifferenceMatrix(startOfKernel, endOfKernel, differenceMatrix);
-	}
+void IVMMultiBinary::initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix){
+	GaussianKernel::calcDifferenceMatrix(startOfKernel, endOfKernel, *differenceMatrix, m_storage);
 }
 
 void IVMMultiBinary::trainInParallel(const int usedIvm, const double trainTime, InformationPackage* package){
@@ -264,10 +292,31 @@ void IVMMultiBinary::trainInParallel(const int usedIvm, const double trainTime, 
 //	mutex.unlock();
 }
 
-int IVMMultiBinary::predict(const DataPoint& point) const{
-	std::vector<double> probs(amountOfClasses());
+void IVMMultiBinary::predict(const DataPoint& point, std::vector<double>& probabilities) const{
+	probabilities.resize(amountOfClasses());
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
-		probs[i] = m_ivms[i]->predict(point);
+		if(m_isClassUsed[i]){
+			probabilities[i] = m_ivms[i]->predict(point);
+		}
+	}
+}
+
+int IVMMultiBinary::predict(const DataPoint& point) const{
+	std::vector<double> probs(amountOfClasses(),0.);
+	for(unsigned int i = 0; i < amountOfClasses(); ++i){
+		if(m_isClassUsed[i]){
+			probs[i] = m_ivms[i]->predict(point);
+		}
+	}
+	return m_classOfIVMs[std::distance(probs.cbegin(), std::max_element(probs.cbegin(), probs.cend()))];
+}
+
+int IVMMultiBinary::predict(const ClassPoint& point) const{
+	std::vector<double> probs(amountOfClasses(), 0.);
+	for(unsigned int i = 0; i < amountOfClasses(); ++i){
+		if(m_isClassUsed[i]){
+			probs[i] = m_ivms[i]->predict(point);
+		}
 	}
 	return m_classOfIVMs[std::distance(probs.cbegin(), std::max_element(probs.cbegin(), probs.cend()))];
 }
@@ -288,8 +337,10 @@ void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector
 	boost::thread_group group;
 	std::vector<InformationPackage*> packages(amountOfClasses(), nullptr);
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
-		packages[i] = new InformationPackage(InformationPackage::IVM_PREDICT, 0, points.size());
-		group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::predictDataInParallel, this, points, i, &probabilities, packages[i])));
+		if(m_isClassUsed[i]){
+			packages[i] = new InformationPackage(InformationPackage::IVM_PREDICT, 0, points.size());
+			group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::predictDataInParallel, this, points, i, &probabilities, packages[i])));
+		}
 	}
 	group.join_all();
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){

@@ -25,6 +25,10 @@ public:
 
 	int predict(const DataPoint& point) const;
 
+	int predict(const ClassPoint& point) const;
+
+	void predict(const DataPoint& point, std::vector<double>& probabilities) const;
+
 	void predictData(const Data& points, Labels& labels) const;
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
@@ -40,11 +44,13 @@ private:
 	void predictDataInParallel(const Data& points, const int usedIvm,
 			std::vector< std::vector<double> >* probabilities, InformationPackage* package) const;
 
-	void initInParallel(const int usedIvm, const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix);
+	void initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix);
 
 	OnlineStorage<ClassPoint*>& m_storage;
 
 	std::vector<IVM*> m_ivms;
+
+	std::vector<bool> m_isClassUsed;
 
 	std::vector<unsigned int> m_classOfIVMs;
 

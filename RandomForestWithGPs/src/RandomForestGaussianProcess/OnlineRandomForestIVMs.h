@@ -21,7 +21,11 @@ public:
 
 	int predict(const DataPoint& point) const;
 
+	int predict(const ClassPoint& point) const;
+
 	void predictData(const Data& points, Labels& labels) const;
+
+	void predictData(const ClassData& points, Labels& labels) const;
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
 
@@ -29,11 +33,17 @@ public:
 
 private:
 
+	void trainIvm(const int usedIvm, const int nrOfInducingPoints, const bool doEpUpdate, ClassData& data);
+
 	void update();
 
 	OnlineStorage<ClassPoint*>& m_storage;
 
 	OnlineRandomForest m_orf;
+
+	std::vector<IVMMultiBinary*> m_ivms;
+
+	std::vector<OnlineStorage<ClassPoint*>* > m_onlineStoragesForIvms;
 
 	int m_amountOfUsedClasses;
 

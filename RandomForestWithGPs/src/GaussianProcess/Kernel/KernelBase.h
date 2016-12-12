@@ -12,6 +12,7 @@
 #include "../../Utility/Util.h"
 #include "KernelType.h"
 #include "../../RandomNumberGenerator/RandomGaussianNr.h"
+#include "../../Data/OnlineStorage.h"
 #include "../../Utility/ReadWriterHelper.h"
 #include "../../Base/Settings.h"
 #include "../../Data/ClassKnowledge.h"
@@ -59,6 +60,8 @@ public:
 
 	void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd* usedMatrix);
 
+	static void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd& usedMatrix, const OnlineStorage<ClassPoint*>& storage);
+
 	virtual double calcDiagElement(unsigned int row) const = 0;
 
 	virtual double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const = 0;
@@ -67,6 +70,10 @@ public:
 
 	virtual std::string prettyString() const = 0;
 
+	void setDifferenceMatrix(Eigen::MatrixXd* differenceMatrix){
+		m_differences = differenceMatrix;
+		m_calcedDifferenceMatrix = true;
+	}
 
 protected:
 

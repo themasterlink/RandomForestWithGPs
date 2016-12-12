@@ -15,15 +15,15 @@
     	"testingAmount": 200
     },
     "Forest": {
-        "amountOfTrees": 1000,
+        "amountOfTrees": 5000,
         "Trees": {
-            "height": 14
+            "height": 20
         }
     },
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 45,
+        "nrOfInducingPoints": 60,
         "desiredMargin": 0.01,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
@@ -31,7 +31,7 @@
         	"useSavedHyperParams": "false",
         	"overwriteExistingHyperParams": "true"
         },
-        "kernelType": 1
+        "kernelType": 0
     },
     "TotalStorage": {
     	"amountOfPointsUsedForTraining": 200,
@@ -42,10 +42,10 @@
     },
     "OnlineRandomForest": {
 		"amountOfPointsUntilRetrain": 300,
-		"minUsedDataFactor":  0.2,
-		"maxUsedDataFactor":  0.8,
-		"factorAmountOfUsedDims": 1.0,
-		"ownSamplingTime": 2
+		"minUsedDataFactor":  0.3,
+		"maxUsedDataFactor":  0.6,
+		"factorAmountOfUsedDims": 0.9,
+		"ownSamplingTime": 100
 	},
     "Kernel": {
         "path": "..\/realTest\/kernelData.kernel"
@@ -59,10 +59,10 @@
     	"len": 0.732498,
     	"fNoise": 3.51785,
     	"sNoise": 0.0832458,
-    	"lenMean": 0.4,
-    	"lenVar": 0.2,
-    	"fNoiseMean": 1.0,
-    	"fNoiseVar": 0.15,
+    	"lenMean": 1.5,
+    	"lenVar": 0.5,
+    	"fNoiseMean": 0.65,
+    	"fNoiseVar": 0.1,
     	"sNoiseMean": 0.1,
     	"sNoiseVar": 0.01
     },

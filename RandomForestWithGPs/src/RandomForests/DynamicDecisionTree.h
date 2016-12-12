@@ -28,7 +28,7 @@ public:
 
 	virtual ~DynamicDecisionTree();
 
-	void train(const int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
+	void train(int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
 
 	double trySplitFor(const int actNode, const double usedSplitValue, const int usedDim,
 			const std::vector<int>& dataInNode, std::vector<int>& leftHisto,

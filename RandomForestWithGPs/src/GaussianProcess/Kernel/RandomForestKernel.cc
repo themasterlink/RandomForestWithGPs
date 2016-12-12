@@ -57,7 +57,7 @@ double RandomForestKernel::calcDerivativeDiagElement(unsigned int row, const Own
 void RandomForestKernel::calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const{
 	res = Eigen::VectorXd(m_dataPoints);
 	for(int i = 0; i < m_dataPoints; ++i){
-		res[i] = (double) kernelFuncVec(vector, dataMat.col(i));
+		res.coeffRef(i) = (double) kernelFuncVec(vector, dataMat.col(i));
 	}
 }
 

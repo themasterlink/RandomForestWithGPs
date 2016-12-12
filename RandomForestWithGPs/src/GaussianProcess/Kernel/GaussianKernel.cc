@@ -71,7 +71,7 @@ double GaussianKernel::kernelFunc(const int row, const int col) const{
 		}
 	}else{
 		return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue()
-				* (double) (*m_differences)(row, col)) + m_kernelParams.m_sNoise.getSquaredValue();
+				* (double) (*m_differences).coeff(row, col)) + m_kernelParams.m_sNoise.getSquaredValue();
 	}
 	return 0;
 }
@@ -80,7 +80,7 @@ double GaussianKernel::kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::Ve
 	if(hasLengthMoreThanOneDim()){
 		double squaredNorm = 0;
 		for(unsigned int i = 0; i < lhs.rows(); ++i){
-			const double temp = (lhs[i] - rhs[i]) * 1. / m_kernelParams.m_length.getValues()[i];
+			const double temp = (lhs.coeff(i) - rhs.coeff(i)) * 1. / m_kernelParams.m_length.getValues()[i];
 			squaredNorm += temp * temp;
 		}
 		return m_kernelParams.m_fNoise.getValue() * m_kernelParams.m_fNoise.getValue() *
@@ -100,23 +100,23 @@ double GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col,
 			double squaredDerivNorm = 0;
 			if(m_pData != nullptr){
 				for(unsigned int i = 0; i < (*m_pData)[row]->rows(); ++i){
-					const double temp = ((*(*m_pData)[row])[i] - (*(*m_pData)[col])[i]) * 1. / m_kernelParams.m_length.getValues()[i];
+					const double temp = ((*(*m_pData)[row]).coeff(i) - (*(*m_pData)[col]).coeff(i)) * 1. / m_kernelParams.m_length.getValues()[i];
 					squaredNorm += temp * temp;
 				}
-				squaredDerivNorm = ((*(*m_pData)[row])[element] - (*(*m_pData)[col])[element]) * ((*(*m_pData)[row])[element] - (*(*m_pData)[col])[element]) /
+				squaredDerivNorm = ((*(*m_pData)[row]).coeff(element) - (*(*m_pData)[col]).coeff(element)) * ((*(*m_pData)[row]).coeff(element) - (*(*m_pData)[col]).coeff(element)) /
 						(lenElement * lenElement * lenElement);
 			}else if(m_pDataMat != nullptr){
 				for(unsigned int i = 0; i < m_pDataMat->col(row).rows(); ++i){
-					const double temp = (m_pDataMat->col(row)[i] - m_pDataMat->col(col)[i]) * 1. / m_kernelParams.m_length.getValues()[i];
+					const double temp = (m_pDataMat->col(row).coeff(i) - m_pDataMat->col(col).coeff(i)) * 1. / m_kernelParams.m_length.getValues()[i];
 					squaredNorm += temp * temp;
 				}
-				squaredDerivNorm = (m_pDataMat->col(row)[element] - m_pDataMat->col(col)[element]) * (m_pDataMat->col(row)[element] - m_pDataMat->col(col)[element]) /
+				squaredDerivNorm = (m_pDataMat->col(row).coeff(element) - m_pDataMat->col(col).coeff(element)) * (m_pDataMat->col(row).coeff(element) - m_pDataMat->col(col).coeff(element)) /
 						(lenElement * lenElement * lenElement);
 			}
 			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * squaredNorm) * squaredDerivNorm;
 		}else if(m_calcedDifferenceMatrix){
 			const double lenSquared = m_kernelParams.m_length.getSquaredValue();
-			const double dotResult = (double) (*m_differences)(row, col);
+			const double dotResult = (double) (*m_differences).coeff(row, col);
 			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue() * dotResult)
 					* dotResult / (lenSquared * m_kernelParams.m_length.getValue()); // derivative to m_params[0]
 		}else{
@@ -135,7 +135,7 @@ double GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col,
 	}else if(type->getKernelNr() == m_kernelParams.m_fNoise.getKernelNr()){
 		if(!hasLengthMoreThanOneDim() && m_calcedDifferenceMatrix){
 			return 2.0 * m_kernelParams.m_fNoise.getValue() * exp(-0.5 * (1.0/ (m_kernelParams.m_length.getValue() *
-					m_kernelParams.m_length.getValue())) * (double) (*m_differences)(row, col)); // derivative to m_params[1]
+					m_kernelParams.m_length.getValue())) * (double) m_differences->coeff(row, col)); // derivative to m_params[1]
 		}else{
 			double result = 0;
 			if(m_pData != nullptr){
@@ -176,10 +176,10 @@ double GaussianKernel::kernelFuncDerivativeToFNoise(const int row, const int col
 void GaussianKernel::calcCovariance(Eigen::MatrixXd& cov) const{
 	cov = Eigen::MatrixXd(m_dataPoints, m_dataPoints);
 	for(int i = 0; i < m_dataPoints; ++i){
-		cov(i,i) = calcDiagElement(i);
+		cov.coeffRef(i,i) = calcDiagElement(i);
 		for(int j = i + 1; j < m_dataPoints; ++j){
-			cov(i,j) = kernelFunc(i, j);
-			cov(j,i) = cov(i,j);
+			cov.coeffRef(i,j) = kernelFunc(i, j);
+			cov.coeffRef(j,i) = cov.coeff(i,j);
 		}
 	}
 }
@@ -190,19 +190,19 @@ void GaussianKernel::calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& 
 		cov.resize(nrOfInducingPoints, nrOfInducingPoints);
 		unsigned int i = 0;
 		for(std::list<int>::const_iterator it1 = activeSet.begin(); it1 != activeSet.end(); ++it1, ++i){
-			cov(i,i) = calcDerivativeDiagElement(*it1, type);
+			cov.coeffRef(i,i) = calcDerivativeDiagElement(*it1, type);
 			unsigned int j = i + 1;
 			std::list<int>::const_iterator it2 = it1;
 			++it2;
 			for(; it2 != activeSet.end(); ++it2, ++j){
-				cov(i,j) = kernelFuncDerivativeToParam(*it1, *it2, type, element);
-				cov(j,i) = cov(i,j);
+				cov.coeffRef(i,j) = kernelFuncDerivativeToParam(*it1, *it2, type, element);
+				cov.coeffRef(j,i) = cov.coeff(i,j);
 			}
 		}
 	}else{
 		cov = Eigen::MatrixXd::Zero(nrOfInducingPoints, nrOfInducingPoints);
 		for(int i = 0; i < nrOfInducingPoints; ++i){
-			cov(i,i) = calcDerivativeDiagElement(i, type); // derivative of m_params[2]^2
+			cov.coeffRef(i,i) = calcDerivativeDiagElement(i, type); // derivative of m_params[2]^2
 		}
 	}
 }
@@ -223,10 +223,10 @@ double GaussianKernel::calcDerivativeDiagElement(unsigned int row, const OwnKern
 void GaussianKernel::calcCovarianceDerivative(Eigen::MatrixXd& cov, const OwnKernelElement* type) const{
 	cov = Eigen::MatrixXd(m_dataPoints, m_dataPoints);
 	for(int i = 0; i < m_dataPoints; ++i){
-		cov(i,i) = calcDerivativeDiagElement(i, type);
+		cov.coeffRef(i,i) = calcDerivativeDiagElement(i, type);
 		for(int j = i + 1; j < m_dataPoints; ++j){
-			cov(i,j) = kernelFuncDerivativeToParam(i, j, type);
-			cov(j,i) = cov(i,j);
+			cov.coeffRef(i,j) = kernelFuncDerivativeToParam(i, j, type);
+			cov.coeffRef(j,i) = cov.coeff(i,j);
 		}
 	}
 }
@@ -234,7 +234,7 @@ void GaussianKernel::calcCovarianceDerivative(Eigen::MatrixXd& cov, const OwnKer
 void GaussianKernel::calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const{
 	res = Eigen::VectorXd(m_dataPoints);
 	for(int i = 0; i < m_dataPoints; ++i){
-		res[i] = (double) kernelFuncVec(vector, dataMat.col(i));
+		res.coeffRef(i) = (double) kernelFuncVec(vector, dataMat.col(i));
 	}
 }
 

@@ -10,6 +10,7 @@
 
 #include <curses.h>
 #include <panel.h>
+#undef OK
 #include "ThreadMaster.h"
 #include "../Utility/StopWatch.h"
 

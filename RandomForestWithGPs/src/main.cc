@@ -103,6 +103,15 @@ int main(int ac, char* av[]){
 	if(CommandSettings::get_samplingAndTraining() > 0){
 		printOnScreen("Training time: " << TimeFrame(CommandSettings::get_samplingAndTraining()));
 	}
+//	Eigen::VectorXd testVec = Eigen::VectorXd::Random(1000);
+//	Eigen::VectorXd testVec2 = Eigen::VectorXd::Random(1000);
+//	double res = 0;
+//	for(unsigned int k = 0; k < 100000; ++k){
+//		for(unsigned int i = 0; i < 1000; ++i){
+//
+//		}
+//	}
+
 	/*
     const int nr = 300;
     Eigen::MatrixXd Sigma, controlSigma;
@@ -162,6 +171,9 @@ int main(int ac, char* av[]){
 	}else if(type == "ORF"){
 		executeForBinaryClassORF();
 		printOnScreen("For ORFs: " << sw.elapsedAsTimeFrame());
+	}else if(type == "ORFIVMs"){
+		executeForBinaryClassORFIVM();
+		printOnScreen("For ORFIVMs: " << sw.elapsedAsTimeFrame());
 	}else{
 		printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
 	}

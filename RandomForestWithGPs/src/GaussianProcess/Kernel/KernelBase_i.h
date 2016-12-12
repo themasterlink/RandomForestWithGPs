@@ -109,6 +109,10 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 	if(m_pData != nullptr){
 		m_dataPoints = m_pData->size();
 		int counter = 0;
+		if(usedMatrix->rows() != m_dataPoints || usedMatrix->cols() != m_dataPoints){
+			printError("The size of the matrix is incorrect!");
+			return;
+		}
 		for(int i = 0; i < m_dataPoints; ++i){
 			++counter;
 			for(int j = i + 1; j < m_dataPoints; ++j){
@@ -117,8 +121,8 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 						i = m_dataPoints;
 						break;
 					}
-					(*m_differences)(i,j) = (*(*m_pData)[i] - *(*m_pData)[j]).squaredNorm();
-					(*m_differences)(j,i) = (*m_differences)(i,j);
+					(*m_differences).coeffRef(i,j) = (*(*m_pData)[i] - *(*m_pData)[j]).squaredNorm();
+					(*m_differences).coeffRef(j,i) = (*m_differences).coeff(i,j);
 				}
 				++counter;
 			}
@@ -135,16 +139,43 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 						break;
 					}
 					if(i != j){
-						(*m_differences)(i,j) = (m_pDataMat->col(i) - m_pDataMat->col(j)).squaredNorm();
-						(*m_differences)(j,i) = (*m_differences)(i,j);
+						(*m_differences).coeffRef(i,j) = (m_pDataMat->col(i) - m_pDataMat->col(j)).squaredNorm();
+						(*m_differences).coeffRef(j,i) = (*m_differences).coeff(i,j);
 					}else{
-						(*m_differences)(i,i) = 0.;
+						(*m_differences).coeffRef(i,i) = 0.;
 					}
 				}
 				++counter;
 			}
 		}
 		m_calcedDifferenceMatrix = true;
+	}else{
+		printError("This will not work!");
+	}
+}
+
+
+template<typename KernelType, unsigned int nrOfParams>
+void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd& usedMatrix, const OnlineStorage<ClassPoint*>& storage){
+	const int dataPoints = storage.size();
+	int counter = 0;
+	if(usedMatrix.rows() != dataPoints || usedMatrix.cols() != dataPoints){
+		printError("The size of the matrix is incorrect!");
+		return;
+	}
+	for(int i = 0; i < dataPoints; ++i){
+		++counter;
+		for(int j = i + 1; j < dataPoints; ++j){
+			if(counter >= start){
+				if(counter == end){
+					i = dataPoints;
+					break;
+				}
+				usedMatrix.coeffRef(i,j) = (*storage[i] - *storage[j]).squaredNorm();
+				usedMatrix.coeffRef(j,i) = usedMatrix.coeff(i,j);
+			}
+			++counter;
+		}
 	}
 }
 
@@ -202,10 +233,10 @@ void KernelBase<KernelType, nrOfParams>::calcCovariance(Eigen::MatrixXd& cov) co
 	if(m_init){
 		cov.conservativeResize(m_dataPoints, m_dataPoints);
 		for(int i = 0; i < m_dataPoints; ++i){
-			cov(i,i) =  calcDiagElement(i);
+			cov.coeffRef(i,i) =  calcDiagElement(i);
 			for(int j = i + 1; j < m_dataPoints; ++j){
-				cov(i,j) = kernelFunc(i,j);
-				cov(j,i) = cov(i,j);
+				cov.coeffRef(i,j) = kernelFunc(i,j);
+				cov.coeffRef(j,i) = cov.coeff(i,j);
 			}
 		}
 	}else{
@@ -220,8 +251,8 @@ void KernelBase<KernelType, nrOfParams>::calcCovarianceDerivative(Eigen::MatrixX
 		for(int i = 0; i < m_dataPoints; ++i){
 			cov(i,i) =  calcDerivativeDiagElement(i, type);
 			for(int j = i + 1; j < m_dataPoints; ++j){
-				cov(i,j) = kernelFunc(i,j);
-				cov(j,i) = cov(i,j);
+				cov.coeffRef(i,j) = kernelFunc(i,j);
+				cov.coeffRef(j,i) = cov.coeff(i,j);
 			}
 		}
 	}else{
@@ -236,19 +267,19 @@ void KernelBase<KernelType, nrOfParams>::calcCovarianceDerivativeForInducingPoin
 	if(!type->isDerivativeOnlyDiag()){
 		unsigned int i = 0;
 		for(std::list<int>::const_iterator it1 = activeSet.begin(); it1 != activeSet.end(); ++it1, ++i){
-			cov(i,i) = calcDerivativeDiagElement(i, type);
+			cov.coeffRef(i,i) = calcDerivativeDiagElement(i, type);
 			unsigned int j = i + 1;
 			std::list<int>::const_iterator it2 = it1;
 			++it2;
 			for(; it2 != activeSet.end(); ++it2, ++j){
-				cov(i,j) = kernelFuncDerivativeToParam(*it1, *it2, type);
-				cov(j,i) = cov(i,j);
+				cov.coeffRef(i,j) = kernelFuncDerivativeToParam(*it1, *it2, type);
+				cov.coeffRef(j,i) = cov.coeff(i,j);
 			}
 		}
 	}else{
 		// derivative has only diag elements
 		for(int i = 0; i < nrOfInducingPoints; ++i){
-			cov(i,i) = calcDerivativeDiagElement(i, type); // derivative of m_hyperParams[2]^2
+			cov.coeffRef(i,i) = calcDerivativeDiagElement(i, type); // derivative of m_hyperParams[2]^2
 		}
 	}
 }

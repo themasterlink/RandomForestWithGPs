@@ -30,16 +30,20 @@ void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 		const unsigned int dim = storage.dim();
 		if(m_uniformSplitValues.size() != dim){
 			m_uniformSplitValues.resize(dim);
+			m_useDim.resize(dim);
 		}
 		m_mutex.lock();
 		const std::vector<Eigen::Vector2d >& minMaxValues = forest->getMinMaxValues();
 		for(unsigned int i = 0; i < dim; ++i){
-			if(minMaxValues[i][0] != minMaxValues[i][1]){
+			m_useDim[i] = minMaxValues[i][0] < minMaxValues[i][1];
+			if(m_useDim[i]){
 				m_uniformSplitValues[i].param(uniform_distribution_real::param_type(minMaxValues[i][0], minMaxValues[i][1]));
-			}else{
-				// just to get any value -> else this will throw an execption
-				m_uniformSplitValues[i].param(uniform_distribution_real::param_type(minMaxValues[i][0], minMaxValues[i][0] + 1e-7));
 			}
+//			else{
+//				m_useDim[i] = false;
+				// just to get any value -> else this will throw an execption
+//				m_uniformSplitValues[i].param(uniform_distribution_real::param_type(minMaxValues[i][0], minMaxValues[i][0] + (minMaxValues[i][0] * 1e-5) + 1e-7));
+//			}
 		}
 		m_mutex.unlock();
 	}else{

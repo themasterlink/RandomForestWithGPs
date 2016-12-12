@@ -37,6 +37,8 @@ public:
 
 	void setRandFromRange(const int min, const int max);
 
+	void setRandForDim(const int min, const int max);
+
 	int getRandFromRange();
 
 	double getRandSplitValueInDim(const unsigned int dim);
@@ -81,12 +83,16 @@ inline void RandomNumberGeneratorForDT::setRandFromRange(const int min, const in
 	m_uniformDistRange.param(uniform_distribution_int::param_type(min, max));
 }
 
+inline void RandomNumberGeneratorForDT::setRandForDim(const int min, const int max){
+	m_varGenDimension.distribution().param(uniform_distribution_int::param_type(min, max));
+}
+
 inline int RandomNumberGeneratorForDT::getRandFromRange(){
 	return m_uniformDistRange(m_generator);
 }
 
 inline double RandomNumberGeneratorForDT::getRandSplitValueInDim(const unsigned int dim){
-	if(m_uniformSplitValues.size() > dim){
+	if(m_uniformSplitValues.size() > dim && m_useDim[dim]){
 		m_mutex.lock();
 		const double val =  m_uniformSplitValues[dim](m_generator);
 		m_mutex.unlock();

@@ -45,7 +45,7 @@ void OnlineRandomForest::train(){
 		printError("There should be at least 2 dimensions in the data");
 		return;
 	}
-	m_amountOfUsedDims = m_factorForUsedDims * m_storage.dim();
+	m_amountOfUsedDims = std::max((int) (m_factorForUsedDims * m_storage.dim()), 2);
 	printOnScreen("Amount of used dims: " << m_amountOfUsedDims);
 	printOnScreen("Amount of used data: " << m_storage.size());
 	if(m_amountOfUsedDims > m_storage.dim()){
@@ -183,7 +183,9 @@ int OnlineRandomForest::amountOfClasses() const{
 
 bool OnlineRandomForest::update(){
 	if(!m_firstTrainingDone){
+		StopWatch sw;
 		train();
+		printOnScreen("Needed for training: " << sw.elapsedAsTimeFrame());
 	}else{
 		std::list<std::pair<DecisionTreeIterator, double> >* list = new std::list<std::pair<DecisionTreeIterator, double> >();
 		sortTreesAfterPerformance(*list);
