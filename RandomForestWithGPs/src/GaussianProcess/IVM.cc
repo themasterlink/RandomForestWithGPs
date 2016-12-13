@@ -230,6 +230,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 					}
 				}
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
+//				int iCounterSampling = 0;
 				while(m_package != nullptr){ // equals a true
 					//				if(m_uniformNr() % 10 == 0){
 					//					printError("Just an test error!" << m_uniformNr() % 2);
@@ -242,10 +243,11 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 					std::stringstream str2;
 					if(trained){
 						str2 << "Params: " << m_gaussKernel->getHyperParams() << " with success and logZ: " << m_logZ;
+						m_package->overwriteLastLineToScreenForThisThread(str2.str());
 					}else{
 						str2 << "Params: " << m_gaussKernel->getHyperParams() << " failed";
+						m_package->printLineToScreenForThisThread(str2.str());
 					}
-					m_package->overwriteLastLineToScreenForThisThread(str2.str());
 					//				if(!trained){
 					//					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
 					//				}
@@ -364,10 +366,63 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 						m_package->printLineToScreenForThisThread("Training has to wait!");
 						m_package->wait(); // will hold this process
 					}
+//					if(iCounterSampling++ > 100){
+//						break;
+//					}
 				}
 				if(Settings::getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
 					bestParams.writeToFile(kernelFilePath);
 				}
+
+//				m_gaussKernel->setHyperParamsWith(bestParams);
+//				if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
+//					setDerivAndLogZFlag(false, false);
+//					m_uniformNr.setMinAndMax(1, 1); // final training with all points considered
+//					internalTrain(true, verboseLevel);
+//					DataWriterForVisu::writeSvg("before_ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_storage.storage());
+//					openFileInViewer("before_ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+//				}
+//				int iGradientCounter = 0;
+//				std::list<double> logZs;
+//				GaussianKernelParams eSquared;
+//				eSquared.setAllValuesTo(0);
+//				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
+//				setDerivAndLogZFlag(true, true);
+//				while(m_package != nullptr){ // equals a true
+//					const bool trained = internalTrain(iGradientCounter % 10 == 0, 0);
+//					if(trained){
+//						printInPackageOnScreen(m_package, "Gradient is: " << m_derivLogZ << ", p: " << m_gaussKernel->getHyperParams() << ", l: " << m_logZ);
+//						logZs.push_back(m_logZ);
+//						if(!m_gaussKernel->hasLengthMoreThanOneDim()){
+//							for(unsigned int j = 0; j < 3; ++j){
+//								const double lastLearningRate = sqrt(1e-8 + eSquared.m_params[j]->getValue()); // 0,001
+//								eSquared.m_params[j]->getValues()[0] = 0.9 * eSquared.m_params[j]->getValue() + 0.1 * m_derivLogZ.m_params[j]->getSquaredValue(); // 0,0000000099856
+//								const double actLearningRate = sqrt(1e-8 + eSquared.m_params[j]->getValue());
+//								m_gaussKernel->getHyperParams().m_params[j]->getValues()[0] += 0.000001 * (lastLearningRate / actLearningRate) * m_derivLogZ.m_params[j]->getValue();
+//							}
+//						}else{
+//							m_gaussKernel->subGradient(m_derivLogZ, -0.00000005);
+//						}
+//					}else{
+////						internalTrain(true, 0);
+//					}
+//					if(bestLogZ < m_logZ){
+//						bestLogZ = m_logZ;
+//						m_gaussKernel->getCopyOfParams(bestParams);
+//						if(!m_gaussKernel->hasLengthMoreThanOneDim()){
+//							std::stringstream str2;
+//							str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
+//									<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
+//									<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+//									<< "logZ: " << bestLogZ;
+//							m_package->setAdditionalInfo(str2.str());
+//						}
+//					}
+//					if(iGradientCounter++ > 1000){
+//						break;
+//					}
+//				}
+//				DataWriterForVisu::writeSvg("logZ_"+number2String((int)m_labelsForClasses[0])+".svg", logZs);
 			}
 			if(bestLogZ == -DBL_MAX){
 				printError("This ivm could not find any parameter set in the given time, which could be trained without an error!");
@@ -976,26 +1031,70 @@ void IVM::calcLogZ(){
 	for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
 		m_logZ -= log((double) llt.coeff(i,i));
 	}
-	const Vector muTilde = m_nuTilde.cwiseQuotient(m_tauTilde);
-	Vector muL0 = Vector::Zero(m_numberOfInducingPoints);
-	for(uint i=0; i<m_numberOfInducingPoints; ++i){
-		double sum = muTilde.coeff(i);
-		for(int k = (int)i-1; k >= 0; --k){
-			sum -= (double)llt.coeff(i,k) * muL0.coeff(k);
+	if(true){
+		const Vector muTilde = m_nuTilde.cwiseQuotient(m_tauTilde);
+		Vector muL0 = Vector::Zero(m_numberOfInducingPoints);
+		Vector muL0_2 = Vector::Zero(m_numberOfInducingPoints);
+		List<int>::const_iterator it = m_I.begin();
+		for(uint i=0; i<m_numberOfInducingPoints; ++i, ++it){
+			if(m_y.coeff(*it) == 1){
+				double sum = muTilde.coeff(i);
+				for(int k = (int)i-1; k >= 0; --k){
+					sum -= (double)llt.coeff(i,k) * muL0.coeff(k);
+				}
+				muL0.coeffRef(i) = sum / (double) llt.coeff(i,i);
+			}else{
+				double sum = muTilde.coeff(i);
+				for(int k = (int)i-1; k >= 0; --k){
+					sum -= (double)llt.coeff(i,k) * muL0_2.coeff(k);
+				}
+				muL0_2.coeffRef(i) = sum / (double) llt.coeff(i,i);
+			}
 		}
-		muL0.coeffRef(i) = sum / (double) llt.coeff(i,i);
-	}
-	Vector muL1 = Vector::Zero(m_numberOfInducingPoints);
-	for(int i= (int) m_numberOfInducingPoints - 1; i >= 0; --i){
-		double sum = muL0.coeff(i);
-		for(int k = i+1; k < m_numberOfInducingPoints; ++k){
-			sum -= (double)llt.coeff(k,i) * muL1.coeff(k);
+		Vector muL1 = Vector::Zero(m_numberOfInducingPoints);
+		Vector muL1_2 = Vector::Zero(m_numberOfInducingPoints);
+		List<int>::const_reverse_iterator itr = m_I.rbegin();
+		for(int i= (int) m_numberOfInducingPoints - 1; i >= 0; --i, ++itr){
+			if(m_y.coeff(*itr) == 1){
+				double sum = muL0.coeff(i);
+				for(int k = i+1; k < m_numberOfInducingPoints; ++k){
+					sum -= (double)llt.coeff(k,i) * muL1.coeff(k);
+				}
+				muL1.coeffRef(i) = sum / (double)llt.coeff(i,i);
+			}else{
+				double sum = muL0.coeff(i);
+				for(int k = i+1; k < m_numberOfInducingPoints; ++k){
+					sum -= (double)llt.coeff(k,i) * muL1_2.coeff(k);
+				}
+				muL1_2.coeffRef(i) = sum / (double)llt.coeff(i,i);
+			}
 		}
-		muL1.coeffRef(i) = sum / (double)llt.coeff(i,i);
-	}
-	m_logZ -= 0.5 * muTilde.dot(muL1);
-	if(m_calcDerivLogZ){
-		calcDerivatives(muL1);
+		m_logZ -= (1. - m_desiredPoint) * (0.5 * muTilde.dot(muL1)) + m_desiredPoint * (0.5 * muTilde.dot(muL1_2));
+		if(m_calcDerivLogZ){
+			calcDerivatives(muL1);
+		}
+	}else{
+		const Vector muTilde = m_nuTilde.cwiseQuotient(m_tauTilde);
+		Vector muL0 = Vector::Zero(m_numberOfInducingPoints);
+		for(uint i=0; i<m_numberOfInducingPoints; ++i){
+			double sum = muTilde.coeff(i);
+			for(int k = (int)i-1; k >= 0; --k){
+				sum -= (double)llt.coeff(i,k) * muL0.coeff(k);
+			}
+			muL0.coeffRef(i) = sum / (double) llt.coeff(i,i);
+		}
+		Vector muL1 = Vector::Zero(m_numberOfInducingPoints);
+		for(int i= (int) m_numberOfInducingPoints - 1; i >= 0; --i){
+			double sum = muL0.coeff(i);
+			for(int k = i+1; k < m_numberOfInducingPoints; ++k){
+				sum -= (double)llt.coeff(k,i) * muL1.coeff(k);
+			}
+			muL1.coeffRef(i) = sum / (double)llt.coeff(i,i);
+		}
+		m_logZ -= 0.5 * muTilde.dot(muL1);
+		if(m_calcDerivLogZ){
+			calcDerivatives(muL1);
+		}
 	}
 }
 

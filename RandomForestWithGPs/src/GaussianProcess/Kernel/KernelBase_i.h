@@ -180,6 +180,21 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 }
 
 template<typename KernelType, unsigned int nrOfParams>
+void KernelBase<KernelType, nrOfParams>::subGradient(const KernelType& gradient, const double factor){
+	for(unsigned int i = 0; i < nrOfParams; ++i){
+		if(m_kernelParams.m_params[i]->hasMoreThanOneDim() && gradient.m_params[i]->hasMoreThanOneDim()){ // both true
+			for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){
+				m_kernelParams.m_params[i]->getValues()[j] -= factor * gradient.m_params[i]->getValues()[j];
+			}
+		}else if(!m_kernelParams.m_params[i]->hasMoreThanOneDim() && !gradient.m_params[i]->hasMoreThanOneDim()){ // both false
+			m_kernelParams.m_params[i]->getValues()[0] -= factor * gradient.m_params[i]->getValue();
+		}else{
+			printError("The gradient does not match the kernel!");
+		}
+	}
+}
+
+template<typename KernelType, unsigned int nrOfParams>
 void KernelBase<KernelType, nrOfParams>::setHyperParamsWith(const KernelType& params){
 	for(unsigned int i = 0; i < KernelType::paramsAmount; ++i){
 		if(m_kernelParams.m_params[i]->hasMoreThanOneDim()){

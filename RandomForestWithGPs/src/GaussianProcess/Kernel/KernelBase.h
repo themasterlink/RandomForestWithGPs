@@ -50,6 +50,8 @@ public:
 
 	virtual void setSeed(const int seed);
 
+	void subGradient(const KernelType& gradient, const double factor);
+
 	bool wasDifferenceCalced(){ return m_calcedDifferenceMatrix; };
 
 	void setGaussianRandomVariables(const std::vector<double>& means, const std::vector<double> sds);

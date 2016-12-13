@@ -59,10 +59,10 @@
     	"len": 0.732498,
     	"fNoise": 3.51785,
     	"sNoise": 0.0832458,
-    	"lenMean": 1.5,
+    	"lenMean": 0.9,
     	"lenVar": 0.5,
-    	"fNoiseMean": 0.65,
-    	"fNoiseVar": 0.1,
+    	"fNoiseMean": 0.75,
+    	"fNoiseVar": 0.3,
     	"sNoiseMean": 0.1,
     	"sNoiseVar": 0.01
     },

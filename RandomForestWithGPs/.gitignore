@@ -3,3 +3,5 @@
 ../RemoteSystemsTempFiles/
 /Release/
 /Release Opencv2/
+../.DS_Store
+*.DS_Store
