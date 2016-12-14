@@ -138,6 +138,7 @@ void IVMMultiBinary::train(){
 		}
 		double durationOfTraining = CommandSettings::get_samplingAndTraining();
 		boost::thread_group group;
+		boost::thread_group groupForRetraining;
 		const int nrOfParallel = boost::thread::hardware_concurrency();
 		StopWatch sw;
 		std::vector<int> counterRes(amountOfClasses(), 0);
@@ -161,43 +162,61 @@ void IVMMultiBinary::train(){
 			}else{
 				InLinePercentageFiller::setActMaxTime(5); // max time for sampling
 			}
+			std::list<InformationPackage*> packagesForRetrain;
+			std::vector<unsigned char> stateOfIvms(amountOfClasses(), 0);
 			for(unsigned int i = 0; i < amountOfClasses(); ++i){
 				if(m_isClassUsed[i]){
 					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, i, durationOfTraining, packages[i])));
+					stateOfIvms[i] = 1;
 				}
 			}
+
 			unsigned int counter = 0;
-			while(durationOfWholeTraining > sw.elapsedSeconds()){
-				counter = 0;
-				bool stillOneRunning = false;
+			bool stillOneRunning = true;
+			while(stillOneRunning){
+				stillOneRunning = false;
+//				counter = 0;
 				for(unsigned int i = 0; i < amountOfClasses(); ++i){
 					if(m_isClassUsed[i]){
 						if(!packages[i]->isTaskFinished()){
 							stillOneRunning = true;
+						}else{ // task is finished
+							if(stateOfIvms[i] == 1 && m_ivms[i]->getKernelType() == IVM::GAUSS){
+								printOnScreen("Add " << i << " to retrain");
+								// add to retrain
+								packagesForRetrain.push_back(new InformationPackage(InformationPackage::IVM_RETRAIN, packages[i]->correctlyClassified(), m_storage.size()));
+								groupForRetraining.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::retrainIvmIfNeeded, this, packagesForRetrain.back(), i)));
+								stateOfIvms[i] = 2;
+							}
 						}
-						const int c = packages[i]->amountOfTrainingStepsPerformed();
-						counter += c;
+//						const int c = packages[i]->amountOfTrainingStepsPerformed();
+//						counter += c;
 					}
 				}
-				if(!stillOneRunning){
-					break;
-				}
-				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
+//				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
 				usleep(0.15 * 1e6);
 			}
-			counter = 0;
-			for(unsigned int i = 0; i < amountOfClasses(); ++i){
-				if(m_isClassUsed[i]){
-					counter += packages[i]->amountOfTrainingStepsPerformed();
-				}
-			}
-			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
+//			counter = 0;
+//			for(unsigned int i = 0; i < amountOfClasses(); ++i){
+//				if(m_isClassUsed[i]){
+//					counter += packages[i]->amountOfTrainingStepsPerformed();
+//				}
+//			}
+//			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
 			group.join_all();
+			for(std::list<InformationPackage*>::const_iterator it = packagesForRetrain.begin(); it != packagesForRetrain.end(); ++it){
+				(*it)->abortTraing(); // aborts training otherwise it will go on forever
+			}
 			for(unsigned int i = 0; i < amountOfClasses(); ++i){
 				if(m_isClassUsed[i]){
 					ThreadMaster::threadHasFinished(packages[i]);
 					delete packages[i];
 				}
+			}
+			groupForRetraining.join_all(); // to get a little bit of time until we wait on the finished training
+			for(std::list<InformationPackage*>::const_iterator it = packagesForRetrain.begin(); it != packagesForRetrain.end(); ++it){
+				ThreadMaster::threadHasFinished(*it);
+				delete *it;
 			}
 //		}else{
 //			const bool fitParams = CommandSettings::get_samplingAndTraining();
@@ -265,6 +284,18 @@ void IVMMultiBinary::train(){
 	}
 }
 
+void IVMMultiBinary::retrainIvmIfNeeded(InformationPackage* package, const int iClassNr){
+	if(package != nullptr){
+		if(m_isClassUsed[iClassNr]){
+			m_ivms[iClassNr]->setInformationPackage(package);
+			package->setStandartInformation("Ivm retraining for class: " + number2String(iClassNr));
+			ThreadMaster::appendThreadToList(package); // wait is performed in the ivm->train()
+			m_ivms[iClassNr]->train(true, 0, true); // endless training, which can be pausend and aborted inside of the ivm training
+		}
+		package->finishedTask();
+	}
+}
+
 void IVMMultiBinary::initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix){
 	GaussianKernel::calcDifferenceMatrix(startOfKernel, endOfKernel, *differenceMatrix, m_storage);
 }
@@ -274,7 +305,7 @@ void IVMMultiBinary::trainInParallel(const int usedIvm, const double trainTime, 
 	package->setStandartInformation("Ivm training for class: " + number2String(usedIvm));
 	ThreadMaster::appendThreadToList(package);
 	m_ivms[usedIvm]->setKernelSeed((usedIvm + 1) * 459486);
-	const bool ret = m_ivms[usedIvm]->train(trainTime,1);
+	const bool ret = m_ivms[usedIvm]->train(true, 1); // package(task is finished) inside the binary ivm training!
 //	m_ivms[usedIvm]->getKernel().setHyperParams(
 //			Settings::getDirectDoubleValue("KernelParam.len"),
 //			Settings::getDirectDoubleValue("KernelParam.fNoise"),

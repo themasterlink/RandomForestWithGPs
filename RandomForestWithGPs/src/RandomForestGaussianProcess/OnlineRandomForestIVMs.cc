@@ -20,8 +20,6 @@ OnlineRandomForestIVMs::OnlineRandomForestIVMs(OnlineStorage<ClassPoint*>& stora
 	m_orf.getStorageRef().deattach(&m_orf);
 	// instead call the update on the
 	m_storage.attach(this);
-
-
 }
 
 OnlineRandomForestIVMs::~OnlineRandomForestIVMs() {

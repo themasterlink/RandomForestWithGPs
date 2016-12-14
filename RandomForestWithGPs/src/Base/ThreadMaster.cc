@@ -80,7 +80,7 @@ void InformationPackage::overwriteLastLineToScreenForThisThread(const std::strin
 	}
 }
 
-bool InformationPackage::canBeAborted(){
+bool InformationPackage::canBeAbortedAfterCertainTime(){
 	switch(m_type){
 	case ORF_TRAIN:
 		return true;
@@ -90,9 +90,29 @@ bool InformationPackage::canBeAborted(){
 		return true;
 	case IVM_PREDICT:
 		return false;
+	case IVM_RETRAIN:
+		return false; // can not be aborted, will be aborted if all IVM_TRAIN are finished
 	default:
 		printError("This type is unknown!");
 		return false;
+	}
+}
+
+int InformationPackage::getPriority(){
+	switch(m_type){
+	case ORF_TRAIN:
+		return 6;
+	case ORF_TRAIN_FIX:
+		return 6;
+	case IVM_TRAIN:
+		return 5;
+	case IVM_PREDICT:
+		return 2;
+	case IVM_RETRAIN:
+		return 1;
+	default:
+		printError("This type is unknown!");
+		return 0;
 	}
 }
 
@@ -160,7 +180,7 @@ void ThreadMaster::run(){
 //		if(m_counter < m_maxCounter){
 		PackageList::const_iterator selectedValue = m_waitingList.end();
 		double bestAttractionLevel = 0;
-		int minAmountOfPoints, maxAmountOfPoints;
+		int minAmountOfPoints = INT_MAX, maxAmountOfPoints = 0;
 		for(PackageList::const_iterator it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
 			const int amount = (*it)->amountOfAffectedPoints();
 			if(minAmountOfPoints > amount){
@@ -169,22 +189,25 @@ void ThreadMaster::run(){
 			if(maxAmountOfPoints < amount){
 				maxAmountOfPoints = amount;
 			}
+			if(amount == 1){
+				(*it)->printLineToScreenForThisThread("This thread has only 1 element");
+			}
 		}
 		for(PackageList::const_iterator it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
 			if(!(*it)->isWaiting()){
 				continue; // hasn't reached the waiting point so the thread should be added to the running list
 			}
-			const int amount = (*it)->amountOfAffectedPoints();
-			const double correct = (*it)->correctlyClassified();
 			switch((*it)->getType()){
 			case InfoType::IVM_TRAIN:
+			case InfoType::IVM_RETRAIN: // has another priority -> but rest is the same
 				if(selectedValue == m_waitingList.end()){
-					if(amount > amountOfPointsNeededForIvms){
+					if((*it)->amountOfAffectedPoints() > amountOfPointsNeededForIvms){
 						selectedValue = it;
+						bestAttractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
 					}
 				}else{
 					const double attractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
-					if(attractionLevel > bestAttractionLevel){
+					if(attractionLevel > bestAttractionLevel || (*selectedValue)->getPriority() < (*it)->getPriority()){
 						bestAttractionLevel = attractionLevel;
 						selectedValue = it;
 					}
@@ -194,9 +217,10 @@ void ThreadMaster::run(){
 			case InformationPackage::ORF_TRAIN_FIX:
 				if(selectedValue == m_waitingList.end()){
 					selectedValue = it;
+					bestAttractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
 				}else{
 					const double attractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
-					if(attractionLevel > bestAttractionLevel){
+					if(attractionLevel > bestAttractionLevel || (*selectedValue)->getPriority() < (*it)->getPriority()){
 						bestAttractionLevel = attractionLevel;
 						selectedValue = it;
 					}
@@ -206,10 +230,12 @@ void ThreadMaster::run(){
 				if(selectedValue == m_waitingList.end()){
 					selectedValue = it;
 				}else{
-					const int diff = (*selectedValue)->amountOfTrainingStepsPerformed() - (*it)->amountOfTrainingStepsPerformed();
-					const int amountOfPoints = ((*it)->amountOfAffectedPoints() + (*selectedValue)->amountOfAffectedPoints()) * 0.5;
-					if(diff > 0.1 * amountOfPoints){
-						selectedValue = it;
+					if((*selectedValue)->getPriority() < (*it)->getPriority()){
+						const int diff = (*selectedValue)->amountOfTrainingStepsPerformed() - (*it)->amountOfTrainingStepsPerformed();
+						const int amountOfPoints = ((*it)->amountOfAffectedPoints() + (*selectedValue)->amountOfAffectedPoints()) * 0.5;
+						if(diff > 0.1 * amountOfPoints){
+							selectedValue = it;
+						}
 					}
 				}
 				break;
@@ -239,13 +265,13 @@ void ThreadMaster::run(){
 			// for each running element check if execution is finished
 			const int maxTrainingsTime = (*it)->getMaxTrainingsTime() > 0 ? (*it)->getMaxTrainingsTime() : CommandSettings::get_samplingAndTraining();
 			if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime * 0.05 || (*it)->isTaskFinished()){ // each training have to take at least 5 seconds!
-				if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime && !(*it)->shouldTrainingBeAborted() && (*it)->canBeAborted()){
+				if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime && !(*it)->shouldTrainingBeAborted() && (*it)->canBeAbortedAfterCertainTime()){
 //					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
 					(*it)->abortTraing(); // break the training
 				}
 				if(selectedValue != m_waitingList.end() && !selectedValueWasUsed){
-					if(!(*it)->shouldTrainingBePaused()){
-						if(bestAttractionLevel > (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints)){
+					if(!(*it)->shouldTrainingBePaused() && (*it)->runningTimeSinceLastWait() > 2.0){ // only change thread if it is running more than 2 seconds
+						if((int) bestAttractionLevel > (int) (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints) || (*selectedValue)->getPriority() > (*it)->getPriority()){ // must be at least 1. point be better
 							// hold this training and start the other one
 							(*it)->pauseTheTraining(); // pause the actual training
 							selectedValueWasUsed = true;

@@ -38,7 +38,7 @@ public:
 
 	void setNumberOfInducingPoints(unsigned int nr);
 
-	bool train(double timeForTraining = 0., const int verboseLevel = 0);
+	bool train(const bool doSampling, const int verboseLevel, const bool useKernelValuesAsBestParams = false);
 
 	bool trainOptimizeStep(const int verboseLevel = 0);
 

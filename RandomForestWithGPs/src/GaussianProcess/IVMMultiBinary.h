@@ -46,6 +46,8 @@ private:
 
 	void initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix);
 
+	void retrainIvmIfNeeded(InformationPackage* package, const int iClassNr);
+
 	OnlineStorage<ClassPoint*>& m_storage;
 
 	std::vector<IVM*> m_ivms;

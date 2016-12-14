@@ -22,7 +22,8 @@ public:
 		ORF_TRAIN = 0,
 		ORF_TRAIN_FIX = 1, // can not be aborted
 		IVM_TRAIN = 2,
-		IVM_PREDICT = 3
+		IVM_PREDICT = 3,
+		IVM_RETRAIN = 4
 	};
 
 	InformationPackage(InfoType type, double correctlyClassified, int amountOfPoints);
@@ -69,13 +70,17 @@ public:
 
 	void setStandartInformation(const std::string& line){ m_lineMutex.lock(); m_standartInfo = line; m_lineMutex.unlock(); };
 
-	bool canBeAborted();
+	bool canBeAbortedAfterCertainTime();
 
 	void setAdditionalInfo(const std::string& line);
 
 	void setTrainingsTime(const double maxTrainingsTime){ m_maxTrainingsTime = maxTrainingsTime; }
 
 	double getMaxTrainingsTime(){ return m_maxTrainingsTime;}
+
+	int getPriority();
+
+	double runningTimeSinceLastWait(){ return m_sw.elapsedSeconds(); };
 
 private:
 

@@ -18,7 +18,7 @@ double BayesOptimizerIVM::evaluateSample(const vectord& x){
 	m_ivm.getGaussianKernel()->setHyperParams(x[0], x[1]);
 	std::cout << "x: " << x[0] << ", " << x[1] << std::endl; // << " with: " << (int) x[2] << std::endl;
 	StopWatch sw;
-	m_ivm.train();
+	m_ivm.train(false, 0);
 	std::cout << "LogZ is: " << m_ivm.m_logZ << ", needs: " << sw.elapsedAsTimeFrame() << std::endl;
 	if(isnan(m_ivm.m_logZ)){
 		return 5000;

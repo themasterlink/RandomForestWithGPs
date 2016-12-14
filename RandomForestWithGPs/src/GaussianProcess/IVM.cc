@@ -140,7 +140,7 @@ double IVM::cumulativeLog(const double x){
 	return boost::math::erfc(-x / SQRT2) - LOG2;
 }
 
-bool IVM::train(const double timeForTraining, const int verboseLevel){
+bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKernelValuesAsBestParams){
 //	if(m_kernel.calcDiagElement(0) == 0){
 //		if(verboseLevel != 0)
 //			printError("The kernel diagonal is 0, this kernel params are invalid:" << m_kernel.prettyString());
@@ -172,15 +172,22 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 		}
 		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses[0]) + ".binary";
 		bool loadBestParams = false;
+		double bestLogZ = -DBL_MAX;
 		if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
 			bestParams.readFromFile(kernelFilePath);
 			loadBestParams = true;
+		}else if(useKernelValuesAsBestParams){
+			bestParams = m_gaussKernel->getHyperParams();
+			if(m_logZ == 0){
+				printError("The logZ was not set correctly!");
+			}
+			bestLogZ = m_logZ; // should be set correctly on the last training with this params
 		}else{
 			bestParams.m_length.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.len"));
 			bestParams.m_fNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.fNoise"));
 			bestParams.m_sNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.sNoise"));
 		}
-		if(timeForTraining > 0.){
+		if(doSampling){
 			bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 			m_gaussKernel->changeKernelConfig(hasMoreThanOneLengthValue);
 			std::vector<double> means = {Settings::getDirectDoubleValue("KernelParam.lenMean"),
@@ -192,7 +199,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 			m_gaussKernel->setGaussianRandomVariables(means, sds);
 			setDerivAndLogZFlag(true, false);
 			StopWatch sw;
-			double bestLogZ = -DBL_MAX;
+
 			double bestCorrectness = 0;
 			StopWatch swAvg;
 			if(!loadBestParams){
@@ -251,7 +258,7 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 					//				if(!trained){
 					//					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
 					//				}
-					if(trained && bestLogZ < m_logZ){
+					if(trained && bestLogZ < m_logZ * 0.98){ // even if the logZ is slightly above the value can be good enough -> perform simple check
 						m_package->printLineToScreenForThisThread("Perform a simple test");
 						// perform a simple test
 						// go over a bunch of points to test it
@@ -340,20 +347,22 @@ bool IVM::train(const double timeForTraining, const int verboseLevel){
 						}else if(bestCorrectness == 0){ // for the starting cases	// in this case only the simple check was performed and the values
 							// are not good enough to guarantee that these params are better
 							// so always take the params with the lower logZ
-							m_gaussKernel->getCopyOfParams(bestParams);
-							bestLogZ = m_logZ;
-							m_package->changeCorrectlyClassified(correctness);
-							if(!m_gaussKernel->hasLengthMoreThanOneDim()){
-								std::stringstream str2;
-								str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
-										<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
-										<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
-										<< "simple: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
-								m_package->setAdditionalInfo(str2.str());
+							if(correctness > m_package->correctlyClassified() || bestLogZ < m_logZ){
+								m_gaussKernel->getCopyOfParams(bestParams);
+								bestLogZ = m_logZ;
+								m_package->changeCorrectlyClassified(correctness);
+								if(!m_gaussKernel->hasLengthMoreThanOneDim()){
+									std::stringstream str2;
+									str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
+											<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
+											<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+											<< "simple: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
+									m_package->setAdditionalInfo(str2.str());
+								}
+								std::stringstream str;
+								str << "New best params: " << bestParams << ", with simple correctness of: " << correctness;
+								m_package->printLineToScreenForThisThread(str.str());
 							}
-							std::stringstream str;
-							str << "New best params: " << bestParams << ", with simple correctness of: " << correctness;
-							m_package->printLineToScreenForThisThread(str.str());
 						}
 						//					printInPackageOnScreen(m_package, "\nBestParams: " << bestParams << ", with: " << bestLogZ);
 					}
@@ -1031,7 +1040,7 @@ void IVM::calcLogZ(){
 	for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
 		m_logZ -= log((double) llt.coeff(i,i));
 	}
-	if(true){
+	if(false){
 		const Vector muTilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 		Vector muL0 = Vector::Zero(m_numberOfInducingPoints);
 		Vector muL0_2 = Vector::Zero(m_numberOfInducingPoints);

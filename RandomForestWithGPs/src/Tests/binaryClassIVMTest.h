@@ -67,7 +67,7 @@ void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, double* bestLo
 	StopWatch sw;
 	while(sw.elapsedSeconds() < durationOfTraining && ivm->getGaussianKernel() != nullptr){
 		ivm->getGaussianKernel()->newRandHyperParams();
-		ivm->train(false);
+		ivm->train(false, 0);
 		mutex->lock();
 		if(*bestLogZ < ivm->m_logZ){
 			ivm->getGaussianKernel()->getCopyOfParams(*bestParams);
@@ -110,7 +110,7 @@ GaussianKernelParams sampleParams(OnlineStorage<ClassPoint*>& storage, int numbe
 }
 
 void trainIVM(IVM* ivm, const int verboseLevel){
-	ivm->train(CommandSettings::get_samplingAndTraining(), 1);
+	ivm->train(true, 1);
 }
 
 void executeForBinaryClassIVM(){
@@ -193,7 +193,7 @@ void executeForBinaryClassIVM(){
 				const TimeFrame timeTry = swTry.elapsedAsTimeFrame();
 				StopWatch swGrad;
 				ivm.getGaussianKernel()->setHyperParamsWith(bestParams);
-				bool t = ivm.train(false);
+				bool t = ivm.train(false, 0);
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0) && t){
 					DataWriterForVisu::writeSvg("before.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
 					system("open before.svg");
@@ -254,7 +254,7 @@ void executeForBinaryClassIVM(){
 					}
 				}
 				ivm.getGaussianKernel()->setHyperParamsWith(bestParams);
-				t = ivm.train(false);
+				t = ivm.train(false, 0);
 				printOnScreen("T: " << t);
 				const TimeFrame timeGrad = swGrad.elapsedAsTimeFrame();
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
@@ -369,7 +369,7 @@ void executeForBinaryClassIVM(){
 				//system("open logZValues.svg");
 				ivm.getGaussianKernel()->setHyperParams(result[0], result[1]);
 				StopWatch sw;
-				ivm.train();
+				ivm.train(false, 0);
 				printOnScreen("Time for training: " << sw.elapsedAsPrettyTime());
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 					DataWriterForVisu::writeSvg("new.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
@@ -408,7 +408,7 @@ void executeForBinaryClassIVM(){
 						ivm.init(0.33333 * train.size(), usedClasses, doEpUpdate);
 						ivm.setDerivAndLogZFlag(true, false);
 						ivm.getGaussianKernel()->setHyperParams(x, y2, sNoise);
-						bool trained = ivm.train(false);
+						bool trained = ivm.train(false, 0);
 						if(trained){
 							int right = 0;
 							int amountOfBelow = 0;
@@ -496,7 +496,7 @@ void executeForBinaryClassIVM(){
 			printOnScreen("Start training");
 			StopWatch swTraining;
 			//	ivm.setNumberOfInducingPoints(std::min((int)(data.size() * 0.25), 100));
-			ivm.train(0, 1);
+			ivm.train(false, 1);
 			printOnScreen("Needed for training: " << swTraining.elapsedAsTimeFrame());
 			/*
 		std::list<double> times;
