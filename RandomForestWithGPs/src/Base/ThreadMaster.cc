@@ -6,116 +6,8 @@
  */
 
 #include "ThreadMaster.h"
-#include "../Utility/Util.h"
-#include "Logger.h"
 #include "Settings.h"
 #include "CommandSettings.h"
-
-InformationPackage::InformationPackage(InfoType type,
-		double correctlyClassified,
-		int amountOfPoints): m_type(type),
-		m_performTask(false),
-		m_abortTraining(false),
-		m_isWaiting(false),
-		m_shouldTrainingBeHold(false),
-		m_correctlyClassified(correctlyClassified),
-		m_amountOfAffectedPoints(amountOfPoints),
-		m_amountOfTrainingsSteps(0),
-		m_workedTime(0),
-		m_maxTrainingsTime(-1){
-};
-
-
-double InformationPackage::calcAttractionLevel(const int minAmountOfPoints, const int maxAmountOfPoints){
-	double partAmount = 100.; // if all have the same size, just ignore this value and go after the correct classified amount
-	if(maxAmountOfPoints != minAmountOfPoints){
-		partAmount = (((double) m_amountOfAffectedPoints - minAmountOfPoints)
-				/ (double)(maxAmountOfPoints - minAmountOfPoints)) * 100.;
-	}
-	return partAmount + (100 - m_correctlyClassified);
-}
-
-void InformationPackage::wait(){
-	if(!m_abortTraining){ // only wait if the training is not aborted
-		m_shouldTrainingBeHold = false; // could be called, because the training should be hold
-		m_isWaiting = true;
-		m_workedTime += m_sw.elapsedSeconds();
-		boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(m_mutex);
-		m_condition.wait(lock);
-	}
-};
-
-void InformationPackage::notify(){
-	m_condition.notify_all();
-	m_sw.startTime();
-	m_isWaiting = false;
-};
-
-double InformationPackage::getWorkedAmountOfSeconds(){
-	if(!m_isWaiting){
-		return m_sw.elapsedSeconds() + m_workedTime;
-	}
-	return m_workedTime; // if it is waiting at the moment
-}
-
-void InformationPackage::setAdditionalInfo(const std::string& line){
-	m_lineMutex.lock();
-	m_additionalInformation = line;
-	m_lineMutex.unlock();
-}
-
-void InformationPackage::printLineToScreenForThisThread(const std::string& line) {
-	m_lineMutex.lock();
-	m_lines.push_back(line);
-	Logger::addToFile(m_standartInfo+"\n\t"+line);
-	m_lineMutex.unlock();
-}
-
-void InformationPackage::overwriteLastLineToScreenForThisThread(const std::string& line){
-	if(m_lines.size() > 0){
-		m_lineMutex.lock();
-		m_lines.back() = line;
-		Logger::addToFile(m_standartInfo+"\n\toverwrite: "+line);
-		m_lineMutex.unlock();
-	}
-}
-
-bool InformationPackage::canBeAbortedAfterCertainTime(){
-	switch(m_type){
-	case ORF_TRAIN:
-		return true;
-	case ORF_TRAIN_FIX:
-		return false;
-	case IVM_TRAIN:
-		return true;
-	case IVM_PREDICT:
-		return false;
-	case IVM_RETRAIN:
-		return false; // can not be aborted, will be aborted if all IVM_TRAIN are finished
-	default:
-		printError("This type is unknown!");
-		return false;
-	}
-}
-
-int InformationPackage::getPriority(){
-	switch(m_type){
-	case ORF_TRAIN:
-		return 6;
-	case ORF_TRAIN_FIX:
-		return 6;
-	case IVM_TRAIN:
-		return 5;
-	case IVM_PREDICT:
-		return 2;
-	case IVM_RETRAIN:
-		return 1;
-	default:
-		printError("This type is unknown!");
-		return 0;
-	}
-}
-
 
 int ThreadMaster::m_counter = 0;
 int ThreadMaster::m_maxCounter = 0;
@@ -197,19 +89,23 @@ void ThreadMaster::run(){
 			if(!(*it)->isWaiting()){
 				continue; // hasn't reached the waiting point so the thread should be added to the running list
 			}
+
 			switch((*it)->getType()){
 			case InfoType::IVM_TRAIN:
 			case InfoType::IVM_RETRAIN: // has another priority -> but rest is the same
+			case InfoType::IVM_MULTI_UPDATE:
 				if(selectedValue == m_waitingList.end()){
 					if((*it)->amountOfAffectedPoints() > amountOfPointsNeededForIvms){
 						selectedValue = it;
 						bestAttractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
 					}
 				}else{
-					const double attractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
-					if(attractionLevel > bestAttractionLevel || (*selectedValue)->getPriority() < (*it)->getPriority()){
-						bestAttractionLevel = attractionLevel;
-						selectedValue = it;
+					if((*selectedValue)->getPriority() < (*it)->getPriority()){
+						const double attractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
+						if(attractionLevel > bestAttractionLevel){
+							bestAttractionLevel = attractionLevel;
+							selectedValue = it;
+						}
 					}
 				}
 				break;
@@ -219,10 +115,12 @@ void ThreadMaster::run(){
 					selectedValue = it;
 					bestAttractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
 				}else{
-					const double attractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
-					if(attractionLevel > bestAttractionLevel || (*selectedValue)->getPriority() < (*it)->getPriority()){
-						bestAttractionLevel = attractionLevel;
-						selectedValue = it;
+					if((*selectedValue)->getPriority() < (*it)->getPriority()){
+						const double attractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
+						if(attractionLevel > bestAttractionLevel){
+							bestAttractionLevel = attractionLevel;
+							selectedValue = it;
+						}
 					}
 				}
 				break;
@@ -244,7 +142,6 @@ void ThreadMaster::run(){
 				break;
 			}
 		}
-
 		bool selectedValueWasUsed = false;
 		if(m_counter < m_maxCounter){
 			if(selectedValue != m_waitingList.end()){
@@ -270,12 +167,11 @@ void ThreadMaster::run(){
 					(*it)->abortTraing(); // break the training
 				}
 				if(selectedValue != m_waitingList.end() && !selectedValueWasUsed){
-					if(!(*it)->shouldTrainingBePaused() && (*it)->runningTimeSinceLastWait() > 2.0){ // only change thread if it is running more than 2 seconds
+					if(!(*it)->shouldTrainingBePaused() && !(*it)->isWaiting() && (*it)->runningTimeSinceLastWait() > 2.0){ // only change thread if it is running more than 2 seconds
 						if((int) bestAttractionLevel > (int) (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints) || (*selectedValue)->getPriority() > (*it)->getPriority()){ // must be at least 1. point be better
 							// hold this training and start the other one
 							(*it)->pauseTheTraining(); // pause the actual training
 							selectedValueWasUsed = true;
-//							std::cout << "A thread should wait!" << std::endl;
 						}
 					}
 				}
@@ -315,4 +211,19 @@ bool ThreadMaster::appendThreadToList(InformationPackage* package){
 	ret = true;
 	m_mutex.unlock();
 	return ret;
+}
+
+void ThreadMaster::abortAllThreads(){
+	m_mutex.lock();
+	for(PackageList::const_iterator it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
+		if((*it)->canBeAbortedInGeneral()){
+			(*it)->abortTraing();
+		}
+	}
+	for(PackageList::const_iterator it = m_runningList.begin(); it != m_runningList.end(); ++it){
+		if((*it)->canBeAbortedInGeneral()){
+			(*it)->abortTraing();
+		}
+	}
+	m_mutex.unlock();
 }

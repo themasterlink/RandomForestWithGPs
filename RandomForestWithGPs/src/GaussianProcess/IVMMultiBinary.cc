@@ -16,6 +16,7 @@ IVMMultiBinary::IVMMultiBinary(OnlineStorage<ClassPoint*>& storage,
 		m_doEpUpdate(doEPUpdate),
 		m_init(false),
 		m_firstTraining(true),
+		m_correctAmountForTrainingData(0),
 		m_orfForKernel(nullptr){
 	m_storage.attach(this);
 }
@@ -49,6 +50,8 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 					}
 				}
 				m_ivms.resize(amountOfUsedClasses);
+				m_correctAmountForTrainingDataForClasses.resize(amountOfClasses());
+				std::fill(m_correctAmountForTrainingDataForClasses.begin(), m_correctAmountForTrainingDataForClasses.end(), 0);
 				if(amountOfUsedClasses > 0){
 					const bool calcDifferenceMatrixAlone = false;
 					int kernelType = 0;
@@ -57,7 +60,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 						int maxDepth, samplingAmount;
 						Settings::getValue("RandomForestKernel.maxDepth", maxDepth);
 						Settings::getValue("RandomForestKernel.samplingAmount", samplingAmount);
-						m_orfForKernel = new OnlineRandomForest(m_storage, maxDepth, ClassKnowledge::amountOfClasses());
+						m_orfForKernel = new OnlineRandomForest(m_storage, maxDepth, amountOfClasses());
 						// train the trees before the ivms are used
 						m_orfForKernel->setDesiredAmountOfTrees(samplingAmount);
 						m_orfForKernel->update(&m_storage, OnlineStorage<ClassPoint*>::APPENDBLOCK);
@@ -114,7 +117,31 @@ IVMMultiBinary::~IVMMultiBinary() {
 
 void IVMMultiBinary::train(){
 	if(!m_firstTraining){
-		printError("Not implemented yet!");
+		if(m_packages.size() > 0 ){
+			// abort all running ivm retrainings
+			for(std::list<InformationPackage*>::iterator it = m_packages.begin(); it != m_packages.end(); ++it){
+				(*it)->abortTraing();
+			}
+			// wait until all old runnings ivm retrainings are finished
+			bool taskFinish = true;
+			while(taskFinish){
+				taskFinish = false;
+				for(std::list<InformationPackage*>::iterator it = m_packages.begin(); it != m_packages.end(); ++it){
+					if(!(*it)->isTaskFinished()){
+						taskFinish = true;
+						break;
+					}
+				}
+				usleep(0.05 * 1e6);
+			}
+			// remove all running threads
+			for(std::list<InformationPackage*>::iterator it = m_packages.begin(); it != m_packages.end(); ++it){
+				delete *it;
+			}
+			m_packages.clear();
+		}
+		InformationPackage* wholePackage = new InformationPackage(InformationPackage::IVM_MULTI_UPDATE, m_correctAmountForTrainingData, m_storage.size());
+		m_group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::retrainAllIvmsIfNeeded, this, wholePackage)));
 	}else{
 		if(!Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam")){
 			std::vector<double> means = {Settings::getDirectDoubleValue("KernelParam.lenMean"),
@@ -144,11 +171,9 @@ void IVMMultiBinary::train(){
 		std::vector<int> counterRes(amountOfClasses(), 0);
 		std::vector<bool> stillWorking(amountOfClasses(), true);
 		std::vector<InformationPackage*> packages(amountOfClasses());
-
 		for(unsigned int i = 0; i < amountOfClasses(); ++i){
 			if(m_isClassUsed[i]){
-				const double correctlyClassified = 0.; // TODO in future this value can be determined before hand!
-				packages[i] = new InformationPackage(InformationPackage::IVM_TRAIN, correctlyClassified, m_storage.size());
+				packages[i] = new InformationPackage(InformationPackage::IVM_TRAIN, m_correctAmountForTrainingDataForClasses[i], m_storage.size());
 			}
 		}
 		double durationOfWholeTraining = durationOfTraining;
@@ -175,34 +200,35 @@ void IVMMultiBinary::train(){
 			bool stillOneRunning = true;
 			while(stillOneRunning){
 				stillOneRunning = false;
-//				counter = 0;
+				counter = 0;
 				for(unsigned int i = 0; i < amountOfClasses(); ++i){
 					if(m_isClassUsed[i]){
 						if(!packages[i]->isTaskFinished()){
 							stillOneRunning = true;
+//							printOnScreen("Package: " << i << ", is still running");
 						}else{ // task is finished
 							if(stateOfIvms[i] == 1 && m_ivms[i]->getKernelType() == IVM::GAUSS){
-								printOnScreen("Add " << i << " to retrain");
+//								printOnScreen("Add " << i << " to retrain");
 								// add to retrain
-								packagesForRetrain.push_back(new InformationPackage(InformationPackage::IVM_RETRAIN, packages[i]->correctlyClassified(), m_storage.size()));
-								groupForRetraining.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::retrainIvmIfNeeded, this, packagesForRetrain.back(), i)));
+//								packagesForRetrain.push_back(new InformationPackage(InformationPackage::IVM_RETRAIN, packages[i]->correctlyClassified(), m_storage.size()));
+//								groupForRetraining.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::retrainIvmIfNeeded, this, packagesForRetrain.back(), i)));
 								stateOfIvms[i] = 2;
 							}
 						}
-//						const int c = packages[i]->amountOfTrainingStepsPerformed();
-//						counter += c;
+						const int c = packages[i]->amountOfTrainingStepsPerformed();
+						counter += c;
 					}
 				}
-//				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
+				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
 				usleep(0.15 * 1e6);
 			}
-//			counter = 0;
-//			for(unsigned int i = 0; i < amountOfClasses(); ++i){
-//				if(m_isClassUsed[i]){
-//					counter += packages[i]->amountOfTrainingStepsPerformed();
-//				}
-//			}
-//			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
+			counter = 0;
+			for(unsigned int i = 0; i < amountOfClasses(); ++i){
+				if(m_isClassUsed[i]){
+					counter += packages[i]->amountOfTrainingStepsPerformed();
+				}
+			}
+			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
 			group.join_all();
 			for(std::list<InformationPackage*>::const_iterator it = packagesForRetrain.begin(); it != packagesForRetrain.end(); ++it){
 				(*it)->abortTraing(); // aborts training otherwise it will go on forever
@@ -280,7 +306,35 @@ void IVMMultiBinary::train(){
 //			}
 //			group.join_all();
 //		}
-		m_firstTraining = false;
+			m_firstTraining = false;
+	}
+	int amountOfCorrect = 0;
+	std::vector<int> counterClass(amountOfClasses(), 0);
+	for(unsigned int i = 0; i < m_storage.size(); ++i){ // always test the whole data set
+		const int correctLabel = m_storage[i]->getLabel();
+		if(correctLabel == predict(*m_storage[i])){
+			++m_correctAmountForTrainingDataForClasses[correctLabel];
+			++amountOfCorrect;
+		}
+		++counterClass[correctLabel];
+	}
+	for(unsigned int i = 0; i < amountOfClasses(); ++i){
+		m_correctAmountForTrainingDataForClasses[i] /= (double) counterClass[i];
+	}
+	m_correctAmountForTrainingData = amountOfCorrect / (double) m_storage.size();
+}
+
+void IVMMultiBinary::retrainAllIvmsIfNeeded(InformationPackage* wholePackage){
+	if(wholePackage != nullptr && !m_firstTraining){ // should not be called on untrained ivms
+		ThreadMaster::appendThreadToList(wholePackage);
+		wholePackage->wait();
+		for(unsigned int i = 0; i < amountOfClasses(); ++i){
+			if(m_isClassUsed[i]){
+				m_packages.push_back(new InformationPackage(InformationPackage::IVM_RETRAIN, m_correctAmountForTrainingDataForClasses[i], m_storage.size()));
+				m_group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::retrainIvmIfNeeded, this, m_packages.back(), i)));
+			}
+		}
+		wholePackage->finishedTask();
 	}
 }
 

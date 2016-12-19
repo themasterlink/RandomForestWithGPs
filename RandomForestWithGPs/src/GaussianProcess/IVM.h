@@ -13,7 +13,7 @@
 #include <list>
 #include "Kernel/GaussianKernel.h"
 #include "Kernel/RandomForestKernel.h"
-#include "../Base/ThreadMaster.h"
+#include "../Base/InformationPackage.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
 #include "../Data/OnlineStorage.h"
 
@@ -74,6 +74,8 @@ public:
 	GaussianKernelParams m_derivLogZ;
 
 private:
+
+	double predictOnTraining(const unsigned int id);
 
 	double calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j,
 			const Vector& zeta, const Vector& mu,

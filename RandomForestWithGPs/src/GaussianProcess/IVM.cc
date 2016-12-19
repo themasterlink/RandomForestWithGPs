@@ -12,6 +12,9 @@
 #include "../Data/DataWriterForVisu.h"
 #include "../Utility/Util.h"
 #include "../Data/DataConverter.h"
+#include <src/cmaes.cc>
+#include <src/boundary_transformation.c>
+
 
 #define LOG2   0.69314718055994528623
 #define LOG2PI 1.8378770664093453391
@@ -73,21 +76,21 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 		printError("No data in init given!"); return;
 	}
 	m_labelsForClasses = labelsForClasses;
-	m_uniformNr.setSeed((int)labelsForClasses[0] * 74739); // TODO better way if class is used multiple times
+	m_uniformNr.setSeed((int)labelsForClasses.coeff(0) * 74739); // TODO better way if class is used multiple times
 	m_uniformNr.setMinAndMax(1, m_storage.size() / 100);
-	const bool oneVsAllCase = m_labelsForClasses[1] == -1;
-	if(m_labelsForClasses[0] == m_labelsForClasses[1]){
+	const bool oneVsAllCase = m_labelsForClasses.coeff(1) == -1;
+	if(m_labelsForClasses.coeff(0) == m_labelsForClasses.coeff(1)){
 		printError("The labels for the two different classes are the same!");
 	}
 	m_dataPoints = m_storage.size();
 	m_y = Vector(m_storage.size());
 	int amountOfOneClass = 0;
 	for(unsigned int i = 0; i < m_y.rows(); ++i){ // convert usuall mutli class labels in 1 and -1
-		if(m_storage[i]->getLabel() == m_labelsForClasses[0]){
-			m_y[i] = 1;
+		if(m_storage[i]->getLabel() == m_labelsForClasses.coeff(0)){
+			m_y.coeffRef(i) = 1;
 			++amountOfOneClass;
-		}else if(((int) m_storage[i]->getLabel() == m_labelsForClasses[1]) || oneVsAllCase){
-			m_y[i] = -1;
+		}else if(((int) m_storage[i]->getLabel() == m_labelsForClasses.coeff(1)) || oneVsAllCase){
+			m_y.coeffRef(i) = -1;
 		}else{
 			printError("This IVM contains data, which does not belong to one of the two classes!");
 			return;
@@ -152,6 +155,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //		return false;
 //	}
 	m_trained = false;
+	const double minCorrectForWholeClassification = 70;
 	if(m_package == nullptr){
 		printError("The IVM has no set package set!");
 		return false;
@@ -170,9 +174,10 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 		}else{
 			Settings::getValue("TotalStorage.folderLocReal", folderLocation);
 		}
-		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses[0]) + ".binary";
+		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses.coeff(0)) + ".binary";
 		bool loadBestParams = false;
 		double bestLogZ = -DBL_MAX;
+		double bestCorrectness = 0;
 		if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
 			bestParams.readFromFile(kernelFilePath);
 			loadBestParams = true;
@@ -182,6 +187,9 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				printError("The logZ was not set correctly!");
 			}
 			bestLogZ = m_logZ; // should be set correctly on the last training with this params
+			if(m_package->correctlyClassified() > minCorrectForWholeClassification){
+				bestCorrectness = m_package->correctlyClassified();
+			}
 		}else{
 			bestParams.m_length.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.len"));
 			bestParams.m_fNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.fNoise"));
@@ -199,8 +207,6 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 			m_gaussKernel->setGaussianRandomVariables(means, sds);
 			setDerivAndLogZFlag(true, false);
 			StopWatch sw;
-
-			double bestCorrectness = 0;
 			StopWatch swAvg;
 			if(!loadBestParams){
 				m_uniformNr.setMinAndMax(0, m_dataPoints - 1);
@@ -238,6 +244,155 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				}
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 //				int iCounterSampling = 0;
+				if(true){
+					cmaes::cmaes_t evo; /* an CMA-ES type struct or "object" */
+					cmaes::cmaes_boundary_transformation_t boundaries;
+					double *arFunvals, *x_in_bounds, *const*pop;
+					double lowerBounds[] = {0.2,0.2, 0.03};
+					double upperBounds[] = {3.5, 2.9, 0.15};
+					int nb_bounds = 3; /* numbers used from lower and upperBounds */
+					unsigned long dimension;
+					int i;
+
+					/* initialize boundaries, be sure that initialSigma is smaller than upper minus lower bound */
+					cmaes::cmaes_boundary_transformation_init(&boundaries, lowerBounds, upperBounds, nb_bounds);
+					/* Initialize everything into the struct evo, 0 means default */
+					arFunvals = cmaes::cmaes_init(&evo, 0, NULL, NULL, 0, 0, "cmaes_initials.par");
+					dimension = (unsigned long) cmaes::cmaes_Get(&evo, "dimension");
+					if(dimension != 3){
+						printError("The dimension in the settings does not fit!");
+					}
+					x_in_bounds = cmaes::cmaes_NewDouble(dimension); /* calloc another vector */
+					cmaes::cmaes_ReadSignals(&evo, "cmaes_signals.par");  /* write header and initial values */
+					m_gaussKernel->newRandHyperParams();
+					/* Iterate until stop criterion holds */
+					StopWatch sw;
+					int iCounter = 0;
+					double negBestLogZ = -bestLogZ;
+					while(m_package != nullptr){
+						/* generate lambda new search points, sample population */
+						pop = cmaes::cmaes_SamplePopulation(&evo); /* do not change content of pop */
+
+						/* transform into bounds and evaluate the new search points */
+						for (i = 0; i < cmaes::cmaes_Get(&evo, "lambda"); ++i) {
+							cmaes::cmaes_boundary_transformation(&boundaries, pop[i], x_in_bounds, dimension);
+							/* this loop can be omitted if is_feasible is invariably true */
+//							while(!is_feasible(x_in_bounds, dimension)) { /* is_feasible needs to be user-defined, in case, and can change/repair x */
+//								cmaes_ReSampleSingle(&evo, i);
+//								cmaes_boundary_transformation(&boundaries, pop[i], x_in_bounds, dimension);
+//							}
+							m_gaussKernel->setHyperParams(x_in_bounds[0], x_in_bounds[1], x_in_bounds[2]);
+							sw.startTime();
+							const bool trained = internalTrain(true, 1);
+							if(trained){
+								int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
+								int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
+								for(std::list<int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
+									const int label = m_storage[*it]->getLabel();
+									const double prob = predictOnTraining(*it);
+									if(label == getLabelForOne()){
+										if(prob > 0.5){
+											++amountOfOnesCorrect;
+										}
+										++amountOfOneChecks;
+									}else{
+										if(prob < 0.5){
+											++amountOfMinusOnesCorrect;
+										}
+										++amountOfMinusOneChecks;
+									}
+								}
+								// both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
+								double correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
+								if(correctness >= 50.){
+									arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints - correctness + 100; //fitfun(x_in_bounds, dimension); /* evaluate */
+									if(arFunvals[i] < negBestLogZ){
+										amountOfOneChecks = amountOfOnesCorrect = 0;
+										amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
+										for(unsigned int i = 0; i < m_dataPoints; ++i){
+											const int label = m_storage[i]->getLabel();
+											const double prob = predictOnTraining(i);
+											if(label == getLabelForOne()){
+												if(prob > 0.5){
+													++amountOfOnesCorrect;
+												}
+												++amountOfOneChecks;
+											}else{
+												if(prob < 0.5){
+													++amountOfMinusOnesCorrect;
+												}
+												++amountOfMinusOneChecks;
+											}
+										}
+										if(amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks) != m_desiredPoint){
+											printError("The margin for the full test is wrong, should be: " << m_desiredPoint << ", is: " << amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks));
+										}
+										correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
+										arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints - correctness + 100; //fitfun(x_in_bounds, dimension); /* evaluate */
+										m_gaussKernel->getCopyOfParams(bestParams);
+										negBestLogZ = arFunvals[i];
+										m_package->changeCorrectlyClassified(correctness);
+										if(!m_gaussKernel->hasLengthMoreThanOneDim()){
+											std::stringstream str2;
+											str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
+													<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
+													<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+													<< "correct: " << number2String(correctness, 2) << " %%, logZ: " << negBestLogZ;
+											m_package->setAdditionalInfo(str2.str());
+										}
+										std::stringstream str;
+										str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
+																		<< " %%, ones: " << (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.
+																		<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100.
+																		<< ", amount of minues correct: " << amountOfMinusOnesCorrect << ", amount of minus ones: " << amountOfMinusOneChecks
+																		<< " %%, for: " << m_dataPoints << " points";*/
+										m_package->printLineToScreenForThisThread(str.str());
+									}
+								}else{
+									arFunvals[i] = m_numberOfInducingPoints * 200;
+								}
+							}else{
+								arFunvals[i] = m_numberOfInducingPoints * 200;
+							}
+							printInPackageOnScreen(m_package, "Test len: " << x_in_bounds[0] << ", fNoise: " << x_in_bounds[1] << ", has: " << -m_logZ / (double) m_numberOfInducingPoints << " needed for Time: " << sw.elapsedAsTimeFrame() << ", c: " << iCounter);
+							m_package->performedOneTrainingStep(); // adds a one to the counter
+							if(m_package->shouldTrainingBeAborted()){
+								break;
+							}else if(m_package->shouldTrainingBePaused()){
+								m_package->printLineToScreenForThisThread("Training has to wait!");
+								m_package->wait(); // will hold this process
+							}else if(m_package->correctlyClassified() > 98.0){
+								m_package->abortTraing();
+							}
+						}
+						if(m_package->shouldTrainingBeAborted()){
+							m_package->printLineToScreenForThisThread("Training should be aborted!");
+							break;
+						}
+						++iCounter;
+
+						/* update the search distribution used for cmaes_SampleDistribution() */
+						cmaes::cmaes_UpdateDistribution(&evo, arFunvals);  /* assumes that pop[i] has not been modified */
+
+						/* read instructions for printing output or changing termination conditions */
+//						cmaes_ReadSignals(&evo, "cmaes_signals.par");
+					}
+
+					/* get best estimator for the optimum, xmean */
+					cmaes::cmaes_boundary_transformation(&boundaries,
+						(double const *) cmaes_GetPtr(&evo, "xbestever"), /* "xbestever" might be used as well */
+						x_in_bounds, dimension);
+
+//					bestParams.m_length.setAllValuesTo(x_in_bounds[0]);
+//					bestParams.m_fNoise.setAllValuesTo(x_in_bounds[1]);
+//					bestParams.m_sNoise.setAllValuesTo(m_gaussKernel->getHyperParams().m_sNoise.getValue());
+					bestLogZ = -negBestLogZ;
+					  /* and finally release memory */
+					cmaes::cmaes_exit(&evo); /* release memory */
+					cmaes::cmaes_boundary_transformation_exit(&boundaries); /* release memory */
+					free(x_in_bounds);
+
+				}else{
 				while(m_package != nullptr){ // equals a true
 					//				if(m_uniformNr() % 10 == 0){
 					//					printError("Just an test error!" << m_uniformNr() % 2);
@@ -266,14 +421,14 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
 						for(std::list<int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
 							const int label = m_storage[*it]->getLabel();
-							const double prob = predict(*m_storage[*it]);
+							const double prob = predictOnTraining(*it);
 							if(label == getLabelForOne()){
-								if(prob > 0.6){
+								if(prob > 0.5){
 									++amountOfOnesCorrect;
 								}
 								++amountOfOneChecks;
 							}else{
-								if(prob < 0.4){
+								if(prob < 0.5){
 									++amountOfMinusOnesCorrect;
 								}
 								++amountOfMinusOneChecks;
@@ -282,7 +437,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						// both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
 						double correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
 						bool didCompleteCheck = false;
-						if(correctness > 70.){
+						if(correctness > minCorrectForWholeClassification){
 							m_package->overwriteLastLineToScreenForThisThread("Perform a complex test");
 							didCompleteCheck = true;
 							// check all points
@@ -290,14 +445,14 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 							amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
 							for(unsigned int i = 0; i < m_dataPoints; ++i){
 								const int label = m_storage[i]->getLabel();
-								const double prob = predict(*m_storage[i]);
+								const double prob = predictOnTraining(i);
 								if(label == getLabelForOne()){
-									if(prob > 0.6){
+									if(prob > 0.5){
 										++amountOfOnesCorrect;
 									}
 									++amountOfOneChecks;
 								}else{
-									if(prob < 0.4){
+									if(prob < 0.5){
 										++amountOfMinusOnesCorrect;
 									}
 									++amountOfMinusOneChecks;
@@ -379,6 +534,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //						break;
 //					}
 				}
+				}
 				if(Settings::getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
 					bestParams.writeToFile(kernelFilePath);
 				}
@@ -388,8 +544,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //					setDerivAndLogZFlag(false, false);
 //					m_uniformNr.setMinAndMax(1, 1); // final training with all points considered
 //					internalTrain(true, verboseLevel);
-//					DataWriterForVisu::writeSvg("before_ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_storage.storage());
-//					openFileInViewer("before_ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+//					DataWriterForVisu::writeSvg("before_ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_storage.storage());
+//					openFileInViewer("before_ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
 //				}
 //				int iGradientCounter = 0;
 //				std::list<double> logZs;
@@ -431,7 +587,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //						break;
 //					}
 //				}
-//				DataWriterForVisu::writeSvg("logZ_"+number2String((int)m_labelsForClasses[0])+".svg", logZs);
+//				DataWriterForVisu::writeSvg("logZ_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", logZs);
 			}
 			if(bestLogZ == -DBL_MAX){
 				printError("This ivm could not find any parameter set in the given time, which could be trained without an error!");
@@ -450,8 +606,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				}
 			}
 			if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
-				DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_storage.storage());
-				openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+				DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_storage.storage());
+				openFileInViewer("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
 			}
 			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 			if(m_package != nullptr){
@@ -470,8 +626,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				// train the whole active set again but in the oposite direction similiar to an ep step
 				trainOptimizeStep(verboseLevel);
 			}
-			//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
-			//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+			//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_data);
+			//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
 			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 
 			if(m_package != nullptr){
@@ -491,11 +647,11 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 		}
 		if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
 			printInPackageOnScreen(m_package, "Training finished only visu has to be done!");
-			DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_storage.storage());
-			openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+			DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_storage.storage());
+			openFileInViewer("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
 		}
-		//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses[0])+".svg", *this, m_I, m_data);
-		//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses[0])+".svg");
+		//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_data);
+		//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
 		m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 		if(m_package != nullptr){
 			m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
@@ -1237,6 +1393,42 @@ double IVM::predict(const Vector& input) const{
 	/*
 	const Vector mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 	double mu_star = (mu_tilde + (m_bias * Vector::Ones(n))).dot(v);*/
+	double mu_star = m_muTildePlusBias.dot(v);
+	double sigma_star = (diagEle - k_star.dot(v));
+	//printInPackageOnScreen(m_package, "mu_start: " << mu_star);
+	//printInPackageOnScreen(m_package, "sigma_star: " << sigma_star);
+	double contentOfSig = 0;
+	if(1.0 / (m_lambda * m_lambda) + sigma_star < 0){
+		contentOfSig = mu_star;
+	}else{
+		contentOfSig = (mu_star / sqrt(1.0 / (m_lambda * m_lambda) + sigma_star));
+	}
+	return boost::math::erfc(-contentOfSig / SQRT2) / 2.0;
+}
+
+double IVM::predictOnTraining(const unsigned int id){
+	const unsigned int n = m_I.size();
+	Vector k_star(n);
+	double diagEle = 0;
+	unsigned int i = 0;
+	if(m_kernelType == GAUSS){
+		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+			k_star.coeffRef(i) = m_gaussKernel->kernelFunc(id, *itOfI);
+		}
+		diagEle = m_gaussKernel->calcDiagElement(0);
+	}else if(m_kernelType == 1){
+		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+			k_star.coeffRef(i) = m_rfKernel->kernelFunc(id, *itOfI);
+		}
+		diagEle = m_rfKernel->calcDiagElement(0);
+	}
+
+	//	printInPackageOnScreen(m_package, "L: \n" << m_choleskyLLT.matrixL().toDenseMatrix());
+	//	printInPackageOnScreen(m_package, "llt: \n" << m_choleskyLLT.matrixLLT());
+	const Vector v = m_choleskyLLT.solve(k_star);
+	/*
+		const Vector mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
+		double mu_star = (mu_tilde + (m_bias * Vector::Ones(n))).dot(v);*/
 	double mu_star = m_muTildePlusBias.dot(v);
 	double sigma_star = (diagEle - k_star.dot(v));
 	//printInPackageOnScreen(m_package, "mu_start: " << mu_star);

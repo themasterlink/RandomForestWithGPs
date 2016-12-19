@@ -10,7 +10,7 @@
 
 #include "IVM.h"
 #include "../Base/Predictor.h"
-#include "../Base/ThreadMaster.h"
+#include "../Base/InformationPackage.h"
 #include "../Data/OnlineStorage.h"
 
 class IVMMultiBinary  : public PredictorMultiClass, public Observer {
@@ -39,6 +39,8 @@ public:
 
 private:
 
+	void retrainAllIvmsIfNeeded(InformationPackage* wholePackage);
+
 	void trainInParallel(const int usedIvm, const double trainTime, InformationPackage* package);
 
 	void predictDataInParallel(const Data& points, const int usedIvm,
@@ -64,7 +66,15 @@ private:
 
 	bool m_firstTraining;
 
+	double m_correctAmountForTrainingData;
+
 	OnlineRandomForest* m_orfForKernel;
+
+	boost::thread_group m_group;
+
+	std::list<InformationPackage*> m_packages;
+
+	std::vector<double> m_correctAmountForTrainingDataForClasses;
 
 };
 
