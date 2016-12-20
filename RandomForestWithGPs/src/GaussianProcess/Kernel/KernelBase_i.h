@@ -12,7 +12,7 @@
 template<typename KernelType, unsigned int nrOfParams>
 KernelBase<KernelType, nrOfParams>::KernelBase(const OwnKernelInitParams& initParams, const bool sampleNewParams):
 	m_differences(nullptr), m_pDataMat(nullptr), m_pData(nullptr), m_init(false),
-	m_calcedDifferenceMatrix(false), m_dataPoints(0), m_kernelParams(initParams) {
+	m_calcedDifferenceMatrix(false), m_dataPoints(0), m_kernelParams(initParams), m_seed(0.) {
 	for(unsigned int i = 0; i < nrOfParams; ++i){
 		m_randomGaussians[i] = new RandomGaussianNr(0.0, 1.0);
 		m_kernelParams.m_params[i]->changeAmountOfDims(m_kernelParams.m_params[i]->hasMoreThanOneDim()); // to secure that the amount of values is there
@@ -314,6 +314,7 @@ void KernelBase<KernelType, nrOfParams>::newRandHyperParams(){
 
 template<typename KernelType, unsigned int nrOfParams>
 void KernelBase<KernelType, nrOfParams>::setSeed(const int seed){
+	m_seed = seed;
 	for(unsigned int i = 0; i < nrOfParams; ++i){
 		m_randomGaussians[i]->setSeed((seed + 1) * (i+1) * 53667);
 	}

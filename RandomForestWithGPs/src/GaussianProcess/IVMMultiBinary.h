@@ -31,7 +31,11 @@ public:
 
 	void predictData(const Data& points, Labels& labels) const;
 
+	void predictData(const ClassData& points, Labels& labels) const;
+
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
+
+	void predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
 
 	int amountOfClasses() const;
 
@@ -44,6 +48,9 @@ private:
 	void trainInParallel(const int usedIvm, const double trainTime, InformationPackage* package);
 
 	void predictDataInParallel(const Data& points, const int usedIvm,
+			std::vector< std::vector<double> >* probabilities, InformationPackage* package) const;
+
+	void predictClassDataInParallel(const ClassData& points, const int usedIvm,
 			std::vector< std::vector<double> >* probabilities, InformationPackage* package) const;
 
 	void initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix);

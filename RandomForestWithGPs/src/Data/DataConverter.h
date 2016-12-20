@@ -44,6 +44,8 @@ public:
 
 	static void getMinMax(const std::list<double>& list, double& min, double& max, const bool ignoreDBL_MAX_NEG = false);
 
+	static void getMinMaxIn2D(const std::list<Eigen::Vector2d>& list, Eigen::Vector2d& min, Eigen::Vector2d& max, const bool ignoreDBL_MAX_NEG = false);
+
 	static void getMinMaxIn2D(const Data& data, Eigen::Vector2d& min, Eigen::Vector2d& max, const Eigen::Vector2i& dim);
 
 	static void getMinMaxIn2D(const ClassData& data, Eigen::Vector2d& min, Eigen::Vector2d& max, const Eigen::Vector2i& dim);

@@ -48,6 +48,8 @@ public:
 
 	static void writeSvg(const std::string& fileName, const std::list<double>& vec, const std::list<std::string>& colors);
 
+	static void writePointsIn2D(const std::string& fileName, const std::list<Eigen::Vector2d>& points, const std::list<double>& values);
+
 	static void writeHisto(const std::string&fileName, const std::list<double>& list, const unsigned int nrOfBins = 40, const double minValue = -1, const double maxValue = -1);
 
 private:
@@ -82,6 +84,11 @@ private:
 	static void drawSvgCoords(std::ofstream& file,
 			const double startX, const double startY, const double startXForData, const double startYForData, const double xSize,
 			const double ySize, const double min, const double max, const double width, const double heigth, const bool useAllXSegments = false);
+
+	static void drawSvgCoords2D(std::ofstream& file,
+			const double startX, const double startY, const double startXForData, const double startYForData, const Eigen::Vector2d& min,
+			const Eigen::Vector2d& max, const int amountOfSegm, const double width, const double heigth);
+
 
 	DataWriterForVisu();
 	virtual ~DataWriterForVisu();

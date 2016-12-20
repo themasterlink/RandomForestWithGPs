@@ -77,6 +77,8 @@ public:
 		m_calcedDifferenceMatrix = true;
 	}
 
+	double getSeed(){ return m_seed; };
+
 protected:
 
 	virtual bool kernelCanHaveDifferenceMatrix() const = 0;
@@ -102,6 +104,8 @@ protected:
 	KernelType m_kernelParams;
 
 	RandomGaussianNr* m_randomGaussians[nrOfParams];
+
+	double m_seed;
 
 };
 

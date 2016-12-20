@@ -407,10 +407,13 @@ int IVMMultiBinary::predict(const ClassPoint& point) const{
 }
 
 void IVMMultiBinary::predictData(const Data& points, Labels& labels) const{
-	labels.resize(points.size());
-	for(unsigned int i = 0; i < points.size(); ++i){
-		labels[i] = predict(*points[i]);
-	}
+	std::vector< std::vector<double> > probs;
+	predictData(points, labels, probs);
+}
+
+void IVMMultiBinary::predictData(const ClassData& points, Labels& labels) const{
+	std::vector< std::vector<double> > probs;
+	predictData(points, labels, probs);
 }
 
 void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
@@ -433,12 +436,7 @@ void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector
 		delete packages[i];
 	}
 	for(unsigned int i = 0; i < points.size(); ++i){
-//		double sum = 0;
-//		for(unsigned int j = 0; j < amountOfClasses(); ++j){
-//			sum += probabilities[i][j];
-//		}
-//		if(sum > 0.0){
-		double highestValue;
+		double highestValue = 0.;
 		int highestArg;
 		for(unsigned int j = 0; j < amountOfClasses(); ++j){
 			//				probabilities[i][j] /= sum;
@@ -449,6 +447,38 @@ void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector
 		}
 		labels[i] = highestArg;
 		//			}
+	}
+}
+
+void IVMMultiBinary::predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+	probabilities.resize(points.size());
+	labels.resize(points.size());
+	for(unsigned int i = 0; i < points.size(); ++i){
+		probabilities[i].resize(amountOfClasses());
+	}
+	boost::thread_group group;
+	std::vector<InformationPackage*> packages(amountOfClasses(), nullptr);
+	for(unsigned int i = 0; i < amountOfClasses(); ++i){
+		if(m_isClassUsed[i]){
+			packages[i] = new InformationPackage(InformationPackage::IVM_PREDICT, 0, points.size());
+			group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::predictClassDataInParallel, this, points, i, &probabilities, packages[i])));
+		}
+	}
+	group.join_all();
+	for(unsigned int i = 0; i < amountOfClasses(); ++i){
+		ThreadMaster::threadHasFinished(packages[i]);
+		delete packages[i];
+	}
+	for(unsigned int i = 0; i < points.size(); ++i){
+		double highestValue = 0.;
+		int highestArg;
+		for(unsigned int j = 0; j < amountOfClasses(); ++j){
+			if(probabilities[i][j] > highestValue){
+				highestValue = probabilities[i][j];
+				highestArg = j;
+			}
+		}
+		labels[i] = highestArg;
 	}
 }
 
@@ -470,6 +500,26 @@ void IVMMultiBinary::predictDataInParallel(const Data& points, const int usedIvm
 	}
 	package->finishedTask();
 }
+
+void IVMMultiBinary::predictClassDataInParallel(const ClassData& points, const int usedIvm, std::vector< std::vector<double> >* probabilities, InformationPackage* package) const{
+	package->setStandartInformation("Thread for ivm: " + number2String(usedIvm));
+	ThreadMaster::appendThreadToList(package);
+	package->wait();
+	for(unsigned int i = 0; i < points.size(); ++i){
+		(*probabilities)[i][usedIvm] = m_ivms[usedIvm]->predict(*points[i]);
+		if(i % 5000 == 0 && i > 0){
+			package->printLineToScreenForThisThread("5000 points predicted");
+		}
+		package->performedOneTrainingStep();
+		if(package->shouldTrainingBePaused()){
+			package->wait();
+		}else if(package->shouldTrainingBeAborted()){
+			printError("The prediciton can not be aborted!");
+		}
+	}
+	package->finishedTask();
+}
+
 
 int IVMMultiBinary::amountOfClasses() const{
 	return m_ivms.size();

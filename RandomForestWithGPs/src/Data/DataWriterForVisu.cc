@@ -439,6 +439,82 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const ClassData& d
 	closeSvgFile(file);
 }
 
+void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::list<Eigen::Vector2d>& points, const std::list<double>& values){
+	if(points.size() != values.size()){
+		printError("The size of the values and the points does not match!");
+	}else if(points.size() < 3){
+		printError("There must be at least 3 points");
+	}
+	Eigen::Vector2d min, max;
+	DataConverter::getMinMaxIn2D(points, min, max);
+	double minVal, maxVal;
+	DataConverter::getMinMax(values, minVal, maxVal, true);
+	const Eigen::Vector2d diff = max - min;
+	max[0] += diff[0] * 0.2;
+	max[1] += diff[1] * 0.2;
+	min[0] -= diff[0] * 0.2;
+	min[1] -= diff[1] * 0.2;
+	std::list<int> empty;
+	std::ofstream file;
+	openSvgFile(fileName, 820., 1., 1.,  file);
+	const double height = 820;
+	const int amountOfSeg = 10;
+	drawSvgCoords2D(file, 7.5, 7.5, 10, 10, min, max, amountOfSeg, 820., height);
+	double minUsedValue = minVal;
+	if(points.size() > 10){
+		std::list<double> sortedValues;
+		double mean = 0;
+		for(std::list<double>::const_iterator it = values.cbegin(); it != values.cend(); ++it){
+			if(*it > -DBL_MAX){
+				mean += *it;
+			}
+			bool found = false;
+			for(std::list<double>::const_iterator itSort = sortedValues.cbegin(); itSort != sortedValues.cend() && !found; ++itSort){
+				if(*itSort > *it){
+					sortedValues.insert(itSort, *it);
+					found = true;
+				}
+			}
+			if(!found){
+				sortedValues.push_back(*it);
+			}
+		}
+		mean /= values.size();
+		for(std::list<double>::const_iterator itSort = sortedValues.cbegin(); itSort != sortedValues.cend(); ++itSort){
+			if(*itSort > mean - (maxVal - mean) && *itSort > -DBL_MAX){
+				minUsedValue = *itSort;
+				break;
+			}
+		}
+	}
+	std::list<double>::const_iterator itValues = values.cbegin();
+	double red[3];
+	double blue[3];
+	ColorConverter::HSV2LAB(90., 1, 1, red[0], red[1], red[2]);
+	ColorConverter::HSV2LAB(0., 1, 1, blue[0], blue[1], blue[2]);
+
+	for(std::list<Eigen::Vector2d>::const_iterator it = points.cbegin(); it != points.cend(); ++it, ++itValues){
+		const double dx = (((*it)[0] - min[0]) / (max[0] - min[0]) * 80. + 10.) / 100. * 820.; // see 10. in drawSvgCoords2D
+		const double dy = (((*it)[1] - min[1]) / (max[1] - min[1]) * 80. + 10.) / 100. * height;
+		double r = 0, g = 0, b = 0;
+		//std::cout << "(*it)->getLabel(): " << (*it)->getLabel() + 1 << " " << amountOfClasses << ",";
+		if(*itValues > -DBL_MAX){ // ignores -DBL_MAX values make them black
+			double val;
+			if(*itValues > minUsedValue){
+				val = (*itValues - minUsedValue) / (maxVal - minUsedValue);
+			}else{
+				val = 0.;
+			}
+			double l = red[0] * val + blue[0] * (1. - val);
+			double a = red[1] * val + blue[1] * (1. - val);
+			double b = red[2] * val + blue[2] * (1. - val);
+			ColorConverter::LAB2RGB(l,a,b, r,g,b);
+		}
+		file << "<circle cx=\"" << dx << "\" cy=\"" << dy << "\" r=\"8\" fill=\"rgb(" << r * 100. << "%," << g * 100. << "%," << b * 100. << "%)\" stroke=\"black\" stroke-width=\"2\"/> \n";
+	}
+	closeSvgFile(file);
+}
+
 void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMultiClass* predictor,
 		const ClassData& data, const int x, const int y){
 	if(data.size() == 0){
@@ -459,8 +535,8 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	int amount = 0;
 	std::vector<double> labels;
-	const double elementInX = ceil((double)(max[0] - min[0]) / stepSize[0]) + 1;
-	const double elementInY = ceil((double)(max[1] - min[1]) / stepSize[1]) + 1;
+	const double elementInX = ceil((double)((max[0] - min[0]) / stepSize[0])) + 1;
+	const double elementInY = ceil((double)((max[1] - min[1]) / stepSize[1])) + 1;
 	const int classAmount = predictor->amountOfClasses();
 	Data points;
 	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
@@ -741,7 +817,6 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<Ei
 	closeSvgFile(file);
 }
 
-
 void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<double>& list, const bool drawLine){
 	if(list.size() == 0){
 		return;
@@ -801,6 +876,53 @@ void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 		 << " l " << 0 << " " << widthOfMarks << " l " << widthOfMarks * 1.5 << " " << - widthOfMarks / 2.0
 		 << " l " << -widthOfMarks * 1.5 << " " << - widthOfMarks / 2.0
 		 << "\" fill=\"black\" stroke=\"black\"/> \n";
+}
+
+void DataWriterForVisu::drawSvgCoords2D(std::ofstream& file,
+		const double startX, const double startY, const double startXForData, const double startYForData, const Eigen::Vector2d& min,
+		const Eigen::Vector2d& max, const int amountOfSegm, const double width, const double heigth){
+	file << "<path d=\"M " << startX / 100. * width << " "<< startY / 100. * heigth
+			<< " l " << (100. - 2. * startX) / 100. * width  << " 0"
+			<< " M " << startX / 100. * width << " "<< startY / 100. * heigth
+			<< " l 0 " << (100. - 2. * startY) / 100. * heigth
+			<< "\" fill=\"transparent\" stroke=\"black\"/> \n";
+	const double widthOfMarks = 8;
+	double segmentWidth = ((100 - startXForData - startXForData) / 100. * width) / amountOfSegm;
+	file << "<path d=\"";//M " << startXForData / 100. * width << " "  << startY / 100. *heigth - widthOfMarks / 2;
+	for(unsigned int i = 0; i <= amountOfSegm; ++i){
+		file << " M " << startXForData / 100. * width + i * segmentWidth
+				<< " " << startY / 100. * heigth - widthOfMarks / 2
+				<< " l " << "0 " << widthOfMarks;
+	}
+	file << "\" fill=\"transparent\" stroke=\"black\"/> \n";
+	for(unsigned int i = 0; i <= amountOfSegm; ++i){ // transform=\"translate(0,10) scale(1,-1) translate(0,-10)\"
+		file << "<text x=\"" << startXForData / 100. * width + i * segmentWidth
+				<< "\" y=\"" << -(startY / 100. * heigth - widthOfMarks / 2. - 20)<< "\" transform=\"scale(1,-1)\" "
+				<< "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
+				<< number2String((double) ((i / (double) (amountOfSegm - 1)) * (max[0] - min[0]) + min[0]), 4)  << "</text>\n";
+	}
+	segmentWidth = ((100 - startXForData - startXForData) / 100. * width) / amountOfSegm;
+	file << "<path d=\"";//M " << startXForData / 100. * width << " "  << startY / 100. *heigth - widthOfMarks / 2;
+	for(unsigned int i = 0; i <= amountOfSegm; ++i){
+		file << " M " << startY / 100. * heigth - widthOfMarks / 2
+				<< " " << startYForData / 100. * width + i * segmentWidth
+				<< " l " << widthOfMarks << " 0 ";
+	}
+	file << "\" fill=\"transparent\" stroke=\"black\"/> \n";
+	for(unsigned int i = 0; i <= amountOfSegm; ++i){ // transform=\"translate(0,10) scale(1,-1) translate(0,-10)\"
+		file << "<text x=\"" << (startY / 100. * heigth - widthOfMarks / 2. - 20)
+						 << "\" y=\"" << -(startXForData / 100. * width + i * segmentWidth) << "\" transform=\"scale(1,-1)\" "
+						 << "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
+						 << number2String((double) ((i / (double) (amountOfSegm - 1)) * (max[1] - min[1]) + min[1]), 4) << "</text>\n";
+	}
+	file << "<path d=\"M " << startX / 100. * heigth - widthOfMarks / 2 << " " << (100. - startY) / 100. * width
+			<< " l " << widthOfMarks << " " << 0 << " l " << - widthOfMarks / 2.0 << " " << widthOfMarks * 1.5
+			<< " l " << - widthOfMarks / 2.0 << " " << -widthOfMarks * 1.5
+			<< "\" fill=\"black\" stroke=\"black\"/> \n";
+	file << "<path d=\"M " << (100. - startX) / 100. * width << " " << startY / 100. * heigth - widthOfMarks / 2
+			<< " l " << 0 << " " << widthOfMarks << " l " << widthOfMarks * 1.5 << " " << - widthOfMarks / 2.0
+			<< " l " << -widthOfMarks * 1.5 << " " << - widthOfMarks / 2.0
+			<< "\" fill=\"black\" stroke=\"black\"/> \n";
 }
 
 void DataWriterForVisu::drawSvgLine(std::ofstream& file, const Eigen::VectorXd vec,

@@ -32,12 +32,14 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 //	Eigen::Vector2i amountPerClass;
 //	amountPerClass[0] = amountPerClass[1] = 0;
 	Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(ivms.amountOfClasses(), ivms.amountOfClasses());
+	Labels labels;
+	ivms.predictData(data, labels);
 	for(int i = 0; i < amountOfTestPoints; ++i){
-		const int label = ivms.predict(*data[i]);
+		const unsigned int label = labels[i];
 		if(label == data[i]->getLabel()){
 			++right;
 		}
-		conv(data[i]->getLabel(), label) += 1;
+		conv.coeffRef(data[i]->getLabel(), label) += 1;
 		/*if(data[i]->getLabel() == label){
 			++amountPerClass[label];
 		}else if(data[i]->getLabel() == ivms.getLabelForMinusOne()){

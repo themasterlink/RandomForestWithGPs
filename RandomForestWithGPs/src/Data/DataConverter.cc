@@ -406,7 +406,7 @@ void DataConverter::getMinMax(const Data& data, double& min, double& max, const 
 			DataPoint& ele = **it;
 			for(unsigned int i = 0; i < ele.rows(); ++i){
 				const double val = ele[i];
-				if(val < min && min > -DBL_MAX){
+				if(val < min && val > -DBL_MAX){
 					min = val;
 				}
 				if(val > max){
@@ -436,7 +436,7 @@ void DataConverter::getMinMax(const Eigen::MatrixXd& mat, double& min, double& m
 		for(unsigned int i = 0; i < mat.rows(); ++i){
 			for(unsigned int j = 0; j < mat.cols(); ++j){
 				const double ele = mat(i,j);
-				if(ele < min && min > -DBL_MAX){
+				if(ele < min && ele > -DBL_MAX){
 					min = ele;
 				}
 				if(ele > max){
@@ -464,7 +464,7 @@ void DataConverter::getMinMax(const Eigen::VectorXd& vec, double& min, double& m
 	if(ignoreDBL_MAX_NEG){
 		for(unsigned int i = 0; i < vec.rows(); ++i){
 			const double ele = vec[i];
-			if(ele < min && min > -DBL_MAX){
+			if(ele < min && ele > -DBL_MAX){
 				min = ele;
 			}
 			if(ele > max){
@@ -489,7 +489,7 @@ void DataConverter::getMinMax(const std::list<double>& list, double& min, double
 	if(ignoreDBL_MAX_NEG){
 		for(std::list<double>::const_iterator it = list.begin(); it != list.end(); ++it){
 			const double ele = *it;
-			if(ele < min && min > -DBL_MAX){
+			if(ele < min && ele > -DBL_MAX){
 				min = ele;
 			}
 			if(ele > max){
@@ -504,6 +504,27 @@ void DataConverter::getMinMax(const std::list<double>& list, double& min, double
 			}
 			if(ele > max){
 				max = ele;
+			}
+		}
+	}
+}
+
+void DataConverter::getMinMaxIn2D(const std::list<Eigen::Vector2d>& list, Eigen::Vector2d& min, Eigen::Vector2d& max, const bool ignoreDBL_MAX_NEG){
+	min[0] = min[1] =  DBL_MAX;
+	max[0] = max[1] = -DBL_MAX;
+	for(std::list<Eigen::Vector2d>::const_iterator it = list.cbegin(); it != list.cend(); ++it){
+		for(unsigned int i = 0; i < 2; ++i){
+			if(ignoreDBL_MAX_NEG){
+				if((*it)[i] < min[i] && (*it)[i] > -DBL_MAX){
+					min[i] = (*it)[i];
+				}
+			}else{
+				if((*it)[i] < min[i]){
+					min[i] = (*it)[i];
+				}
+			}
+			if((*it)[i] > max[i]){
+				max[i] = (*it)[i];
 			}
 		}
 	}

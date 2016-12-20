@@ -23,7 +23,7 @@ void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<ClassPoint*>& test){
 			if(test[i]->getLabel() == labels[i]){
 				++amountOfCorrect;
 			}
-			conv(test[i]->getLabel(), labels[i]) += 1;
+			conv.coeffRef(test[i]->getLabel(), labels[i]) += 1;
 		}
 		printOnScreen("Test size: " << test.size());
 		printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %");
