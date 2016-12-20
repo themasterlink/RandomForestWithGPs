@@ -258,13 +258,13 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					cmaes::cmaes_boundary_transformation_init(&boundaries, lowerBounds, upperBounds, nb_bounds);
 					/* Initialize everything into the struct evo, 0 means default */
 					const int seed = m_gaussKernel->getSeed() + 812737 * (1 + getLabelForOne());
-					arFunvals = cmaes::cmaes_init(&evo, 0, NULL, NULL, seed, 0, "cmaes_initials.par");
+					arFunvals = cmaes::cmaes_init(&evo, 0, NULL, NULL, seed, 0, "../Settings/cmaes_initials.par");
 					dimension = (unsigned long) cmaes::cmaes_Get(&evo, "dimension");
 					if(dimension != 3){
 						printError("The dimension in the settings does not fit!");
 					}
 					x_in_bounds = cmaes::cmaes_NewDouble(dimension); /* calloc another vector */
-					cmaes::cmaes_ReadSignals(&evo, "cmaes_signals.par");  /* write header and initial values */
+					cmaes::cmaes_ReadSignals(&evo, "../Settings/cmaes_signals.par");  /* write header and initial values */
 					m_gaussKernel->newRandHyperParams();
 					/* Iterate until stop criterion holds */
 					StopWatch sw;
