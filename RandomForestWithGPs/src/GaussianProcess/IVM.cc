@@ -248,8 +248,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					cmaes::cmaes_t evo; /* an CMA-ES type struct or "object" */
 					cmaes::cmaes_boundary_transformation_t boundaries;
 					double *arFunvals, *x_in_bounds, *const*pop;
-					double lowerBounds[] = {0.02,0.02, 0.03};
-					double upperBounds[] = {3., 3.0, 0.15};
+					double lowerBounds[] = {0.2,0.1, 0.03};
+					double upperBounds[] = {5., 4.0, 0.15};
 					int nb_bounds = 3; /* numbers used from lower and upperBounds */
 					unsigned long dimension;
 					int i;
@@ -279,14 +279,14 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						/* transform into bounds and evaluate the new search points */
 						for (i = 0; i < cmaes::cmaes_Get(&evo, "lambda"); ++i) {
 							const double corr = m_package->correctlyClassified();
-							const double probDiff = corr < 60. ? 0. : corr < 80 ? 0.1 : corr < 90 ? 0.2 : 0.3;
+							const double probDiff = 0; //corr < 60. ? 0. : corr < 80 ? 0.1 : corr < 90 ? 0.2 : 0.3;
 							cmaes::cmaes_boundary_transformation(&boundaries, pop[i], x_in_bounds, dimension);
 							/* this loop can be omitted if is_feasible is invariably true */
 //							while(!is_feasible(x_in_bounds, dimension)) { /* is_feasible needs to be user-defined, in case, and can change/repair x */
 //								cmaes_ReSampleSingle(&evo, i);
 //								cmaes_boundary_transformation(&boundaries, pop[i], x_in_bounds, dimension);
 //							}
-							m_gaussKernel->setHyperParams(x_in_bounds[0], x_in_bounds[1]);
+							m_gaussKernel->setHyperParams(x_in_bounds[0], x_in_bounds[1], x_in_bounds[2]);
 							sw.startTime();
 							const bool trained = internalTrain(true, 1);
 							if(trained){
@@ -310,7 +310,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								// both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
 								const bool onlyUseOnes = false;
 								double correctness;
-								double neededValue = 50.;
+								double neededValue = 0.01;
 								if(onlyUseOnes){
 									correctness = (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.;
 									neededValue = 0.01;
@@ -319,7 +319,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								}
 								if(correctness >= neededValue){
 									arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + (-correctness + 100) * 2; //fitfun(x_in_bounds, dimension); /* evaluate */
-									if(arFunvals[i] < negBestLogZ){
+									if(arFunvals[i] < negBestLogZ * 1.2){
 										amountOfOneChecks = amountOfOnesCorrect = 0;
 										amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
 										for(unsigned int i = 0; i < m_dataPoints; ++i){
@@ -342,8 +342,9 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 										}else{
 											correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
 										}
+										printInPackageOnScreen(m_package, "New full correcntess of: " << correctness);
 										arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + (-correctness + 100) * 2; //fitfun(x_in_bounds, dimension); /* evaluate */
-										if(arFunvals[i] < negBestLogZ){
+										if(arFunvals[i] < negBestLogZ * 1.2 && correctness >= m_package->correctlyClassified()){
 											m_gaussKernel->getCopyOfParams(bestParams);
 											negBestLogZ = arFunvals[i];
 											m_package->changeCorrectlyClassified(correctness);

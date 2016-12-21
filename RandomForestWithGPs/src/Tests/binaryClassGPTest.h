@@ -29,7 +29,12 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 	const int trainAmount = 500;
 	const int testAmount = 200;
 	if(useRealData){
-		DataReader::readFromFiles(datas, "../realTest/", trainAmount + testAmount);
+		bool didNormalize = false;
+		DataReader::readFromFiles(datas, "../realTest/", trainAmount + testAmount, false, didNormalize);
+		if(!didNormalize){
+			DataPoint center, var;
+			DataConverter::centerAndNormalizeData(datas, center, var);
+		}
 		std::cout << "Amount of datas: " << datas.size() << std::endl;
 	}else{
 		DataReader::readFromFile(data, "../testData/trainInput.txt", trainAmount);

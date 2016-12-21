@@ -490,7 +490,7 @@ void IVMMultiBinary::predictDataInParallel(const Data& points, const int usedIvm
 	for(unsigned int i = 0; i < points.size(); ++i){
 		(*probabilities)[i][usedIvm] = m_ivms[usedIvm]->predict(*points[i]);
 		if(i % percent10 == 0 && i > 0){
-			printInPackageOnScreen(package, i / (double) percent10 << "%% points done");
+			printInPackageOnScreen(package, i / (double) percent10 * 10 << " %% points done");
 		}
 		package->performedOneTrainingStep();
 		if(package->shouldTrainingBePaused()){
@@ -510,7 +510,7 @@ void IVMMultiBinary::predictClassDataInParallel(const ClassData& points, const i
 	for(unsigned int i = 0; i < points.size(); ++i){
 		(*probabilities)[i][usedIvm] = m_ivms[usedIvm]->predict(*points[i]);
 		if(i % percent10 == 0 && i > 0){
-			printInPackageOnScreen(package, i / (double) percent10 << "%% points done");
+			printInPackageOnScreen(package, i / (double) percent10 * 10 << " %% points done");
 		}
 		package->performedOneTrainingStep();
 		if(package->shouldTrainingBePaused()){

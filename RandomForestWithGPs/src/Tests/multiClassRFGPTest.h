@@ -12,8 +12,8 @@
 
 #include "../Base/Settings.h"
 #include "../Data/DataReader.h"
-/*#include "../Data/DataConverter.h"
-#include "../Data/DataWriterForVisu.h"
+#include "../Data/DataConverter.h"
+/*#include "../Data/DataWriterForVisu.h"
 #include "../GaussianProcess/GaussianProcess.h"
 #include "../GaussianProcess/GaussianProcessMultiBinary.h"
 */
@@ -31,7 +31,12 @@ void executeForRFGPMultiClass(const std::string& path){
 	//return 0;
 
 	DataSets dataSets;
-	DataReader::readFromFiles(dataSets, path, 500);
+	bool didNormalize = false;
+	DataReader::readFromFiles(dataSets, path, 500, false, didNormalize);
+	if(!didNormalize){
+		DataPoint center, var;
+		DataConverter::centerAndNormalizeData(dataSets, center, var);
+	}
 	DataSets trainSets;
 	DataSets testSets;
 	const double facForTraining = 0.8;

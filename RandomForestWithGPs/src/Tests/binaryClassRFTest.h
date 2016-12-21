@@ -19,7 +19,12 @@ void executeForRFBinaryClass(){
 	ClassData data;
 	ClassData testData;
 	DataSets datas;
-	DataReader::readFromFiles(datas, "../realData/", 500);
+	bool didNormalize = false;
+	DataReader::readFromFiles(datas, "../realData/", 500, false, didNormalize);
+	if(!didNormalize){
+		DataPoint center, var;
+		DataConverter::centerAndNormalizeData(datas, center, var);
+	}
 	int labelCounter = 0;
 	for(DataSetsIterator itData = datas.begin(); itData != datas.end(); ++itData){
 		const int amountOfElements = itData->second.size();

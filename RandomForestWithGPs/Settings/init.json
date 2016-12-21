@@ -23,7 +23,7 @@
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 30,
+        "nrOfInducingPoints": 60,
         "desiredMargin": 0.01,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
@@ -31,10 +31,10 @@
         	"useSavedHyperParams": "false",
         	"overwriteExistingHyperParams": "true"
         },
-        "kernelType": 1
+        "kernelType": 0
     },
     "TotalStorage": {
-    	"amountOfPointsUsedForTraining": 200,
+    	"amountOfPointsUsedForTraining": 500,
     	"shareForTraining": 0.6,
         "folderLocReal": "..\/mnist\/",
         "folderLocFake": "..\/fakeData\/",
@@ -52,7 +52,7 @@
     },
     "RandomForestKernel": {
     	"samplingAmount": 400,
-    	"maxDepth": 12,
+    	"maxDepth": 18,
 		"usePartitionInsteadOfLabels": "true"
     },
     "KernelParam": {
@@ -101,8 +101,8 @@
     	"maxValueFraction": 0.6
     },
     "VisuParams": {
-    	"visuHyperParamSampling2D": "true",
-    	"visuEntropyForFinalIvm": "true",
+    	"visuHyperParamSampling2D": "false",
+    	"visuEntropyForFinalIvm": "false",
     	"visuFinalIvm": "true"
     },
     "main": {

@@ -41,7 +41,8 @@ void TotalStorage::readData(const int amountOfData){
 		Settings::getValue("TotalStorage.folderLocReal", folderLocation);
 	}
 	const bool readTxt = false;
-	DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt);
+	bool didNormalizeStep = false;
+	DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt, didNormalizeStep);
 	std::string type = "";
 	Settings::getValue("main.type", type);
 	if(!type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView()){ // type starts with binary -> remove all classes
@@ -61,7 +62,7 @@ void TotalStorage::readData(const int amountOfData){
 	for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 		m_totalSize += it->second.size();
 	}
-	if(Settings::getDirectBoolValue("TotalStorage.normalizeData")){
+	if(Settings::getDirectBoolValue("TotalStorage.normalizeData") && !didNormalizeStep){
 		DataConverter::centerAndNormalizeData(m_storage, m_center, m_var);
 	}
 }

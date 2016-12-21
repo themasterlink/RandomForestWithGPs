@@ -10,6 +10,7 @@
 #include <iostream>
 #include "../Utility/ReadWriterHelper.h"
 #include "ClassKnowledge.h"
+#include "DataConverter.h"
 #include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
 
@@ -103,7 +104,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 	}
 }
 
-void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLocation, const int amountOfData, const bool readTxt){
+void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLocation, const int amountOfData, const bool readTxt, bool& didNormalizeData){
 	boost::filesystem::path targetDir(folderLocation);
 	boost::filesystem::directory_iterator end_itr;
 	// cycle through the directory
@@ -113,6 +114,9 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		type = 1;
 	}else if(targetDir.parent_path().filename() == "uspsOrg"){
 		type = 2;
+	}
+	if(targetDir.parent_path().filename() == "mnist" && type == 0){
+		didNormalizeData = true; // did perform that before write out mnistOrg
 	}
 	if(type == 0){
 		for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
@@ -124,7 +128,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 				readFromFile(data, filePath, amountOfData, amountOfClasses, readTxt);
 				ClassKnowledge::setNameFor(name, amountOfClasses);
 				++amountOfClasses;
-				dataSets.insert( DataSetPair(name, data));
+				dataSets.insert(DataSetPair(name, data));
 			}
 		}
 	}else if(type == 1){
@@ -257,6 +261,9 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		cv::imwrite("test.png", img);
 		openFileInViewer("test.png");
 		ClassKnowledge::setAmountOfDims(newDim);
+		DataPoint center, var;
+		DataConverter::centerAndNormalizeData(dataSets, center, var);
+		didNormalizeData = true;
 
 		std::string mnistFolder = targetDir.parent_path().parent_path().c_str();
 			mnistFolder += "/mnist/";
@@ -344,6 +351,5 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 
 	}
 	printOnScreen("Finished Reading all Folders");
-	sleep(1);
 }
 
