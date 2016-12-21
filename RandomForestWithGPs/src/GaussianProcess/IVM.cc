@@ -729,8 +729,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	//printInPackageOnScreen(m_package, "bias: " << m_bias);
 	List<int>::const_iterator itOfActiveSet = m_I.begin();
 	Vector s_nk = Vector(m_dataPoints), k_nk = Vector(m_dataPoints); // k_nk is not filled for k == 0!!!!
-//	List<double> deltaValues;
-//	List<std::string> colors;
+	List<double> deltaValues;
+	List<std::string> colors;
 //	List<double> informationOfUsedValues;
 	for(unsigned int k = 0; k < m_numberOfInducingPoints; ++k){
 		if(m_kernelType == RF){
@@ -815,6 +815,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		}else{
 			argmax = *itOfActiveSet;
 			double gForArgmax, nuForArgmax;
+			// TODO remove calc of Inner not needed here
 			delta.coeffRef(k) = calcInnerOfFindPointWhichDecreaseEntropyMost(argmax, zeta, mu, gForArgmax, nuForArgmax, fraction, amountOfPointsPerClass, verboseLevel);
 			g.coeffRef(k) = gForArgmax;
 			nu.coeffRef(k) = nuForArgmax;
@@ -844,8 +845,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 						<< m_numberOfInducingPoints << ", size: " << m_dataPoints);
 			return false;
 		}
-//		deltaValues.push_back((double) delta[k]);
-//		colors.push_back(std::string(m_y[argmax] == 1 ? "red" : "blue"));
+
+		deltaValues.push_back((double) delta[k]);
+		colors.push_back(std::string(m_y[argmax] == 1 ? "red" : "blue"));
 		fraction = ((fraction * k) + (m_y.coeff(argmax) == 1 ? 1 : 0)) / (double) (k + 1);
 		if(verboseLevel == 2)
 			printDebug("Next i is: " << argmax << " has label: " << (double) m_y.coeff(argmax));
@@ -1008,6 +1010,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		m_J.remove(argmax);
 		amountOfPointsPerClass.coeffRef(m_y.coeff(argmax) == 1 ? 0 : 1) -= 1;
 	}
+
+
 	if(verboseLevel == 2){
 		int classOneCounter = 0;
 		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI){
@@ -1018,8 +1022,12 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		printInPackageOnScreen(m_package, "Fraction in including points is: " << classOneCounter / (double) m_I.size() * 100. << " %");
 		printInPackageOnScreen(m_package, "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime());
 	}
-//	DataWriterForVisu::writeSvg("deltas.svg", deltaValues, colors);
-//	openFileInViewer("deltas.svg");
+	if(!m_uniformNr.isUsed() && getLabelForOne() == 8){
+		DataWriterForVisu::writeSvg("deltas_" + number2String(getLabelForOne()) + ".svg", deltaValues, colors);
+		openFileInViewer("deltas_" + number2String(getLabelForOne()) + ".svg");
+		printLine();
+		sleep(3);
+	}
 	if(m_I.size() != m_numberOfInducingPoints){
 		if(verboseLevel != 0)
 			printError("The active set has not the desired amount of points");

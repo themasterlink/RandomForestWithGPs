@@ -736,6 +736,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::Matri
 
 void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<double>& list, const std::list<std::string>& colors){
 	if(list.size() == 0 || list.size() != colors.size()){
+		printError("The lists are unequal or have no elements!");
 		return;
 	}
 	Eigen::VectorXd vec(list.size());
@@ -744,12 +745,18 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<do
 		vec[t] = *it;
 	}
 	double min, max;
-	DataConverter::getMinMax(vec, min, max);
+	DataConverter::getMinMax(vec, min, max, true);
+	if(max == min){
+		printError("Min and max are equal!");
+		return;
+	}
 	std::ofstream file;
-	openSvgFile(fileName, 820., 1.0, 1.0, file);
-	drawSvgCoords(file, 7.5, 7.5, 10, 10, vec.size(), max - min, min, max, 820., 820.);
-	drawSvgDots(file, vec, 10., 10., min, max, 820., 820., colors);
-	closeSvgFile(file);
+	const bool open = openSvgFile(fileName, 820., 1.0, 1.0, file);
+	if(open){
+		drawSvgCoords(file, 7.5, 7.5, 10, 10, vec.size(), max - min, min, max, 820., 820.);
+		drawSvgDots(file, vec, 10., 10., min, max, 820., 820., colors);
+		closeSvgFile(file);
+	}
 }
 
 void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::VectorXd& vec, const bool drawLine){
@@ -945,9 +952,11 @@ void DataWriterForVisu::drawSvgDots(std::ofstream& file, const Eigen::VectorXd v
 		const double max, const double width, const double heigth, const std::string& color){
 	const double diff = max == min ? 1 : max - min;
 	for(unsigned int i = 0; i < vec.rows(); ++i){
-		file << "<circle cx=\"" << (i / (double) vec.rows() * (100. - 2. * startX) + startX) / 100. * width
-				<< "\" cy=\"" << ((vec[i] - min) / diff * (100. - 2. * startY) + startY) / 100. * heigth
-				<< "\" r=\"3\" fill=\"transparent\" stroke=\"" << color << "\" /> \n";
+		if(vec[i] > -DBL_MAX){ // don't use -DBL_MAX Values they should be ignored
+			file << "<circle cx=\"" << (i / (double) vec.rows() * (100. - 2. * startX) + startX) / 100. * width
+					<< "\" cy=\"" << ((vec[i] - min) / diff * (100. - 2. * startY) + startY) / 100. * heigth
+					<< "\" r=\"3\" fill=\"transparent\" stroke=\"" << color << "\" /> \n";
+		}
 	}
 }
 
@@ -957,9 +966,11 @@ void DataWriterForVisu::drawSvgDots(std::ofstream& file, const Eigen::VectorXd v
 	const double diff = max == min ? 1 : max - min;
 	std::list<std::string>::const_iterator it = colors.begin();
 	for(unsigned int i = 0; i < vec.rows(); ++i){
-		file << "<circle cx=\"" << (i / (double) vec.rows() * (100. - 2. * startX) + startX) / 100. * width
-				<< "\" cy=\"" << ((vec[i] - min) / diff * (100. - 2. * startY) + startY) / 100. * heigth
-				<< "\" r=\"3\" fill=\"transparent\" stroke=\"" << *it << "\" /> \n";
+		if(vec[i] > -DBL_MAX){ // don't use -DBL_MAX Values they should be ignored
+			file << "<circle cx=\"" << (i / (double) vec.rows() * (100. - 2. * startX) + startX) / 100. * width
+					<< "\" cy=\"" << ((vec[i] - min) / diff * (100. - 2. * startY) + startY) / 100. * heigth
+					<< "\" r=\"3\" fill=\"transparent\" stroke=\"" << *it << "\" /> \n";
+		}
 		++it;
 	}
 }

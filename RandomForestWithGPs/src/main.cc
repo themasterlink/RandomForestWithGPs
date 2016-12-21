@@ -114,6 +114,7 @@ int main(int ac, char* av[]){
 //		}
 //	}
 
+
 	/*
     const int nr = 300;
     Eigen::MatrixXd Sigma, controlSigma;

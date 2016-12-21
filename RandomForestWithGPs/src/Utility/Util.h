@@ -42,12 +42,21 @@
 
 inline std::string number2String(const double& in, const int precision = -1){
 	if(precision != -1){
-		char buffer[10 + precision];
-		std::string format = "%."+number2String(precision)+ "f";
-		sprintf(buffer,format.c_str(), in);
-		std::stringstream ss;
-		ss << buffer;
-		return ss.str();
+		if(in < 10000.){
+			char buffer[10 + precision];
+			std::string format = "%."+number2String(precision)+ "f";
+			sprintf(buffer,format.c_str(), in);
+			std::stringstream ss;
+			ss << buffer;
+			return ss.str();
+		}else{
+			char buffer[350 + precision]; // higher should be impossible
+			std::string format = "%."+number2String(precision)+ "f";
+			sprintf(buffer,format.c_str(), in);
+			std::stringstream ss;
+			ss << buffer;
+			return ss.str();
+		}
 	}else{
 		std::stringstream ss;
 		ss << in;
