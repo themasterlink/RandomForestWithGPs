@@ -413,7 +413,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					cmaes::cmaes_exit(&evo); /* release memory */
 					cmaes::cmaes_boundary_transformation_exit(&boundaries); /* release memory */
 					free(x_in_bounds);
-					if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
+					if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && Settings::getDirectBoolValue("VisuParams.visuHyperParamSampling2D")){
 						DataWriterForVisu::writePointsIn2D("hp_params_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", points, values);
 						openFileInViewer("hp_params_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
 					}
@@ -630,7 +630,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					printWarning("The optimization step could not be performed!");
 				}
 			}
-			if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && CommandSettings::get_useFakeData()){
+			if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && CommandSettings::get_useFakeData() && Settings::getDirectBoolValue("VisuParams.visuFinalIvm")){
 				DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_storage.storage());
 				openFileInViewer("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
 			}
@@ -729,6 +729,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	//printInPackageOnScreen(m_package, "bias: " << m_bias);
 	List<int>::const_iterator itOfActiveSet = m_I.begin();
 	Vector s_nk = Vector(m_dataPoints), k_nk = Vector(m_dataPoints); // k_nk is not filled for k == 0!!!!
+	const bool visuDeltas = !m_uniformNr.isUsed() && Settings::getDirectBoolValue("VisuParams.visuEntropyForFinalIvm");
 	List<double> deltaValues;
 	List<std::string> colors;
 //	List<double> informationOfUsedValues;
@@ -812,6 +813,10 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 //			DataWriterForVisu::writeSvg("deltas1.svg", deltasValue, colorForDeltas);
 //			openFileInViewer("deltas1.svg");
 //			sleep(1);
+			if(visuDeltas){
+				deltaValues.push_back((double) delta[k]);
+				colors.push_back(std::string(m_y[argmax] == 1 ? "red" : "blue"));
+			}
 		}else{
 			argmax = *itOfActiveSet;
 			double gForArgmax, nuForArgmax;
@@ -846,8 +851,6 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			return false;
 		}
 
-		deltaValues.push_back((double) delta[k]);
-		colors.push_back(std::string(m_y[argmax] == 1 ? "red" : "blue"));
 		fraction = ((fraction * k) + (m_y.coeff(argmax) == 1 ? 1 : 0)) / (double) (k + 1);
 		if(verboseLevel == 2)
 			printDebug("Next i is: " << argmax << " has label: " << (double) m_y.coeff(argmax));
@@ -1022,11 +1025,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		printInPackageOnScreen(m_package, "Fraction in including points is: " << classOneCounter / (double) m_I.size() * 100. << " %");
 		printInPackageOnScreen(m_package, "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime());
 	}
-	if(!m_uniformNr.isUsed() && getLabelForOne() == 8){
+	if(visuDeltas){
 		DataWriterForVisu::writeSvg("deltas_" + number2String(getLabelForOne()) + ".svg", deltaValues, colors);
 		openFileInViewer("deltas_" + number2String(getLabelForOne()) + ".svg");
-		printLine();
-		sleep(3);
 	}
 	if(m_I.size() != m_numberOfInducingPoints){
 		if(verboseLevel != 0)
