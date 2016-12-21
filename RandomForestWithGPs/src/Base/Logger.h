@@ -9,6 +9,7 @@
 #define BASE_LOGGER_H_
 
 #include <boost/thread.hpp>
+#include <map>
 
 class Logger {
 public:
@@ -16,7 +17,9 @@ public:
 	// checks the values in the settings file
 	static void start();
 
-	static void addToFile(const std::string& line);
+	static void addNormalLineToFile(const std::string& line);
+
+	static void addSpecialLineToFile(const std::string& line, const std::string& identifier);
 
 	static void setTimeBetweenWritingIntervals(const double timeToSleep){ m_timeToSleep = timeToSleep; };
 
@@ -27,6 +30,8 @@ public:
 	static bool isUsed(){ return m_init;}
 
 private:
+
+	static void write();
 
 	static void run();
 
@@ -43,6 +48,8 @@ private:
 	static std::string m_filePath;
 
 	static double m_timeToSleep;
+
+	static std::map<std::string, std::string> m_specialLines;
 
 	Logger();
 	virtual ~Logger();

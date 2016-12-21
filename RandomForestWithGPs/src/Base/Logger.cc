@@ -16,6 +16,7 @@ bool Logger::m_needToWrite(false);
 std::string Logger::m_text("");
 std::string Logger::m_filePath("");
 double Logger::m_timeToSleep(2.);
+std::map<std::string, std::string> Logger::m_specialLines;
 
 Logger::Logger() {
 }
@@ -37,34 +38,63 @@ void Logger::start(){
 
 void Logger::forcedWrite(){
 	m_mutex.lock();
+	write();
+	m_mutex.unlock();
+}
+
+void Logger::write(){
+	// not locked!
 	std::fstream file;
 	file.open(m_filePath, std::fstream::out | std::fstream::trunc);
 	file.write(m_text.c_str(), m_text.length());
+	for(std::map<std::string, std::string>::iterator it = m_specialLines.begin(); it != m_specialLines.end(); ++it){
+		if(!(it->first == "Error" || it->first == "Warning")){
+			file << it->first << "\n";
+			file.write(it->second.c_str(), it->second.length());
+		}
+	}
+	for(auto name : {"Warning", "Error"}){
+		std::map<std::string, std::string>::iterator itOther = m_specialLines.find(name);
+		if(itOther != m_specialLines.end()){
+			file << itOther->first << "\n";
+			file.write(itOther->second.c_str(), itOther->second.length());
+		}
+	}
 	file.close();
 	m_needToWrite = false;
-	m_mutex.unlock();
 }
 
 void Logger::run(){
 	while(m_init){
 		m_mutex.lock();
 		if(m_needToWrite){ // write only if something changed
-			std::fstream file;
-			file.open(m_filePath, std::fstream::out | std::fstream::trunc);
-			file.write(m_text.c_str(), m_text.length());
-			file.close();
-			m_needToWrite = false;
+			write();
 		}
 		m_mutex.unlock();
 		usleep(m_timeToSleep * 1e6);
 	}
 }
 
-void Logger::addToFile(const std::string& line){
+void Logger::addNormalLineToFile(const std::string& line){
 	if(m_init){
 		m_mutex.lock();
 		m_needToWrite = true;
 		m_text += line + "\n";
+		m_mutex.unlock();
+	}
+}
+
+void Logger::addSpecialLineToFile(const std::string& line, const std::string& identifier){
+	if(m_init){
+		m_mutex.lock();
+		std::map<std::string, std::string>::iterator it = m_specialLines.find(identifier);
+		if(it != m_specialLines.end()){
+			it->second += ("\t" + line + "\n");
+		}else{
+			const std::string input = "\t" + line + "\n";
+			m_specialLines.insert(std::pair<std::string, std::string>(identifier, input));
+		}
+		m_needToWrite = true;
 		m_mutex.unlock();
 	}
 }

@@ -508,7 +508,7 @@ void ScreenOutput::print(const std::string& line){
 		m_lines.push_back(line);
 	}
 	m_lineMutex.unlock();
-	Logger::addToFile(line);
+	Logger::addNormalLineToFile(line);
 }
 
 void ScreenOutput::printErrorLine(const std::string& line){
@@ -530,7 +530,7 @@ void ScreenOutput::printErrorLine(const std::string& line){
 		m_errorCounters.push_back(1);
 	}
 	m_lineMutex.unlock();
-	Logger::addToFile(line);
+	Logger::addSpecialLineToFile(line, "Error");
 }
 
 

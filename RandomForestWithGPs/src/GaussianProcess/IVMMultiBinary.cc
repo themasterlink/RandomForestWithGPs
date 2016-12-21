@@ -486,10 +486,11 @@ void IVMMultiBinary::predictDataInParallel(const Data& points, const int usedIvm
 	package->setStandartInformation("Thread for ivm: " + number2String(usedIvm));
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
+	const int percent10 = std::max((int) points.size() / 10, 10);
 	for(unsigned int i = 0; i < points.size(); ++i){
 		(*probabilities)[i][usedIvm] = m_ivms[usedIvm]->predict(*points[i]);
-		if(i % 5000 == 0 && i > 0){
-			package->printLineToScreenForThisThread("5000 points predicted");
+		if(i % percent10 == 0 && i > 0){
+			printInPackageOnScreen(package, i / (double) percent10 << "%% points done");
 		}
 		package->performedOneTrainingStep();
 		if(package->shouldTrainingBePaused()){
@@ -505,10 +506,11 @@ void IVMMultiBinary::predictClassDataInParallel(const ClassData& points, const i
 	package->setStandartInformation("Thread for ivm: " + number2String(usedIvm));
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
+	const int percent10 = std::max((int) points.size() / 10, 10);
 	for(unsigned int i = 0; i < points.size(); ++i){
 		(*probabilities)[i][usedIvm] = m_ivms[usedIvm]->predict(*points[i]);
-		if(i % 5000 == 0 && i > 0){
-			package->printLineToScreenForThisThread("5000 points predicted");
+		if(i % percent10 == 0 && i > 0){
+			printInPackageOnScreen(package, i / (double) percent10 << "%% points done");
 		}
 		package->performedOneTrainingStep();
 		if(package->shouldTrainingBePaused()){

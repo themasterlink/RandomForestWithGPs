@@ -31,7 +31,7 @@
         	"useSavedHyperParams": "false",
         	"overwriteExistingHyperParams": "true"
         },
-        "kernelType": 0
+        "kernelType": 1
     },
     "TotalStorage": {
     	"amountOfPointsUsedForTraining": 200,

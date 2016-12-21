@@ -67,7 +67,7 @@ void InformationPackage::setAdditionalInfo(const std::string& line){
 void InformationPackage::printLineToScreenForThisThread(const std::string& line) {
 	m_lineMutex.lock();
 	m_lines.push_back(line);
-	Logger::addToFile(m_standartInfo+"\n\t"+line);
+	Logger::addSpecialLineToFile(line, m_standartInfo);
 	m_lineMutex.unlock();
 }
 
@@ -75,7 +75,7 @@ void InformationPackage::overwriteLastLineToScreenForThisThread(const std::strin
 	if(m_lines.size() > 0){
 		m_lineMutex.lock();
 		m_lines.back() = line;
-		Logger::addToFile(m_standartInfo+"\n\toverwrite: "+line);
+		Logger::addSpecialLineToFile("overwrite: "+line, m_standartInfo);
 		m_lineMutex.unlock();
 	}
 }
