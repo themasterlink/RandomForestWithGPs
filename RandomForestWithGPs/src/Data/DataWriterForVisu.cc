@@ -461,6 +461,13 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 	const int amountOfSeg = 10;
 	drawSvgCoords2D(file, 7.5, 7.5, 10, 10, min, max, amountOfSeg, 820., height);
 	double minUsedValue = minVal;
+	const int k = CommandSettings::get_visuRes() > 0 ? 7 : CommandSettings::get_visuResSimple() > 0 ? 1 : 0;
+	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	const Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	double red[3];
+	double blue[3];
+	ColorConverter::HSV2LAB(180., 1, 1, red[0], red[1], red[2]);
+	ColorConverter::HSV2LAB(0., 1, 1, blue[0], blue[1], blue[2]);
 	if(points.size() > 10){
 		std::list<double> sortedValues;
 		double mean = 0;
@@ -487,11 +494,61 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 			}
 		}
 	}
+	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
+	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
+	for(double dX = min[0]; dX < max[0]; dX += stepSize[0]){
+		for(double dY = min[1]; dY < max[1]; dY += stepSize[1]){
+			std::list<std::pair<double, double> > closestsPoints;
+			const double newDX = dX + stepSize[0] * 0.5;
+			const double newDY = dY + stepSize[1] * 0.5;
+			std::list<double>::const_iterator itValue = values.begin();
+			for(std::list<Eigen::Vector2d>::const_iterator it = points.cbegin(); it != points.cend(); ++it, ++itValue){
+				const double dist = ((*it).coeff(0) - newDX) * ((*it).coeff(0) - newDX) + ((*it).coeff(1) - newDY) * ((*it).coeff(1) - newDY);
+				bool addNew = false;
+				for(std::list<std::pair<double, double> >::iterator it = closestsPoints.begin(); it != closestsPoints.end(); ++it){
+					if(dist < it->second){
+						closestsPoints.insert(it, std::pair<double, double>(*itValue, dist));
+						addNew = true;
+						break;
+					}
+				}
+				if(!addNew && closestsPoints.size() < k){
+					closestsPoints.push_back(std::pair<double, double>(*itValue, dist));
+				}else if(closestsPoints.size() > k){
+					closestsPoints.pop_back();
+				}
+			}
+			double val = 0;
+			double totalDist = 0;
+			for(std::list<std::pair<double, double> >::const_iterator it = closestsPoints.begin(); it != closestsPoints.end(); ++it){
+				totalDist += it->second;
+			}
+			for(std::list<std::pair<double, double> >::const_iterator it = closestsPoints.begin(); it != closestsPoints.end(); ++it){
+				if(it->first > -DBL_MAX){
+					val += it->first * (it->second / totalDist);
+				}else{
+					val = -DBL_MAX;
+					break;
+				}
+			}
+			const double xPos = ((dX - min[0]) / (max[0] - min[0]) * 80. + 10.); // see 10. in drawSvgCoords2D
+			const double yPos = ((dY - min[1]) / (max[1] - min[1]) * 80. + 10.);
+			double r = 0, g = 0, b = 0;
+			if(val >= minVal){
+				if(val > minUsedValue){
+					val = (val - minUsedValue) / (maxVal - minUsedValue);
+				}else{
+					val = 0.;
+				}
+				double l = red[0] * val + blue[0] * (1. - val);
+				double a = red[1] * val + blue[1] * (1. - val);
+				double b_ = red[2] * val + blue[2] * (1. - val);
+				ColorConverter::LAB2RGB(l,a,b_, r,g,b);
+			}
+			drawSvgRect(file, xPos, yPos, 100. / elementInX, 100. / elementInY, r * 100,g * 100,b * 100);
+		}
+	}
 	std::list<double>::const_iterator itValues = values.cbegin();
-	double red[3];
-	double blue[3];
-	ColorConverter::HSV2LAB(90., 1, 1, red[0], red[1], red[2]);
-	ColorConverter::HSV2LAB(0., 1, 1, blue[0], blue[1], blue[2]);
 
 	for(std::list<Eigen::Vector2d>::const_iterator it = points.cbegin(); it != points.cend(); ++it, ++itValues){
 		const double dx = (((*it)[0] - min[0]) / (max[0] - min[0]) * 80. + 10.) / 100. * 820.; // see 10. in drawSvgCoords2D
@@ -507,8 +564,8 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 			}
 			double l = red[0] * val + blue[0] * (1. - val);
 			double a = red[1] * val + blue[1] * (1. - val);
-			double b = red[2] * val + blue[2] * (1. - val);
-			ColorConverter::LAB2RGB(l,a,b, r,g,b);
+			double b_ = red[2] * val + blue[2] * (1. - val);
+			ColorConverter::LAB2RGB(l,a,b_, r,g,b);
 		}
 		file << "<circle cx=\"" << dx << "\" cy=\"" << dy << "\" r=\"8\" fill=\"rgb(" << r * 100. << "%," << g * 100. << "%," << b * 100. << "%)\" stroke=\"black\" stroke-width=\"2\"/> \n";
 	}

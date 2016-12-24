@@ -29,9 +29,9 @@ void DataConverter::centerAndNormalizeData(DataSets& datas, DataPoint& center, D
 				for(ClassDataIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
 					ClassPoint& ele = **itData;
 					for(unsigned int i = 0; i < dim; ++i){
-						const double fac = 1. / counter[i];
-						center[i] = fac * ele[i] + (1. - fac) * center[i];
-						++counter[i];
+						const double fac = 1. / counter.coeff(i);
+						center.coeffRef(i) = fac * ele.coeff(i) + (1. - fac) * center.coeff(i);
+						++counter.coeffRef(i);
 					}
 				}
 			}
@@ -41,17 +41,17 @@ void DataConverter::centerAndNormalizeData(DataSets& datas, DataPoint& center, D
 				for(ClassDataIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
 					ClassPoint& ele = **itData;
 					for(unsigned int i = 0; i < dim; ++i){
-						const double fac = 1. / counter[i];
-						const double newVal = ele[i] - center[i];
-						var[i] = fac * (newVal * newVal) + (1. - fac) * var[i];
-						++counter[i];
+						const double fac = 1. / counter.coeff(i);
+						const double newVal = ele.coeff(i) - center.coeff(i);
+						var.coeffRef(i) = fac * (newVal * newVal) + (1. - fac) * var.coeff(i);
+						++counter.coeffRef(i);
 					}
 				}
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
-				var[i] = sqrt((double) var[i]);
-				if(var[i] <= 1e-15){
-					var[i] = 1.; // no change
+				var.coeffRef(i) = sqrt((double) var.coeff(i));
+				if(var.coeff(i) <= 1e-15){
+					var.coeffRef(i) = 1.; // no change
 				}
 			}
 		}
@@ -59,7 +59,7 @@ void DataConverter::centerAndNormalizeData(DataSets& datas, DataPoint& center, D
 			for(ClassDataIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
 				ClassPoint& ele = **itData;
 				for(unsigned int i = 0; i < dim; ++i){
-					ele[i] = (ele[i] - center[i]) / var[i];
+					ele.coeffRef(i) = (ele.coeff(i) - center.coeff(i)) / var.coeff(i);
 				}
 			}
 		}

@@ -12,8 +12,6 @@
 #include "../Data/DataWriterForVisu.h"
 #include "../Utility/Util.h"
 #include "../Data/DataConverter.h"
-#include <src/cmaes.cc>
-#include <src/boundary_transformation.c>
 
 
 #define LOG2   0.69314718055994528623
@@ -31,7 +29,9 @@ IVM::IVM(OnlineStorage<ClassPoint*>& storage, const bool isPartOfMultiIvm):
 	m_uniformNr(0, 10, 0),
 	m_useNeighbourComparison(false),
 	m_package(nullptr),
-	m_isPartOfMultiIvm(isPartOfMultiIvm){
+	m_isPartOfMultiIvm(isPartOfMultiIvm),
+	m_arFunvals(nullptr),
+	m_hyperParamsValues(nullptr){
 	int kernelType = 0;
 	Settings::getValue("IVM.kernelType", kernelType);
 	if(kernelType == 0){
@@ -54,6 +54,11 @@ IVM::IVM(OnlineStorage<ClassPoint*>& storage, const bool isPartOfMultiIvm):
 }
 
 IVM::~IVM(){
+	if(Settings::getDirectBoolValue("IVM.useCmaes")){
+		cmaes::cmaes_exit(&m_evo); /* release memory */
+		cmaes::cmaes_boundary_transformation_exit(&m_cmaesBoundaries); /* release memory */
+		free(m_hyperParamsValues);
+	}
 }
 
 void IVM::setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ){
@@ -124,8 +129,37 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (double) amountOfOneClass / (double) m_dataPoints));
 	Settings::getValue("IVM.lambda", m_lambda);
 	Settings::getValue("IVM.desiredMargin", m_desiredMargin);
+//	m_desiredPoint = (double) amountOfOneClass / (double) m_dataPoints;
 	m_desiredPoint = (0.5 + (double) amountOfOneClass / (double) m_dataPoints) * 0.5; // middle between 0.5 and real margin
 	Settings::getValue("IVM.useNeighbourComparison", m_useNeighbourComparison);
+
+	// sampling method:
+	if(Settings::getDirectBoolValue("IVM.useCmaes")){
+
+		double lowerBounds[] = {0.2,5.1, 0.03};
+		lowerBounds[0] = Settings::getDirectDoubleValue("CMAES.lowerBoundLen");
+		lowerBounds[1] = Settings::getDirectDoubleValue("CMAES.lowerBoundFNoise");
+		lowerBounds[2] = Settings::getDirectDoubleValue("CMAES.lowerBoundSNoise");
+		double upperBounds[] = {9., 24.0, 0.45};
+		upperBounds[0] = Settings::getDirectDoubleValue("CMAES.upperBoundLen");
+		upperBounds[1] = Settings::getDirectDoubleValue("CMAES.upperBoundFNoise");
+		upperBounds[2] = Settings::getDirectDoubleValue("CMAES.upperBoundSNoise");
+		int nb_bounds = 3; /* numbers used from lower and upperBounds */
+		unsigned long dimension;
+
+		/* initialize boundaries, be sure that initialSigma is smaller than upper minus lower bound */
+		cmaes::cmaes_boundary_transformation_init(&m_cmaesBoundaries, lowerBounds, upperBounds, nb_bounds);
+		/* Initialize everything into the struct evo, 0 means default */
+		const int seed = m_gaussKernel->getSeed() + 812737 * (1 + getLabelForOne());
+		m_arFunvals = cmaes::cmaes_init(&m_evo, 0, NULL, NULL, seed, 0, "../Settings/cmaes_initials.par");
+		dimension = (unsigned long) cmaes::cmaes_Get(&m_evo, "dimension");
+		if(dimension != nb_bounds){
+			printError("The dimension in the settings does not fit!");
+		}
+		m_hyperParamsValues = cmaes::cmaes_NewDouble(dimension); /* calloc another vector */
+		// no values are here -> so read is uncessary
+//		cmaes::cmaes_ReadSignals(&m_evo, "../Settings/cmaes_signals.par");  /* write header and initial values */
+	}
 }
 
 void IVM::setNumberOfInducingPoints(unsigned int nr){
@@ -187,7 +221,15 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				printError("The logZ was not set correctly!");
 			}
 			bestLogZ = m_logZ; // should be set correctly on the last training with this params
-			if(m_package->correctlyClassified() > minCorrectForWholeClassification){
+			if(Settings::getDirectBoolValue("IVM.useCmaes")){
+				std::stringstream str2;
+				str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
+						<< number2String(bestParams.m_fNoise.getValue(),4) << ", "
+						<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+						<< "e: " << number2String(100 - m_package->correctlyClassified(), 3) << " %%";
+				m_package->setAdditionalInfo(str2.str());
+				bestCorrectness = m_package->correctlyClassified();
+			}else if(m_package->correctlyClassified() > minCorrectForWholeClassification){
 				bestCorrectness = m_package->correctlyClassified();
 			}
 		}else{
@@ -244,147 +286,121 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				}
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 //				int iCounterSampling = 0;
-				if(true){
-					cmaes::cmaes_t evo; /* an CMA-ES type struct or "object" */
-					cmaes::cmaes_boundary_transformation_t boundaries;
-					double *arFunvals, *x_in_bounds, *const*pop;
-					double lowerBounds[] = {0.2,0.1, 0.03};
-					double upperBounds[] = {5., 4.0, 0.15};
-					int nb_bounds = 3; /* numbers used from lower and upperBounds */
-					unsigned long dimension;
-					int i;
+				if(Settings::getDirectBoolValue("IVM.useCmaes")){
 
-					/* initialize boundaries, be sure that initialSigma is smaller than upper minus lower bound */
-					cmaes::cmaes_boundary_transformation_init(&boundaries, lowerBounds, upperBounds, nb_bounds);
-					/* Initialize everything into the struct evo, 0 means default */
-					const int seed = m_gaussKernel->getSeed() + 812737 * (1 + getLabelForOne());
-					arFunvals = cmaes::cmaes_init(&evo, 0, NULL, NULL, seed, 0, "../Settings/cmaes_initials.par");
-					dimension = (unsigned long) cmaes::cmaes_Get(&evo, "dimension");
-					if(dimension != 3){
-						printError("The dimension in the settings does not fit!");
-					}
-					x_in_bounds = cmaes::cmaes_NewDouble(dimension); /* calloc another vector */
-					cmaes::cmaes_ReadSignals(&evo, "../Settings/cmaes_signals.par");  /* write header and initial values */
-					m_gaussKernel->newRandHyperParams();
 					/* Iterate until stop criterion holds */
 					StopWatch sw;
 					int iCounter = 0;
 					double negBestLogZ = -bestLogZ;
 					List<Eigen::Vector2d> points;
 					List<double> values;
+					double *const*pop;
+
+					const int sampleLambda = cmaes::cmaes_Get(&m_evo, "lambda");
+					const unsigned long dimension = (unsigned long) cmaes::cmaes_Get(&m_evo, "dimension");
 					while(m_package != nullptr){
 						/* generate lambda new search points, sample population */
-						pop = cmaes::cmaes_SamplePopulation(&evo); /* do not change content of pop */
+
+						pop = cmaes::cmaes_SamplePopulation(&m_evo); /* do not change content of pop */
 
 						/* transform into bounds and evaluate the new search points */
-						for (i = 0; i < cmaes::cmaes_Get(&evo, "lambda"); ++i) {
-							const double corr = m_package->correctlyClassified();
-							const double probDiff = 0; //corr < 60. ? 0. : corr < 80 ? 0.1 : corr < 90 ? 0.2 : 0.3;
-							cmaes::cmaes_boundary_transformation(&boundaries, pop[i], x_in_bounds, dimension);
+						for(int i = 0; i < sampleLambda; ++i) {
+//							const double corr = m_package->correctlyClassified();
+//							const double probDiff = corr < 60. ? 0. : corr < 80 ? 0.1 : corr < 90 ? 0.2 : 0.3;
+							cmaes::cmaes_boundary_transformation(&m_cmaesBoundaries, pop[i], m_hyperParamsValues, dimension);
 							/* this loop can be omitted if is_feasible is invariably true */
 //							while(!is_feasible(x_in_bounds, dimension)) { /* is_feasible needs to be user-defined, in case, and can change/repair x */
 //								cmaes_ReSampleSingle(&evo, i);
 //								cmaes_boundary_transformation(&boundaries, pop[i], x_in_bounds, dimension);
 //							}
-							m_gaussKernel->setHyperParams(x_in_bounds[0], x_in_bounds[1], x_in_bounds[2]);
+							m_gaussKernel->setHyperParams(m_hyperParamsValues[0], m_hyperParamsValues[1]); //, m_hyperParamsValues[2]);
 							sw.startTime();
 							const bool trained = internalTrain(true, 1);
+							double error = -DBL_MAX;
 							if(trained){
-								int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
-								int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
-								for(std::list<int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
-									const int label = m_storage[*it]->getLabel();
-									const double prob = predictOnTraining(*it);
-									if(label == getLabelForOne()){
-										if(prob > 0.5 + probDiff){
-											++amountOfOnesCorrect;
-										}
-										++amountOfOneChecks;
-									}else{
-										if(prob < 0.5 - probDiff){
-											++amountOfMinusOnesCorrect;
-										}
-										++amountOfMinusOneChecks;
-									}
-								}
-								// both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
-								const bool onlyUseOnes = false;
-								double correctness;
-								double neededValue = 0.01;
-								if(onlyUseOnes){
-									correctness = (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.;
-									neededValue = 0.01;
-								}else{
-									correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
-								}
-								if(correctness >= neededValue){
-									arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + (-correctness + 100) * 2; //fitfun(x_in_bounds, dimension); /* evaluate */
-									if(arFunvals[i] < negBestLogZ * 1.2){
-										amountOfOneChecks = amountOfOnesCorrect = 0;
-										amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
-										for(unsigned int i = 0; i < m_dataPoints; ++i){
-											const int label = m_storage[i]->getLabel();
-											const double prob = predictOnTraining(i);
-											if(label == getLabelForOne()){
-												if(prob > 0.5 + probDiff){
-													++amountOfOnesCorrect;
+//								int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
+//								int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
+//								double correctness;
+//								const bool onlyUseOnes = false;
+//
+//								testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
+//										amountOfMinusOneChecks, amountOfMinusOnesCorrect,
+//										correctness, probDiff, onlyUseOnes, false, testPoints); // false -> only testPoints
+								error = calcErrorOnTrainingsData(false, testPoints);
+
+//								double neededValue = 50.0;
+								if(error <= 48.){
+//									arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + (-correctness + 100) * 2;
+									m_arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + error;
+									if(m_arFunvals[i] < negBestLogZ * 1.2){
+										error = calcErrorOnTrainingsData(true, testPoints);
+										printInPackageOnScreen(m_package, "New full error of: " << error);
+//										testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
+//												amountOfMinusOneChecks, amountOfMinusOnesCorrect,
+//												correctness, probDiff, onlyUseOnes, true, testPoints);
+//										printInPackageOnScreen(m_package, "New full correcntess of: " << correctness);
+//										arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + (-correctness + 100) * 2; //fitfun(x_in_bounds, dimension); /* evaluate */
+//										if(arFunvals[i] < negBestLogZ * 1.2 && correctness >= m_package->correctlyClassified()){
+//											const double newProbDiff = correctness < 60. ? 0. : correctness < 80 ? 0.1 : correctness < 90 ? 0.2 : 0.3;
+//											if(newProbDiff > probDiff){ // avoids overshooting in the beginning
+//												// test again
+//												testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
+//														amountOfMinusOneChecks, amountOfMinusOnesCorrect,
+//														correctness, newProbDiff, onlyUseOnes, true, testPoints);
+//												printInPackageOnScreen(m_package, "New full on prob: " << newProbDiff << " correcntess of: " << correctness);
+//											}
+
+											// still better than take it
+											const double correctness = 100. - error;
+											if(correctness >= m_package->correctlyClassified()){
+												m_gaussKernel->getCopyOfParams(bestParams);
+												negBestLogZ = m_arFunvals[i];
+												m_package->changeCorrectlyClassified(correctness);
+												if(!m_gaussKernel->hasLengthMoreThanOneDim()){
+													std::stringstream str2;
+													str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
+															<< number2String(bestParams.m_fNoise.getValue(),4) << ", "
+															<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+															<< "e: " << number2String(error, 3) << " %% logZ: " << negBestLogZ;
+//															<< "mc: " << number2String((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100., 2) << " %%, pc: "
+//															<<  number2String((amountOfOnesCorrect / (double) amountOfOneChecks) * 100, 2) << " %%, logZ: " << negBestLogZ << ", " << std::max(newProbDiff, probDiff);
+													m_package->setAdditionalInfo(str2.str());
 												}
-												++amountOfOneChecks;
-											}else{
-												if(prob < 0.5 - probDiff){
-													++amountOfMinusOnesCorrect;
-												}
-												++amountOfMinusOneChecks;
-											}
-										}
-										if(onlyUseOnes){
-											correctness = (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.;
-										}else{
-											correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
-										}
-										printInPackageOnScreen(m_package, "New full correcntess of: " << correctness);
-										arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + (-correctness + 100) * 2; //fitfun(x_in_bounds, dimension); /* evaluate */
-										if(arFunvals[i] < negBestLogZ * 1.2 && correctness >= m_package->correctlyClassified()){
-											m_gaussKernel->getCopyOfParams(bestParams);
-											negBestLogZ = arFunvals[i];
-											m_package->changeCorrectlyClassified(correctness);
-											if(!m_gaussKernel->hasLengthMoreThanOneDim()){
-												std::stringstream str2;
-												str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
-														<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
-														<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
-														<< "correct: " << number2String(correctness, 2) << " %%, logZ: " << negBestLogZ << ", " << probDiff;
-												m_package->setAdditionalInfo(str2.str());
-											}
-											std::stringstream str;
-											str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
+												std::stringstream str;
+												str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
 																		<< " %%, ones: " << (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.
 																		<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100.
 																		<< ", amount of minues correct: " << amountOfMinusOnesCorrect << ", amount of minus ones: " << amountOfMinusOneChecks
 																		<< " %%, for: " << m_dataPoints << " points";*/
-											m_package->printLineToScreenForThisThread(str.str());
+												m_package->printLineToScreenForThisThread(str.str());
+//											}
 										}
 									}
 
 								}else{
-									arFunvals[i] = m_numberOfInducingPoints * 200;
+									m_arFunvals[i] = m_numberOfInducingPoints * 200;
 								}
-								values.push_back(arFunvals[i]);
+								values.push_back(m_arFunvals[i]);
 							}else{
-								arFunvals[i] = m_numberOfInducingPoints * 200;
+								m_arFunvals[i] = m_numberOfInducingPoints * 200;
 								values.push_back(-DBL_MAX);
 							}
-							points.push_back(Eigen::Vector2d(x_in_bounds[0], x_in_bounds[1]));
+							points.push_back(Eigen::Vector2d(m_hyperParamsValues[0], m_hyperParamsValues[1]));
 //							values.push_back(m_logZ);
-
-							printInPackageOnScreen(m_package, "Test len: " << x_in_bounds[0] << ", fNoise: " << x_in_bounds[1] << ", has: " << -m_logZ / (double) m_numberOfInducingPoints << " needed for Time: " << sw.elapsedAsTimeFrame() << ", c: " << iCounter);
+							if(error > -DBL_MAX){
+							printInPackageOnScreen(m_package, "Test len: " << m_hyperParamsValues[0] << ", fNoise: " << m_hyperParamsValues[1] << ", has: " << -m_logZ / (double) m_numberOfInducingPoints
+									<< " needed time: " << sw.elapsedAsTimeFrame() << ", error: " << error << " , c: " << iCounter);
+							}else{
+								printInPackageOnScreen(m_package, "Failed len: " << m_hyperParamsValues[0] << ", fNoise: " << m_hyperParamsValues[1]
+										<< " needed time: " << sw.elapsedAsTimeFrame() << " , c: " << iCounter);
+							}
 							m_package->performedOneTrainingStep(); // adds a one to the counter
 							if(m_package->shouldTrainingBeAborted()){
 								break;
 							}else if(m_package->shouldTrainingBePaused()){
 								m_package->printLineToScreenForThisThread("Training has to wait!");
 								m_package->wait(); // will hold this process
-							}else if(m_package->correctlyClassified() > 99.0 && iCounter > cmaes::cmaes_Get(&evo, "lambda") * 2.0){
+							}else if(m_package->correctlyClassified() > 99.0 && iCounter > cmaes::cmaes_Get(&m_evo, "lambda") * 2.0){
 								m_package->abortTraing();
 							}
 							++iCounter;
@@ -395,25 +411,22 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						}
 
 						/* update the search distribution used for cmaes_SampleDistribution() */
-						cmaes::cmaes_UpdateDistribution(&evo, arFunvals);  /* assumes that pop[i] has not been modified */
+						cmaes::cmaes_UpdateDistribution(&m_evo, m_arFunvals);  /* assumes that pop[i] has not been modified */
 
 						/* read instructions for printing output or changing termination conditions */
 //						cmaes_ReadSignals(&evo, "cmaes_signals.par");
 					}
 
 					/* get best estimator for the optimum, xmean */
-					cmaes::cmaes_boundary_transformation(&boundaries,
-						(double const *) cmaes_GetPtr(&evo, "xbestever"), /* "xbestever" might be used as well */
-						x_in_bounds, dimension);
+//					cmaes::cmaes_boundary_transformation(&boundaries,
+//						(double const *) cmaes_GetPtr(&m_evo, "xbestever"), /* "xbestever" might be used as well */
+//						x_in_bounds, dimension);
 					printOnScreen("Best params: " << bestParams);
 //					bestParams.m_length.setAllValuesTo(x_in_bounds[0]);
 //					bestParams.m_fNoise.setAllValuesTo(x_in_bounds[1]);
 //					bestParams.m_sNoise.setAllValuesTo(m_gaussKernel->getHyperParams().m_sNoise.getValue());
 					bestLogZ = -negBestLogZ;
 					  /* and finally release memory */
-					cmaes::cmaes_exit(&evo); /* release memory */
-					cmaes::cmaes_boundary_transformation_exit(&boundaries); /* release memory */
-					free(x_in_bounds);
 					if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && Settings::getDirectBoolValue("VisuParams.visuHyperParamSampling2D")){
 						DataWriterForVisu::writePointsIn2D("hp_params_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", points, values);
 						openFileInViewer("hp_params_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
@@ -445,49 +458,21 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						// go over a bunch of points to test it
 						int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
 						int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
-						for(std::list<int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
-							const int label = m_storage[*it]->getLabel();
-							const double prob = predictOnTraining(*it);
-							if(label == getLabelForOne()){
-								if(prob > 0.5){
-									++amountOfOnesCorrect;
-								}
-								++amountOfOneChecks;
-							}else{
-								if(prob < 0.5){
-									++amountOfMinusOnesCorrect;
-								}
-								++amountOfMinusOneChecks;
-							}
-						}
-						// both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
-						double correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
+						double correctness;
+						double probDiff = 0;
+						const bool onlyUseOnes = false;
+						testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
+								amountOfMinusOneChecks, amountOfMinusOnesCorrect,
+								correctness, probDiff, onlyUseOnes, false, testPoints); // false -> only testPoints
+
 						bool didCompleteCheck = false;
 						if(correctness > minCorrectForWholeClassification){
 							m_package->overwriteLastLineToScreenForThisThread("Perform a complex test");
 							didCompleteCheck = true;
 							// check all points
-							amountOfOneChecks = amountOfOnesCorrect = 0;
-							amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
-							for(unsigned int i = 0; i < m_dataPoints; ++i){
-								const int label = m_storage[i]->getLabel();
-								const double prob = predictOnTraining(i);
-								if(label == getLabelForOne()){
-									if(prob > 0.5){
-										++amountOfOnesCorrect;
-									}
-									++amountOfOneChecks;
-								}else{
-									if(prob < 0.5){
-										++amountOfMinusOnesCorrect;
-									}
-									++amountOfMinusOneChecks;
-								}
-							}
-							if(amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks) != m_desiredPoint){
-								printError("The margin for the full test is wrong, should be: " << m_desiredPoint << ", is: " << amountOfOneChecks / (double) (amountOfMinusOneChecks + amountOfOneChecks));
-							}
-							correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
+							testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
+									amountOfMinusOneChecks, amountOfMinusOnesCorrect,
+									correctness, probDiff, onlyUseOnes, true, testPoints); // false -> only testPoints
 							if(correctness > 95){
 								m_package->abortTraing();
 							}
@@ -1223,7 +1208,6 @@ bool IVM::trainOptimizeStep(const int verboseLevel){
 	}
 }
 
-
 void IVM::calcLogZ(){
 	m_logZ = 0.0;
 	const Matrix& llt = m_choleskyLLT.matrixLLT();
@@ -1403,6 +1387,83 @@ double IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, c
 		argmax = j;
 	}*/
 	return delta_kn;
+}
+
+double IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const std::list<int>& testPoints){
+	double plusError = 0;
+	double minusError = 0;
+	int oneCounter = 0;
+	if(wholeDataSet){
+		for(unsigned int i = 0; i < m_dataPoints; ++i){
+			const int label = m_storage[i]->getLabel();
+			const double prob = predictOnTraining(i);
+			if(label == getLabelForOne()){
+				plusError += 1.0 - prob;
+				++oneCounter;
+			}else{
+				minusError += prob;
+			}
+		}
+		return (plusError / (double) oneCounter + minusError / (double) (m_dataPoints - oneCounter)) * 50.;
+	}else{
+		for(std::list<int>::const_iterator it = testPoints.cbegin(); it != testPoints.cend(); ++it){
+			const int label = m_storage[*it]->getLabel();
+			const double prob = predictOnTraining(*it);
+			if(label == getLabelForOne()){
+				plusError += 1.0 - prob;
+				++oneCounter;
+			}else{
+				minusError += prob;
+			}
+		}
+		return (plusError / (double) oneCounter + minusError / (double) (testPoints.size() - oneCounter)) * 50.;
+	}
+}
+
+void IVM::testOnTrainingsData(int & amountOfOneChecks, int& amountOfOnesCorrect, int& amountOfMinusOneChecks,
+		int& amountOfMinusOnesCorrect, double& correctness, const double probDiff,
+		const bool onlyUseOnes, const bool wholeDataSet, const std::list<int>& testPoints){
+	amountOfOneChecks = amountOfOnesCorrect = 0;
+	amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
+	if(wholeDataSet){
+		for(unsigned int i = 0; i < m_dataPoints; ++i){
+			const int label = m_storage[i]->getLabel();
+			const double prob = predictOnTraining(i);
+			if(label == getLabelForOne()){
+				if(prob > 0.5 + probDiff){
+					++amountOfOnesCorrect;
+				}
+				++amountOfOneChecks;
+			}else{
+				if(prob < 0.5 - probDiff){
+					++amountOfMinusOnesCorrect;
+				}
+				++amountOfMinusOneChecks;
+			}
+		}
+	}else{
+		for(std::list<int>::const_iterator it = testPoints.cbegin(); it != testPoints.cend(); ++it){
+			const int label = m_storage[*it]->getLabel();
+			const double prob = predictOnTraining(*it);
+			if(label == getLabelForOne()){
+				if(prob > 0.5 + probDiff){
+					++amountOfOnesCorrect;
+				}
+				++amountOfOneChecks;
+			}else{
+				if(prob < 0.5 - probDiff){
+					++amountOfMinusOnesCorrect;
+				}
+				++amountOfMinusOneChecks;
+			}
+		}
+	}
+	if(onlyUseOnes){
+		correctness = (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.;
+	}else{
+		// both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
+		correctness = ((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (double) amountOfOneChecks) * 0.5) * 100.;
+	}
 }
 
 double IVM::predict(const Vector& input) const{

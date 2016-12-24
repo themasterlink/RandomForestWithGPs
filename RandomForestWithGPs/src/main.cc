@@ -22,6 +22,12 @@
 #include "Base/ScreenOutput.h"
 //#include <src/cmaes_interface.h>
 
+#include <ctime>
+#include <iostream>
+#include <string>
+#include <boost/asio.hpp>
+#include <boost/array.hpp>
+
 /*
 void compress(const std::string& path){
 	StopWatch sw;
@@ -82,8 +88,152 @@ void quit()
   endwin();
 }
 
+std::string make_daytime_string(){
+  std::time_t now = std::time(0);
+  return std::ctime(&now);
+}
+
+void socketsTest(){
+	try
+	{
+		// Any program that uses asio need to have at least one io_service object
+		boost::asio::io_service io_service;
+
+		// acceptor object needs to be created to listen for new connections
+		boost::asio::ip::tcp::acceptor acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 13));
+
+		for (;;){
+			// creates a socket
+			boost::asio::ip::tcp::socket socket(io_service);
+
+			// wait and listen
+			acceptor.accept(socket);
+			std::cout << "huh" << std::endl;
+
+			// prepare message to send back to client
+			std::string message = make_daytime_string();
+
+			boost::system::error_code ignored_error;
+
+			// writing the message for current time
+			boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
+		}
+	}
+	catch (std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
+}
+
+void clientTest(char* av[]){
+	try
+	{
+		// the user should specify the server - the 2nd argument
+
+		// Any program that uses asio need to have at least one io_service object
+		boost::asio::io_service io_service;
+
+		// Convert the server name that was specified as a parameter to the application, to a TCP endpoint.
+		// To do this, we use an ip::tcp::resolver object.
+		boost::asio::ip::tcp::resolver resolver(io_service);
+
+		// A resolver takes a query object and turns it into a list of endpoints.
+		// We construct a query using the name of the server, specified in argv[1],
+		// and the name of the service, in this case "daytime".
+		boost::asio::ip::tcp::resolver::query query(av[1], "daytime");
+
+		// The list of endpoints is returned using an iterator of type ip::tcp::resolver::iterator.
+		// A default constructed ip::tcp::resolver::iterator object can be used as an end iterator.
+		boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+
+		// Now we create and connect the socket.
+		// The list of endpoints obtained above may contain both IPv4 and IPv6 endpoints,
+		// so we need to try each of them until we find one that works.
+		// This keeps the client program independent of a specific IP version.
+		// The boost::asio::connect() function does this for us automatically.
+		// The connection is open. All we need to do now is read the response from the daytime service.
+		while(true){
+			boost::asio::ip::tcp::socket socket(io_service);
+			boost::asio::connect(socket, endpoint_iterator);
+
+			while(true){
+				// We use a boost::array to hold the received data.
+				boost::array<char, 128> buf;
+				boost::system::error_code error;
+				std::cout << "ask for something" << std::endl;
+				// The boost::asio::buffer() function automatically determines
+				// the size of the array to help prevent buffer overruns.
+				size_t len = socket.read_some(boost::asio::buffer(buf), error);
+
+				// When the server closes the connection,
+				// the ip::tcp::socket::read_some() function will exit with the boost::asio::error::eof error,
+				// which is how we know to exit the loop.
+				if (error == boost::asio::error::eof)
+					break; // Connection closed cleanly by peer.
+				//				else if (error)
+				//					throw boost::system::system_error(error); // Some other error.
+
+				std::cout.write(buf.data(), len);
+			}
+			sleep(1);
+		}
+	}
+	// handle any exceptions that may have been thrown.
+	catch (std::exception& e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
+}
+
 int main(int ac, char* av[]){
 	handleProgrammOptions(ac,av);
+//	cmaes::cmaes_t evo; /* an CMA-ES type struct or "object" */
+//	cmaes::cmaes_boundary_transformation_t cmaesBoundaries;
+//	double *m_arFunvals, *m_hyperParamsValues;
+//	double lowerBounds[] = {0.2,0.2};
+//	double upperBounds[] = {25., 25.0};
+//	int nb_bounds = 2; /* numbers used from lower and upperBounds */
+//	unsigned long dimension;
+//
+//	double *const*pop;
+//	/* initialize boundaries, be sure that initialSigma is smaller than upper minus lower bound */
+//	cmaes::cmaes_boundary_transformation_init(&cmaesBoundaries, lowerBounds, upperBounds, nb_bounds);
+//	/* Initialize everything into the struct evo, 0 means default */
+//	const int seed = 12389;
+//	m_arFunvals = cmaes::cmaes_init(&evo, 0, NULL, NULL, seed, 0, "../Settings/cmaes_initials.par");
+//	dimension = (unsigned long) cmaes::cmaes_Get(&evo, "dimension");
+//	if(dimension != nb_bounds){
+//		printError("The dimension in the settings does not fit!");
+//	}
+//	m_hyperParamsValues = cmaes::cmaes_NewDouble(dimension); /* calloc another vector */
+//	const int sampleLambda = cmaes::cmaes_Get(&evo, "lambda");
+//	std::list<Eigen::Vector2d> points;
+//	std::list<double> values;
+//	for(unsigned int k = 0; k < 50; ++k){
+//		/* generate lambda new search points, sample population */
+//
+//		pop = cmaes::cmaes_SamplePopulation(&evo); /* do not change content of pop */
+//
+//		/* transform into bounds and evaluate the new search points */
+//		for(int i = 0; i < sampleLambda; ++i) {
+//			//							const double corr = m_package->correctlyClassified();
+//			//							const double probDiff = corr < 60. ? 0. : corr < 80 ? 0.1 : corr < 90 ? 0.2 : 0.3;
+//			cmaes::cmaes_boundary_transformation(&cmaesBoundaries, pop[i], m_hyperParamsValues, dimension);
+//			m_arFunvals[i] =  (((m_hyperParamsValues[0] - 10.) * (m_hyperParamsValues[0] - 10.) + (m_hyperParamsValues[1] - 10.) + (m_hyperParamsValues[1] - 10.)));
+//			values.push_back(m_arFunvals[i]);
+//			points.push_back(Eigen::Vector2d(m_hyperParamsValues[0], m_hyperParamsValues[1]));
+//		}
+//		cmaes::cmaes_UpdateDistribution(&evo, m_arFunvals);  /* assumes that pop[i] has not been modified */
+//	}
+//	DataWriterForVisu::writePointsIn2D("test.svg", points, values);
+//	openFileInViewer("test.svg");
+//	exit(0);
+//	if(ac > 1){
+//		clientTest(av);
+//	}else{
+//		socketsTest();
+//	}
+//	return 0;
 	Settings::init("../Settings/init.json");
 	ThreadMaster::start(); // must be performed after Settings init!
 	ScreenOutput::start(); // should be started after ThreadMaster and Settings

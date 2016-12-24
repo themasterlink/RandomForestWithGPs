@@ -17,13 +17,13 @@
     "Forest": {
         "amountOfTrees": 5000,
         "Trees": {
-            "height": 20
+            "height": 18
         }
     },
     "IVM": {
         "doEpUpdate": "false",
         "lambda": 0.5,
-        "nrOfInducingPoints": 60,
+        "nrOfInducingPoints": 80,
         "desiredMargin": 0.01,
         "hasLengthMoreThanParam" : "false",
         "useNeighbourComparison": "true",
@@ -31,17 +31,26 @@
         	"useSavedHyperParams": "false",
         	"overwriteExistingHyperParams": "true"
         },
-        "kernelType": 0
+        "kernelType": 0,
+        "useCmaes": "true"
+    },
+    "CMAES": {
+    	"lowerBoundLen": 0.2,
+    	"upperBoundLen": 10,
+    	"lowerBoundFNoise": 0.2,
+    	"upperBoundFNoise": 20,
+    	"lowerBoundSNoise": 0.05,
+    	"upperBoundSNoise": 0.1
     },
     "TotalStorage": {
-    	"amountOfPointsUsedForTraining": 500,
+    	"amountOfPointsUsedForTraining": 200,
     	"shareForTraining": 0.6,
-        "folderLocReal": "..\/mnist\/",
+        "folderLocReal": "..\/mnistOrg\/",
         "folderLocFake": "..\/fakeData\/",
         "normalizeData": "true"
     },
     "OnlineRandomForest": {
-		"amountOfPointsUntilRetrain": 300,
+		"amountOfPointsUntilRetrain": 200,
 		"minUsedDataFactor":  0.3,
 		"maxUsedDataFactor":  0.6,
 		"factorAmountOfUsedDims": 0.9,
@@ -51,7 +60,7 @@
         "path": "..\/realTest\/kernelData.kernel"
     },
     "RandomForestKernel": {
-    	"samplingAmount": 400,
+    	"samplingAmount": 450,
     	"maxDepth": 18,
 		"usePartitionInsteadOfLabels": "true"
     },
@@ -101,12 +110,12 @@
     	"maxValueFraction": 0.6
     },
     "VisuParams": {
-    	"visuHyperParamSampling2D": "false",
+    	"visuHyperParamSampling2D": "true",
     	"visuEntropyForFinalIvm": "false",
-    	"visuFinalIvm": "true"
+    	"visuFinalIvm": "false"
     },
     "main": {
-    	"type": "multiIvm"
+    	"type": "ORF"
     }
     
 }

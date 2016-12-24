@@ -116,7 +116,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		type = 2;
 	}
 	if(targetDir.parent_path().filename() == "mnist" && type == 0){
-		didNormalizeData = true; // did perform that before write out mnistOrg
+//		didNormalizeData = true; // did perform that before write out mnistOrg
 	}
 	if(type == 0){
 		for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
@@ -166,7 +166,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 										for(unsigned int c = 0; c < cols; ++c){
 											unsigned char ele;
 											input.read((char*) &ele, 1);
-											(*newEle)[r * rows + c] = ele;
+											(*newEle).coeffRef(r * rows + c) = ele;
 										}
 									}
 									data[labels[i]].push_back(newEle);
@@ -198,71 +198,108 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			printError("Class 0 is not represented here!");
 			return;
 		}
-		const unsigned int dimValue = data[0][0]->rows();
-		std::vector<Eigen::Vector2d > minMaxValues(dimValue);
-		for(unsigned int k = 0; k < dimValue; ++k){
-			minMaxValues[k][0] = DBL_MAX;
-			minMaxValues[k][1] = -DBL_MAX;
-		}
+//		const unsigned int amountOfDim = data[0][0]->rows();
+//		std::vector<Eigen::Vector2d > minMaxValues(amountOfDim);
+//		for(unsigned int k = 0; k < amountOfDim; ++k){
+//			minMaxValues[k][0] = DBL_MAX;
+//			minMaxValues[k][1] = -DBL_MAX;
+//		}
+//		for(DataSetsIterator it = dataSets.begin(); it != dataSets.end(); ++it){
+//			for(unsigned int t = 0; t < it->second.size(); ++t){
+//				ClassPoint& point = *it->second[t];
+//				for(unsigned int k = 0; k < amountOfDim; ++k){
+//					if(point.coeff(k) < minMaxValues[k].coeff(0)){
+//						minMaxValues[k].coeffRef(0) = point.coeff(k);
+//					}
+//					if(point.coeff(k) > minMaxValues[k].coeff(1)){
+//						minMaxValues[k].coeffRef(1) = point.coeff(k);
+//					}
+//				}
+//			}
+//		}
+//		int newDim = amountOfDim;
+////		bool diffIsEqual = false;
+////		int lastDim = -1;
+//		std::vector<bool> notUsed(amountOfDim, false);
+//		for(int iActDim = amountOfDim - 1; iActDim >= 0; --iActDim){
+//			printOnScreen("iActDim: " << iActDim);
+//			if(minMaxValues[iActDim].coeff(0) == minMaxValues[iActDim].coeff(1)){
+//				--newDim;
+//				for(DataSetsIterator it = dataSets.begin(); it != dataSets.end(); ++it){
+//					for(unsigned int t = 0; t < it->second.size(); ++t){
+//						ClassPoint& point = *it->second[t];
+//						for(unsigned int t = iActDim; t < newDim; ++t){
+//							point.coeffRef(t) = point.coeff(t+1);
+//						}
+//					}
+//				}
+//				notUsed[iActDim] = true;
+//			}
+////			else if(minMaxValues[iActDim].coeff(0) != minMaxValues[iActDim].coeff(1) && diffIsEqual){
+////				// remove this dimension in every pixel
+////				int diff = lastDim - iActDim;
+////				for(unsigned int i = iActDim; i < lastDim; ++i){
+////					notUsed[i] = true;
+////				}
+////				printOnScreen("Remove dimension from exclusive " << iActDim << " to " << lastDim << " from all points");
+////				++iActDim; // get to last value
+////				newDim -= diff;
+////				std::stringstream str2;
+////				for(unsigned int l = iActDim; l < std::min((int) amountOfDim, lastDim + 5); ++l){
+////					str2 << dataSets.begin()->second[0]->coeff(l) << ", ";
+////				}
+////				printOnScreen("From " << iActDim << " to " << std::min((int) amountOfDim, lastDim + 5) << ": " << str2.str());
+////				for(DataSetsIterator it = dataSets.begin(); it != dataSets.end(); ++it){
+////					for(unsigned int t = 0; t < it->second.size(); ++t){
+////						ClassPoint& point = *it->second[t];
+////						if(iActDim < lastDim - 1){ // not if the last element is removed
+////							for(unsigned int t = iActDim; t < std::min(newDim, (int) amountOfDim - diff); ++t){
+////								point.coeffRef(t) = point.coeff(t+diff);
+////							}
+////						}
+////						point.resize(newDim);
+////					}
+////				}
+////				std::stringstream str3;
+////				for(unsigned int l = iActDim; l < std::min((int) amountOfDim, lastDim + 5); ++l){
+////					str3 << dataSets.begin()->second[0]->coeff(l) << ", ";
+////				}
+////				printOnScreen("From " << iActDim << " to " << std::min((int) amountOfDim, lastDim + 5) << ": " << str3.str());
+////				diffIsEqual = false;
+////				--iActDim; // get back last value
+////			}
+//		}
+//		for(DataSetsIterator it = dataSets.begin(); it != dataSets.end(); ++it){
+//			for(unsigned int t = 0; t < it->second.size(); ++t){
+//				(*it->second[t]).resize(newDim);
+//			}
+//		}
+//		printOnScreen("Reduced from " << amountOfDim << " to " << newDim);
+//		cv::Mat img(28, 28, CV_8UC3, cv::Scalar(0, 0, 0));
+//		for(unsigned int r = 0; r < 28; ++r){
+//			for(unsigned int c = 0; c < 28; ++c){
+//				cv::Vec3b& color = img.at<cv::Vec3b>(r,c);
+//				color[0] = (notUsed[r * 28 + c] ? 1 : 0) * 255;
+//				color[1] = (notUsed[r * 28 + c] ? 1 : 0) * 255;
+//				color[2] = (notUsed[r * 28 + c] ? 1 : 0) * 255;
+//			}
+//		}
+//		cv::imwrite("test.png", img);
+//		openFileInViewer("test.png");
+//		ClassKnowledge::setAmountOfDims(newDim);
+
+		ClassKnowledge::setAmountOfDims(28 * 28);
 		for(DataSetsIterator it = dataSets.begin(); it != dataSets.end(); ++it){
 			for(unsigned int t = 0; t < it->second.size(); ++t){
 				ClassPoint& point = *it->second[t];
-				for(unsigned int k = 0; k < dimValue; ++k){
-					if(point[k] < minMaxValues[k][0]){
-						minMaxValues[k][0] = point[k];
-					}
-					if(point[k] > minMaxValues[k][1]){
-						minMaxValues[k][1] = point[k];
-					}
+				for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
+					point.coeffRef(k) /= 255.;
 				}
 			}
 		}
-		int newDim = dimValue;
-		bool diffIsEqual = false;
-		int lastDim = -1;
-		std::vector<bool> notUsed(dimValue, false);
-		for(int k = dimValue - 1; k >= 0; --k){
-			if(minMaxValues[k][0] == minMaxValues[k][1] && !diffIsEqual){
-				lastDim = k;
-				diffIsEqual = true;
-			}else if(minMaxValues[k][0] != minMaxValues[k][1] && diffIsEqual){
-				// remove this dimension in every pixel
-				int diff = lastDim - k;
-				for(unsigned int i = k; i < lastDim; ++i){
-					notUsed[i] = true;
-				}
-				printOnScreen("Remove dimension from exclusive " << k << " to " << lastDim << " from all points");
-				++k; // get to last value
-				newDim -= diff;
-				for(DataSetsIterator it = dataSets.begin(); it != dataSets.end(); ++it){
-					for(unsigned int t = 0; t < it->second.size(); ++t){
-						ClassPoint& point = *it->second[t];
-						if(k < dimValue - 1){ // not if the last element is removed
-							for(unsigned int t = k; t < newDim; ++t){
-								point[t] = point[t+diff];
-							}
-						}
-						point.resize(newDim);
-					}
-				}
-				diffIsEqual = false;
-				--k; // get back last value
-			}
-		}
-		cv::Mat img(28, 28, CV_8UC3, cv::Scalar(0, 0, 0));
-		for(unsigned int r = 0; r < 28; ++r){
-			for(unsigned int c = 0; c < 28; ++c){
-				cv::Vec3b& color = img.at<cv::Vec3b>(r,c);
-				color[0] = (notUsed[r * 28 + c] ? 1 : 0) * 255;
-				color[1] = (notUsed[r * 28 + c] ? 1 : 0) * 255;
-				color[2] = (notUsed[r * 28 + c] ? 1 : 0) * 255;
-			}
-		}
-		cv::imwrite("test.png", img);
-		openFileInViewer("test.png");
-		ClassKnowledge::setAmountOfDims(newDim);
-		DataPoint center, var;
-		DataConverter::centerAndNormalizeData(dataSets, center, var);
+
+//		DataPoint center, var;
+//		DataConverter::centerAndNormalizeData(dataSets, center, var);
 		didNormalizeData = true;
 
 		std::string mnistFolder = targetDir.parent_path().parent_path().c_str();

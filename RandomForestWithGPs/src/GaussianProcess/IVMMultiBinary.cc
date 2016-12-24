@@ -143,6 +143,7 @@ void IVMMultiBinary::train(){
 		InformationPackage* wholePackage = new InformationPackage(InformationPackage::IVM_MULTI_UPDATE, m_correctAmountForTrainingData, m_storage.size());
 		m_group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::retrainAllIvmsIfNeeded, this, wholePackage)));
 	}else{
+		printOnScreen("First Value: " << m_storage[0]->getLabel() << " with: " << m_storage[0]->transpose());
 		if(!Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam")){
 			std::vector<double> means = {Settings::getDirectDoubleValue("KernelParam.lenMean"),
 					Settings::getDirectDoubleValue("KernelParam.fNoiseMean"),
@@ -208,10 +209,10 @@ void IVMMultiBinary::train(){
 //							printOnScreen("Package: " << i << ", is still running");
 						}else{ // task is finished
 							if(stateOfIvms[i] == 1 && m_ivms[i]->getKernelType() == IVM::GAUSS){
-//								printOnScreen("Add " << i << " to retrain");
+								printOnScreen("Add " << i << " to retrain");
 								// add to retrain
-//								packagesForRetrain.push_back(new InformationPackage(InformationPackage::IVM_RETRAIN, packages[i]->correctlyClassified(), m_storage.size()));
-//								groupForRetraining.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::retrainIvmIfNeeded, this, packagesForRetrain.back(), i)));
+								packagesForRetrain.push_back(new InformationPackage(InformationPackage::IVM_RETRAIN, packages[i]->correctlyClassified(), m_storage.size()));
+								groupForRetraining.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::retrainIvmIfNeeded, this, packagesForRetrain.back(), i)));
 								stateOfIvms[i] = 2;
 							}
 						}

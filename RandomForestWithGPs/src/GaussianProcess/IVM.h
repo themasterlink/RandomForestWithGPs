@@ -16,6 +16,8 @@
 #include "../Base/InformationPackage.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
 #include "../Data/OnlineStorage.h"
+#include "../CMAES/cmaes.h"
+#include "../CMAES/boundary_transformation.h"
 
 class IVM {
 public:
@@ -92,6 +94,13 @@ private:
 
 	bool internalTrain(bool clearActiveSet = true, const int verboseLevel = 0);
 
+	void testOnTrainingsData(int & amountOfOneChecks, int& amountOfOnesCorrect, int& amountOfMinusOneChecks,
+			int& amountOfMinusOnesCorrect, double& correctness, const double probDiff,
+			const bool onlyUseOnes, const bool wholeDataSet, const std::list<int>& testPoints);
+
+	double calcErrorOnTrainingsData(const bool wholeDataSet, const std::list<int>& testPoints);
+
+
 	OnlineStorage<ClassPoint*>& m_storage;
 	Matrix m_M;
 	Matrix m_K;
@@ -130,6 +139,10 @@ private:
 	InformationPackage* m_package;
 
 	bool m_isPartOfMultiIvm;
+
+	cmaes::cmaes_t m_evo; /* an CMA-ES type struct or "object" */
+	cmaes::cmaes_boundary_transformation_t m_cmaesBoundaries;
+	double *m_arFunvals, *m_hyperParamsValues;
 };
 
 #endif /* GAUSSIANPROCESS_IVM_H_ */
