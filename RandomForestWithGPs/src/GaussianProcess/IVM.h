@@ -98,7 +98,7 @@ private:
 			int& amountOfMinusOnesCorrect, double& correctness, const double probDiff,
 			const bool onlyUseOnes, const bool wholeDataSet, const std::list<int>& testPoints);
 
-	double calcErrorOnTrainingsData(const bool wholeDataSet, const std::list<int>& testPoints);
+	double calcErrorOnTrainingsData(const bool wholeDataSet, const std::list<int>& testPoints, double& oneCorrect, double& minusOneCorrect);
 
 
 	OnlineStorage<ClassPoint*>& m_storage;

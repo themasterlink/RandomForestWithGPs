@@ -115,7 +115,7 @@
     	"visuFinalIvm": "false"
     },
     "main": {
-    	"type": "ORF"
+    	"type": "multiIvm"
     }
     
 }

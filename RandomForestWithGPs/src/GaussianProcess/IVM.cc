@@ -318,6 +318,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 							const bool trained = internalTrain(true, 1);
 							double error = -DBL_MAX;
 							if(trained){
+								double oneError, minusOneError;
 //								int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
 //								int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
 //								double correctness;
@@ -326,14 +327,23 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //								testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
 //										amountOfMinusOneChecks, amountOfMinusOnesCorrect,
 //										correctness, probDiff, onlyUseOnes, false, testPoints); // false -> only testPoints
-								error = calcErrorOnTrainingsData(false, testPoints);
-
+								error = calcErrorOnTrainingsData(false, testPoints, oneError, minusOneError);
+								if(oneError > minusOneError){
+									error = 0.25 * minusOneError + 0.75 * oneError;
+								}else{
+									error = 0.25 * oneError + 0.75 * minusOneError;
+								}
 //								double neededValue = 50.0;
 								if(error <= 48.){
 //									arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + (-correctness + 100) * 2;
 									m_arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + error;
 									if(m_arFunvals[i] < negBestLogZ * 1.2){
-										error = calcErrorOnTrainingsData(true, testPoints);
+										error = calcErrorOnTrainingsData(true, testPoints, oneError, minusOneError);
+										if(oneError > minusOneError){
+											error = 0.25 * minusOneError + 0.75 * oneError;
+										}else{
+											error = 0.25 * oneError + 0.75 * minusOneError;
+										}
 										printInPackageOnScreen(m_package, "New full error of: " << error);
 //										testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
 //												amountOfMinusOneChecks, amountOfMinusOnesCorrect,
@@ -361,7 +371,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 													str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
 															<< number2String(bestParams.m_fNoise.getValue(),4) << ", "
 															<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
-															<< "e: " << number2String(error, 3) << " %% logZ: " << negBestLogZ;
+															<< "e: " << number2String(error, 3) << " %%, 1: "<< number2String(oneError, 3)
+															<< " %%, -1: " << number2String(minusOneError, 3) << " %% logZ: " << negBestLogZ;
 //															<< "mc: " << number2String((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100., 2) << " %%, pc: "
 //															<<  number2String((amountOfOnesCorrect / (double) amountOfOneChecks) * 100, 2) << " %%, logZ: " << negBestLogZ << ", " << std::max(newProbDiff, probDiff);
 													m_package->setAdditionalInfo(str2.str());
@@ -1389,7 +1400,7 @@ double IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, c
 	return delta_kn;
 }
 
-double IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const std::list<int>& testPoints){
+double IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const std::list<int>& testPoints, double& oneError, double& minusOneError){
 	double plusError = 0;
 	double minusError = 0;
 	int oneCounter = 0;
@@ -1404,7 +1415,9 @@ double IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const std::list<in
 				minusError += prob;
 			}
 		}
-		return (plusError / (double) oneCounter + minusError / (double) (m_dataPoints - oneCounter)) * 50.;
+		oneError = plusError / (double) oneCounter * 100.;
+		minusOneError = (minusError / (double) (m_dataPoints - oneCounter)) * 100.;
+		return (oneError + minusError) * 0.5;
 	}else{
 		for(std::list<int>::const_iterator it = testPoints.cbegin(); it != testPoints.cend(); ++it){
 			const int label = m_storage[*it]->getLabel();
@@ -1416,7 +1429,9 @@ double IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const std::list<in
 				minusError += prob;
 			}
 		}
-		return (plusError / (double) oneCounter + minusError / (double) (testPoints.size() - oneCounter)) * 50.;
+		oneError = plusError / (double) oneCounter * 100.;
+		minusOneError = (minusError / (double) (testPoints.size() - oneCounter)) * 100.;
+		return (oneError + minusError) * 0.5;
 	}
 }
 
