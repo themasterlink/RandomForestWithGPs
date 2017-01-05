@@ -16,6 +16,8 @@
 
 #define MAX_HEIGHT 120
 
+#define USE_SCREEN_OUPUT 1
+
 class ScreenOutput {
 public:
 	// must be called to get the needed information

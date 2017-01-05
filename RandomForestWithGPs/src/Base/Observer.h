@@ -13,7 +13,7 @@
 class Subject;
 
 class Observer {
-	friend Subject;
+	friend class Subject;
 public:
 	Observer();
 
@@ -29,7 +29,7 @@ enum ClassTypeSubject {
 };
 
 class Subject {
-	friend Observer;
+	friend class Observer;
 public:
 	Subject();
 

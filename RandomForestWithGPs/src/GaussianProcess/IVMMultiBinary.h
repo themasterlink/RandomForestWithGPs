@@ -17,7 +17,7 @@ class IVMMultiBinary  : public PredictorMultiClass, public Observer {
 public:
 	IVMMultiBinary(OnlineStorage<ClassPoint*>& storage,
 			const unsigned int numberOfInducingPointsPerIVM,
-			const bool doEPUpdate);
+			const bool doEPUpdate, const int orfClassLabel = UNDEF_CLASS_LABEL);
 
 	virtual ~IVMMultiBinary();
 
@@ -53,7 +53,7 @@ private:
 	void predictClassDataInParallel(const ClassData& points, const int usedIvm,
 			std::vector< std::vector<double> >* probabilities, InformationPackage* package) const;
 
-	void initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix);
+	void initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix, InformationPackage* package);
 
 	void retrainIvmIfNeeded(InformationPackage* package, const int iClassNr);
 
@@ -83,6 +83,7 @@ private:
 
 	std::vector<double> m_correctAmountForTrainingDataForClasses;
 
+	const int m_orfClassLabel;
 };
 
 #endif /* GAUSSIANPROCESS_IVMMULTIBINARY_H_ */

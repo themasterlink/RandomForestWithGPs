@@ -36,6 +36,7 @@ void OnlineStorage<T>::append(const OnlineStorage<T>& storage){
 template<typename T>
 void OnlineStorage<T>::append(const std::vector<T>& storage){
 	m_lastUpdateIndex = size();
+	m_internal.reserve(m_internal.size() + storage.size());
 	m_internal.insert(m_internal.end(), storage.begin(), storage.end());
 	notify(APPENDBLOCK);
 }

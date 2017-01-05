@@ -39,7 +39,9 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 		if(label == data[i]->getLabel()){
 			++right;
 		}
-		conv.coeffRef(data[i]->getLabel(), label) += 1;
+		if(label != UNDEF_CLASS_LABEL){
+			conv.coeffRef(data[i]->getLabel(), label) += 1;
+		}
 		/*if(data[i]->getLabel() == label){
 			++amountPerClass[label];
 		}else if(data[i]->getLabel() == ivms.getLabelForMinusOne()){
@@ -75,15 +77,7 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 }
 
 void executeForMutliClassIVM(){
-	int firstPoints; // all points
-	Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
-	const double share = Settings::getDirectDoubleValue("TotalStorage.shareForTraining");
-	firstPoints /= share;
-	printOnScreen("Read " << firstPoints << " points per class");
-	TotalStorage::readData(firstPoints);
-	DataSets datas;
-	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << " with " << TotalStorage::getAmountOfClass() << " classes");
-	const int trainAmount = share * (std::min((int) TotalStorage::getSmallestClassSize(), firstPoints) * (double) TotalStorage::getAmountOfClass());
+	const int trainAmount = readAllData();
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;
 	printOnScreen("Finish reading");
@@ -93,7 +87,6 @@ void executeForMutliClassIVM(){
 	int number;
 	Settings::getValue("IVM.nrOfInducingPoints", number);
 	IVMMultiBinary ivms(train, number, doEpUpdate);
-
 	// starts the training by its own
 	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 	printOnScreen("Finish training");

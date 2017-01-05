@@ -18,6 +18,7 @@
 #include "StopWatch.h"
 #include "InLinePercentageFiller.h"
 #include "../Base/ScreenOutput.h"
+#include "../Base/Logger.h"
 #include "boost/filesystem.hpp"
 
 #define RESET   "\033[0m"
@@ -39,6 +40,8 @@
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
 #define EPSILON 1e-15
+
+#define NEG_DBL_MAX -DBL_MAX
 
 inline std::string number2String(const double& in, const int precision = -1){
 	if(precision != -1){
@@ -73,6 +76,7 @@ inline std::string number2String(const T& in){
 
 inline void openFileInViewer(const std::string& filename){
 	if(boost::filesystem::exists(filename)){
+		Logger::addSpecialLineToFile("open " + filename, "System");
 		system(("open " + filename).c_str());
 	}
 }

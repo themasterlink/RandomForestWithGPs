@@ -62,7 +62,7 @@ public:
 
 	void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd* usedMatrix);
 
-	static void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd& usedMatrix, const OnlineStorage<ClassPoint*>& storage);
+	static void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd& usedMatrix, const OnlineStorage<ClassPoint*>& storage, InformationPackage* package = nullptr);
 
 	virtual double calcDiagElement(unsigned int row) const = 0;
 

@@ -20,6 +20,29 @@ DataReader::DataReader(){
 DataReader::~DataReader(){
 }
 
+void DataReader::readFromBinaryFile(ClassData& data, const std::string& inputName, const int amountOfData){
+	std::string line;
+	std::fstream input(inputName);
+	if(input.is_open()){
+		long size;
+		input.read((char*) &size, sizeof(long));
+		data.resize(size);
+		for(ClassDataIterator it = data.begin(); it != data.end(); ++it){
+			*it = new ClassPoint();
+			ReadWriterHelper::readPoint(input, **it);
+			if(!ClassKnowledge::hasClassName((*it)->getLabel())){
+				ClassKnowledge::setNameFor(number2String((*it)->getLabel()), (*it)->getLabel());
+			}
+		}
+		if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
+			ClassKnowledge::setAmountOfDims(data[0]->rows());
+		}
+		input.close();
+	}else{
+		printError("File was not found: " << inputName);
+	}
+}
+
 void DataReader::readFromFile(ClassData& data, const std::string& inputName, const int amountOfData){
 	std::string line;
 	std::ifstream input(inputName);
@@ -31,7 +54,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName, con
 			while(std::getline(ss, item, ',')){
 				elements.push_back(item);
 			}
-			ClassPoint* newEle = new ClassPoint(elements.size() - 1, std::stoi(elements.back()) > 0 ? 1 : 0);
+			ClassPoint* newEle = new ClassPoint(elements.size() - 1, std::stoi(elements.back()));
 			for(int i = 0; i < elements.size() - 1; ++i){
 				(*newEle)[i] = std::stod(elements[i]);
 			};
@@ -202,7 +225,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 //		std::vector<Eigen::Vector2d > minMaxValues(amountOfDim);
 //		for(unsigned int k = 0; k < amountOfDim; ++k){
 //			minMaxValues[k][0] = DBL_MAX;
-//			minMaxValues[k][1] = -DBL_MAX;
+//			minMaxValues[k][1] = NEG_DBL_MAX;
 //		}
 //		for(DataSetsIterator it = dataSets.begin(); it != dataSets.end(); ++it){
 //			for(unsigned int t = 0; t < it->second.size(); ++t){

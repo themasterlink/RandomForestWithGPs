@@ -12,6 +12,7 @@
 #include "../Data/DataWriterForVisu.h"
 #include "../Utility/Util.h"
 #include "../Data/DataConverter.h"
+#include "../Data/DataBinaryWriter.h"
 
 
 #define LOG2   0.69314718055994528623
@@ -22,7 +23,7 @@ IVM::IVM(OnlineStorage<ClassPoint*>& storage, const bool isPartOfMultiIvm):
 	m_logZ(0), m_derivLogZ(),
 	m_storage(storage),m_dataPoints(0),
 	m_numberOfInducingPoints(0), m_bias(0), m_lambda(0),
-	m_doEPUpdate(false), m_desiredPoint(0.5), m_desiredMargin(0.05),
+	m_doEPUpdate(false), m_splitOfClassOneInData(0.5), m_desiredPoint(0.5), m_desiredMargin(0.05),
 	m_calcLogZ(false), m_calcDerivLogZ(false), m_trained(false),
 	m_gaussKernel(nullptr),
 	m_rfKernel(nullptr),
@@ -30,6 +31,7 @@ IVM::IVM(OnlineStorage<ClassPoint*>& storage, const bool isPartOfMultiIvm):
 	m_useNeighbourComparison(false),
 	m_package(nullptr),
 	m_isPartOfMultiIvm(isPartOfMultiIvm),
+	m_className("undefined"),
 	m_arFunvals(nullptr),
 	m_hyperParamsValues(nullptr){
 	int kernelType = 0;
@@ -81,9 +83,10 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 		printError("No data in init given!"); return;
 	}
 	m_labelsForClasses = labelsForClasses;
+	m_className = ClassKnowledge::getNameFor(getLabelForOne());
 	m_uniformNr.setSeed((int)labelsForClasses.coeff(0) * 74739); // TODO better way if class is used multiple times
 	m_uniformNr.setMinAndMax(1, m_storage.size() / 100);
-	const bool oneVsAllCase = m_labelsForClasses.coeff(1) == -1;
+	const bool oneVsAllCase = m_labelsForClasses.coeff(1) == UNDEF_CLASS_LABEL;
 	if(m_labelsForClasses.coeff(0) == m_labelsForClasses.coeff(1)){
 		printError("The labels for the two different classes are the same!");
 	}
@@ -129,8 +132,8 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (double) amountOfOneClass / (double) m_dataPoints));
 	Settings::getValue("IVM.lambda", m_lambda);
 	Settings::getValue("IVM.desiredMargin", m_desiredMargin);
-//	m_desiredPoint = (double) amountOfOneClass / (double) m_dataPoints;
-	m_desiredPoint = (0.5 + (double) amountOfOneClass / (double) m_dataPoints) * 0.5; // middle between 0.5 and real margin
+	m_splitOfClassOneInData = (double) amountOfOneClass / (double) m_dataPoints;
+	m_desiredPoint = (0.5 + m_splitOfClassOneInData) * 0.5; // middle between 0.5 and real margin
 	Settings::getValue("IVM.useNeighbourComparison", m_useNeighbourComparison);
 
 	// sampling method:
@@ -189,6 +192,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //		return false;
 //	}
 	m_trained = false;
+
 	const double minCorrectForWholeClassification = 70;
 	if(m_package == nullptr){
 		printError("The IVM has no set package set!");
@@ -210,7 +214,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 		}
 		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses.coeff(0)) + ".binary";
 		bool loadBestParams = false;
-		double bestLogZ = -DBL_MAX;
+		double bestLogZ = NEG_DBL_MAX;
 		double bestCorrectness = 0;
 		if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
 			bestParams.readFromFile(kernelFilePath);
@@ -238,6 +242,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 			bestParams.m_sNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.sNoise"));
 		}
 		if(doSampling){
+			printInPackageOnScreen(m_package, "Start sampling");
 			bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 			m_gaussKernel->changeKernelConfig(hasMoreThanOneLengthValue);
 			std::vector<double> means = {Settings::getDirectDoubleValue("KernelParam.lenMean"),
@@ -254,7 +259,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				m_uniformNr.setMinAndMax(0, m_dataPoints - 1);
 				std::list<int> testPoints;
 				int counter = 0;
-				const int minAmountOfDataPoints = std::min(m_dataPoints * m_desiredPoint, m_dataPoints * (1. - m_desiredPoint));
+				const int minAmountOfDataPoints = (std::min(m_dataPoints * m_splitOfClassOneInData, m_dataPoints * (1. - m_splitOfClassOneInData)) - 1) * 2;
 				const int maxAmount = std::min((int) 100, minAmountOfDataPoints);
 				while(counter < maxAmount){
 					int value = -1;
@@ -287,7 +292,6 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 //				int iCounterSampling = 0;
 				if(Settings::getDirectBoolValue("IVM.useCmaes")){
-
 					/* Iterate until stop criterion holds */
 					StopWatch sw;
 					int iCounter = 0;
@@ -298,6 +302,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 
 					const int sampleLambda = cmaes::cmaes_Get(&m_evo, "lambda");
 					const unsigned long dimension = (unsigned long) cmaes::cmaes_Get(&m_evo, "dimension");
+					const int desiredAmountOfInducingsPoints = m_numberOfInducingPoints;
+
 					while(m_package != nullptr){
 						/* generate lambda new search points, sample population */
 
@@ -314,10 +320,16 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //								cmaes_boundary_transformation(&boundaries, pop[i], x_in_bounds, dimension);
 //							}
 							m_gaussKernel->setHyperParams(m_hyperParamsValues[0], m_hyperParamsValues[1]); //, m_hyperParamsValues[2]);
+
 							sw.startTime();
+							const int diffInInducingPoints = desiredAmountOfInducingsPoints - m_numberOfInducingPoints;
+							if(diffInInducingPoints > 0){
+								setNumberOfInducingPoints(desiredAmountOfInducingsPoints);
+							}
 							const bool trained = internalTrain(true, 1);
-							double error = -DBL_MAX;
+							double error = NEG_DBL_MAX;
 							if(trained){
+
 								double oneError, minusOneError;
 //								int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
 //								int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
@@ -336,7 +348,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //								double neededValue = 50.0;
 								if(error <= 48.){
 //									arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + (-correctness + 100) * 2;
-									m_arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + error;
+									const int diff = desiredAmountOfInducingsPoints - m_numberOfInducingPoints; // bad if not all inducing points were used
+									m_arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + error + diff / (double) desiredAmountOfInducingsPoints;
 									if(m_arFunvals[i] < negBestLogZ * 1.2){
 										error = calcErrorOnTrainingsData(true, testPoints, oneError, minusOneError);
 										if(oneError > minusOneError){
@@ -360,31 +373,35 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //												printInPackageOnScreen(m_package, "New full on prob: " << newProbDiff << " correcntess of: " << correctness);
 //											}
 
-											// still better than take it
-											const double correctness = 100. - error;
-											if(correctness >= m_package->correctlyClassified()){
-												m_gaussKernel->getCopyOfParams(bestParams);
-												negBestLogZ = m_arFunvals[i];
-												m_package->changeCorrectlyClassified(correctness);
-												if(!m_gaussKernel->hasLengthMoreThanOneDim()){
-													std::stringstream str2;
-													str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
-															<< number2String(bestParams.m_fNoise.getValue(),4) << ", "
-															<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
-															<< "e: " << number2String(error, 3) << " %%, 1: "<< number2String(oneError, 3)
-															<< " %%, -1: " << number2String(minusOneError, 3) << " %% logZ: " << negBestLogZ;
-//															<< "mc: " << number2String((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100., 2) << " %%, pc: "
-//															<<  number2String((amountOfOnesCorrect / (double) amountOfOneChecks) * 100, 2) << " %%, logZ: " << negBestLogZ << ", " << std::max(newProbDiff, probDiff);
-													m_package->setAdditionalInfo(str2.str());
-												}
-												std::stringstream str;
-												str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
+										// still better than take it
+										const double correctness = 100. - error;
+										if(correctness >= m_package->correctlyClassified()){
+											m_gaussKernel->getCopyOfParams(bestParams);
+											negBestLogZ = m_arFunvals[i];
+											m_package->changeCorrectlyClassified(correctness);
+											if(!m_gaussKernel->hasLengthMoreThanOneDim()){
+												std::stringstream str2;
+												str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
+														<< number2String(bestParams.m_fNoise.getValue(),4) << ", "
+														<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+														<< "e: " << number2String(error, 3) << " %%, 1: "<< number2String(oneError, 3)
+														<< " %%, -1: " << number2String(minusOneError, 3) << " %% logZ: " << negBestLogZ;
+												//															<< "mc: " << number2String((amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100., 2) << " %%, pc: "
+												//															<<  number2String((amountOfOnesCorrect / (double) amountOfOneChecks) * 100, 2) << " %%, logZ: " << negBestLogZ << ", " << std::max(newProbDiff, probDiff);
+												m_package->setAdditionalInfo(str2.str());
+											}
+											std::stringstream str;
+											str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
 																		<< " %%, ones: " << (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.
 																		<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100.
 																		<< ", amount of minues correct: " << amountOfMinusOnesCorrect << ", amount of minus ones: " << amountOfMinusOneChecks
 																		<< " %%, for: " << m_dataPoints << " points";*/
-												m_package->printLineToScreenForThisThread(str.str());
-//											}
+											m_package->printLineToScreenForThisThread(str.str());
+											//											}
+											if(correctness > 95.){
+												m_package->abortTraing();
+												i = sampleLambda;
+											}
 										}
 									}
 
@@ -394,13 +411,13 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								values.push_back(m_arFunvals[i]);
 							}else{
 								m_arFunvals[i] = m_numberOfInducingPoints * 200;
-								values.push_back(-DBL_MAX);
+								values.push_back(NEG_DBL_MAX);
 							}
 							points.push_back(Eigen::Vector2d(m_hyperParamsValues[0], m_hyperParamsValues[1]));
 //							values.push_back(m_logZ);
-							if(error > -DBL_MAX){
+							if(error > NEG_DBL_MAX){
 							printInPackageOnScreen(m_package, "Test len: " << m_hyperParamsValues[0] << ", fNoise: " << m_hyperParamsValues[1] << ", has: " << -m_logZ / (double) m_numberOfInducingPoints
-									<< " needed time: " << sw.elapsedAsTimeFrame() << ", error: " << error << " , c: " << iCounter);
+									<< ", logZ: " << -m_logZ << ", inducing: " << m_numberOfInducingPoints << " needed time: " << sw.elapsedAsTimeFrame() << ", error: " << error << " , c: " << iCounter);
 							}else{
 								printInPackageOnScreen(m_package, "Failed len: " << m_hyperParamsValues[0] << ", fNoise: " << m_hyperParamsValues[1]
 										<< " needed time: " << sw.elapsedAsTimeFrame() << " , c: " << iCounter);
@@ -427,7 +444,6 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						/* read instructions for printing output or changing termination conditions */
 //						cmaes_ReadSignals(&evo, "cmaes_signals.par");
 					}
-
 					/* get best estimator for the optimum, xmean */
 //					cmaes::cmaes_boundary_transformation(&boundaries,
 //						(double const *) cmaes_GetPtr(&m_evo, "xbestever"), /* "xbestever" might be used as well */
@@ -439,8 +455,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					bestLogZ = -negBestLogZ;
 					  /* and finally release memory */
 					if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && Settings::getDirectBoolValue("VisuParams.visuHyperParamSampling2D")){
-						DataWriterForVisu::writePointsIn2D("hp_params_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", points, values);
-						openFileInViewer("hp_params_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
+						DataWriterForVisu::writePointsIn2D("hp_params_"+m_className+".svg", points, values);
+						openFileInViewer("hp_params_"+m_className+".svg");
 					}
 				}else{
 				while(m_package != nullptr){ // equals a true
@@ -582,9 +598,9 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //						logZs.push_back(m_logZ);
 //						if(!m_gaussKernel->hasLengthMoreThanOneDim()){
 //							for(unsigned int j = 0; j < 3; ++j){
-//								const double lastLearningRate = sqrt(1e-8 + eSquared.m_params[j]->getValue()); // 0,001
+//								const double lastLearningRate = sqrt(EPSILON + eSquared.m_params[j]->getValue()); // 0,001
 //								eSquared.m_params[j]->getValues()[0] = 0.9 * eSquared.m_params[j]->getValue() + 0.1 * m_derivLogZ.m_params[j]->getSquaredValue(); // 0,0000000099856
-//								const double actLearningRate = sqrt(1e-8 + eSquared.m_params[j]->getValue());
+//								const double actLearningRate = sqrt(EPSILON + eSquared.m_params[j]->getValue());
 //								m_gaussKernel->getHyperParams().m_params[j]->getValues()[0] += 0.000001 * (lastLearningRate / actLearningRate) * m_derivLogZ.m_params[j]->getValue();
 //							}
 //						}else{
@@ -611,11 +627,11 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //				}
 //				DataWriterForVisu::writeSvg("logZ_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", logZs);
 			}
-			if(bestLogZ == -DBL_MAX){
+			if(bestLogZ == NEG_DBL_MAX){
 				printError("This ivm could not find any parameter set in the given time, which could be trained without an error!");
 				return false;
 			}
-			printOnScreen("For IVM: " << getLabelForOne() << " logZ: " << bestLogZ << ", "<< bestParams << ", has: " << m_package->correctlyClassified());
+			printOnScreen("For IVM: " << m_className << " logZ: " << bestLogZ << ", "<< bestParams << ", has: " << m_package->correctlyClassified() << ", with IPs: " << m_numberOfInducingPoints);
 			m_gaussKernel->setHyperParamsWith(bestParams);
 			setDerivAndLogZFlag(false, false);
 			m_uniformNr.setMinAndMax(1, 1); // final training with all points considered
@@ -628,8 +644,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				}
 			}
 			if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && CommandSettings::get_useFakeData() && Settings::getDirectBoolValue("VisuParams.visuFinalIvm")){
-				DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_storage.storage());
-				openFileInViewer("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
+				DataWriterForVisu::writeSvg("ivm_"+m_className+".svg", *this, m_I, m_storage.storage());
+				openFileInViewer("ivm_"+m_className+".svg");
 			}
 			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 			if(m_package != nullptr){
@@ -669,8 +685,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 		}
 		if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
 			printInPackageOnScreen(m_package, "Training finished only visu has to be done!");
-			DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_storage.storage());
-			openFileInViewer("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
+			DataWriterForVisu::writeSvg("ivm_"+m_className+".svg", *this, m_I, m_storage.storage());
+			openFileInViewer("ivm_"+m_className+".svg");
 		}
 		//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_data);
 		//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
@@ -729,14 +745,16 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	const bool visuDeltas = !m_uniformNr.isUsed() && Settings::getDirectBoolValue("VisuParams.visuEntropyForFinalIvm");
 	List<double> deltaValues;
 	List<std::string> colors;
+	int forceUsedOfClass = 0; // 1 or -1 are the possible classes (0 == non selected)
 //	List<double> informationOfUsedValues;
 	for(unsigned int k = 0; k < m_numberOfInducingPoints; ++k){
+
 		if(m_kernelType == RF){
 			printInPackageOnScreen(m_package, "Calculation of inducing point nr: " << k);
 		}
 		int argmax = -1;
 		//List<Pair<int, double> > pointEntropies;
-		delta.coeffRef(k) = -DBL_MAX;
+		delta.coeffRef(k) = NEG_DBL_MAX;
 		if(clearActiveSet){
 //			List<double> deltasValue;
 //			List<std::string> colorForDeltas;
@@ -757,11 +775,11 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			}
 			while(itOfJ != m_J.end()){
 				double gForJ, nuForJ;
-				double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, verboseLevel);
-				// deltaForJ == -DBL_MAX means this class should not be used (fraction requirment not fullfilled!)
+				double deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, forceUsedOfClass, verboseLevel);
+				// deltaForJ == NEG_DBL_MAX means this class should not be used (fraction requirment not fullfilled!)
 
 //				printInPackageOnScreen(m_package, "Point: " << *itOfJ << ", with: " << deltaForJ << " and nu: " << nuForJ);
-				if(deltaForJ > -DBL_MAX && nuForJ > 0.){ // if nuForJ is smaller 0 it shouldn't be considered at all
+				if(deltaForJ > NEG_DBL_MAX && nuForJ > 0.){ // if nuForJ is smaller 0 it shouldn't be considered at all
 					if(m_useNeighbourComparison){
 						unsigned int informationCounter = 0;
 						const double labelOfJ = m_y.coeff(*itOfJ);
@@ -785,12 +803,15 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 					}
 //					deltasValue.push_back(deltaForJ);
 //					colorForDeltas.push_back(std::string(m_y[*itOfJ] == 1 ? "red" : "blue"));
-				}
-				for(unsigned int i = 0; i < increaseValue; ++i){
-					++itOfJ; // increases the iterator
-					if(itOfJ == m_J.end()){ // controls if the loop should be ended
-						break;
+					for(unsigned int i = 0; i < increaseValue; ++i){
+						++itOfJ; // increases the iterator
+						if(itOfJ == m_J.end()){ // controls if the loop should be ended
+							break;
+						}
 					}
+				}else{
+					// go only one further if it does not work
+					++itOfJ;
 				}
 			}
 //			if(k > 0){
@@ -818,35 +839,74 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			argmax = *itOfActiveSet;
 			double gForArgmax, nuForArgmax;
 			// TODO remove calc of Inner not needed here
-			delta.coeffRef(k) = calcInnerOfFindPointWhichDecreaseEntropyMost(argmax, zeta, mu, gForArgmax, nuForArgmax, fraction, amountOfPointsPerClass, verboseLevel);
+			delta.coeffRef(k) = calcInnerOfFindPointWhichDecreaseEntropyMost(argmax, zeta, mu, gForArgmax, nuForArgmax, fraction, amountOfPointsPerClass, 0, verboseLevel);
 			g.coeffRef(k) = gForArgmax;
 			nu.coeffRef(k) = nuForArgmax;
 			++itOfActiveSet;
 		}
 //		printInPackageOnScreen(m_package, "New point was found: " << argmax);
 		if(argmax == -1 && m_J.size() > 0){
-			if(verboseLevel != 0){
+			if(fraction < m_desiredPoint - m_desiredMargin && forceUsedOfClass == 0){
+				forceUsedOfClass = 1;
+			}else if(fraction > m_desiredPoint - m_desiredMargin && forceUsedOfClass == 0){
+				forceUsedOfClass = -1;
+			}else{
+				return false;
+				if(m_numberOfInducingPoints * 0.1 < m_I.size() && m_I.size() > 5){
+					// change the nr of inducing points:
+					setNumberOfInducingPoints(m_I.size());
+					int l = 0;
+					for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++l){
+						m_nuTilde.coeffRef(l) = m.coeff(*itOfI) * beta.coeff(*itOfI);
+						m_tauTilde.coeffRef(l) = beta.coeff(*itOfI);
+					}
+					m_muTildePlusBias = m_nuTilde.cwiseQuotient(m_tauTilde) + (m_bias * Vector::Ones(m_numberOfInducingPoints));
+					// calc m_L
+					Eigen::MatrixXd copyOfL = m_L;
+					m_L.resize(m_numberOfInducingPoints, m_numberOfInducingPoints);
+					for(unsigned int q = 0; q < m_numberOfInducingPoints; ++q){
+						for(unsigned int p = 0; p < m_numberOfInducingPoints; ++p){
+							m_L.coeffRef(p,q) = copyOfL.coeff(p,q);
+						}
+					}
+					m_choleskyLLT.compute(m_L);
+					if(m_calcLogZ){
+						calcLogZ();
+					}else if(m_calcDerivLogZ){
+						printError("The derivative can not be calculated without the log!");
+					}
+					std::cout << "New inducing points: " << m_numberOfInducingPoints << std::endl;
+					return true;
+				}else{
+					printError("No new inducing point found and the nr of inducing points is to low");
+					return false;
+				}
+			}
+			--k;
+			continue;
+//			if(verboseLevel != 0){
 //				for(List<int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
 //					printInPackageOnScreen(m_package, "(" << *it << ", " << (double) m_y[*it] << ")");
 //				}
-				std::string classRes = "";
-				if(fraction < m_desiredPoint - m_desiredMargin){
-					classRes = "1";
-				}else if(fraction > m_desiredPoint - m_desiredMargin){
-					classRes = "-1";
-				}else{
-					classRes = "1 or -1";
-				}
-				printInPackageOnScreen(m_package, "m_desiredPoint: " << m_desiredPoint << ", fraction: " << fraction);
-				printError("No new inducing point was found and there are still points over and next point should be from class: " << classRes << "!");
-			}
-			return false;
+//				std::string classRes = "";
+//				if(fraction < m_desiredPoint - m_desiredMargin){
+//					classRes = "1";
+//				}else if(fraction > m_desiredPoint - m_desiredMargin){
+//					classRes = "-1";
+//				}else{
+//					classRes = "1 or -1";
+//				}
+//				printInPackageOnScreen(m_package, "m_desiredPoint: " << m_desiredPoint << ", fraction: " << fraction);
+//				printError("No new inducing point was found and there are still points over and next point should be from class: " << classRes << "!");
+//			}
+//			return false;
 		}else if(argmax == -1){
 			if(verboseLevel != 0)
 				printError("No new inducing point was found, because no points are left to process, number of inducing points: "
 						<< m_numberOfInducingPoints << ", size: " << m_dataPoints);
 			return false;
 		}
+		forceUsedOfClass = 0;
 
 		fraction = ((fraction * k) + (m_y.coeff(argmax) == 1 ? 1 : 0)) / (double) (k + 1);
 		if(verboseLevel == 2)
@@ -1023,8 +1083,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		printInPackageOnScreen(m_package, "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime());
 	}
 	if(visuDeltas){
-		DataWriterForVisu::writeSvg("deltas_" + number2String(getLabelForOne()) + ".svg", deltaValues, colors);
-		openFileInViewer("deltas_" + number2String(getLabelForOne()) + ".svg");
+		DataWriterForVisu::writeSvg("deltas_" + m_className + ".svg", deltaValues, colors);
+		openFileInViewer("deltas_" + m_className + ".svg");
 	}
 	if(m_I.size() != m_numberOfInducingPoints){
 		if(verboseLevel != 0)
@@ -1154,8 +1214,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		printInPackageOnScreen(m_package, "Total ep time: " << updateEP.elapsedAvgAsTimeFrame() * (double) counter);
 		//printInPackageOnScreen(m_package, "Min delta: " << minDelta);
 
-		DataWriterForVisu::writeSvg("deltas.svg", listToPrint, true);
-		system("open deltas.svg");
+		DataWriterForVisu::writeSvg("deltas" + m_className + ".svg", listToPrint, true);
+		openFileInViewer("deltas" + m_className + ".svg");
 	/*	Matrix temp = m_K;
 		for(unsigned int i = 0; i < m_tauTilde.rows(); ++i){
 			temp(i,i) += 1. / (double) m_tauTilde[i];
@@ -1361,12 +1421,14 @@ void IVM::calcDerivatives(const Vector& muL1){
 	}
 }
 
-double IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, const Vector& zeta, const Vector& mu, double& g_kn, double& nu_kn, const double fraction, const Eigen::Vector2i& amountOfPointsPerClassLeft, const int verboseLevel){
+double IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, const Vector& zeta, const Vector& mu, double& g_kn, double& nu_kn, const double fraction, const Eigen::Vector2i& amountOfPointsPerClassLeft, const int useThisLabel, const int verboseLevel){
 	const double label = m_y.coeff(j);
-	if(amountOfPointsPerClassLeft.coeff(0) > 0 && amountOfPointsPerClassLeft.coeff(1) > 0){
+	if(useThisLabel != 0 && label != useThisLabel){ // use this label if it is not return NEG_DBL_MAX, useThisLabel == 0 -> no forced us
+		return NEG_DBL_MAX;
+	}else if(amountOfPointsPerClassLeft.coeff(0) > 0 && amountOfPointsPerClassLeft.coeff(1) > 0){
 		if((fraction < m_desiredPoint - m_desiredMargin && label == -1) || (fraction > m_desiredPoint - m_desiredMargin && label == 1)){
 			// => only less than 20 % of data is 1 choose 1
-			return -DBL_MAX; // or only less than 20 % of data is -1 choose -1
+			return NEG_DBL_MAX; // or only less than 20 % of data is -1 choose -1
 		}
 	}
 	const double tau = 1.0 / zeta.coeff(j);
@@ -1487,8 +1549,10 @@ double IVM::predict(const Vector& input) const{
 	unsigned int i = 0;
 	double diagEle = 0;
 	if(m_kernelType == 0){
-		for(List<int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-			k_star.coeffRef(i) = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
+		const int size = m_I.size();
+		for(List<int>::const_iterator itOfI = m_I.cbegin(); itOfI != m_I.cend(); ++itOfI, ++i){
+			const int t = *itOfI;
+			k_star[i] = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_gaussKernel->calcDiagElement(0);
 	}else if(m_kernelType == 1){

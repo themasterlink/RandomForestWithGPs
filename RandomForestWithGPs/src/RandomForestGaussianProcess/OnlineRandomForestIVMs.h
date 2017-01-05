@@ -33,7 +33,7 @@ public:
 
 private:
 
-	void trainIvm(const int usedIvm, const int nrOfInducingPoints, const bool doEpUpdate, ClassData& data);
+	void trainIvm(const int usedIvm, const int nrOfInducingPoints, const bool doEpUpdate, ClassData* data, const int orfClass);
 
 	void update();
 

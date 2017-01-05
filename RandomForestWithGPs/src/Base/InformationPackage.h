@@ -20,13 +20,14 @@ class InformationPackage {
 	friend ScreenOutput;
 	friend ThreadMaster;
 public:
-	enum InfoType {
+	enum InfoType { // low is more important
 		ORF_TRAIN = 0,
 		ORF_TRAIN_FIX = 1, // can not be aborted
 		IVM_TRAIN = 2,
 		IVM_PREDICT = 3,
 		IVM_RETRAIN = 4,
-		IVM_MULTI_UPDATE = 5
+		IVM_MULTI_UPDATE = 5,
+		IVM_INIT_DIFFERENCE_MATRIX = 6
 	};
 
 	InformationPackage(InfoType type, double correctlyClassified, int amountOfPoints);

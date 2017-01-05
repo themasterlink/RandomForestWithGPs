@@ -17,43 +17,43 @@ void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<ClassPoint*>& test){
 	if(test.size() > 0){
 		int amountOfCorrect = 0;
 		Labels labels;
+		printOnScreen("Predict Data");
+		sleep(2);
 		orf.predictData(test.storage(), labels);
+		printOnScreen("Predicted Data");
+		sleep(2);
 		Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(orf.amountOfClasses(), orf.amountOfClasses());
 		for(unsigned int i = 0; i < labels.size(); ++i){
 			if(test[i]->getLabel() == labels[i]){
 				++amountOfCorrect;
 			}
-			conv.coeffRef(test[i]->getLabel(), labels[i]) += 1;
+			if(labels[i] != UNDEF_CLASS_LABEL){
+				conv.coeffRef(test[i]->getLabel(), labels[i]) += 1;
+			}else{
+				printError("The label could not be determined!");
+			}
 		}
 		printOnScreen("Test size: " << test.size());
-		printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %");
+		std::cout << "Result:    " << amountOfCorrect / (double) test.size() * 100. << " %%" << std::endl;
+		printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %%");
 		ConfusionMatrixPrinter::print(conv);
 	}
 }
 
 void executeForBinaryClassORFIVM(){
-	ClassData data;
-	ClassData testData;
-	DataSets datas;
-	int trainAmount; // all points
-	Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", trainAmount);
-	const double share = Settings::getDirectDoubleValue("TotalStorage.shareForTraining");
-	int firstPoints = trainAmount / share;
-	printOnScreen("Read " << firstPoints << " points per class");
-	TotalStorage::readData(firstPoints);
-	printOnScreen("Finish reading ");
+
+	const int trainAmount = readAllData();
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;
-	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize());
-	trainAmount = std::min((int) TotalStorage::getSmallestClassSize(), trainAmount) * TotalStorage::getAmountOfClass();
-	printOnScreen("Train amount: " << trainAmount);
 	int height;
 	Settings::getValue("Forest.Trees.height", height);
 	OnlineRandomForestIVMs orf(train, height, TotalStorage::getAmountOfClass());
 	// starts the training by its own
 	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 	printOnScreen("Training finished");
+	sleep(2);
 	performTest(orf, train);
+	sleep(2);
 	printOnScreen("First test finished");
 
 	performTest(orf, test);

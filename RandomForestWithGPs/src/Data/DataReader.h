@@ -17,6 +17,8 @@ public:
 
 	static void readFromFile(ClassData& data, const std::string& inputName, const int amountOfData);
 
+	static void readFromBinaryFile(ClassData& data, const std::string& inputName, const int amountOfData);
+
 	static void readFromFiles(DataSets& dataSets, const std::string& folderLocation, const int amountOfData, const bool readTxt, bool& didNormalizeData);
 
 private:

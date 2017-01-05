@@ -42,7 +42,25 @@ void TotalStorage::readData(const int amountOfData){
 	}
 	const bool readTxt = false;
 	bool didNormalizeStep = false;
-	DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt, didNormalizeStep);
+	if(Settings::getDirectBoolValue("TotalStorage.readFromFolder")){
+		DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt, didNormalizeStep);
+	}else{
+		ClassData data;
+		DataReader::readFromBinaryFile(data, "../binary/dataFor_0.binary", amountOfData);
+		for(unsigned int i = 0; i < data.size(); ++i){
+			DataSetsIterator it = m_storage.find(ClassKnowledge::getNameFor(data[i]->getLabel()));
+			if(it != m_storage.end()){
+				it->second.push_back(data[i]);
+			}else{
+				ClassData newData;
+				m_storage.insert(DataSetPair(ClassKnowledge::getNameFor(data[i]->getLabel()), newData));
+				DataSetsIterator newIt = m_storage.find(ClassKnowledge::getNameFor(data[i]->getLabel()));
+				if(newIt != m_storage.end()){
+					newIt->second.push_back(data[i]);
+				}
+			}
+		}
+	}
 	std::string type = "";
 	Settings::getValue("main.type", type);
 	if(!type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView()){ // type starts with binary -> remove all classes

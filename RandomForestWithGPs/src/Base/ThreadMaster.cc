@@ -70,7 +70,6 @@ void ThreadMaster::run(){
 	while(true){
 		m_mutex.lock();
 //		if(m_counter < m_maxCounter){
-		PackageList::const_iterator selectedValue = m_waitingList.end();
 		double bestAttractionLevel = 0;
 		int minAmountOfPoints = INT_MAX, maxAmountOfPoints = 0;
 		for(PackageList::const_iterator it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
@@ -85,68 +84,11 @@ void ThreadMaster::run(){
 				(*it)->printLineToScreenForThisThread("This thread has only 1 element");
 			}
 		}
-		for(PackageList::const_iterator it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
-			if(!(*it)->isWaiting()){
-				continue; // hasn't reached the waiting point so the thread should be added to the running list
-			}
-
-			switch((*it)->getType()){
-			case InfoType::IVM_TRAIN:
-			case InfoType::IVM_RETRAIN: // has another priority -> but rest is the same
-			case InfoType::IVM_MULTI_UPDATE:
-				if(selectedValue == m_waitingList.end()){
-					if((*it)->amountOfAffectedPoints() > amountOfPointsNeededForIvms){
-						selectedValue = it;
-						bestAttractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
-					}
-				}else{
-					if((*selectedValue)->getPriority() < (*it)->getPriority()){
-						const double attractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
-						if(attractionLevel > bestAttractionLevel){
-							bestAttractionLevel = attractionLevel;
-							selectedValue = it;
-						}
-					}
-				}
-				break;
-			case InfoType::ORF_TRAIN:
-			case InformationPackage::ORF_TRAIN_FIX:
-				if(selectedValue == m_waitingList.end()){
-					selectedValue = it;
-					bestAttractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
-				}else{
-					if((*selectedValue)->getPriority() < (*it)->getPriority()){
-						const double attractionLevel = (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints);
-						if(attractionLevel > bestAttractionLevel){
-							bestAttractionLevel = attractionLevel;
-							selectedValue = it;
-						}
-					}
-				}
-				break;
-			case InfoType::IVM_PREDICT:
-				if(selectedValue == m_waitingList.end()){
-					selectedValue = it;
-				}else{
-					if((*selectedValue)->getPriority() < (*it)->getPriority()){
-						const int diff = (*selectedValue)->amountOfTrainingStepsPerformed() - (*it)->amountOfTrainingStepsPerformed();
-						const int amountOfPoints = ((*it)->amountOfAffectedPoints() + (*selectedValue)->amountOfAffectedPoints()) * 0.5;
-						if(diff > 0.1 * amountOfPoints){
-							selectedValue = it;
-						}
-					}
-				}
-				break;
-			default:
-				printError("This type is not supported here!");
-				break;
-			}
-		}
-		bool selectedValueWasUsed = false;
-		if(m_counter < m_maxCounter){
+		sortWaitingList(amountOfPointsNeededForIvms, minAmountOfPoints, maxAmountOfPoints);
+		while(m_counter < m_maxCounter && m_waitingList.size() > 0){
+			PackageList::const_iterator selectedValue = m_waitingList.begin();
 			if(selectedValue != m_waitingList.end()){
 //				std::cout << "A thread was added to running!" << std::endl;
-				selectedValueWasUsed = true;
 				m_runningList.push_back(*selectedValue); // first add to the running list
 				++m_counter; // increase the counter of running threads
 				while(!(*selectedValue)->isWaiting()){ // if the thread is not waiting wait until it waits for reactivation -> should happen fast
@@ -158,6 +100,7 @@ void ThreadMaster::run(){
 				selectedValue = m_waitingList.end();
 			}
 		}
+		PackageList::const_iterator selectedValue = m_waitingList.begin();
 		for(PackageList::const_iterator it = m_runningList.begin(); it != m_runningList.end(); ++it){
 			// for each running element check if execution is finished
 			const int maxTrainingsTime = (*it)->getMaxTrainingsTime() > 0 ? (*it)->getMaxTrainingsTime() : CommandSettings::get_samplingAndTraining();
@@ -166,12 +109,12 @@ void ThreadMaster::run(){
 //					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
 					(*it)->abortTraing(); // break the training
 				}
-				if(selectedValue != m_waitingList.end() && !selectedValueWasUsed){
+				if(selectedValue != m_waitingList.end()){
 					if(!(*it)->shouldTrainingBePaused() && !(*it)->isWaiting() && (*it)->runningTimeSinceLastWait() > 2.0){ // only change thread if it is running more than 2 seconds
 						if((int) bestAttractionLevel > (int) (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints) || (*selectedValue)->getPriority() > (*it)->getPriority()){ // must be at least 1. point be better
 							// hold this training and start the other one
 							(*it)->pauseTheTraining(); // pause the actual training
-							selectedValueWasUsed = true;
+							++selectedValue; // take the next one and compare that to the rest
 						}
 					}
 				}
@@ -201,6 +144,55 @@ void ThreadMaster::run(){
 		}
 		m_mutex.unlock();
 		usleep(m_timeToSleep * 1e6);
+	}
+}
+
+void ThreadMaster::sortWaitingList(const int amountOfPointsNeededForIvms, const int minAmountOfPoints, const int maxAmountOfPoints){
+	if(m_waitingList.size() > 1){
+		for(unsigned int k = 0; k < m_waitingList.size(); ++k){
+			bool somethingChange = false;
+			for(PackageList::iterator itPrev = m_waitingList.begin(), it = ++itPrev; it != m_waitingList.end(); ++it, ++itPrev){
+				bool swap = false;
+				if(!(*itPrev)->isWaiting() || (*itPrev)->getPriority() > (*it)->getPriority()){
+					swap = true;
+					somethingChange = true;
+				}else{
+					switch((*it)->getType()){
+					case InfoType::IVM_INIT_DIFFERENCE_MATRIX:
+						// only after priority
+						break;
+					case InfoType::IVM_TRAIN:
+					case InfoType::IVM_RETRAIN: // has another priority -> but rest is the same
+					case InfoType::IVM_MULTI_UPDATE:
+					case InfoType::ORF_TRAIN:
+					case InformationPackage::ORF_TRAIN_FIX:
+						if((*itPrev)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints) > (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints)){
+							swap = true;
+						}
+						break;
+					case InfoType::IVM_PREDICT:{
+						const int diff = (*itPrev)->amountOfTrainingStepsPerformed() - (*it)->amountOfTrainingStepsPerformed();
+						const int amountOfPoints = ((*it)->amountOfAffectedPoints() + (*itPrev)->amountOfAffectedPoints()) * 0.5;
+						if(diff > 0.1 * amountOfPoints){
+							swap = true;
+						}
+						break;
+					}default:
+						printError("This type is not supported here!");
+						break;
+					}
+				}
+				if(swap){
+					InformationPackage* temp = *itPrev;
+					*itPrev = *it;
+					*it = temp;
+					somethingChange = true;
+				}
+			}
+			if(!somethingChange){
+				break;
+			}
+		}
 	}
 }
 

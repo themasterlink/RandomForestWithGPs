@@ -9,6 +9,7 @@
 #define GAUSSIANPROCESS_KERNEL_KERNELTYPE_H_
 
 #include "../../Data/ClassKnowledge.h"
+#include <vector>
 
 class KernelElement {
 public:

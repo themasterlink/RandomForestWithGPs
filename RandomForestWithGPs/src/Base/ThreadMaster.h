@@ -28,12 +28,14 @@ public:
 
 	static void threadHasFinished(InformationPackage* package);
 
-	static void setMaxCounter(){ m_maxCounter = boost::thread::hardware_concurrency();}
+	static void setMaxCounter(){ m_maxCounter = 1; } //boost::thread::hardware_concurrency();}
 
 	static void abortAllThreads();
 
 private:
 	static void run();
+
+	static void sortWaitingList(const int amountOfPointsNeededForIvms, const int minAmountOfPoints, const int maxAmountOfPoints);
 
 	ThreadMaster();
 	virtual ~ThreadMaster();

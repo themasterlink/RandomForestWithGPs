@@ -198,7 +198,7 @@ bool OnlineRandomForest::update(){
 		boost::mutex* mutex = new boost::mutex();
 		if(list->size() != m_trees.size()){
 			printError("The sorting process failed, list size is: " << list->size() << ", should be: " << m_trees.size());
-			return true;
+			return false;
 		}
 		int counter = 0;
 		const int totalAmount = m_trees.size() / nrOfParallel * nrOfParallel;
@@ -326,12 +326,15 @@ OnlineRandomForest::DecisionTreeIterator OnlineRandomForest::findWorstPerforming
 int OnlineRandomForest::predict(const DataPoint& point) const {
 	if(m_firstTrainingDone){
 		std::vector<int> values(m_amountOfClasses, 0);
+		int k = 0;
 		for(DecisionTreeConstIterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
-			++values[it->predict(point)];
+			const unsigned int value = it->predict(point);
+			++values[value];
+			++k;
 		}
 		return std::distance(values.cbegin(), std::max_element(values.cbegin(), values.cend()));
 	}
-	return -1;
+	return UNDEF_CLASS_LABEL;
 }
 
 double OnlineRandomForest::predict(const DataPoint& point1, const DataPoint& point2, const int sampleAmount) const{
@@ -415,7 +418,7 @@ void OnlineRandomForest::predictDataProbInParallel(const Data& points, Labels* l
 			for(DecisionTreeConstIterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
 				(*probabilities)[i][it->predict(*points[i])] += 1;
 			}
-			unsigned int iMax = 0;
+			unsigned int iMax = UNDEF_CLASS_LABEL;
 			double max = 0.;
 			const double fac = 1. / m_trees.size();
 			for(unsigned int j = 0; j < m_amountOfClasses; ++j){
@@ -477,7 +480,7 @@ void OnlineRandomForest::updateMinMaxValues(unsigned int event){
 		m_minMaxValues.resize(m_storage.dim());
 		for(unsigned int i = 0; i < dim; ++i){
 			m_minMaxValues[i][0] = DBL_MAX;
-			m_minMaxValues[i][1] = -DBL_MAX;
+			m_minMaxValues[i][1] = NEG_DBL_MAX;
 		}
 	}
 	switch(event){

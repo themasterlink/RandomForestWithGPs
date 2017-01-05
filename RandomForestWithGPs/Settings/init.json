@@ -1,121 +1,121 @@
 {
 	"RFGP": {
-        "thresholdForNoise": 5,
-        "pointsPerClassForBayOpt": 7,
-        "maxPointsUsedInGpSingleTraining": 1500,
-        "maxNrOfPointsForBayesOpt": 250,
-        "nrOfNoChanges": 6
-    },    
-    "MultiBinaryGP": {
-        "lowerBoundNoise": 0.5,
-        "upperBoundNoise": 5.0,
-        "lowerBoundLength": 1.0,
-        "upperBoundLength": 20.0,
-    	"trainingAmount": 400,
-    	"testingAmount": 200
-    },
-    "Forest": {
-        "amountOfTrees": 5000,
-        "Trees": {
-            "height": 18
-        }
-    },
-    "IVM": {
-        "doEpUpdate": "false",
-        "lambda": 0.5,
-        "nrOfInducingPoints": 80,
-        "desiredMargin": 0.01,
-        "hasLengthMoreThanParam" : "false",
-        "useNeighbourComparison": "true",
-        "Training": {
-        	"useSavedHyperParams": "false",
-        	"overwriteExistingHyperParams": "true"
-        },
-        "kernelType": 0,
-        "useCmaes": "true"
-    },
-    "CMAES": {
-    	"lowerBoundLen": 0.2,
-    	"upperBoundLen": 10,
-    	"lowerBoundFNoise": 0.2,
-    	"upperBoundFNoise": 20,
-    	"lowerBoundSNoise": 0.05,
-    	"upperBoundSNoise": 0.1
-    },
-    "TotalStorage": {
-    	"amountOfPointsUsedForTraining": 200,
-    	"shareForTraining": 0.6,
-        "folderLocReal": "..\/mnistOrg\/",
-        "folderLocFake": "..\/fakeData\/",
-        "normalizeData": "true"
-    },
-    "OnlineRandomForest": {
-		"amountOfPointsUntilRetrain": 200,
-		"minUsedDataFactor":  0.3,
-		"maxUsedDataFactor":  0.6,
-		"factorAmountOfUsedDims": 0.9,
-		"ownSamplingTime": 100
+		"thresholdForNoise": 5,
+		"pointsPerClassForBayOpt": 7,
+		"maxPointsUsedInGpSingleTraining": 1500,
+		"maxNrOfPointsForBayesOpt": 250,
+		"nrOfNoChanges": 6
 	},
-    "Kernel": {
-        "path": "..\/realTest\/kernelData.kernel"
-    },
-    "RandomForestKernel": {
-    	"samplingAmount": 450,
-    	"maxDepth": 18,
+	"MultiBinaryGP": {
+		"lowerBoundNoise": 0.5,
+		"upperBoundNoise": 5.0,
+		"lowerBoundLength": 1.0,
+		"upperBoundLength": 20.0,
+		"trainingAmount": 400,
+		"testingAmount": 200
+	},
+	"Forest": {
+		"amountOfTrees": 5000,
+		"Trees": {
+			"height": 4
+		}
+	},
+	"IVM": {
+		"doEpUpdate": "false",
+		"lambda": 0.5,
+		"nrOfInducingPoints": 100,
+		"desiredMargin": 0.01,
+		"hasLengthMoreThanParam": "false",
+		"useNeighbourComparison": "true",
+		"Training": {
+			"useSavedHyperParams": "false",
+			"overwriteExistingHyperParams": "false"
+		},
+		"kernelType": 0,
+		"useCmaes": "true"
+	},
+	"CMAES": {
+		"lowerBoundLen": 0.01,
+		"upperBoundLen": 2,
+		"lowerBoundFNoise": 0.01,
+		"upperBoundFNoise": 4,
+		"lowerBoundSNoise": 0.05,
+		"upperBoundSNoise": 0.1
+	},
+	"TotalStorage": {
+		"amountOfPointsUsedForTraining": 800,
+		"shareForTraining": 0.9,
+		"folderLocReal": "..\/mnistOrg\/",
+		"folderLocFake": "..\/fakeData\/",
+		"normalizeData": "true",
+		"readFromFolder": "true"
+	},
+	"OnlineRandomForest": {
+		"amountOfPointsUntilRetrain": 200,
+		"minUsedDataFactor": 0.3,
+		"maxUsedDataFactor": 0.6,
+		"factorAmountOfUsedDims": 0.9,
+		"ownSamplingTime": 3
+	},
+	"Kernel": {
+		"path": "..\/realTest\/kernelData.kernel"
+	},
+	"RandomForestKernel": {
+		"samplingAmount": 450,
+		"maxDepth": 18,
 		"usePartitionInsteadOfLabels": "true"
-    },
-    "KernelParam": {
-    	"len": 0.732498,
-    	"fNoise": 3.51785,
-    	"sNoise": 0.0832458,
-    	"lenMean": 0.9,
-    	"lenVar": 0.7,
-    	"fNoiseMean": 1.5,
-    	"fNoiseVar": 0.8,
-    	"sNoiseMean": 0.1,
-    	"sNoiseVar": 0.01
-    },
-    "Training": {
-        "path": "..\/fakeData\/",
-        "amount": 200,
-        "dim": 2
-    },
-    "Logger": {
-        "useLogger": "true",
-        "filePath": "log.txt"
-    },
-    "RealData": {
-        "folderPath": "..\/realTest\/"
-    },
-    "Test": {
-        "path": "..\/testData\/testInput3.txt",
-        "amount": 1000
-    },
-    "WriteBinarySaveOfTrees": {
-    	"doWriting": "true",
-        "path": "..\/testData\/trees.binary"
-    },
-    "Write2D": {
-        "testPath": "..\/testData\/visuTestResult.txt",
-        "gridPath": "..\/testData\/visuGridResult.txt",
-        "doWriting": "true",
-        "printX": 0,
-        "printY": 1
-    },
-    "MinMaxUsedData": {
-    	"useFixedValuesForMinMaxUsedData": "true", 
-    	"minValue": 20,
-    	"maxValue": 100,
-    	"minValueFraction": 0.2,
-    	"maxValueFraction": 0.6
-    },
-    "VisuParams": {
-    	"visuHyperParamSampling2D": "true",
-    	"visuEntropyForFinalIvm": "false",
-    	"visuFinalIvm": "false"
-    },
-    "main": {
-    	"type": "multiIvm"
-    }
-    
+	},
+	"KernelParam": {
+		"len": 0.732498,
+		"fNoise": 3.51785,
+		"sNoise": 0.0832458,
+		"lenMean": 0.9,
+		"lenVar": 0.7,
+		"fNoiseMean": 1.5,
+		"fNoiseVar": 0.8,
+		"sNoiseMean": 0.1,
+		"sNoiseVar": 0.01
+	},
+	"Training": {
+		"path": "..\/fakeData\/",
+		"amount": 200,
+		"dim": 2
+	},
+	"Logger": {
+		"useLogger": "false",
+		"filePath": "log.txt"
+	},
+	"RealData": {
+		"folderPath": "..\/realTest\/"
+	},
+	"Test": {
+		"path": "..\/testData\/testInput3.txt",
+		"amount": 1000
+	},
+	"WriteBinarySaveOfTrees": {
+		"doWriting": "true",
+		"path": "..\/testData\/trees.binary"
+	},
+	"Write2D": {
+		"testPath": "..\/testData\/visuTestResult.txt",
+		"gridPath": "..\/testData\/visuGridResult.txt",
+		"doWriting": "true",
+		"printX": 0,
+		"printY": 1
+	},
+	"MinMaxUsedData": {
+		"useFixedValuesForMinMaxUsedData": "true",
+		"minValue": 20,
+		"maxValue": 100,
+		"minValueFraction": 0.2,
+		"maxValueFraction": 0.6
+	},
+	"VisuParams": {
+		"visuHyperParamSampling2D": "false",
+		"visuEntropyForFinalIvm": "false",
+		"visuFinalIvm": "true"
+	},
+	"main": {
+		"type": "ORFIVMs"
+	}
 }

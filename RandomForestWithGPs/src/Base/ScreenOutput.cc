@@ -35,6 +35,7 @@ void ScreenOutput::quitForScreenMode(){
 
 void ScreenOutput::start(){
 	m_runningThreads = &ThreadMaster::m_runningList;
+#ifdef USE_SCREEN_OUPUT
 	initscr();
 	start_color();
 	init_pair(1, COLOR_GREEN, COLOR_BLACK);
@@ -42,7 +43,7 @@ void ScreenOutput::start(){
 	init_pair(6, COLOR_CYAN, COLOR_BLACK);
 	attron(COLOR_PAIR(1));
 	atexit(ScreenOutput::quitForScreenMode);
-//	curs_set(0);
+#endif
 	m_mainThread = new boost::thread(&ScreenOutput::run);
 }
 
@@ -54,15 +55,21 @@ void ScreenOutput::run(){
 	std::string mode;
 	Settings::getValue("main.type", mode);
 	const std::string firstLine = "Online Random Forest with IVMs, mode: " + mode;
+#ifdef USE_SCREEN_OUPUT
 	noecho();
 	cbreak();	/* Line buffering disabled. pass on everything */
 	nodelay(stdscr, true);
 	keypad(stdscr, true);
+#endif
 	int lineOffset = 0;
 	int modeNr = -1;
 	StopWatch sw;
 	const int startOfMainContent = 4;
+#ifdef USE_SCREEN_OUPUT
 	while(true){
+#else
+	while(false){
+#endif
 		mvprintw(1,5, firstLine.c_str());
 //		clear();
 		std::string completeWhite = "";

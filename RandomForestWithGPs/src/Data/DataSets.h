@@ -7,7 +7,6 @@
 #include "ClassData.h"
 #include <map>
 
-
 typedef typename std::map< std::string, ClassData> DataSets;
 
 typedef typename DataSets::iterator DataSetsIterator;

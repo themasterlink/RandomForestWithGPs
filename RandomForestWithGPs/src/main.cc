@@ -185,7 +185,16 @@ void clientTest(char* av[]){
 	}
 }
 
-int main(int ac, char* av[]){
+int main(int ac, char** av){
+//	system("cd \"Debug OpenCV2\"");
+//	system("pwd");
+	ac = 4;
+	av = new char*[4];
+	std::vector<std::string> input = {"RandomForest", "--useFakeData", "--samplingAndTraining", "100"};
+	for(unsigned int i = 0; i < ac; ++i){
+		av[i] = const_cast<char*>(input[i].c_str());
+	}
+//	getchar();
 	handleProgrammOptions(ac,av);
 //	cmaes::cmaes_t evo; /* an CMA-ES type struct or "object" */
 //	cmaes::cmaes_boundary_transformation_t cmaesBoundaries;
@@ -237,6 +246,7 @@ int main(int ac, char* av[]){
 	Settings::init("../Settings/init.json");
 	ThreadMaster::start(); // must be performed after Settings init!
 	ScreenOutput::start(); // should be started after ThreadMaster and Settings
+	ClassKnowledge::init();
 //	std::cout << RESET << "Start" << std::endl;
 
 	if(CommandSettings::get_onlyDataView()){
@@ -300,7 +310,7 @@ int main(int ac, char* av[]){
     	sigmaUpNew.recordActTime();
     	for(int p = 0; p < nr; ++p){
     		for(int q = 0; q < nr; ++q){
-    			if(fabs(controlSigma(p,q) - Sigma(p,q)) > fabs(Sigma(p,q)) * 1e-5){
+    			if(fabs(controlSigma(p,q) - Sigma(p,q)) > fabs(Sigma(p,q)) * EPSILON){
     				printError("Calc is wrong!" << p << ", " << q << ": " << fabs(controlSigma(p,q) - Sigma(p,q)));
     				p = q = nr;
     			}

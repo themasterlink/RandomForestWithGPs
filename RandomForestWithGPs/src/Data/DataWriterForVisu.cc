@@ -318,7 +318,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 	Eigen::Vector2d min, max;
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
 	const Eigen::Vector2d diff = max - min;
-	if(diff[0] <= 1e-7 || diff[1] <= 1e-7){
+	if(diff[0] <= EPSILON || diff[1] <= EPSILON){
 		printError("The min and max of the desired axis is equal for " << fileName << "!"); return;
 	}
 	max[0] += diff[0] * 0.2;
@@ -337,7 +337,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 	std::vector< std::vector<double> > colors(2, std::vector<double>(3));
 	ColorConverter::RGB2LAB(1,0,0, colors[0][0], colors[0][1], colors[0][2]);
 	ColorConverter::RGB2LAB(0,0,1, colors[1][0], colors[1][1], colors[1][2]);
-	double minMu = DBL_MAX, minSigma = DBL_MAX, maxMu = -DBL_MAX, maxSigma = -DBL_MAX;
+	double minMu = DBL_MAX, minSigma = DBL_MAX, maxMu = NEG_DBL_MAX, maxSigma = NEG_DBL_MAX;
 	if(type == 1 || type == 2){
 		for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 			for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
@@ -472,7 +472,7 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 		std::list<double> sortedValues;
 		double mean = 0;
 		for(std::list<double>::const_iterator it = values.cbegin(); it != values.cend(); ++it){
-			if(*it > -DBL_MAX){
+			if(*it > NEG_DBL_MAX){
 				mean += *it;
 			}
 			bool found = false;
@@ -488,7 +488,7 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 		}
 		mean /= values.size();
 		for(std::list<double>::const_iterator itSort = sortedValues.cbegin(); itSort != sortedValues.cend(); ++itSort){
-			if(*itSort > mean - (maxVal - mean) && *itSort > -DBL_MAX){
+			if(*itSort > mean - (maxVal - mean) && *itSort > NEG_DBL_MAX){
 				minUsedValue = *itSort;
 				break;
 			}
@@ -524,10 +524,10 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 				totalDist += it->second;
 			}
 			for(std::list<std::pair<double, double> >::const_iterator it = closestsPoints.begin(); it != closestsPoints.end(); ++it){
-				if(it->first > -DBL_MAX){
+				if(it->first > NEG_DBL_MAX){
 					val += it->first * (it->second / totalDist);
 				}else{
-					val = -DBL_MAX;
+					val = NEG_DBL_MAX;
 					break;
 				}
 			}
@@ -555,7 +555,7 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 		const double dy = (((*it)[1] - min[1]) / (max[1] - min[1]) * 80. + 10.) / 100. * height;
 		double r = 0, g = 0, b = 0;
 		//std::cout << "(*it)->getLabel(): " << (*it)->getLabel() + 1 << " " << amountOfClasses << ",";
-		if(*itValues > -DBL_MAX){ // ignores -DBL_MAX values make them black
+		if(*itValues > NEG_DBL_MAX){ // ignores NEG_DBL_MAX values make them black
 			double val;
 			if(*itValues > minUsedValue){
 				val = (*itValues - minUsedValue) / (maxVal - minUsedValue);
@@ -778,7 +778,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::Matri
 	DataConverter::getMinMax(mat, min, max, ignoreDBLMAXNEG);
 	for(int iX = 0; iX < mat.rows(); ++iX){
 		for(int iY = 0; iY < mat.cols(); ++iY){
-			if(mat(iX,iY) > -DBL_MAX){
+			if(mat(iX,iY) > NEG_DBL_MAX){
 				const double prob = (mat(iX,iY)  - min) / (max - min);
 				double r,g,b;
 				ColorConverter::HSV2RGB(prob * 360.,1.0, 1.0,r,g,b);
@@ -843,7 +843,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<Ei
 			return;
 		}
 	}
-	double min = DBL_MAX, max = -DBL_MAX;
+	double min = DBL_MAX, max = NEG_DBL_MAX;
 	for(std::list<Eigen::VectorXd>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
 		double minAct, maxAct;
 		DataConverter::getMinMax(*it, minAct, maxAct);
@@ -1009,7 +1009,7 @@ void DataWriterForVisu::drawSvgDots(std::ofstream& file, const Eigen::VectorXd v
 		const double max, const double width, const double heigth, const std::string& color){
 	const double diff = max == min ? 1 : max - min;
 	for(unsigned int i = 0; i < vec.rows(); ++i){
-		if(vec[i] > -DBL_MAX){ // don't use -DBL_MAX Values they should be ignored
+		if(vec[i] > NEG_DBL_MAX){ // don't use NEG_DBL_MAX Values they should be ignored
 			file << "<circle cx=\"" << (i / (double) vec.rows() * (100. - 2. * startX) + startX) / 100. * width
 					<< "\" cy=\"" << ((vec[i] - min) / diff * (100. - 2. * startY) + startY) / 100. * heigth
 					<< "\" r=\"3\" fill=\"transparent\" stroke=\"" << color << "\" /> \n";
@@ -1023,7 +1023,7 @@ void DataWriterForVisu::drawSvgDots(std::ofstream& file, const Eigen::VectorXd v
 	const double diff = max == min ? 1 : max - min;
 	std::list<std::string>::const_iterator it = colors.begin();
 	for(unsigned int i = 0; i < vec.rows(); ++i){
-		if(vec[i] > -DBL_MAX){ // don't use -DBL_MAX Values they should be ignored
+		if(vec[i] > NEG_DBL_MAX){ // don't use NEG_DBL_MAX Values they should be ignored
 			file << "<circle cx=\"" << (i / (double) vec.rows() * (100. - 2. * startX) + startX) / 100. * width
 					<< "\" cy=\"" << ((vec[i] - min) / diff * (100. - 2. * startY) + startY) / 100. * heigth
 					<< "\" r=\"3\" fill=\"transparent\" stroke=\"" << *it << "\" /> \n";

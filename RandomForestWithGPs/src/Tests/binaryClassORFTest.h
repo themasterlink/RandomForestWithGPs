@@ -30,21 +30,9 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 }
 
 void executeForBinaryClassORF(){
-	ClassData data;
-	ClassData testData;
-	DataSets datas;
-	int trainAmount; // all points
-	Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", trainAmount);
-	const double share = Settings::getDirectDoubleValue("TotalStorage.shareForTraining");
-	int firstPoints = trainAmount / share;
-	printOnScreen("Read " << firstPoints << " points per class");
-	TotalStorage::readData(firstPoints);
-	printOnScreen("Finish reading ");
+	const int trainAmount = readAllData();
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;
-	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize());
-	trainAmount = std::min((int) TotalStorage::getSmallestClassSize(), trainAmount) * TotalStorage::getAmountOfClass();
-	printOnScreen("Train amount: " << trainAmount);
 	int height;
 	Settings::getValue("Forest.Trees.height", height);
 	OnlineRandomForest orf(train, height, TotalStorage::getAmountOfClass());

@@ -9,10 +9,16 @@
 #define DATA_CLASSKNOWLEDGE_H_
 
 #include <string>
-#include <vector>
+#include <map>
 
 class ClassKnowledge {
 public:
+
+	typedef typename std::pair<unsigned int, std::string> LabelNamePair;
+
+	typedef typename std::map<unsigned int, std::string > LabelNameMap;
+
+	typedef typename LabelNameMap::iterator LabelNameMapIterator;
 
 	static void setNameFor(const std::string& name, unsigned int nr);
 
@@ -24,9 +30,13 @@ public:
 
 	static void setAmountOfDims(unsigned int value);
 
+	static bool hasClassName(const unsigned int nr);
+
+	static void init();
+
 private:
 
-	static std::vector<std::string> m_names;
+	static LabelNameMap m_names;
 
 	static unsigned int m_amountOfDims;
 

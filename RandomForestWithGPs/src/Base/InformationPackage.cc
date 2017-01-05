@@ -94,6 +94,8 @@ bool InformationPackage::canBeAbortedInGeneral(){
 		return true; // can not be aborted, will be aborted if all IVM_TRAIN are finished, or if the general abort signal is sended
 	case IVM_MULTI_UPDATE:
 		return true;
+	case IVM_INIT_DIFFERENCE_MATRIX:
+		return false;
 	default:
 		printError("This type is unknown!");
 		return false;
@@ -115,6 +117,8 @@ bool InformationPackage::canBeAbortedAfterCertainTime(){
 		return false; // can not be aborted, will be aborted if all IVM_TRAIN are finished
 	case IVM_MULTI_UPDATE:
 		return true;
+	case IVM_INIT_DIFFERENCE_MATRIX:
+		return false;
 	default:
 		printError("This type is unknown!");
 		return false;
@@ -135,6 +139,8 @@ int InformationPackage::getPriority(){
 		return 2;
 	case IVM_RETRAIN:
 		return 1;
+	case IVM_INIT_DIFFERENCE_MATRIX: // should be done before ivm start training
+		return 7;
 	default:
 		printError("This type is unknown!");
 		return 0;

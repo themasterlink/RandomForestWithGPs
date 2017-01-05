@@ -296,7 +296,7 @@ int GaussianProcessMultiBinary::predict(const DataPoint& point, std::vector<doub
 		}
 		p += prob[i];
 	}
-	if(fabs(p) <= 1e-14){
+	if(fabs(p) <= EPSILON){
 		p = 0;
 		for(int i = 0; i < m_amountOfUsedClasses; ++i){
 			if(m_gps[i] != NULL){
@@ -310,7 +310,7 @@ int GaussianProcessMultiBinary::predict(const DataPoint& point, std::vector<doub
 			}
 			p += prob[i];
 		}
-		if(fabs(p) <= 1e-14){
+		if(fabs(p) <= EPSILON){
 			return -1; // no result!
 		}
 	}

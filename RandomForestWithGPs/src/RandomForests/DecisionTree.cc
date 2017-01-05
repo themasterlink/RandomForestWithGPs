@@ -9,6 +9,7 @@
 #include <random>
 #include <algorithm>
 #include <limits>
+#include "../Data/Data.h"
 #include "../Utility/Util.h"
 #include "DecisionTree.h"
 #include <boost/thread.hpp> // Boost threads
@@ -23,7 +24,7 @@ DecisionTree::DecisionTree(const int maxDepth,
 			m_amountOfClasses(amountOfClasses),
 			m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
 			m_splitDim(m_maxInternalNodeNr + 1, NODE_IS_NOT_USED),
-			m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), -1){
+			m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), UNDEF_CLASS_LABEL){
 }
 
 DecisionTree::DecisionTree(const DecisionTree& tree):
@@ -265,7 +266,7 @@ int DecisionTree::predict(const DataPoint& point) const{
 		return m_labelsOfWinningClassesInLeaves[iActNode - pow(2, m_maxDepth)];
 	}else{
 		printError("A tree must be trained before it can predict anything!");
-		return -1;
+		return UNDEF_CLASS_LABEL;
 	}
 }
 

@@ -83,7 +83,7 @@ GaussianKernelParams sampleParams(OnlineStorage<ClassPoint*>& storage, int numbe
 	boost::thread_group group;
 	boost::mutex mutex;
 	const int nrOfParallel = boost::thread::hardware_concurrency();
-	double bestLogZ = -DBL_MAX;
+	double bestLogZ = NEG_DBL_MAX;
 	const double durationOfTraining = CommandSettings::get_samplingAndTraining();
 	std::vector<IVM*> ivms(nrOfParallel);
 	bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
@@ -204,7 +204,7 @@ void executeForBinaryClassIVM(){
 				}
 				ivm.setDerivAndLogZFlag(true, true);
 				double fac = 0.0001;
-				double smallestLog = -DBL_MAX;
+				double smallestLog = NEG_DBL_MAX;
 				const int amountOfTrainingSteps = 0;
 				for(int i = 0; i < amountOfTrainingSteps; ++i){
 					printOnScreen("Act " << ivm.getGaussianKernel()->getHyperParams() << ", logZ: " << ivm.m_logZ << ", deriv: "
@@ -401,7 +401,7 @@ void executeForBinaryClassIVM(){
 			const int size = ((1. - 0.9) / 0.005 + 1);
 			InLinePercentageFiller::setActMax(size * size);
 			int i = 0;
-			double bestLogZ = -DBL_MAX;
+			double bestLogZ = NEG_DBL_MAX;
 			if(false){
 				Eigen::VectorXd correctVec = Eigen::VectorXd::Zero(size * size);
 				for(double x = 0.5; x < 0.6; x += 0.005){
@@ -519,7 +519,7 @@ void executeForBinaryClassIVM(){
 			if((CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 				int x = 0, y = 1;
 				if(!CommandSettings::get_useFakeData() && ivm.getGaussianKernel()->hasLengthMoreThanOneDim()){
-					double highestVal = -DBL_MAX, secondHighestVal = -DBL_MAX;
+					double highestVal = NEG_DBL_MAX, secondHighestVal = NEG_DBL_MAX;
 					for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
 						const double len = ivm.getGaussianKernel()->getHyperParams().m_length.getValues()[i];
 						if(len > highestVal){

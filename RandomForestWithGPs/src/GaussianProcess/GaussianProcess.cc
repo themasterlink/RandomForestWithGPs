@@ -230,9 +230,9 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 		std::cout << std::endl;
 		//flush(std::cout);
 		for(int j = 0; j < 3; ++j){
-			const double lastLearningRate = sqrt(1e-8 + ESquared[j]); // 0,001
+			const double lastLearningRate = sqrt(EPSILON + ESquared[j]); // 0,001
 			ESquared[j] = 0.9 * ESquared[j] + 0.1 * dLogZ[j] * dLogZ[j]; // 0,0000000099856
-			const double actLearningRate = sqrt(1e-8 + ESquared[j]);  // 0,0001413704354
+			const double actLearningRate = sqrt(EPSILON + ESquared[j]);  // 0,0001413704354
 			const double fac = max(0.0,(-counter + 100.0) / 100.0);
 			if(j == 1){
 				stepSize[j] = 0.00001; // 0,001222106928

@@ -8,6 +8,22 @@
 #ifndef TESTS_TESTS_H_
 #define TESTS_TESTS_H_
 
+#include "../Utility/Util.h"
+#include "../Data/TotalStorage.h"
+#include "../Base/Settings.h"
+
+int readAllData(){
+	int firstPoints; // all points
+	Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
+	const double share = Settings::getDirectDoubleValue("TotalStorage.shareForTraining");
+	firstPoints /= share;
+	printOnScreen("Read " << firstPoints << " points per class");
+	TotalStorage::readData(firstPoints);
+	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << " with " << TotalStorage::getAmountOfClass() << " classes");
+	const int trainAmount = share * (std::min((int) TotalStorage::getSmallestClassSize(), firstPoints) * (double) TotalStorage::getAmountOfClass());
+	return trainAmount;
+}
+
 #include "multiClassRFGPTest.h"
 #include "binaryClassRFTest.h"
 #include "binaryClassGPTest.h"

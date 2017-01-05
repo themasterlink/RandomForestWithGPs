@@ -235,7 +235,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 			if(ele.getLabel() == label){
 				++right;
 			}
-			if(label != -1){
+			if(label != UNDEF_CLASS_LABEL){
 				confusion(ele.getLabel() ,label) += 1;
 			}else{
 				++unknownCounter;
@@ -267,7 +267,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 			Eigen::MatrixXd mat = Eigen::MatrixXd::Zero(size1, size2);
 			int i = 0,j,k = 0;
 			double minX, minY, minZ;
-			double minVal = -DBL_MAX;
+			double minVal = NEG_DBL_MAX;
 			InLinePercentageFiller::setActMax(size1 * size2);
 			//for(double z = -1.; z < 1.0; z += 0.01){
 			{	double z = 0.1;
@@ -289,7 +289,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 							}
 							mat(i,j) = val;
 						}else{
-							mat(i,j) = -DBL_MAX;
+							mat(i,j) = NEG_DBL_MAX;
 						}
 					//	std::cout << "z: " << z << ", val: " << val << std::endl;
 						std::cout << "x: " << x << ", y: " << y << std::endl;
@@ -329,7 +329,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 
 		bayOpt.setBoundingBox(lowerBound, upperBound);
 		bayOpt.optimize(result);
-		gp.getKernel().setHyperParams(result[0], result[1], 1e-16);
+		gp.getKernel().setHyperParams(result[0], result[1], EPSILON);
 		std::cout << gp.getKernel().prettyString() << std::endl;
 		}
 		gp.getKernel().setHyperParams(0.6,0.4, 0.1);
@@ -377,8 +377,8 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 	OptimizeFunctor functor(&gp);
 	Eigen::LevenbergMarquardt<OptimizeFunctor, double> lm(functor);
 	printLine();
-	lm.parameters.ftol = 1e-6;
-	lm.parameters.xtol = 1e-6;
+	lm.parameters.ftol = EPSILON;
+	lm.parameters.xtol = EPSILON;
 	lm.parameters.maxfev = 1000; // Max iterations
 	int status = lm.minimize(x);
 	std::cout << "LM status: " << status << std::endl;

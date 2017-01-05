@@ -50,7 +50,7 @@ void DataConverter::centerAndNormalizeData(DataSets& datas, DataPoint& center, D
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
 				var.coeffRef(i) = sqrt((double) var.coeff(i));
-				if(var.coeff(i) <= 1e-15){
+				if(var.coeff(i) <= EPSILON){
 					var.coeffRef(i) = 1.; // no change
 				}
 			}
@@ -92,7 +92,7 @@ void DataConverter::centerAndNormalizeData(Data& data, DataPoint& center, DataPo
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
 				var[i] = sqrt((double) var[i]);
-				if(var[i] <= 1e-15){
+				if(var[i] <= EPSILON){
 					var[i] = 1.; // no change
 				}
 			}
@@ -132,7 +132,7 @@ void DataConverter::centerAndNormalizeData(ClassData& data, DataPoint& center, D
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
 				var[i] = sqrt((double) var[i]);
-				if(var[i] <= 1e-15){
+				if(var[i] <= EPSILON){
 					var[i] = 1.; // no change
 				}
 			}
@@ -400,13 +400,13 @@ void DataConverter::toRandClassAndHalfUniformDataMatrix(const ClassData& data,
 }
 
 void DataConverter::getMinMax(const Data& data, double& min, double& max, const bool ignoreDBL_MAX_NEG){
-	min = DBL_MAX; max = -DBL_MAX;
+	min = DBL_MAX; max = NEG_DBL_MAX;
 	if(ignoreDBL_MAX_NEG){
 		for(DataConstIterator it = data.begin(); it != data.end(); ++it){
 			DataPoint& ele = **it;
 			for(unsigned int i = 0; i < ele.rows(); ++i){
 				const double val = ele[i];
-				if(val < min && val > -DBL_MAX){
+				if(val < min && val > NEG_DBL_MAX){
 					min = val;
 				}
 				if(val > max){
@@ -431,12 +431,12 @@ void DataConverter::getMinMax(const Data& data, double& min, double& max, const 
 }
 
 void DataConverter::getMinMax(const Eigen::MatrixXd& mat, double& min, double& max, const bool ignoreDBL_MAX_NEG){
-	min = DBL_MAX; max = -DBL_MAX;
+	min = DBL_MAX; max = NEG_DBL_MAX;
 	if(ignoreDBL_MAX_NEG){
 		for(unsigned int i = 0; i < mat.rows(); ++i){
 			for(unsigned int j = 0; j < mat.cols(); ++j){
 				const double ele = mat(i,j);
-				if(ele < min && ele > -DBL_MAX){
+				if(ele < min && ele > NEG_DBL_MAX){
 					min = ele;
 				}
 				if(ele > max){
@@ -460,11 +460,11 @@ void DataConverter::getMinMax(const Eigen::MatrixXd& mat, double& min, double& m
 }
 
 void DataConverter::getMinMax(const Eigen::VectorXd& vec, double& min, double& max, const bool ignoreDBL_MAX_NEG){
-	min = DBL_MAX; max = -DBL_MAX;
+	min = DBL_MAX; max = NEG_DBL_MAX;
 	if(ignoreDBL_MAX_NEG){
 		for(unsigned int i = 0; i < vec.rows(); ++i){
 			const double ele = vec[i];
-			if(ele < min && ele > -DBL_MAX){
+			if(ele < min && ele > NEG_DBL_MAX){
 				min = ele;
 			}
 			if(ele > max){
@@ -485,11 +485,11 @@ void DataConverter::getMinMax(const Eigen::VectorXd& vec, double& min, double& m
 }
 
 void DataConverter::getMinMax(const std::list<double>& list, double& min, double& max, const bool ignoreDBL_MAX_NEG){
-	min = DBL_MAX; max = -DBL_MAX;
+	min = DBL_MAX; max = NEG_DBL_MAX;
 	if(ignoreDBL_MAX_NEG){
 		for(std::list<double>::const_iterator it = list.begin(); it != list.end(); ++it){
 			const double ele = *it;
-			if(ele < min && ele > -DBL_MAX){
+			if(ele < min && ele > NEG_DBL_MAX){
 				min = ele;
 			}
 			if(ele > max){
@@ -511,11 +511,11 @@ void DataConverter::getMinMax(const std::list<double>& list, double& min, double
 
 void DataConverter::getMinMaxIn2D(const std::list<Eigen::Vector2d>& list, Eigen::Vector2d& min, Eigen::Vector2d& max, const bool ignoreDBL_MAX_NEG){
 	min[0] = min[1] =  DBL_MAX;
-	max[0] = max[1] = -DBL_MAX;
+	max[0] = max[1] = NEG_DBL_MAX;
 	for(std::list<Eigen::Vector2d>::const_iterator it = list.cbegin(); it != list.cend(); ++it){
 		for(unsigned int i = 0; i < 2; ++i){
 			if(ignoreDBL_MAX_NEG){
-				if((*it)[i] < min[i] && (*it)[i] > -DBL_MAX){
+				if((*it)[i] < min[i] && (*it)[i] > NEG_DBL_MAX){
 					min[i] = (*it)[i];
 				}
 			}else{
@@ -532,7 +532,7 @@ void DataConverter::getMinMaxIn2D(const std::list<Eigen::Vector2d>& list, Eigen:
 
 void DataConverter::getMinMaxIn2D(const ClassData& data, Eigen::Vector2d& min, Eigen::Vector2d& max, const Eigen::Vector2i& dim){
 	min[0] = min[1] =  DBL_MAX;
-	max[0] = max[1] = -DBL_MAX;
+	max[0] = max[1] = NEG_DBL_MAX;
 	if(data.size() > 0){
 		if(dim[0] < data[0]->rows() && dim[1] < data[0]->rows()){
 			for(ClassDataConstIterator it = data.begin(); it != data.end(); ++it){
@@ -557,7 +557,7 @@ void DataConverter::getMinMaxIn2D(const ClassData& data, Eigen::Vector2d& min, E
 
 void DataConverter::getMinMaxIn2D(const Data& data, Eigen::Vector2d& min, Eigen::Vector2d& max, const Eigen::Vector2i& dim){
 	min[0] = min[1] =  DBL_MAX;
-	max[0] = max[1] = -DBL_MAX;
+	max[0] = max[1] = NEG_DBL_MAX;
 	if(data.size() > 0){
 		if(dim[0] < data[0]->rows() && dim[1] < data[0]->rows()){
 			for(DataConstIterator it = data.begin(); it != data.end(); ++it){

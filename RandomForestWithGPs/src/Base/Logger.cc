@@ -37,9 +37,11 @@ void Logger::start(){
 }
 
 void Logger::forcedWrite(){
-	m_mutex.lock();
-	write();
-	m_mutex.unlock();
+	if(m_init){
+		m_mutex.lock();
+		write();
+		m_mutex.unlock();
+	}
 }
 
 void Logger::write(){
@@ -47,7 +49,7 @@ void Logger::write(){
 	std::fstream file;
 	file.open(m_filePath, std::fstream::out | std::fstream::trunc);
 	file.write(m_text.c_str(), m_text.length());
-	for(std::map<std::string, std::string>::iterator it = m_specialLines.begin(); it != m_specialLines.end(); ++it){
+	for(std::map<std::string, std::string>::const_iterator it = m_specialLines.cbegin(); it != m_specialLines.cend(); ++it){
 		if(!(it->first == "Error" || it->first == "Warning")){
 			file << it->first << "\n";
 			file.write(it->second.c_str(), it->second.length());

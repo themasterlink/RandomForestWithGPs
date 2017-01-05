@@ -58,7 +58,13 @@ public:
 
 	unsigned int getLabelForMinusOne() const;
 
-	void setInformationPackage(InformationPackage* package){ m_package = package; };
+	void setInformationPackage(InformationPackage* package){
+		if(package != nullptr){
+			m_package = package;
+		}else{
+			printError("The given information package was null!");
+		}
+	};
 
 	void setKernelSeed(unsigned int seed);
 
@@ -75,6 +81,17 @@ public:
 	double m_logZ;
 	GaussianKernelParams m_derivLogZ;
 
+	void setClassName(const int classNrOfMulti = UNDEF_CLASS_LABEL){
+		std::stringstream str2;
+		if(classNrOfMulti != UNDEF_CLASS_LABEL){
+			str2 << ClassKnowledge::getNameFor(classNrOfMulti) << "_";
+		}
+		str2 << ClassKnowledge::getNameFor(getLabelForOne());
+		m_className = str2.str();
+	}
+
+	std::string getClassName(){ return m_className; };
+
 private:
 
 	double predictOnTraining(const unsigned int id);
@@ -82,7 +99,7 @@ private:
 	double calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j,
 			const Vector& zeta, const Vector& mu,
 			double& g_kn, double& nu_kn,
-			const double fraction, const Eigen::Vector2i& amountOfPointsPerClassLeft, const int verboseLevel);
+			const double fraction, const Eigen::Vector2i& amountOfPointsPerClassLeft, const int useThisLabel, const int verboseLevel);
 
 	double cumulativeLog(const double x);
 
@@ -115,6 +132,7 @@ private:
 	double m_bias;
 	double m_lambda;
 	bool m_doEPUpdate;
+	double m_splitOfClassOneInData;
 	double m_desiredPoint;
 	double m_desiredMargin;
 	bool m_calcLogZ;
@@ -139,6 +157,8 @@ private:
 	InformationPackage* m_package;
 
 	bool m_isPartOfMultiIvm;
+
+	std::string m_className;
 
 	cmaes::cmaes_t m_evo; /* an CMA-ES type struct or "object" */
 	cmaes::cmaes_boundary_transformation_t m_cmaesBoundaries;

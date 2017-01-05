@@ -379,13 +379,13 @@ int RandomForestGaussianProcess::predict(const DataPoint& point, std::vector<dou
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
 		p += prob[i];
 	}
-	if(fabs(p) <= 1e-7){
+	if(fabs(p) <= EPSILON){
 		//std::cout << "p is zero, p: " << p << std::endl;
 		return m_pureClassLabelForRfClass[rfLabel];
 	}
 	int sum = 0;
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
-		if(fabs(prob[i] - 1.0) <= 1e-7){
+		if(fabs(prob[i] - 1.0) <= EPSILON){
 			++sum;
 		}
 	}

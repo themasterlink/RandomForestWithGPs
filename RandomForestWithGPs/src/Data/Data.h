@@ -18,6 +18,8 @@
 
 #include "DataPoint.h"
 
+#define UNDEF_CLASS_LABEL 99999999
+
 typedef typename std::vector<DataPoint*> Data;
 
 typedef typename Data::iterator DataIterator;

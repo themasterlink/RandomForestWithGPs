@@ -45,7 +45,7 @@ bool testSpeedOfEigenMultWithDiag(){
 	std::cout << "New way takes: " << sw2.elapsedAsPrettyTime() << std::endl;
 	for(int i = 0; i < dataPoints; ++i){
 		for(int j = 0; j < dataPoints; ++j){
-			if(fabs(innerOfLLT2(i,j) - innerOfLLT(i,j)) <= 1e-7){
+			if(fabs(innerOfLLT2(i,j) - innerOfLLT(i,j)) <= EPSILON){
 				return false;
 			}
 		}

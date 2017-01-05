@@ -8,6 +8,7 @@
 #include "OnlineRandomForestIVMs.h"
 #include "../Utility/ConfusionMatrixPrinter.h"
 #include "../Data/ClassKnowledge.h"
+#include "../Base/Logger.h"
 
 OnlineRandomForestIVMs::OnlineRandomForestIVMs(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfUsedClasses):
 	m_storage(storage),
@@ -48,6 +49,7 @@ void OnlineRandomForestIVMs::update(Subject* caller, unsigned int event){
 
 void OnlineRandomForestIVMs::update(){
 	if(!m_firstTrainedDone){
+		m_orf.setDesiredAmountOfTrees(100);
 		m_orf.update(&m_storage, OnlineStorage<ClassPoint*>::APPENDBLOCK);
 		std::list<int> predictedLabels;
 
@@ -58,60 +60,68 @@ void OnlineRandomForestIVMs::update(){
 		}
 		printOnScreen("Just ORFs:");
 		ConfusionMatrixPrinter::print(conv);
-		boost::thread_group group;
+		Logger::forcedWrite();
+		boost::thread_group* group = new boost::thread_group();
+		std::vector<ClassData*> datasForPredictedClasses(amountOfClasses(), nullptr);
 		for(unsigned int iClassNr = 0; iClassNr < amountOfClasses(); ++iClassNr){
 			// for each class find all predicted values which should be considered in this class
-			ClassData dataForPredictedClass;
+			datasForPredictedClasses[iClassNr] = new ClassData();
 			std::list<int>::const_iterator itPredictedLabel = predictedLabels.begin();
 			std::vector<int> classCounter(amountOfClasses(), 0);
 			for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it, ++itPredictedLabel){
 				if(*itPredictedLabel == iClassNr){
-					dataForPredictedClass.push_back(*it);
+					datasForPredictedClasses[iClassNr]->push_back(*it);
 					++classCounter[(*it)->getLabel()];
 				}
 			}
-			const int sizeOfPointsForClass = dataForPredictedClass.size();
-			printOnScreen("Size of class " << iClassNr << ": " << classCounter[iClassNr] << ", whole is: " << sizeOfPointsForClass);
 			int nrOfInducingPoints = 40;
 			Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
-			if(sizeOfPointsForClass * 0.95 > classCounter[iClassNr] && nrOfInducingPoints + 100 < sizeOfPointsForClass){ // if less than 95 % of the points belong to the right class -> use ivms
-				const bool doEpUpdate = false;
-				group.add_thread(new boost::thread(boost::bind(&OnlineRandomForestIVMs::trainIvm, this, iClassNr, nrOfInducingPoints, doEpUpdate, dataForPredictedClass)));
-				printOnScreen("Calc ivm" << iClassNr);
-			}
+			const int sizeOfPointsForClass = datasForPredictedClasses[iClassNr]->size();
+//			for(unsigned int iInnerClassNr = 0; iInnerClassNr < amountOfClasses(); ++iInnerClassNr){
+//				printOnScreen("Size of class " << ClassKnowledge::getNameFor(iClassNr) << "_"<< ClassKnowledge::getNameFor(iInnerClassNr)<< ": " << classCounter[iInnerClassNr] << ", whole is: " << sizeOfPointsForClass);
+				if(sizeOfPointsForClass * 0.95 > classCounter[iClassNr] && nrOfInducingPoints + 100 < sizeOfPointsForClass){ // if less than 95 % of the points belong to the right class -> use ivms
+					const bool doEpUpdate = false;
+					group->add_thread(new boost::thread(boost::bind(&OnlineRandomForestIVMs::trainIvm, this, iClassNr, nrOfInducingPoints, doEpUpdate, datasForPredictedClasses[iClassNr], iClassNr)));
+					printOnScreen("Calc ivm for " << ClassKnowledge::getNameFor(iClassNr) << "_"<< ClassKnowledge::getNameFor(iClassNr));
+				}
+//			}
 		}
-		group.join_all();
+		group->join_all();
+		for(unsigned int iClassNr = 0; iClassNr < amountOfClasses(); ++iClassNr){
+			delete datasForPredictedClasses[iClassNr];
+		}
+		delete group;
 	}else{
 		printError("Not implemented yet!");
 	}
 }
 
-void OnlineRandomForestIVMs::trainIvm(const int usedIvm, const int nrOfInducingPoints, const bool doEpUpdate, ClassData& data){
+void OnlineRandomForestIVMs::trainIvm(const int usedIvm, const int nrOfInducingPoints, const bool doEpUpdate, ClassData* data, const int orfClass){
 	m_onlineStoragesForIvms[usedIvm] = new OnlineStorage<ClassPoint*>();
-	m_ivms[usedIvm] = new IVMMultiBinary(*m_onlineStoragesForIvms[usedIvm], nrOfInducingPoints, doEpUpdate);
-	m_onlineStoragesForIvms[usedIvm]->append(data); // this append will call the update of the ivm and will start the training
+	m_ivms[usedIvm] = new IVMMultiBinary(*m_onlineStoragesForIvms[usedIvm], nrOfInducingPoints, doEpUpdate, orfClass);
+	m_onlineStoragesForIvms[usedIvm]->append(*data); // this append will call the update of the ivm and will start the training
 }
 
 int OnlineRandomForestIVMs::predict(const DataPoint& point) const{
 	const int label = m_orf.predict(point);
-	if(label > -1){
+	if(label != UNDEF_CLASS_LABEL){
 		if(m_ivms[label] != nullptr){
 			return m_ivms[label]->predict(point);
 		}
 		return label;
 	}
-	return -1;
+	return UNDEF_CLASS_LABEL;
 }
 
 int OnlineRandomForestIVMs::predict(const ClassPoint& point) const{
 	const int label = m_orf.predict(point);
-	if(label > -1){
+	if(label != UNDEF_CLASS_LABEL){
 		if(m_ivms[label] != nullptr){
 			return m_ivms[label]->predict(point);
 		}
 		return label;
 	}
-	return -1;
+	return UNDEF_CLASS_LABEL;
 }
 
 void OnlineRandomForestIVMs::predictData(const Data& points, Labels& labels) const{

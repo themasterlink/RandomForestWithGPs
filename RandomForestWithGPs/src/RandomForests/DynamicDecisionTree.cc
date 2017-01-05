@@ -18,7 +18,7 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, co
 		m_amountOfClasses(amountOfClasses),
 		m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
 		m_splitDim(m_maxInternalNodeNr + 1, NODE_IS_NOT_USED),
-		m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), -1){
+		m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), UNDEF_CLASS_LABEL){
 }
 
 // copy construct
@@ -41,7 +41,7 @@ void DynamicDecisionTree::DynamicDecisionTree::train(int amountOfUsedDims,
 	if(m_splitDim[1] != NODE_IS_NOT_USED || m_splitDim[1] != NODE_CAN_BE_USED){
 		// reset training
 		std::fill(m_splitDim.begin(), m_splitDim.end(), NODE_IS_NOT_USED);
-		std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), -1);
+		std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), UNDEF_CLASS_LABEL);
 	}
 	std::vector<int> usedDims(amountOfUsedDims,-1);
 //	if(amountOfUsedDims == m_storage.dim()){
@@ -92,7 +92,7 @@ void DynamicDecisionTree::DynamicDecisionTree::train(int amountOfUsedDims,
 		const int randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
 		const int amountOfUsedData = generator.getRandAmountOfUsedData();
 		double maxScoreElementValue = 0;
-		double actScore = -DBL_MAX; // TODO check magic number
+		double actScore = NEG_DBL_MAX; // TODO check magic number
 		for(int j = 0; j < amountOfUsedData; ++j){ // amount of checks for a specified split
 			//const int randElementId = generator.getRandNextDataEle();
 			//const double usedValue = (*m_storage[usedNode])[usedDim];
@@ -265,7 +265,7 @@ int DynamicDecisionTree::predict(const DataPoint& point) const{
 		return m_labelsOfWinningClassesInLeaves[iActNode - pow(2, m_maxDepth)];
 	}else{
 		printError("A tree must be trained before it can predict anything!");
-		return -1;
+		return UNDEF_CLASS_LABEL;
 	}
 }
 

@@ -156,7 +156,7 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd& usedMatrix, const OnlineStorage<ClassPoint*>& storage){
+void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd& usedMatrix, const OnlineStorage<ClassPoint*>& storage, InformationPackage* package){
 	const int dataPoints = storage.size();
 	int counter = 0;
 	if(usedMatrix.rows() != dataPoints || usedMatrix.cols() != dataPoints){
@@ -167,6 +167,15 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 		++counter;
 		for(int j = i + 1; j < dataPoints; ++j){
 			if(counter >= start){
+				if(package != nullptr && ((counter - start) % ((int) ((end - start) * 0.001))) == 0){
+					std::stringstream str2;
+					str2 << "Done: " << (counter - start) / (double) (end - start) * 100.0 << " %%" ;
+					if(counter == start){
+						package->printLineToScreenForThisThread(str2.str());
+					}else{
+						package->overwriteLastLineToScreenForThisThread(str2.str());
+					}
+				}
 				if(counter == end){
 					i = dataPoints;
 					break;
