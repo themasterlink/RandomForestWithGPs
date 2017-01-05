@@ -330,6 +330,7 @@ void IVMMultiBinary::train(){
 //		}
 			m_firstTraining = false;
 	}
+	printOnScreen("Finish training of IVM Multi Binary");
 	int amountOfCorrect = 0;
 	std::vector<int> counterClass(amountOfClasses(), 0);
 	for(unsigned int i = 0; i < m_storage.size(); ++i){ // always test the whole data set
@@ -393,6 +394,7 @@ void IVMMultiBinary::trainInParallel(const int usedIvm, const double trainTime, 
 		//			Settings::getDirectDoubleValue("KernelParam.fNoise"),
 		//			Settings::getDirectDoubleValue("KernelParam.sNoise"));
 		//	const bool ret = m_ivms[usedIvm]->train(false,1);
+		m_isClassUsed[usedIvm] = ret;
 		if(!ret){
 			printError("The ivm: " << m_ivms[usedIvm]->getClassName() << ", could not be trained!");
 		}

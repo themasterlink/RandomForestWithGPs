@@ -18,10 +18,9 @@ void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<ClassPoint*>& test){
 		int amountOfCorrect = 0;
 		Labels labels;
 		printOnScreen("Predict Data");
-		sleep(2);
+		std::cout << std::flush;
 		orf.predictData(test.storage(), labels);
 		printOnScreen("Predicted Data");
-		sleep(2);
 		Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(orf.amountOfClasses(), orf.amountOfClasses());
 		for(unsigned int i = 0; i < labels.size(); ++i){
 			if(test[i]->getLabel() == labels[i]){
@@ -34,7 +33,6 @@ void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<ClassPoint*>& test){
 			}
 		}
 		printOnScreen("Test size: " << test.size());
-		std::cout << "Result:    " << amountOfCorrect / (double) test.size() * 100. << " %%" << std::endl;
 		printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %%");
 		ConfusionMatrixPrinter::print(conv);
 	}
@@ -51,9 +49,7 @@ void executeForBinaryClassORFIVM(){
 	// starts the training by its own
 	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 	printOnScreen("Training finished");
-	sleep(2);
 	performTest(orf, train);
-	sleep(2);
 	printOnScreen("First test finished");
 
 	performTest(orf, test);

@@ -35,6 +35,9 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 }
 
 OnlineRandomForest::~OnlineRandomForest(){
+	for(DecisionTreeIterator it = m_trees.begin(); it != m_trees.end(); ++it){
+		delete *it;
+	}
 }
 
 void OnlineRandomForest::train(){
@@ -135,8 +138,8 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 			break;
 		}
 		// create a new element and train it
-		m_trees.push_back(DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses));
-		DynamicDecisionTree& tree = m_trees.back();
+		m_trees.push_back(new DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses));
+		DynamicDecisionTree& tree = *m_trees.back();
 		m_treesMutex.unlock();
 		tree.train(m_amountOfUsedDims, *generator);
 		package->printLineToScreenForThisThread("Number " + number2String(i++) + " was calculated");
@@ -236,7 +239,8 @@ void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list)
 		int correct = 0;
 		for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			ClassPoint& point = *(*it);
-			if(point.getLabel() == itTree->predict(point)){
+			DynamicDecisionTree& tree = **itTree;
+			if(point.getLabel() == tree.predict(point)){
 				++correct;
 			}
 		}
@@ -258,11 +262,12 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const in
 	list->pop_front(); // remove it
 	mutex->unlock();
 	for(unsigned int i = 0; i < amountOfSteps; ++i){
-		pair.first->train(m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
+		DynamicDecisionTree& tree = **pair.first;
+		tree.train(m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
 		int correct = 0;
 		for(OnlineStorage<ClassPoint*>::ConstIterator itPoint = m_storage.begin(); itPoint != m_storage.end(); ++itPoint){
 			ClassPoint& point = **itPoint;
-			if(point.getLabel() == pair.first->predict(point)){
+			if(point.getLabel() == tree.predict(point)){
 				++correct;
 			}
 		}
@@ -307,9 +312,10 @@ OnlineRandomForest::DecisionTreeIterator OnlineRandomForest::findWorstPerforming
 	DecisionTreeIterator itWorst = m_trees.end();
 	for(DecisionTreeIterator itTree = m_trees.begin(); itTree != m_trees.end(); ++itTree){
 		int correct = 0;
+		DynamicDecisionTree& tree = **itTree;
 		for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			ClassPoint& point = *(*it);
-			if(point.getLabel() == itTree->predict(point)){
+			if(point.getLabel() == tree.predict(point)){
 				++correct;
 			}
 		}
@@ -328,7 +334,7 @@ int OnlineRandomForest::predict(const DataPoint& point) const {
 		std::vector<int> values(m_amountOfClasses, 0);
 		int k = 0;
 		for(DecisionTreeConstIterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
-			const unsigned int value = it->predict(point);
+			const unsigned int value = (*it)->predict(point);
 			++values[value];
 			++k;
 		}
@@ -345,7 +351,7 @@ double OnlineRandomForest::predict(const DataPoint& point1, const DataPoint& poi
 			int inSameClassCounter = 0;
 			int counter = 0;
 			for(DecisionTreeConstIterator it = m_trees.cbegin(); it != m_trees.cend() && counter < sampleAmount; ++it, ++counter){
-				if(it->predict(point1) == it->predict(point2)){ // labels are the same -> in the same cluster
+				if((*it)->predict(point1) == (*it)->predict(point2)){ // labels are the same -> in the same cluster
 					++inSameClassCounter;
 				}
 			}
@@ -364,7 +370,7 @@ double OnlineRandomForest::predictPartitionEquality(const DataPoint& point1, con
 		int counter = 0;
 		for(DecisionTreesContainer::const_iterator it = m_trees.begin(); it != m_trees.end() && counter < amountOfSamples; ++it){
 			const int height = uniformNr();
-			if(it->predictIfPointsShareSameLeaveWithHeight(point1, point2, height)){
+			if((*it)->predictIfPointsShareSameLeaveWithHeight(point1, point2, height)){
 				++sameLeaveCounter;
 			}
 			++counter;
@@ -416,7 +422,7 @@ void OnlineRandomForest::predictDataProbInParallel(const Data& points, Labels* l
 		for(unsigned int i = start; i < end; ++i){
 			(*probabilities)[i].resize(m_amountOfClasses);
 			for(DecisionTreeConstIterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
-				(*probabilities)[i][it->predict(*points[i])] += 1;
+				(*probabilities)[i][(*it)->predict(*points[i])] += 1;
 			}
 			unsigned int iMax = UNDEF_CLASS_LABEL;
 			double max = 0.;

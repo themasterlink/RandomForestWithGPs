@@ -19,7 +19,7 @@
 class OnlineRandomForest : public Observer, public PredictorMultiClass, public Subject {
 public:
 
-	typedef typename std::list<DynamicDecisionTree> DecisionTreesContainer;
+	typedef typename std::list<DynamicDecisionTree*> DecisionTreesContainer;
 	typedef typename DecisionTreesContainer::iterator DecisionTreeIterator;
 	typedef typename DecisionTreesContainer::const_iterator DecisionTreeConstIterator;
 

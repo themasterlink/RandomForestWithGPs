@@ -91,6 +91,7 @@ void OnlineRandomForestIVMs::update(){
 			delete datasForPredictedClasses[iClassNr];
 		}
 		delete group;
+		printOnScreen("Finished Training!");
 	}else{
 		printError("Not implemented yet!");
 	}
