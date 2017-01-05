@@ -74,6 +74,8 @@ public:
 
 	void setStandartInformation(const std::string& line){ m_lineMutex.lock(); m_standartInfo = line; m_lineMutex.unlock(); };
 
+	std::string getStandartInformation(){ return m_standartInfo; };
+
 	bool canBeAbortedAfterCertainTime();
 
 	void setAdditionalInfo(const std::string& line);

@@ -163,6 +163,8 @@ private:
 	cmaes::cmaes_t m_evo; /* an CMA-ES type struct or "object" */
 	cmaes::cmaes_boundary_transformation_t m_cmaesBoundaries;
 	double *m_arFunvals, *m_hyperParamsValues;
+
+	static boost::mutex m_listMutex;
 };
 
 #endif /* GAUSSIANPROCESS_IVM_H_ */

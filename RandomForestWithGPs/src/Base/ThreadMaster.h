@@ -28,7 +28,7 @@ public:
 
 	static void threadHasFinished(InformationPackage* package);
 
-	static void setMaxCounter(){ m_maxCounter = 1; } //boost::thread::hardware_concurrency();}
+	static void setMaxCounter();
 
 	static void abortAllThreads();
 

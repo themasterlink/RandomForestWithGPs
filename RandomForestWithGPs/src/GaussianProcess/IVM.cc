@@ -14,7 +14,7 @@
 #include "../Data/DataConverter.h"
 #include "../Data/DataBinaryWriter.h"
 
-
+boost::mutex IVM::m_listMutex;
 #define LOG2   0.69314718055994528623
 #define LOG2PI 1.8378770664093453391
 #define SQRT2  1.4142135623730951455
@@ -1064,10 +1064,12 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		for(unsigned int i = 0; i < m_dataPoints; ++i){
 			m_M.coeffRef(k,i) = sqrtNu * s_nk.coeff(i);
 		}
+		m_listMutex.lock();
 		if(clearActiveSet){
 			m_I.push_back(argmax);
 		}
 		m_J.remove(argmax);
+		m_listMutex.unlock();
 		amountOfPointsPerClass.coeffRef(m_y.coeff(argmax) == 1 ? 0 : 1) -= 1;
 	}
 

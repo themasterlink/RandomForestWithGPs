@@ -16,7 +16,7 @@
 
 #define MAX_HEIGHT 120
 
-#define USE_SCREEN_OUPUT 1
+//#define USE_SCREEN_OUPUT 1
 
 class ScreenOutput {
 public:
@@ -68,8 +68,15 @@ private:
 #define printOnScreen(message) \
 		do{std::stringstream str; str << message; ScreenOutput::print(str.str()); }while(false) \
 
+#ifdef USE_SCREEN_OUPUT
 #define printInPackageOnScreen(package, message) \
 		do{std::stringstream str; str << message; package->printLineToScreenForThisThread(str.str()); }while(false) \
 
+#else
+
+#define printInPackageOnScreen(package, message) \
+	std::cout << package->getStandartInformation() << "\n\t" << message << std::endl; \
+
+#endif
 
 #endif /* BASE_SCREENOUTPUT_H_ */

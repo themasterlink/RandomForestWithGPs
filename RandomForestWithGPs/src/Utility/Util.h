@@ -81,15 +81,7 @@ inline void openFileInViewer(const std::string& filename){
 	}
 }
 
-#define printMsg(message, ...)\
-	do{ \
-		const std::string p[] = {__VA_ARGS__}; \
-		const int numArgs = sizeof(p)/sizeof(p[0]); \
-		std::string resultString = numArgs>0 ? "" : " "; \
-		for(int i = 0; i < numArgs; ++i)\
-			resultString += p[i]; \
-		std::cout << resultString << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl; \
-	}while(0) \
+#ifdef USE_SCREEN_OUPUT
 
 #define printError(message) \
 	do{	std::stringstream str; str << "Error in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message; ScreenOutput::printErrorLine(str.str()); }while(false) \
@@ -102,6 +94,22 @@ inline void openFileInViewer(const std::string& filename){
 
 #define printDebug(message) \
 	printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message) \
+
+#else
+
+#define printError(message) \
+	std::cout << RED << "Error in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << RESET << std::endl; \
+
+#define printWarning(message) \
+	 std::cout << "Warning in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl;\
+
+#define printLine() \
+	 std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << std::endl; \
+
+#define printDebug(message) \
+	 std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl; \
+
+#endif
 
 template<class T> const T& min(const T& a, const T& b){
 	return !(b < a) ? a : b;     // or: return !comp(b,a)?a:b; for version (2)

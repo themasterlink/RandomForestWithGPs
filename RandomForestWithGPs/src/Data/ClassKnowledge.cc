@@ -11,6 +11,7 @@
 
 ClassKnowledge::LabelNameMap ClassKnowledge::m_names;
 unsigned int ClassKnowledge::m_amountOfDims(0);
+boost::mutex ClassKnowledge::m_mutex;
 
 ClassKnowledge::ClassKnowledge() {
 }
@@ -23,6 +24,7 @@ void ClassKnowledge::init(){
 }
 
 void ClassKnowledge::setNameFor(const std::string& name, unsigned int nr){
+	m_mutex.lock();
 	LabelNameMapIterator it = m_names.find(nr);
 	if(it != m_names.end()){
 		if(it->second == name){
@@ -36,22 +38,32 @@ void ClassKnowledge::setNameFor(const std::string& name, unsigned int nr){
 	if(nr >= UNDEF_CLASS_LABEL){
 		printError("The amount of classes exceeds the amount of supported classes: " << UNDEF_CLASS_LABEL);
 		sleep(10);
+		m_mutex.unlock();
 		exit(0);
 	}
+	m_mutex.unlock();
 }
 
 std::string ClassKnowledge::getNameFor(unsigned int nr){
+	m_mutex.lock();
 	LabelNameMapIterator it = m_names.find(nr);
 	if(it != m_names.end()){
-		return it->second;
+		const std::string ret = it->second;
+		m_mutex.unlock();
+		return ret;
 	}else{
 		printError("This number has no name: " << nr << "!");
-		return m_names.find(UNDEF_CLASS_LABEL)->second;
+		const std::string ret = m_names.find(UNDEF_CLASS_LABEL)->second;
+		m_mutex.unlock();
+		return ret;
 	}
 }
 
 unsigned int ClassKnowledge::amountOfClasses(){
-	return m_names.size() - 1; // for default class!
+	m_mutex.lock();
+	const int size = m_names.size() - 1;// for default class!
+	m_mutex.unlock();
+	return size;
 }
 
 unsigned int ClassKnowledge::amountOfDims(){
@@ -59,9 +71,14 @@ unsigned int ClassKnowledge::amountOfDims(){
 }
 
 void ClassKnowledge::setAmountOfDims(unsigned int value){
+	m_mutex.lock();
 	m_amountOfDims = value;
+	m_mutex.unlock();
 }
 
 bool ClassKnowledge::hasClassName(const unsigned int nr){
-	return m_names.end() != m_names.find(nr);
+	m_mutex.lock();
+	const bool exists = m_names.end() != m_names.find(nr);
+	m_mutex.unlock();
+	return exists;
 }

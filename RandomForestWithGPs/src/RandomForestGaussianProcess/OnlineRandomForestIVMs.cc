@@ -63,6 +63,8 @@ void OnlineRandomForestIVMs::update(){
 		Logger::forcedWrite();
 		boost::thread_group* group = new boost::thread_group();
 		std::vector<ClassData*> datasForPredictedClasses(amountOfClasses(), nullptr);
+		int nrOfInducingPoints = 40;
+		Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 		for(unsigned int iClassNr = 0; iClassNr < amountOfClasses(); ++iClassNr){
 			// for each class find all predicted values which should be considered in this class
 			datasForPredictedClasses[iClassNr] = new ClassData();
@@ -74,8 +76,6 @@ void OnlineRandomForestIVMs::update(){
 					++classCounter[(*it)->getLabel()];
 				}
 			}
-			int nrOfInducingPoints = 40;
-			Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 			const int sizeOfPointsForClass = datasForPredictedClasses[iClassNr]->size();
 //			for(unsigned int iInnerClassNr = 0; iInnerClassNr < amountOfClasses(); ++iInnerClassNr){
 //				printOnScreen("Size of class " << ClassKnowledge::getNameFor(iClassNr) << "_"<< ClassKnowledge::getNameFor(iInnerClassNr)<< ": " << classCounter[iInnerClassNr] << ", whole is: " << sizeOfPointsForClass);

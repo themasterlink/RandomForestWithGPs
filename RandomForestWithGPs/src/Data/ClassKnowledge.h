@@ -10,6 +10,7 @@
 
 #include <string>
 #include <map>
+#include <boost/thread.hpp>
 
 class ClassKnowledge {
 public:
@@ -39,6 +40,8 @@ private:
 	static LabelNameMap m_names;
 
 	static unsigned int m_amountOfDims;
+
+	static boost::mutex m_mutex;
 
 	ClassKnowledge();
 	virtual ~ClassKnowledge();

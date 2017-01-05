@@ -219,3 +219,11 @@ void ThreadMaster::abortAllThreads(){
 	}
 	m_mutex.unlock();
 }
+
+void ThreadMaster::setMaxCounter(){
+	if(Settings::getDirectBoolValue("ThreadMaster.useMultiThread")){
+		m_maxCounter = boost::thread::hardware_concurrency();
+	}else{
+		m_maxCounter = 1;
+	}
+}

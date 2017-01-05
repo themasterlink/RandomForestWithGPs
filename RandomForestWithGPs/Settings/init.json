@@ -60,6 +60,9 @@
 	"Kernel": {
 		"path": "..\/realTest\/kernelData.kernel"
 	},
+	"ThreadMaster": {
+		"useMultiThread": "true"
+	},
 	"RandomForestKernel": {
 		"samplingAmount": 450,
 		"maxDepth": 18,
