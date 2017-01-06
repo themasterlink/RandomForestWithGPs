@@ -47,7 +47,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 					}
 				}
 				unsigned int amountOfUsedClasses = 0u;
-				const int minimumNeededAmountOfElements = 0.75 * m_numberOfInducingPointsPerIVM;
+				const unsigned int minimumNeededAmountOfElements = 0.75 * m_numberOfInducingPointsPerIVM;
 				for (std::map<unsigned int, unsigned int>::const_iterator it = classCounter.begin(); it != classCounter.end(); ++it){
 					m_isClassUsed.push_back(it->second > minimumNeededAmountOfElements);
 					m_classOfIVMs.push_back(it->first); // guarentees that classOfIvms and isClassUsed have the same mapping
@@ -77,11 +77,9 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 						m_orfForKernel->setDesiredAmountOfTrees(samplingAmount);
 						m_orfForKernel->update(&m_storage, OnlineStorage<ClassPoint*>::APPENDBLOCK);
 					}
-					std::list<IVM*> usedIvms;
 					for(unsigned int i = 0; i < amountOfClasses(); ++i){
 						if(m_isClassUsed[i]){
 							m_ivms[i] = new IVM(m_storage, true);
-							usedIvms.push_back(m_ivms[i]);
 							if(m_ivms[i]->getKernelType() == IVM::RF){
 								m_ivms[i]->setOnlineRandomForest(m_orfForKernel);
 							}
@@ -91,10 +89,10 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 									m_doEpUpdate, calcDifferenceMatrixAlone);
 						}
 					}
-					const int nrOfParallel = (int) boost::thread::hardware_concurrency();
-					const int size = (m_storage.size() * m_storage.size() + m_storage.size()) / 2;
-					const int sizeOfPart =  size / nrOfParallel;
-					if(kernelType == 0 && usedIvms.size() > 0){ // GAUSS, calc the kernel matrix
+					const unsigned int nrOfParallel = (unsigned int) boost::thread::hardware_concurrency();
+					const unsigned int size = (m_storage.size() * m_storage.size() + m_storage.size()) / 2;
+					const unsigned int sizeOfPart =  size / nrOfParallel;
+					if(kernelType == 0 && amountOfUsedClasses > 0){ // GAUSS, calc the kernel matrix
 						Eigen::MatrixXd* differenceMatrix = new Eigen::MatrixXd(m_storage.size(), m_storage.size());
 						boost::thread_group* group = new boost::thread_group();
 						std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
@@ -110,8 +108,10 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 							ThreadMaster::threadHasFinished(packages[i]);
 							delete packages[i];
 						}
-						for(std::list<IVM*>::iterator itIvm = usedIvms.begin(); itIvm != usedIvms.end(); ++itIvm){
-							(*itIvm)->getGaussianKernel()->setDifferenceMatrix(differenceMatrix);
+						for(unsigned int i = 0; i < amountOfClasses(); ++i){
+							if(m_isClassUsed[i]){
+								m_ivms[i]->getGaussianKernel()->setDifferenceMatrix(differenceMatrix);
+							}
 						}
 						delete group;
 					}
@@ -562,6 +562,6 @@ void IVMMultiBinary::predictClassDataInParallel(IVM* ivm, const ClassData& point
 }
 
 
-int IVMMultiBinary::amountOfClasses() const{
+unsigned int IVMMultiBinary::amountOfClasses() const{
 	return m_classOfIVMs.size();
 }

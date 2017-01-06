@@ -37,7 +37,7 @@ public:
 		printError("Not implemented yet!");
 	}
 
-	int amountOfClasses() const;
+	unsigned int amountOfClasses() const;
 
 private:
 

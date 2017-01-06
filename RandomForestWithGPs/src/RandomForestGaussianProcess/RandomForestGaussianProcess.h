@@ -40,7 +40,7 @@ public:
 		printError("Not implemented yet!");
 	}
 
-	int amountOfClasses() const {return m_amountOfUsedClasses;};
+	unsigned int amountOfClasses() const {return m_amountOfUsedClasses;};
 
 	void train();
 

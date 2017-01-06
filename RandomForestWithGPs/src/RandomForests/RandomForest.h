@@ -52,7 +52,7 @@ public:
 
 	void getLeafNrFor(const ClassData& data, std::vector<int>& leafNrs);
 
-	int amountOfClasses() const;
+	unsigned int amountOfClasses() const;
 
 private:
 	const int m_amountOfTrees;

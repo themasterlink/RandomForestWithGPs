@@ -52,7 +52,7 @@ public:
 
 	bool update();
 
-	int amountOfClasses() const;
+	unsigned int amountOfClasses() const;
 
 	OnlineStorage<ClassPoint*>& getStorageRef();
 

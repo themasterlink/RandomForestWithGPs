@@ -27,7 +27,7 @@ public:
 
 	virtual void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const = 0;
 
-	virtual int amountOfClasses() const = 0;
+	virtual unsigned int amountOfClasses() const = 0;
 };
 
 #endif /* BASE_PREDICTOR_H_ */

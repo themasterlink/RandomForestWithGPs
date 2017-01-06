@@ -37,7 +37,7 @@ public:
 
 	void predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
 
-	int amountOfClasses() const;
+	unsigned int amountOfClasses() const;
 
 	void update(Subject* caller, unsigned int event);
 

@@ -50,7 +50,7 @@ public:
 
 	int getNrOfLeaves();
 
-	int amountOfClasses() const;
+	unsigned int amountOfClasses() const;
 
 private:
 	OnlineStorage<ClassPoint*>& m_storage;

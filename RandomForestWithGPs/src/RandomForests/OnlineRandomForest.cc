@@ -180,7 +180,7 @@ void OnlineRandomForest::update(Subject* caller, unsigned int event){
 	}
 }
 
-int OnlineRandomForest::amountOfClasses() const{
+unsigned int OnlineRandomForest::amountOfClasses() const{
 	return m_amountOfClasses;
 }
 
@@ -197,7 +197,7 @@ bool OnlineRandomForest::update(){
 			return false;
 		}
 		boost::thread_group group;
-		const int nrOfParallel = std::min((int) boost::thread::hardware_concurrency(), (int) m_trees.size());
+		const unsigned int nrOfParallel = std::min((int) boost::thread::hardware_concurrency(), (int) m_trees.size());
 		boost::mutex* mutex = new boost::mutex();
 		if(list->size() != m_trees.size()){
 			printError("The sorting process failed, list size is: " << list->size() << ", should be: " << m_trees.size());

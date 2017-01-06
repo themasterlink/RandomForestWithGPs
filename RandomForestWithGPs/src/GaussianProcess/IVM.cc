@@ -408,7 +408,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								}else{
 									m_arFunvals[iLambda] = m_numberOfInducingPoints * 200;
 								}
-								values.push_back(m_arFunvals[iLambda]);
+								const double arValue = m_arFunvals[iLambda];
+								values.push_back(arValue);
 							}else{
 								m_arFunvals[iLambda] = m_numberOfInducingPoints * 200;
 								values.push_back(NEG_DBL_MAX);

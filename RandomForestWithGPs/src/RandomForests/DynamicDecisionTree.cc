@@ -356,7 +356,7 @@ int DynamicDecisionTree::getNrOfLeaves(){
 	return pow(2, m_maxDepth);
 }
 
-int DynamicDecisionTree::amountOfClasses() const{
+unsigned int DynamicDecisionTree::amountOfClasses() const{
 	return m_amountOfClasses;
 }
 

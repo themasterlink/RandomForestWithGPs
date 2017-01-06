@@ -16,13 +16,13 @@ KernelElement::KernelElement(unsigned int kernelNr): m_kernelNr(kernelNr), m_val
 KernelElement::KernelElement(const KernelElement& ele):
 		m_kernelNr(ele.m_kernelNr), m_values(nullptr), m_hasMoreThanOneDim(ele.m_hasMoreThanOneDim){
 	if(ele.m_hasMoreThanOneDim){
-		const int dim = ClassKnowledge::amountOfDims();
+		const unsigned int dim = ClassKnowledge::amountOfDims();
 		m_values = new double[dim];
 		for(unsigned int i = 0; i < dim; ++i){
 			m_values[i] = ele.m_values[i];
 		}
 	}else{
-		m_values = new double;
+		m_values = new double[1]; // [1] to make the delete easier
 		m_values[0] = ele.m_values[0];
 	}
 }
@@ -33,16 +33,12 @@ KernelElement::~KernelElement(){
 
 void KernelElement::changeAmountOfDims(const bool newHasMoreThanOneDim){
 	if(hasMoreThanOneDim() != newHasMoreThanOneDim){
-		if(hasMoreThanOneDim()){
-			delete[] m_values;
-		}else{
-			delete m_values;
-		}
+		delete[] m_values;
 		m_hasMoreThanOneDim = newHasMoreThanOneDim;
 		if(hasMoreThanOneDim()){
 			m_values = new double[ClassKnowledge::amountOfDims()];
 		}else{
-			m_values = new double;
+			m_values = new double[1]; // [1] to make the delete easier
 		}
 	}
 }
@@ -52,16 +48,16 @@ GaussianKernelElementLength::GaussianKernelElementLength(bool hasMoreThanOneDim)
 	if(m_hasMoreThanOneDim){
 		m_values = new double[ClassKnowledge::amountOfDims()];
 	}else{
-		m_values = new double;
+		m_values = new double[1];
 	}
 }
 
 GaussianKernelElementFNoise::GaussianKernelElementFNoise(): GaussianKernelElement(FNoiseParam){
-	m_values = new double;
+	m_values = new double[1];
 }
 
 GaussianKernelElementSNoise::GaussianKernelElementSNoise(): GaussianKernelElement(SNoiseParam){
-	m_values = new double;
+	m_values = new double[1];
 }
 
 GaussianKernelParams::GaussianKernelParams(const bool simpleLength):

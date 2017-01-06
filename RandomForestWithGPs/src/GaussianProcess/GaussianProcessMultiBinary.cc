@@ -322,7 +322,7 @@ int GaussianProcessMultiBinary::predict(const DataPoint& point) const{
 	return predict(point, prob);
 }
 
-int GaussianProcessMultiBinary::amountOfClasses() const{
+unsigned int GaussianProcessMultiBinary::amountOfClasses() const{
 	return m_amountOfUsedClasses;
 }
 

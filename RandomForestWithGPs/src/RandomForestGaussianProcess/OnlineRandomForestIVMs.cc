@@ -155,6 +155,6 @@ void OnlineRandomForestIVMs::predictData(const Data& points, Labels& labels, std
 	}
 }
 
-int OnlineRandomForestIVMs::amountOfClasses() const{
+unsigned int OnlineRandomForestIVMs::amountOfClasses() const{
 	return m_amountOfUsedClasses;
 }
