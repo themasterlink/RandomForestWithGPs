@@ -65,6 +65,8 @@ private:
 
 	std::vector<unsigned int> m_classOfIVMs;
 
+	std::vector<unsigned int> m_generalClassesToIVMs; // converts from all classes to the ordering in m_ivms and m_isClassUsed
+
 	int m_numberOfInducingPointsPerIVM;
 
 	bool m_doEpUpdate;
@@ -84,6 +86,8 @@ private:
 	std::vector<double> m_correctAmountForTrainingDataForClasses;
 
 	const int m_orfClassLabel;
+
+	unsigned int m_amountOfAllClasses;
 };
 
 #endif /* GAUSSIANPROCESS_IVMMULTIBINARY_H_ */

@@ -852,7 +852,6 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			}else if(fraction > m_desiredPoint - m_desiredMargin && forceUsedOfClass == 0){
 				forceUsedOfClass = -1;
 			}else{
-				return false;
 				if(m_numberOfInducingPoints * 0.1 < m_I.size() && m_I.size() > 5){
 					// change the nr of inducing points:
 					setNumberOfInducingPoints(m_I.size());
