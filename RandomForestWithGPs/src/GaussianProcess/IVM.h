@@ -30,8 +30,6 @@ public:
 	typedef typename Eigen::MatrixXd Matrix;
 	template <typename T>
 	using List = std::list<T>;
-	template <typename M, typename N>
-	using Pair = std::list<M, N>;
 
 	IVM(OnlineStorage<ClassPoint*>& storage, const bool isPartOfMultiIvm = false);
 
@@ -50,7 +48,7 @@ public:
 
 	double predictSigma(const Vector& input) const;
 
-	const List<int>& getSelectedInducingPoints(){ return m_I; };
+	const List<unsigned int>& getSelectedInducingPoints(){ return m_I; };
 
 	void setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ);
 
@@ -113,9 +111,9 @@ private:
 
 	void testOnTrainingsData(int & amountOfOneChecks, int& amountOfOnesCorrect, int& amountOfMinusOneChecks,
 			int& amountOfMinusOnesCorrect, double& correctness, const double probDiff,
-			const bool onlyUseOnes, const bool wholeDataSet, const std::list<int>& testPoints);
+			const bool onlyUseOnes, const bool wholeDataSet, const List<unsigned int>& testPoints);
 
-	double calcErrorOnTrainingsData(const bool wholeDataSet, const std::list<int>& testPoints, double& oneCorrect, double& minusOneCorrect);
+	double calcErrorOnTrainingsData(const bool wholeDataSet, const List<unsigned int>& testPoints, double& oneCorrect, double& minusOneCorrect);
 
 
 	OnlineStorage<ClassPoint*>& m_storage;
@@ -138,7 +136,7 @@ private:
 	bool m_calcLogZ;
 	bool m_calcDerivLogZ;
 	bool m_trained;
-	List<int> m_J, m_I;
+	List<unsigned int> m_J, m_I;
 	Eigen::Vector2i m_labelsForClasses;
 
 	Eigen::LLT<Eigen::MatrixXd> m_choleskyLLT;

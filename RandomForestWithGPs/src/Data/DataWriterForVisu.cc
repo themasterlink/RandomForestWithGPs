@@ -169,7 +169,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorBin
 		}
 		++iX;
 	}
-	std::list<int> empty;
+	std::list<unsigned int> empty;
 	drawSvgDataPoints(file, data, min, max, dimVec, empty);
 	closeSvgFile(file);
 }
@@ -266,7 +266,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 	for(unsigned int i = 0; i < points.size(); ++i){
 		delete points[i];
 	}
-	std::list<int> empty;
+	std::list<unsigned int> empty;
 	drawSvgDataPoints(file, data, min, max, dimVec, empty, classAmount);
 	closeSvgFile(file);
 }
@@ -306,7 +306,7 @@ void DataWriterForVisu::writeHisto(const std::string&fileName, const std::list<d
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, const std::list<int>& selectedInducingPoints,
+void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, const std::list<unsigned int>& selectedInducingPoints,
 		const ClassData& data, const int x, const int y, const int type){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
@@ -425,7 +425,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const ClassData& d
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
-	std::list<int> empty;
+	std::list<unsigned int> empty;
 	std::ofstream file;
 	std::map<unsigned int, unsigned int> classCounter;
 	for(ClassData::const_iterator it = data.begin(); it != data.end(); ++it){
@@ -698,13 +698,13 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 }
 
 void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& points,
-		const Eigen::Vector2d& min, const Eigen::Vector2d& max, const Eigen::Vector2i& dim, const std::list<int>& selectedInducingPoints, const int amountOfClasses, const IVM* ivm){
+		const Eigen::Vector2d& min, const Eigen::Vector2d& max, const Eigen::Vector2i& dim, const std::list<unsigned int>& selectedInducingPoints, const int amountOfClasses, const IVM* ivm){
 	unsigned int counter = 0;
 	if(selectedInducingPoints.size() > 0){
 		std::list<ClassDataConstIterator> inducedPoints;
 		for(ClassDataConstIterator it = points.cbegin(); it != points.cend(); ++it, ++counter){
 			bool isInduced = false;
-			for(std::list<int>::const_iterator itI = selectedInducingPoints.begin(); itI != selectedInducingPoints.end(); ++itI){
+			for(std::list<unsigned int>::const_iterator itI = selectedInducingPoints.begin(); itI != selectedInducingPoints.end(); ++itI){
 				if((*itI) == counter){
 					isInduced = true; break;
 				}

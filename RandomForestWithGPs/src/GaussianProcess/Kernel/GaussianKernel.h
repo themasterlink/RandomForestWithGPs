@@ -38,7 +38,7 @@ public:
 
 	void calcCovarianceDerivative(Eigen::MatrixXd& cov, const OwnKernelElement* type) const;
 
-	void calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& cov, const std::list<int>& activeSet, const OwnKernelElement* type, const int element = -1) const;
+	void calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& cov, const std::list<unsigned int>& activeSet, const OwnKernelElement* type, const int element = -1) const;
 
 	std::string prettyString() const;
 

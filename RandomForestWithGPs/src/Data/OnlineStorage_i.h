@@ -9,6 +9,13 @@ template<typename T>
 OnlineStorage<T>::OnlineStorage(): m_lastUpdateIndex(0){
 }
 
+
+template<typename T>
+OnlineStorage<T>::OnlineStorage(OnlineStorage<T>& storage): m_lastUpdateIndex(storage.m_lastUpdateIndex){
+	m_internal.reserve(storage.size());
+	m_internal.insert(m_internal.end(), storage.begin(), storage.end());
+}
+
 template<typename T>
 OnlineStorage<T>::~OnlineStorage(){
 }

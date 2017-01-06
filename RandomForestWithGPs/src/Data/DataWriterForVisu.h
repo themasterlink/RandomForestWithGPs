@@ -33,7 +33,7 @@ public:
 	static void writeImg(const std::string& fileName, const PredictorMultiClass* predictor,
 			const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
-	static void writeSvg(const std::string& fileName, const IVM& ivm, const std::list<int>& selectedInducingPoints,
+	static void writeSvg(const std::string& fileName, const IVM& ivm, const std::list<unsigned int>& selectedInducingPoints,
 			const ClassData& data, const int x = 0, const int y = 1, const int type = 0);
 
 	static void writeSvg(const std::string& fileName, const ClassData& data, const int x = 0, const int y = 1);
@@ -56,7 +56,7 @@ private:
 
 	static void drawSvgDataPoints(std::ofstream& file, const ClassData& points,
 			const Eigen::Vector2d& min, const Eigen::Vector2d& max,
-			const Eigen::Vector2i& dim, const std::list<int>& selectedInducingPoints,
+			const Eigen::Vector2i& dim, const std::list<unsigned int>& selectedInducingPoints,
 			const int amountOfClasses = 2, const IVM* ivm = nullptr);
 
 	static void drawSvgLine(std::ofstream& file, const Eigen::VectorXd vec,

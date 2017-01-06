@@ -275,7 +275,7 @@ void executeForBinaryClassIVM(){
 				printOnScreen("Time gradient: " << timeGrad);
 				printOnScreen("Rand generator: " << randStartGen);
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
-					std::list<int> emptyList;
+					std::list<unsigned int> emptyList;
 					DataWriterForVisu::writeSvg("withTest.svg", ivm, emptyList, test.storage());
 					system("open withTest.svg");
 				}

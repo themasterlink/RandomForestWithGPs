@@ -184,15 +184,15 @@ void GaussianKernel::calcCovariance(Eigen::MatrixXd& cov) const{
 	}
 }
 
-void GaussianKernel::calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& cov, const std::list<int>& activeSet, const OwnKernelElement* type, const int element) const{
+void GaussianKernel::calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& cov, const std::list<unsigned int>& activeSet, const OwnKernelElement* type, const int element) const{
 	const int nrOfInducingPoints = activeSet.size();
 	if(!type->isDerivativeOnlyDiag()){
 		cov.resize(nrOfInducingPoints, nrOfInducingPoints);
 		unsigned int i = 0;
-		for(std::list<int>::const_iterator it1 = activeSet.begin(); it1 != activeSet.end(); ++it1, ++i){
+		for(std::list<unsigned int>::const_iterator it1 = activeSet.begin(); it1 != activeSet.end(); ++it1, ++i){
 			cov.coeffRef(i,i) = calcDerivativeDiagElement(*it1, type);
 			unsigned int j = i + 1;
-			std::list<int>::const_iterator it2 = it1;
+			std::list<unsigned int>::const_iterator it2 = it1;
 			++it2;
 			for(; it2 != activeSet.end(); ++it2, ++j){
 				cov.coeffRef(i,j) = kernelFuncDerivativeToParam(*it1, *it2, type, element);

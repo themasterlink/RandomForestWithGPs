@@ -64,18 +64,20 @@ private:
 	virtual ~ScreenOutput();
 };
 
+#ifdef USE_SCREEN_OUPUT
 // do while is used here to avoid that str is used multiple times in the same context
 #define printOnScreen(message) \
 		do{std::stringstream str; str << message; ScreenOutput::print(str.str()); }while(false) \
 
-#ifdef USE_SCREEN_OUPUT
 #define printInPackageOnScreen(package, message) \
 		do{std::stringstream str; str << message; package->printLineToScreenForThisThread(str.str()); }while(false) \
 
 #else
+#define printOnScreen(message) \
+	std::cout << message << std::endl \
 
 #define printInPackageOnScreen(package, message) \
-	std::cout << package->getStandartInformation() << "\n\t" << message << std::endl; \
+	std::cout << package->getStandartInformation() << "\n\t" << message << std::endl \
 
 #endif
 

@@ -45,17 +45,17 @@ private:
 
 	void retrainAllIvmsIfNeeded(InformationPackage* wholePackage);
 
-	void trainInParallel(const int usedIvm, const double trainTime, InformationPackage* package);
+	void trainInParallel(IVM* ivm, const int usedIvm, const double trainTime, InformationPackage* package);
 
-	void predictDataInParallel(const Data& points, const int usedIvm,
+	void predictDataInParallel(IVM* ivm, const Data& points, const int usedIvm,
 			std::vector< std::vector<double> >* probabilities, InformationPackage* package) const;
 
-	void predictClassDataInParallel(const ClassData& points, const int usedIvm,
+	void predictClassDataInParallel(IVM* ivm, const ClassData& points, const int usedIvm,
 			std::vector< std::vector<double> >* probabilities, InformationPackage* package) const;
 
 	void initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix, InformationPackage* package);
 
-	void retrainIvmIfNeeded(InformationPackage* package, const int iClassNr);
+	void retrainIvmIfNeeded(IVM* ivm, InformationPackage* package, const int iClassNr);
 
 	OnlineStorage<ClassPoint*>& m_storage;
 

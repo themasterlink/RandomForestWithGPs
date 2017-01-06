@@ -27,6 +27,8 @@ public:
 
 	OnlineStorage();
 
+	OnlineStorage(OnlineStorage<T>& storage);
+
 	void append(const T& data);
 
 	void append(const std::vector<T>& data);
@@ -57,7 +59,7 @@ public:
 
 	T& last();
 
-	unsigned int size() const{ return m_internal.size(); };
+	unsigned int size() const{ return (unsigned int) m_internal.size(); };
 
 	unsigned int dim() const;
 

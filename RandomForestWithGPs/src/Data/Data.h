@@ -18,7 +18,7 @@
 
 #include "DataPoint.h"
 
-#define UNDEF_CLASS_LABEL 99999999
+#define UNDEF_CLASS_LABEL 99999999u
 
 typedef typename std::vector<DataPoint*> Data;
 
