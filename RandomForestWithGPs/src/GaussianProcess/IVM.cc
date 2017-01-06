@@ -310,10 +310,10 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						pop = cmaes::cmaes_SamplePopulation(&m_evo); /* do not change content of pop */
 
 						/* transform into bounds and evaluate the new search points */
-						for(int i = 0; i < sampleLambda; ++i) {
+						for(int iLambda = 0; iLambda < sampleLambda; ++iLambda) {
 //							const double corr = m_package->correctlyClassified();
 //							const double probDiff = corr < 60. ? 0. : corr < 80 ? 0.1 : corr < 90 ? 0.2 : 0.3;
-							cmaes::cmaes_boundary_transformation(&m_cmaesBoundaries, pop[i], m_hyperParamsValues, dimension);
+							cmaes::cmaes_boundary_transformation(&m_cmaesBoundaries, pop[iLambda], m_hyperParamsValues, dimension);
 							/* this loop can be omitted if is_feasible is invariably true */
 //							while(!is_feasible(x_in_bounds, dimension)) { /* is_feasible needs to be user-defined, in case, and can change/repair x */
 //								cmaes_ReSampleSingle(&evo, i);
@@ -349,8 +349,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								if(error <= 48.){
 //									arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + (-correctness + 100) * 2;
 									const int diff = desiredAmountOfInducingsPoints - m_numberOfInducingPoints; // bad if not all inducing points were used
-									m_arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + error + diff / (double) desiredAmountOfInducingsPoints;
-									if(m_arFunvals[i] < negBestLogZ * 1.2){
+									m_arFunvals[iLambda] = - m_logZ / (double) m_numberOfInducingPoints + error + diff / (double) desiredAmountOfInducingsPoints;
+									if(m_arFunvals[iLambda] < negBestLogZ * 1.2){
 										error = calcErrorOnTrainingsData(true, testPoints, oneError, minusOneError);
 										if(oneError > minusOneError){
 											error = 0.25 * minusOneError + 0.75 * oneError;
@@ -377,7 +377,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 										const double correctness = 100. - error;
 										if(correctness >= m_package->correctlyClassified()){
 											m_gaussKernel->getCopyOfParams(bestParams);
-											negBestLogZ = m_arFunvals[i];
+											negBestLogZ = m_arFunvals[iLambda];
 											m_package->changeCorrectlyClassified(correctness);
 											if(!m_gaussKernel->hasLengthMoreThanOneDim()){
 												std::stringstream str2;
@@ -400,17 +400,17 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 											//											}
 											if(correctness > 95.){
 												m_package->abortTraing();
-												i = sampleLambda;
+												iLambda = sampleLambda;
 											}
 										}
 									}
 
 								}else{
-									m_arFunvals[i] = m_numberOfInducingPoints * 200;
+									m_arFunvals[iLambda] = m_numberOfInducingPoints * 200;
 								}
-								values.push_back(m_arFunvals[i]);
+								values.push_back(m_arFunvals[iLambda]);
 							}else{
-								m_arFunvals[i] = m_numberOfInducingPoints * 200;
+								m_arFunvals[iLambda] = m_numberOfInducingPoints * 200;
 								values.push_back(NEG_DBL_MAX);
 							}
 							points.push_back(Eigen::Vector2d(m_hyperParamsValues[0], m_hyperParamsValues[1]));
