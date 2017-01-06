@@ -876,7 +876,6 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 					}else if(m_calcDerivLogZ){
 						printError("The derivative can not be calculated without the log!");
 					}
-					std::cout << "New inducing points: " << m_numberOfInducingPoints << std::endl;
 					return true;
 				}else{
 					printError("No new inducing point found and the nr of inducing points is to low");

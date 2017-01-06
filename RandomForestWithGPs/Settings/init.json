@@ -85,7 +85,7 @@
 		"dim": 2
 	},
 	"Logger": {
-		"useLogger": "false",
+		"useLogger": "true",
 		"filePath": "log.txt"
 	},
 	"RealData": {

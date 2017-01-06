@@ -208,10 +208,6 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 						}
 						input.close();
 					}
-					for(unsigned int i = 0; i < 10; ++i){
-						ClassKnowledge::setNameFor(number2String(i), i);
-						dataSets.insert( DataSetPair(number2String(i), data[i]));
-					}
 				}else{
 					printError("There is no data.mnist and labels.mnist file in this folder: " + inputPath);
 				}
@@ -220,6 +216,10 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		if(data[0].size() == 0){
 			printError("Class 0 is not represented here!");
 			return;
+		}
+		for(unsigned int i = 0; i < 10; ++i){
+			ClassKnowledge::setNameFor(number2String(i), i);
+			dataSets.insert( DataSetPair(number2String(i), data[i]));
 		}
 //		const unsigned int amountOfDim = data[0][0]->rows();
 //		std::vector<Eigen::Vector2d > minMaxValues(amountOfDim);

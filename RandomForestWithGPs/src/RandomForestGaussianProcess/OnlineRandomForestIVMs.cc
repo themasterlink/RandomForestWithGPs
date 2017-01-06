@@ -49,7 +49,7 @@ void OnlineRandomForestIVMs::update(Subject* caller, unsigned int event){
 
 void OnlineRandomForestIVMs::update(){
 	if(!m_firstTrainedDone){
-		m_orf.setDesiredAmountOfTrees(100);
+//		m_orf.setDesiredAmountOfTrees(100);
 		OnlineStorage<ClassPoint*>* copyForORFs = new OnlineStorage<ClassPoint*>(m_storage);
 		m_orf.update(copyForORFs, OnlineStorage<ClassPoint*>::APPENDBLOCK);
 		std::list<int> predictedLabels;
