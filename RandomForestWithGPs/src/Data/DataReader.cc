@@ -11,7 +11,7 @@
 #include "../Utility/ReadWriterHelper.h"
 #include "ClassKnowledge.h"
 #include "DataConverter.h"
-#include <opencv2/core.hpp>
+#include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
 
 DataReader::DataReader(){

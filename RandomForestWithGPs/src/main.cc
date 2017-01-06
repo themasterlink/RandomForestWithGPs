@@ -194,6 +194,7 @@ int main(int ac, char** av){
 	for(int i = 0; i < ac; ++i){
 		av[i] = const_cast<char*>(input[i].c_str());
 	}
+	printOnScreen("Start");
 //	getchar();
 	handleProgrammOptions(ac,av);
 //	cmaes::cmaes_t evo; /* an CMA-ES type struct or "object" */

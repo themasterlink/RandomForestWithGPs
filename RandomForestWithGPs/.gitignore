@@ -6,3 +6,5 @@
 ../.DS_Store
 *.DS_Store
 /Debug OpenCV2/
+/Debug Linux/
+/DebugLinux/

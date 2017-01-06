@@ -8,7 +8,7 @@
 #include "DataWriterForVisu.h"
 #include "../Utility/ColorConverter.h"
 #include "DataConverter.h"
-#include <opencv2/core.hpp>
+#include <opencv2/core/core.hpp>
 #include <math.h>
 #include "../Base/CommandSettings.h"
 
