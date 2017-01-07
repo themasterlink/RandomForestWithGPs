@@ -13,8 +13,9 @@
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 #include "../RandomForests/DecisionTreeData.h"
 #include "../Base/Predictor.h"
+#include "DynamicDecisionTreeInterface.h"
 
-class DynamicDecisionTree : public PredictorMultiClass {
+class DynamicDecisionTree : public DynamicDecisionTreeInterface {
 public:
 	enum NodeType{ // saved in m_splitDim
 		NODE_IS_NOT_USED = -1,
@@ -28,7 +29,12 @@ public:
 
 	virtual ~DynamicDecisionTree();
 
-	void train(int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
+
+	void train(int amountOfUsedDims, RandomNumberGeneratorForDT& generator){
+		train(amountOfUsedDims, generator, 0, false);
+	}
+
+	bool train(int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const int tryCounter, const bool saveDataPosition);
 
 	double trySplitFor(const int actNode, const double usedSplitValue, const int usedDim,
 			const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
@@ -37,6 +43,8 @@ public:
 	void adjustToNewData();
 
 	int predict(const DataPoint& point) const;
+
+	int predict(const DataPoint& point, int& winningLeafNode) const;
 
 	bool predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const;
 
@@ -51,6 +59,10 @@ public:
 	int getNrOfLeaves();
 
 	unsigned int amountOfClasses() const;
+
+	std::vector<std::vector<int> >* getDataPositions(){ return m_dataPositions; };
+
+	void setUsedDataPositions(std::vector<int>* usedDataPositions){ m_useOnlyThisDataPositions = usedDataPositions; };
 
 private:
 	OnlineStorage<ClassPoint*>& m_storage;
@@ -74,6 +86,11 @@ private:
 	std::vector<int> m_splitDim;
 
 	std::vector<int> m_labelsOfWinningClassesInLeaves;
+
+	// is used in the BigDynamicDecisionTree
+	std::vector<std::vector<int> >* m_dataPositions;
+
+	std::vector<int>* m_useOnlyThisDataPositions;
 };
 
 #endif /* RANDOMFORESTS_DYNAMICDECISIONTREE_H_ */

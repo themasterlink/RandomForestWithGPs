@@ -68,14 +68,14 @@ private:
 		do{std::stringstream str; str << message; ScreenOutput::print(str.str()); }while(false) \
 
 #define printInPackageOnScreen(package, message) \
-		do{std::stringstream str; str << message; package->printLineToScreenForThisThread(str.str()); }while(false) \
+		do{std::stringstream str; str << message; (package)->printLineToScreenForThisThread(str.str()); }while(false) \
 
 #else
 #define printOnScreen(message) \
 	std::cout << message << std::endl \
 
 #define printInPackageOnScreen(package, message) \
-	std::cout << package->getStandartInformation() << "\n\t" << message << std::endl \
+	std::cout << (package)->getStandartInformation() << "\n\t" << message << std::endl \
 
 #endif
 

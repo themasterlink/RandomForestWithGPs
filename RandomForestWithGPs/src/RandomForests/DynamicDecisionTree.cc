@@ -18,11 +18,14 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, co
 		m_amountOfClasses(amountOfClasses),
 		m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
 		m_splitDim(m_maxInternalNodeNr + 1, NODE_IS_NOT_USED),
-		m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), UNDEF_CLASS_LABEL){
+		m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), UNDEF_CLASS_LABEL),
+		m_dataPositions(nullptr),
+		m_useOnlyThisDataPositions(nullptr){
 }
 
 // copy construct
 DynamicDecisionTree::DynamicDecisionTree(const DynamicDecisionTree& tree):
+		DynamicDecisionTreeInterface(tree),
 		m_storage(tree.m_storage),
 		m_maxDepth(tree.m_maxDepth),
 		m_maxNodeNr(tree.m_maxNodeNr),
@@ -30,14 +33,16 @@ DynamicDecisionTree::DynamicDecisionTree(const DynamicDecisionTree& tree):
 		m_amountOfClasses(tree.m_amountOfClasses),
 		m_splitValues(tree.m_splitValues),
 		m_splitDim(tree.m_splitDim),
-		m_labelsOfWinningClassesInLeaves(tree.m_labelsOfWinningClassesInLeaves){
+		m_labelsOfWinningClassesInLeaves(tree.m_labelsOfWinningClassesInLeaves),
+		m_dataPositions(nullptr),
+		m_useOnlyThisDataPositions(nullptr){
 }
 
 DynamicDecisionTree::~DynamicDecisionTree(){
 }
 
-void DynamicDecisionTree::DynamicDecisionTree::train(int amountOfUsedDims,
-		RandomNumberGeneratorForDT& generator){
+bool DynamicDecisionTree::train(int amountOfUsedDims,
+		RandomNumberGeneratorForDT& generator, const int tryCounter, const bool saveDataPosition){
 	if(m_splitDim[1] != NODE_IS_NOT_USED || m_splitDim[1] != NODE_CAN_BE_USED){
 		// reset training
 		std::fill(m_splitDim.begin(), m_splitDim.end(), NODE_IS_NOT_USED);
@@ -81,7 +86,8 @@ void DynamicDecisionTree::DynamicDecisionTree::train(int amountOfUsedDims,
 //	}
 	m_splitDim[1] = NODE_CAN_BE_USED; // init the root value
 	std::vector<int> leftHisto(m_amountOfClasses), rightHisto(m_amountOfClasses);
-	std::vector<std::vector<int> > dataPosition(m_maxNodeNr + 1, std::vector<int>());
+	m_dataPositions = new std::vector<std::vector<int> >(m_maxNodeNr + 1, std::vector<int>());
+	std::vector<std::vector<int> >& dataPosition(*m_dataPositions);
 	for(int iActNode = 1; iActNode < m_maxInternalNodeNr + 1; ++iActNode){ // first element is not used!
 		if(m_splitDim[iActNode] == NODE_IS_NOT_USED){ // checks if node contains data or not
 			continue; // if node is not used, go to next node, if node can be used process it
@@ -113,13 +119,26 @@ void DynamicDecisionTree::DynamicDecisionTree::train(int amountOfUsedDims,
 		if(iActNode == 1){ // splitting like this avoids copying the whole stuff into the dataPosition[1]
 			dataPosition[leftPos].reserve(dataPosition[iActNode].size());
 			dataPosition[rightPos].reserve(dataPosition[iActNode].size());
-			for(int i = 0; i < m_storage.size(); ++i){
-				if(m_storage[i]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
-					dataPosition[rightPos].push_back(i);
-					++foundDataRight;
-				}else{
-					dataPosition[leftPos].push_back(i);
-					++foundDataLeft;
+			if(m_useOnlyThisDataPositions == nullptr){
+				for(unsigned int i = 0; i < m_storage.size(); ++i){
+					if(m_storage[i]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
+						dataPosition[rightPos].push_back(i);
+						++foundDataRight;
+					}else{
+						dataPosition[leftPos].push_back(i);
+						++foundDataLeft;
+					}
+				}
+			}else{
+				for(unsigned int j = 0; j < m_useOnlyThisDataPositions->size(); ++j){
+					const unsigned int i = (*m_useOnlyThisDataPositions)[j];
+					if(m_storage[i]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
+						dataPosition[rightPos].push_back(i);
+						++foundDataRight;
+					}else{
+						dataPosition[leftPos].push_back(i);
+						++foundDataLeft;
+					}
 				}
 			}
 		}else{
@@ -182,10 +201,21 @@ void DynamicDecisionTree::DynamicDecisionTree::train(int amountOfUsedDims,
 		}
 		m_labelsOfWinningClassesInLeaves[i] = labelWithHighestOcc;
 	}
-	if(m_splitDim[1] == NODE_CAN_BE_USED){
+	if(m_splitDim[1] == NODE_CAN_BE_USED && tryCounter < 5){ // five splits are enough to try
 		// try again!
-		train(amountOfUsedDims,generator);
+		return train(amountOfUsedDims,generator, tryCounter + 1, saveDataPosition);
+	}else if(tryCounter >= 5){
+		return false;
 	}
+	if(!saveDataPosition){ // if it is not saved this pointer is deleted
+		delete m_dataPositions;
+		m_dataPositions = nullptr;
+	}else{
+		for(unsigned int i = 0; i < m_maxInternalNodeNr; ++i){ // clear all the inner nodes just the leaves are important
+			(*m_dataPositions)[i].clear();
+		}
+	}
+	return true;
 }
 
 double DynamicDecisionTree::trySplitFor(const int actNode, const double usedValue, const int usedDim,
@@ -241,6 +271,11 @@ double DynamicDecisionTree::trySplitFor(const int actNode, const double usedValu
 
 int DynamicDecisionTree::predict(const DataPoint& point) const{
 	int iActNode = 1; // start in root
+	return predict(point, iActNode);
+}
+
+int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode) const { // is named iActNode here, is easier, but represents in the end the winningLeafNode
+	iActNode = 1;
 	if(m_splitDim[1] != NODE_IS_NOT_USED && m_splitDim[1] != NODE_CAN_BE_USED){
 		while(iActNode <= m_maxInternalNodeNr){
 			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
@@ -309,9 +344,7 @@ bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const DataPoin
 }
 
 void DynamicDecisionTree::adjustToNewData(){
-	for(std::vector<int>::iterator it = m_labelsOfWinningClassesInLeaves.begin(); it != m_labelsOfWinningClassesInLeaves.end(); ++it){
-		*it = 0;
-	}
+	std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), 0);
 	const int leafAmount = pow(2, m_maxDepth);
 	std::vector< std::vector<int> > histo(leafAmount, std::vector<int>(m_amountOfClasses, 0));
 	for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){

@@ -8,7 +8,7 @@
 #ifndef RANDOMFORESTS_ONLINERANDOMFOREST_H_
 #define RANDOMFORESTS_ONLINERANDOMFOREST_H_
 
-#include "DynamicDecisionTree.h"
+#include "BigDynamicDecisionTree.h"
 #include "../Data/Data.h"
 #include "../Data/OnlineStorage.h"
 #include "../Data/ClassData.h"
@@ -19,7 +19,7 @@
 class OnlineRandomForest : public Observer, public PredictorMultiClass, public Subject {
 public:
 
-	typedef typename std::list<DynamicDecisionTree*> DecisionTreesContainer;
+	typedef typename std::list<DynamicDecisionTreeInterface*> DecisionTreesContainer;
 	typedef typename DecisionTreesContainer::iterator DecisionTreeIterator;
 	typedef typename DecisionTreesContainer::const_iterator DecisionTreeConstIterator;
 
@@ -118,6 +118,8 @@ private:
 	double m_ownSamplingTime;
 
 	int m_desiredAmountOfTrees;
+
+	bool m_useBigDynamicDecisionTrees;
 };
 
 

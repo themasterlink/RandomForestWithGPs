@@ -434,7 +434,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 							++iCounter;
 						}
 						if(m_package->shouldTrainingBeAborted()){
-							printInPackageOnScreen("Training should be aborted!");
+							printInPackageOnScreen(m_package, "Training should be aborted!");
 							break;
 						}
 

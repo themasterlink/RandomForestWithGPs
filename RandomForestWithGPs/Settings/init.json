@@ -5,7 +5,7 @@
 		"maxPointsUsedInGpSingleTraining": 1500,
 		"maxNrOfPointsForBayesOpt": 250,
 		"nrOfNoChanges": 6
-	},
+	}, 
 	"MultiBinaryGP": {
 		"lowerBoundNoise": 0.5,
 		"upperBoundNoise": 5.0,
@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 4
+			"height": 24
 		}
 	},
 	"IVM": {
@@ -55,7 +55,8 @@
 		"minUsedDataFactor": 0.3,
 		"maxUsedDataFactor": 0.6,
 		"factorAmountOfUsedDims": 0.9,
-		"ownSamplingTime": 3
+		"ownSamplingTime": 60,
+		"useBigDynmaicDecisionTrees": "false"
 	},
 	"Kernel": {
 		"path": "..\/realTest\/kernelData.kernel"
@@ -119,6 +120,6 @@
 		"visuFinalIvm": "true"
 	},
 	"main": {
-		"type": "ORFIVMs"
+		"type": "ORF"
 	}
 }

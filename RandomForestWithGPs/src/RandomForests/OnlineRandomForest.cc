@@ -22,7 +22,8 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 		m_storage(storage),
 		m_firstTrainingDone(false),
 		m_ownSamplingTime(-1),
-		m_desiredAmountOfTrees(0){
+		m_desiredAmountOfTrees(0),
+		m_useBigDynamicDecisionTrees(false){
 	storage.attach(this);
 	Settings::getValue("OnlineRandomForest.factorAmountOfUsedDims", m_factorForUsedDims);
 	Settings::getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
@@ -30,8 +31,9 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	Settings::getValue("OnlineRandomForest.minUsedDataFactor", val);
 	m_minMaxUsedDataFactor[0] = val;
 	Settings::getValue("OnlineRandomForest.maxUsedDataFactor", val);
-	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	m_minMaxUsedDataFactor[1] = val;
+	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
+	Settings::getValue("OnlineRandomForest.useBigDynmaicDecisionTrees", m_useBigDynamicDecisionTrees);
 }
 
 OnlineRandomForest::~OnlineRandomForest(){
@@ -138,11 +140,15 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 			break;
 		}
 		// create a new element and train it
-		m_trees.push_back(new DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses));
-		DynamicDecisionTree& tree = *m_trees.back();
+		if(m_useBigDynamicDecisionTrees){
+			m_trees.push_back(new BigDynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses));
+		}else{
+			m_trees.push_back(new DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses));
+		}
+		DynamicDecisionTreeInterface* tree = m_trees.back();
 		m_treesMutex.unlock();
-		tree.train(m_amountOfUsedDims, *generator);
-		printInPackageOnScreen(package, "Number " << i << " was calculated");
+		tree->train(m_amountOfUsedDims, *generator);
+		printInPackageOnScreen(package, "Number " << i++ << " was calculated");
 		if(package->shouldTrainingBePaused()){
 			package->wait();
 		}else if(package->shouldTrainingBeAborted()){ // if amountOfTrees == 0 -> ORF_TRAIN_FIX -> can not be aborted
@@ -238,9 +244,9 @@ void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list)
 	for(DecisionTreeIterator itTree = m_trees.begin(); itTree != m_trees.end(); ++itTree){
 		int correct = 0;
 		for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-			ClassPoint& point = *(*it);
-			DynamicDecisionTree& tree = **itTree;
-			if(point.getLabel() == tree.predict(point)){
+			const ClassPoint& point = *(*it);
+			const DynamicDecisionTreeInterface* tree = *itTree;
+			if(point.getLabel() == tree->predict(point)){
 				++correct;
 			}
 		}
@@ -262,12 +268,12 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const in
 	list->pop_front(); // remove it
 	mutex->unlock();
 	for(unsigned int i = 0; i < amountOfSteps; ++i){
-		DynamicDecisionTree& tree = **pair.first;
-		tree.train(m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
+		DynamicDecisionTreeInterface* tree = *pair.first;
+		tree->train(m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
 		int correct = 0;
 		for(OnlineStorage<ClassPoint*>::ConstIterator itPoint = m_storage.begin(); itPoint != m_storage.end(); ++itPoint){
 			ClassPoint& point = **itPoint;
-			if(point.getLabel() == tree.predict(point)){
+			if(point.getLabel() == tree->predict(point)){
 				++correct;
 			}
 		}
@@ -312,10 +318,10 @@ OnlineRandomForest::DecisionTreeIterator OnlineRandomForest::findWorstPerforming
 	DecisionTreeIterator itWorst = m_trees.end();
 	for(DecisionTreeIterator itTree = m_trees.begin(); itTree != m_trees.end(); ++itTree){
 		int correct = 0;
-		DynamicDecisionTree& tree = **itTree;
+		DynamicDecisionTreeInterface* tree = *itTree;
 		for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			ClassPoint& point = *(*it);
-			if(point.getLabel() == tree.predict(point)){
+			if(point.getLabel() == tree->predict(point)){
 				++correct;
 			}
 		}
