@@ -53,14 +53,19 @@ void OnlineRandomForestIVMs::update(){
 		OnlineStorage<ClassPoint*>* copyForORFs = new OnlineStorage<ClassPoint*>(m_storage);
 		m_orf.update(copyForORFs, OnlineStorage<ClassPoint*>::APPENDBLOCK);
 		std::list<int> predictedLabels;
-
+		unsigned int amountOfCorrect = 0;
 		Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(ClassKnowledge::amountOfClasses(), ClassKnowledge::amountOfClasses());
 		for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-			predictedLabels.push_back(m_orf.predict(**it));
+			const unsigned int predictedLabel = m_orf.predict(**it);
+			predictedLabels.push_back(predictedLabel);
+			if(predictedLabel == (**it).getLabel()){
+				++amountOfCorrect;
+			}
 			conv((*it)->getLabel(), predictedLabels.back()) += 1;
 		}
 		printOnScreen("Just ORFs:");
 		ConfusionMatrixPrinter::print(conv);
+		printOnScreen("Just ORFs correct: " << number2String(amountOfCorrect / (double) m_storage.size() * 100.0, 2));
 		Logger::forcedWrite();
 		boost::thread_group* group = new boost::thread_group();
 		std::vector<ClassData*> datasForPredictedClasses(amountOfClasses(), nullptr);

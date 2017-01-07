@@ -7,6 +7,7 @@
 
 #include "ThreadMaster.h"
 #include "Settings.h"
+#include "ScreenOutput.h"
 #include "CommandSettings.h"
 
 int ThreadMaster::m_counter = 0;
@@ -81,7 +82,7 @@ void ThreadMaster::run(){
 				maxAmountOfPoints = amount;
 			}
 			if(amount == 1){
-				(*it)->printLineToScreenForThisThread("This thread has only 1 element");
+				printInPackageOnScreen(*it, "This thread has only 1 element");
 			}
 		}
 		sortWaitingList(amountOfPointsNeededForIvms, minAmountOfPoints, maxAmountOfPoints);
@@ -95,7 +96,7 @@ void ThreadMaster::run(){
 					usleep(0.05 * 1e6);
 				}
 				(*selectedValue)->notify(); // start running of the thread
-				(*selectedValue)->printLineToScreenForThisThread("This thread was selected in the beginning!");
+				printInPackageOnScreen(*selectedValue, "This thread was selected in the beginning!");
 				m_waitingList.erase(selectedValue); // remove the selected value out of the waiting thread list
 				selectedValue = m_waitingList.end();
 			}

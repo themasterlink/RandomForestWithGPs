@@ -188,12 +188,15 @@ void clientTest(char* av[]){
 int main(int ac, char** av){
 //	system("cd \"Debug OpenCV2\"");
 //	system("pwd");
-//	ac = 4;
-//	av = new char*[4];
-//	std::vector<std::string> input = {"RandomForest", "--useFakeData", "--samplingAndTraining", "100"};
-//	for(int i = 0; i < ac; ++i){
-//		av[i] = const_cast<char*>(input[i].c_str());
-//	}
+#ifdef DEBUG
+	printOnScreen("Debug does not use inputParams!");
+	std::vector<std::string> input = {"RandomForest", "--samplingAndTraining", "100"}; // , "--useFakeData"
+	ac = input.size();
+	av = new char*[ac];
+	for(int i = 0; i < ac; ++i){
+		av[i] = const_cast<char*>(input[i].c_str());
+	}
+#endif
 	printOnScreen("Start");
 //	getchar();
 	handleProgrammOptions(ac,av);

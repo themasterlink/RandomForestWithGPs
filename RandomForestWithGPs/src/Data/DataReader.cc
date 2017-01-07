@@ -93,8 +93,8 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		}
 		input.close();
 	}else if(boost::filesystem::exists(inputName + ".txt")){
-		printOnScreen("Read txt from " + inputName);
 		inputPath += ".txt";
+		printOnScreen("Read txt from " + inputName);
 		std::ifstream input(inputPath);
 		if(input.is_open()){
 			std::string line;
@@ -119,6 +119,38 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		}else{
 			printError("The file could not be opened: " << inputPath);
 		}
+	}else if(boost::filesystem::exists(inputName + ".csv")){
+		inputPath += ".csv";
+		printOnScreen("Read csv from " + inputName);
+		std::ifstream input(inputPath);
+		if(input.is_open()){
+			std::string line;
+			while(std::getline(input, line)){
+				std::vector<std::string> elements;
+				std::stringstream ss(line);
+				std::string item;
+				while(std::getline(ss, item, ',')){
+					elements.push_back(item);
+				}
+				if(elements.size() > 0){
+					const unsigned int label = std::stoi(elements.front());
+					ClassPoint* newEle = new ClassPoint(elements.size(), label);
+					for(int i = 1; i < elements.size(); ++i){
+						(*newEle)[i] = std::stod(elements[i]);
+					}
+					data.push_back(newEle);
+					if(data.size() == amountOfData){
+						break;
+					}
+				}
+			}
+			input.close();
+//			if(data.size() > 0){
+//				DataBinaryWriter::toFile(data, inputName + ".binary"); // create binary to avoid rereading .txt
+//			}
+		}else{
+			printError("The file could not be opened: " << inputPath);
+		}
 	}else{
 		printError("File was not found for .txt or .binary: " << inputName);
 	}
@@ -137,6 +169,8 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		type = 1;
 	}else if(targetDir.parent_path().filename() == "uspsOrg"){
 		type = 2;
+	}else if(targetDir.parent_path().filename() == "washington"){
+		type = 3;
 	}
 	if(targetDir.parent_path().filename() == "mnist" && type == 0){
 //		didNormalizeData = true; // did perform that before write out mnistOrg
@@ -409,6 +443,32 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 				DataBinaryWriter::toFile(data[i], uspsFolder + number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
 		}
 
+	}else if(type == 3){
+		ClassData data;
+		for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
+			if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".csv"){
+				const std::string inputPath(itr->path().c_str());
+				readFromFile(data, inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
+			}
+		}
+		if(data.size() > 0){
+			std::map<unsigned int, unsigned int> mapFromOldToNewLabels;
+			for(unsigned int i = 0; i < data.size(); ++i){
+				std::map<unsigned int, unsigned int>::iterator it = mapFromOldToNewLabels.find(data[i]->getLabel());
+				if(it != mapFromOldToNewLabels.end()){ // this class was registered before
+					dataSets.find(ClassKnowledge::getNameFor(it->second))->second.push_back(data[i]);
+				}else{
+					const int newNumber = ClassKnowledge::amountOfClasses();
+					mapFromOldToNewLabels.insert(std::pair<unsigned int, unsigned int>(data[i]->getLabel(), newNumber));
+					ClassKnowledge::setNameFor(number2String(newNumber), newNumber);
+					ClassData newData;
+					dataSets.insert(DataSetPair(ClassKnowledge::getNameFor(newNumber), newData));
+					dataSets.find(ClassKnowledge::getNameFor(newNumber))->second.push_back(data[i]);
+				}
+			}
+			const unsigned int dimValue = data[0]->rows();
+			ClassKnowledge::setAmountOfDims(dimValue);
+		}
 	}
 	printOnScreen("Finished Reading all Folders");
 }

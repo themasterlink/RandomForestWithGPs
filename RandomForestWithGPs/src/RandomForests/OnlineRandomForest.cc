@@ -142,7 +142,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 		DynamicDecisionTree& tree = *m_trees.back();
 		m_treesMutex.unlock();
 		tree.train(m_amountOfUsedDims, *generator);
-		package->printLineToScreenForThisThread("Number " + number2String(i++) + " was calculated");
+		printInPackageOnScreen(package, "Number " << i << " was calculated");
 		if(package->shouldTrainingBePaused()){
 			package->wait();
 		}else if(package->shouldTrainingBeAborted()){ // if amountOfTrees == 0 -> ORF_TRAIN_FIX -> can not be aborted
@@ -274,7 +274,7 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const in
 		// add to list again!
 		mutex->lock();
 		const double correctVal = correct / (double) m_storage.size() * 100.;
-		package->printLineToScreenForThisThread("Performed new step with correctness: " + number2String(correctVal, 2));
+		printInPackageOnScreen(package, "Performed new step with correctness: " + number2String(correctVal, 2));
 		*counter += 1; // is already protected in mutex lock
 		internalAppendToSortedList(list, pair.first, correctVal); // insert decision tree again in the list
 		pair = *list->begin(); // get new element

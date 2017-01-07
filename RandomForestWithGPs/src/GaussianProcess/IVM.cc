@@ -390,13 +390,12 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 												//															<<  number2String((amountOfOnesCorrect / (double) amountOfOneChecks) * 100, 2) << " %%, logZ: " << negBestLogZ << ", " << std::max(newProbDiff, probDiff);
 												m_package->setAdditionalInfo(str2.str());
 											}
-											std::stringstream str;
-											str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
+											/*
 																		<< " %%, ones: " << (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.
 																		<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100.
 																		<< ", amount of minues correct: " << amountOfMinusOnesCorrect << ", amount of minus ones: " << amountOfMinusOneChecks
 																		<< " %%, for: " << m_dataPoints << " points";*/
-											m_package->printLineToScreenForThisThread(str.str());
+											printInPackageOnScreen(m_package, "New best params: " << bestParams << ", with correctness of: " << correctness);
 											//											}
 											if(correctness > 95.){
 												m_package->abortTraing();
@@ -427,7 +426,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 							if(m_package->shouldTrainingBeAborted()){
 								break;
 							}else if(m_package->shouldTrainingBePaused()){
-								m_package->printLineToScreenForThisThread("Training has to wait!");
+								printInPackageOnScreen(m_package, "Training has to wait!");
 								m_package->wait(); // will hold this process
 							}else if(m_package->correctlyClassified() > 99.0 && iCounter > cmaes::cmaes_Get(&m_evo, "lambda") * 2.0){
 								m_package->abortTraing();
@@ -435,7 +434,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 							++iCounter;
 						}
 						if(m_package->shouldTrainingBeAborted()){
-							m_package->printLineToScreenForThisThread("Training should be aborted!");
+							printInPackageOnScreen("Training should be aborted!");
 							break;
 						}
 
@@ -465,23 +464,18 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					//					printError("Just an test error!" << m_uniformNr() % 2);
 					//				}
 					m_gaussKernel->newRandHyperParams();
-					std::stringstream str;
-					str << "Try params: " << m_gaussKernel->getHyperParams();
-					m_package->printLineToScreenForThisThread(str.str());
+					printInPackageOnScreen(m_package, "Try params: " << m_gaussKernel->getHyperParams());
 					const bool trained = internalTrain(true, 1);
-					std::stringstream str2;
 					if(trained){
-						str2 << "Params: " << m_gaussKernel->getHyperParams() << " with success and logZ: " << m_logZ;
-						m_package->overwriteLastLineToScreenForThisThread(str2.str());
+						printInPackageOnScreen(m_package, "Params: " << m_gaussKernel->getHyperParams() << " with success and logZ: " << m_logZ);
 					}else{
-						str2 << "Params: " << m_gaussKernel->getHyperParams() << " failed";
-						m_package->printLineToScreenForThisThread(str2.str());
+						printInPackageOnScreen(m_package, "Params: " << m_gaussKernel->getHyperParams() << " failed");
 					}
 					//				if(!trained){
 					//					printDebug("Hyperparams which not work: " << m_kernel.prettyString());
 					//				}
 					if(trained && bestLogZ < m_logZ * 0.98){ // even if the logZ is slightly above the value can be good enough -> perform simple check
-						m_package->printLineToScreenForThisThread("Perform a simple test");
+						printInPackageOnScreen(m_package, "Perform a simple test");
 						// perform a simple test
 						// go over a bunch of points to test it
 						int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
@@ -530,13 +524,11 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 											<< "complex: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
 									m_package->setAdditionalInfo(str2.str());
 								}
-								std::stringstream str;
-								str << "New best params: " << bestParams << ", with correctness of: " << correctness;/*
+								printInPackageOnScreen(m_package, "New best params: " << bestParams << ", with correctness of: " << correctness);/*
 									<< " %%, ones: " << (amountOfOnesCorrect / (double) amountOfOneChecks) * 100.
 									<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (double) amountOfMinusOneChecks) * 100.
 									<< ", amount of minues correct: " << amountOfMinusOnesCorrect << ", amount of minus ones: " << amountOfMinusOneChecks
 									<< " %%, for: " << m_dataPoints << " points";*/
-								m_package->printLineToScreenForThisThread(str.str());
 							}
 						}else if(bestCorrectness == 0){ // for the starting cases	// in this case only the simple check was performed and the values
 							// are not good enough to guarantee that these params are better
@@ -553,9 +545,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 											<< "simple: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
 									m_package->setAdditionalInfo(str2.str());
 								}
-								std::stringstream str;
-								str << "New best params: " << bestParams << ", with simple correctness of: " << correctness;
-								m_package->printLineToScreenForThisThread(str.str());
+								printInPackageOnScreen(m_package, "New best params: " << bestParams << ", with simple correctness of: " << correctness);
 							}
 						}
 						//					printInPackageOnScreen(m_package, "\nBestParams: " << bestParams << ", with: " << bestLogZ);
@@ -563,10 +553,10 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					swAvg.recordActTime();
 					m_package->performedOneTrainingStep(); // adds a one to the counter
 					if(m_package->shouldTrainingBeAborted()){
-						m_package->printLineToScreenForThisThread("Training should be aborted!");
+						printInPackageOnScreen(m_package, "Training should be aborted!");
 						break;
 					}else if(m_package->shouldTrainingBePaused()){
-						m_package->printLineToScreenForThisThread("Training has to wait!");
+						printInPackageOnScreen(m_package, "Training has to wait!");
 						m_package->wait(); // will hold this process
 					}
 //					if(iCounterSampling++ > 100){
@@ -657,9 +647,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 			//		setDerivAndLogZFlag(false, false);
 			m_gaussKernel->setHyperParamsWith(bestParams);
 			m_uniformNr.setMinAndMax(1, 1);
-			std::stringstream str;
-			str << "Use hyperParams: " << bestParams;
-			m_package->printLineToScreenForThisThread(str.str());
+			printInPackageOnScreen(m_package, "Use hyperParams: " << bestParams);
 			const bool ret = internalTrain(true, verboseLevel);
 			if(ret && !m_doEPUpdate){
 				// train the whole active set again but in the oposite direction similiar to an ep step

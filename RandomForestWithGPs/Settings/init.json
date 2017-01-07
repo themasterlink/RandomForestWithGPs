@@ -45,7 +45,7 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 800,
 		"shareForTraining": 0.9,
-		"folderLocReal": "..\/mnistOrg\/",
+		"folderLocReal": "..\/washington\/",
 		"folderLocFake": "..\/fakeData\/",
 		"normalizeData": "true",
 		"readFromFolder": "true"
