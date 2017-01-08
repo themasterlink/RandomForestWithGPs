@@ -202,6 +202,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 	if(m_numberOfInducingPoints <= 0){
 		if(verboseLevel != 0)
 			printError("The number of inducing points is equal or below zero: " << m_numberOfInducingPoints);
+		m_package->finishedTask();
 		return false;
 	}
 	if(m_kernelType == GAUSS){
@@ -296,6 +297,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					StopWatch sw;
 					int iCounter = 0;
 					double negBestLogZ = -bestLogZ;
+					bool foundAtLeastOneParamSet = false;
 					List<Eigen::Vector2d> points;
 					List<double> values;
 					double *const*pop;
@@ -376,6 +378,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 										// still better than take it
 										const double correctness = 100. - error;
 										if(correctness >= m_package->correctlyClassified()){
+											foundAtLeastOneParamSet = true;
 											m_gaussKernel->getCopyOfParams(bestParams);
 											negBestLogZ = m_arFunvals[iLambda];
 											m_package->changeCorrectlyClassified(correctness);
@@ -448,11 +451,17 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //					cmaes::cmaes_boundary_transformation(&boundaries,
 //						(double const *) cmaes_GetPtr(&m_evo, "xbestever"), /* "xbestever" might be used as well */
 //						x_in_bounds, dimension);
-					printOnScreen("Best params: " << bestParams);
 //					bestParams.m_length.setAllValuesTo(x_in_bounds[0]);
+					if(foundAtLeastOneParamSet){
+						printOnScreen("Best params: " << bestParams);
 //					bestParams.m_fNoise.setAllValuesTo(x_in_bounds[1]);
 //					bestParams.m_sNoise.setAllValuesTo(m_gaussKernel->getHyperParams().m_sNoise.getValue());
-					bestLogZ = -negBestLogZ;
+						bestLogZ = -negBestLogZ;
+					}else{
+						printError("This ivm could not find any parameter set in the given time, which could be trained without an error!");
+						m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
+						return false;
+					}
 					  /* and finally release memory */
 					if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && Settings::getDirectBoolValue("VisuParams.visuHyperParamSampling2D")){
 						DataWriterForVisu::writePointsIn2D("hp_params_"+m_className+".svg", points, values);
@@ -620,6 +629,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 			}
 			if(bestLogZ == NEG_DBL_MAX){
 				printError("This ivm could not find any parameter set in the given time, which could be trained without an error!");
+				m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
 				return false;
 			}
 			printOnScreen("For IVM: " << m_className << " logZ: " << bestLogZ << ", "<< bestParams << ", has: " << m_package->correctlyClassified() << ", with IPs: " << m_numberOfInducingPoints);
@@ -639,9 +649,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				openFileInViewer("ivm_"+m_className+".svg");
 			}
 			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
-			if(m_package != nullptr){
-				m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
-			}
+			m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
 			return ret;
 		}else{
 			//		setDerivAndLogZFlag(false, false);

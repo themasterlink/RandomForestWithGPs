@@ -45,7 +45,7 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 800,
 		"shareForTraining": 0.9,
-		"folderLocReal": "..\/washington\/",
+		"folderLocReal": "..\/mnistOrg\/",
 		"folderLocFake": "..\/fakeData\/",
 		"normalizeData": "true",
 		"readFromFolder": "true"
@@ -55,8 +55,8 @@
 		"minUsedDataFactor": 0.3,
 		"maxUsedDataFactor": 0.6,
 		"factorAmountOfUsedDims": 0.9,
-		"ownSamplingTime": 60,
-		"useBigDynmaicDecisionTrees": "false"
+		"ownSamplingTime": 180,
+		"useBigDynmaicDecisionTrees": "true"
 	},
 	"Kernel": {
 		"path": "..\/realTest\/kernelData.kernel"
@@ -120,6 +120,6 @@
 		"visuFinalIvm": "true"
 	},
 	"main": {
-		"type": "ORF"
+		"type": "ORFIVMs"
 	}
 }

@@ -144,6 +144,7 @@
 									<listOptionValue builtIn="false" value="boost_system"/>
 									<listOptionValue builtIn="false" value="panel"/>
 									<listOptionValue builtIn="false" value="ncurses"/>
+									<listOptionValue builtIn="false" value="opencv_imgcodecs"/>
 									<listOptionValue builtIn="false" value="boost_program_options"/>
 									<listOptionValue builtIn="false" value="bayesopt"/>
 									<listOptionValue builtIn="false" value="boost_filesystem"/>
