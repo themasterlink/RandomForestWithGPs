@@ -47,7 +47,7 @@
 		"minUsedDataFactor": 0.3,
 		"maxUsedDataFactor": 0.6,
 		"factorAmountOfUsedDims": 0.9,
-		"ownSamplingTime": 0.1,
+		"ownSamplingTime": 300,
 		"useBigDynmaicDecisionTrees": "true"
 	},
 	"Kernel": {
