@@ -52,8 +52,7 @@ void BigDynamicDecisionTree::train(int amountOfUsedDims,
 							m_innerTrees[iTreeLayer][iChildIdInLayer]->setUsedDataPositions(&dataPositions[innerAmountOfNodesInEachTree + iChild]); // set the values of the storage which should be used in this tree
 							const bool trained = m_innerTrees[iTreeLayer][iChildIdInLayer]->train(amountOfUsedDims, generator, 0, saveDataPositions);
 							if(!trained){
-								delete m_innerTrees[iTreeLayer][iChildIdInLayer];
-								m_innerTrees[iTreeLayer][iChildIdInLayer] = nullptr;
+								SAVE_DELETE(m_innerTrees[iTreeLayer][iChildIdInLayer]);
 							}
 						}
 					}

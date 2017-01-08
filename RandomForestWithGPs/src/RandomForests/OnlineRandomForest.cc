@@ -38,7 +38,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 
 OnlineRandomForest::~OnlineRandomForest(){
 	for(DecisionTreeIterator it = m_trees.begin(); it != m_trees.end(); ++it){
-		delete *it;
+		SAVE_DELETE(*it);
 	}
 }
 
@@ -124,7 +124,7 @@ void OnlineRandomForest::train(){
 	}
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
 		ThreadMaster::threadHasFinished(packages[i]);
-		delete packages[i];
+		SAVE_DELETE(packages[i]);
 	}
 	m_firstTrainingDone = true;
 }
@@ -232,10 +232,10 @@ bool OnlineRandomForest::update(){
 		group.join_all();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			ThreadMaster::threadHasFinished(packages[i]);
-			delete packages[i];
+			SAVE_DELETE(packages[i]);
 		}
-		delete mutex;
-		delete list;
+		SAVE_DELETE(mutex);
+		SAVE_DELETE(list);
 	}
 	return true;
 }

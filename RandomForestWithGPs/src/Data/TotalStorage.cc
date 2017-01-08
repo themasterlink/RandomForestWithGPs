@@ -70,7 +70,7 @@ void TotalStorage::readData(const int amountOfData){
 			for(;it != m_storage.end();){
 				std::string name = it->first;
 				for(unsigned int i = 0; i < it->second.size(); ++i){
-					delete it->second[i];
+					SAVE_DELETE(it->second[i]);
 				}
 				++it;
 				m_storage.erase(name);

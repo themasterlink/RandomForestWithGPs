@@ -43,6 +43,10 @@
 
 #define NEG_DBL_MAX -DBL_MAX
 
+#define SAVE_DELETE(pointer) \
+	delete(pointer); \
+	pointer = nullptr \
+
 inline std::string number2String(const double& in, const int precision = -1){
 	if(precision != -1){
 		if(in < 10000.){

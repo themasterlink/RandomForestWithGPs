@@ -89,7 +89,7 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 		Eigen::VectorXd z(amountOfClasses);
 		//std::vector<DiagMatrixXd*>::iterator it = DSqrt_c.begin();
 		for(int i = 0; i < amountOfClasses; ++i){
-			//delete(*it); // free last iteration, in init it is null
+			//SAVE_DELETE(*it); // free last iteration, in init it is null
 			//it = DSqrt_c.insert(it, sqrtPi.segment(i*dataPoints, dataPoints).asDiagonal());
 			//DiagMatrixXd* pDSqrt_c= *it;
 			//if(pDSqrt_c == NULL){

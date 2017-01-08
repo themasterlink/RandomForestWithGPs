@@ -8,6 +8,7 @@
 #include "IVMMultiBinary.h"
 #include "../Base/CommandSettings.h"
 #include "../Data/DataBinaryWriter.h"
+#include "../Utility/Util.h"
 
 IVMMultiBinary::IVMMultiBinary(OnlineStorage<ClassPoint*>& storage,
 		const unsigned int numberOfInducingPointsPerIVM,
@@ -106,14 +107,14 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 						group->join_all();
 						for(unsigned int i = 0; i < nrOfParallel; ++i){
 							ThreadMaster::threadHasFinished(packages[i]);
-							delete packages[i];
+							SAVE_DELETE(packages[i]);
 						}
 						for(unsigned int i = 0; i < amountOfClasses(); ++i){
 							if(m_isClassUsed[i]){
 								m_ivms[i]->getGaussianKernel()->setDifferenceMatrix(differenceMatrix);
 							}
 						}
-						delete group;
+						SAVE_DELETE(group);
 					}
 					m_init = true;
 					train();
@@ -132,7 +133,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 }
 
 IVMMultiBinary::~IVMMultiBinary() {
-	delete m_orfForKernel;
+	SAVE_DELETE(m_orfForKernel);
 }
 
 void IVMMultiBinary::train(){
@@ -156,7 +157,7 @@ void IVMMultiBinary::train(){
 			}
 			// remove all running threads
 			for(std::list<InformationPackage*>::iterator it = m_packages.begin(); it != m_packages.end(); ++it){
-				delete *it;
+				SAVE_DELETE(*it);
 			}
 			m_packages.clear();
 		}
@@ -268,13 +269,13 @@ void IVMMultiBinary::train(){
 		for(unsigned int i = 0; i < amountOfClasses(); ++i){
 			if(m_isClassUsed[i]){
 				ThreadMaster::threadHasFinished(packages[i]);
-				delete packages[i];
+				SAVE_DELETE(packages[i]);
 			}
 		}
 		groupForRetraining.join_all(); // to get a little bit of time until we wait on the finished training
-		for(std::list<InformationPackage*>::const_iterator it = packagesForRetrain.begin(); it != packagesForRetrain.end(); ++it){
+		for(std::list<InformationPackage*>::iterator it = packagesForRetrain.begin(); it != packagesForRetrain.end(); ++it){
 			ThreadMaster::threadHasFinished(*it);
-			delete *it;
+			SAVE_DELETE(*it);
 		}
 //		}else{
 //			const bool fitParams = CommandSettings::get_samplingAndTraining();
@@ -470,7 +471,7 @@ void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector
 	group.join_all();
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
 		ThreadMaster::threadHasFinished(packages[i]);
-		delete packages[i];
+		SAVE_DELETE(packages[i]);
 	}
 	for(unsigned int i = 0; i < points.size(); ++i){
 		double highestValue = 0.;
@@ -504,7 +505,7 @@ void IVMMultiBinary::predictData(const ClassData& points, Labels& labels, std::v
 	group.join_all();
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
 		ThreadMaster::threadHasFinished(packages[i]);
-		delete packages[i];
+		SAVE_DELETE(packages[i]);
 	}
 	for(unsigned int i = 0; i < points.size(); ++i){
 		double highestValue = 0.;

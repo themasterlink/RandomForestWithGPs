@@ -29,11 +29,13 @@ KernelElement::KernelElement(const KernelElement& ele):
 
 KernelElement::~KernelElement(){
 	delete[] m_values;
+	m_values = nullptr;
 };
 
 void KernelElement::changeAmountOfDims(const bool newHasMoreThanOneDim){
 	if(hasMoreThanOneDim() != newHasMoreThanOneDim){
 		delete[] m_values;
+		m_values = nullptr;
 		m_hasMoreThanOneDim = newHasMoreThanOneDim;
 		if(hasMoreThanOneDim()){
 			m_values = new double[ClassKnowledge::amountOfDims()];

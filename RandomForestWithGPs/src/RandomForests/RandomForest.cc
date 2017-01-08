@@ -73,7 +73,7 @@ void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
 	}
 	group.join_all(); // wait until all are finished!
 	for(int i = 0; i < nrOfParallel; ++i){
-		delete generators[i];
+		SAVE_DELETE(generators[i]);
 	}
 	std::cout << "\rFinish training in : " << sw.elapsedSeconds() << " sec                                                                 " << std::endl;
 }

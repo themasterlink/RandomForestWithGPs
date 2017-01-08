@@ -6,7 +6,7 @@
  */
 
 #include "RandomGaussianNr.h"
-
+#include "../Utility/Util.h"
 int RandomGaussianNr::counter = 0;
 
 RandomGaussianNr::RandomGaussianNr(const double mean, const double sd, const int seed):
@@ -18,7 +18,7 @@ RandomGaussianNr::RandomGaussianNr(const double mean, const double sd, const int
 }
 
 RandomGaussianNr::~RandomGaussianNr(){
-	delete m_normalGenerator;
+	SAVE_DELETE(m_normalGenerator);
 }
 
 
@@ -30,6 +30,6 @@ void RandomGaussianNr::reset(const double mean, const double sd){
 
 void RandomGaussianNr::setSeed(const int seed){
 	m_generator.seed(seed);
-	delete m_normalGenerator;
+	SAVE_DELETE(m_normalGenerator);
 	m_normalGenerator = new variante_generator(m_generator, normal_distribution(m_mean, m_sd));
 };

@@ -31,7 +31,7 @@ KernelBase<KernelType, nrOfParams>::KernelBase(const OwnKernelInitParams& initPa
 template<typename KernelType, unsigned int nrOfParams>
 KernelBase<KernelType, nrOfParams>::~KernelBase(){
 	for(unsigned int i = 0; i < nrOfParams; ++i){
-		delete m_randomGaussians[i];
+		SAVE_DELETE(m_randomGaussians[i]);
 	}
 }
 

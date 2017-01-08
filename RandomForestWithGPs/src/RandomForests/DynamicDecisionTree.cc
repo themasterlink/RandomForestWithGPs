@@ -208,8 +208,7 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 		return false;
 	}
 	if(!saveDataPosition){ // if it is not saved this pointer is deleted
-		delete m_dataPositions;
-		m_dataPositions = nullptr;
+		SAVE_DELETE(m_dataPositions);
 	}else{
 		for(unsigned int i = 0; i < m_maxInternalNodeNr; ++i){ // clear all the inner nodes just the leaves are important
 			(*m_dataPositions)[i].clear();

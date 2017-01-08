@@ -329,7 +329,7 @@ unsigned int GaussianProcessMultiBinary::amountOfClasses() const{
 
 GaussianProcessMultiBinary::~GaussianProcessMultiBinary() {
 	for(int iActClass = 0; iActClass < m_amountOfUsedClasses; ++iActClass){
-		delete m_gps[iActClass];
+		SAVE_DELETE(m_gps[iActClass]);
 	}
 }
 

@@ -321,7 +321,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //								cmaes_ReSampleSingle(&evo, i);
 //								cmaes_boundary_transformation(&boundaries, pop[i], x_in_bounds, dimension);
 //							}
-							m_gaussKernel->setHyperParams(m_hyperParamsValues[0], m_hyperParamsValues[1]); //, m_hyperParamsValues[2]);
+							m_gaussKernel->setHyperParams(m_hyperParamsValues[0], m_hyperParamsValues[1], m_hyperParamsValues[2]);
 
 							sw.startTime();
 							const int diffInInducingPoints = desiredAmountOfInducingsPoints - m_numberOfInducingPoints;
@@ -331,7 +331,6 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 							const bool trained = internalTrain(true, 1);
 							double error = NEG_DBL_MAX;
 							if(trained){
-
 								double oneError, minusOneError;
 //								int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
 //								int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
@@ -400,7 +399,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 																		<< " %%, for: " << m_dataPoints << " points";*/
 											printInPackageOnScreen(m_package, "New best params: " << bestParams << ", with correctness of: " << correctness);
 											//											}
-											if(correctness > 95.){
+											if(correctness >= 96.){
 												m_package->abortTraing();
 												iLambda = sampleLambda;
 											}
@@ -1368,7 +1367,7 @@ void IVM::calcDerivatives(const Vector& muL1){
 				if(!type->isDerivativeOnlyDiag()){
 					m_gaussKernel->calcCovarianceDerivativeForInducingPoints(CMatrix[i], m_I, type);
 				}
-				delete type;
+				SAVE_DELETE(type);
 			}
 			for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
 				for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
