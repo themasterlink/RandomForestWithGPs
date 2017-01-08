@@ -399,7 +399,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 																		<< " %%, for: " << m_dataPoints << " points";*/
 											printInPackageOnScreen(m_package, "New best params: " << bestParams << ", with correctness of: " << correctness);
 											//											}
-											if(correctness >= 96.){
+											if(correctness >= 99.6){
 												m_package->abortTraing();
 												iLambda = sampleLambda;
 											}
@@ -640,7 +640,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				// train the whole active set again but in the oposite direction similiar to an ep step
 				const bool ret2 = trainOptimizeStep(0);
 				if(!ret2){
-					printWarning("The optimization step could not be performed!");
+					printWarning("The optimization step for ivm " << m_className << " could not be performed!");
 				}
 			}
 			if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && CommandSettings::get_useFakeData() && Settings::getDirectBoolValue("VisuParams.visuFinalIvm")){
@@ -1576,7 +1576,8 @@ double IVM::predict(const Vector& input) const{
 	}else{
 		contentOfSig = (mu_star / sqrt(1.0 / (m_lambda * m_lambda) + sigma_star));
 	}
-	return boost::math::erfc(-contentOfSig / SQRT2) / 2.0;
+	return contentOfSig;
+//	return boost::math::erfc(-contentOfSig / SQRT2) / 2.0;
 }
 
 double IVM::predictOnTraining(const unsigned int id){

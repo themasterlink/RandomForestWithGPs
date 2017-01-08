@@ -57,6 +57,8 @@ private:
 
 	void retrainIvmIfNeeded(IVM* ivm, InformationPackage* package, const int iClassNr);
 
+	unsigned int getLabelFrom(const std::vector<double>& probs) const;
+
 	OnlineStorage<ClassPoint*>& m_storage;
 
 	std::vector<IVM*> m_ivms;
@@ -88,6 +90,8 @@ private:
 	const int m_orfClassLabel;
 
 	unsigned int m_amountOfAllClasses;
+
+	mutable RandomUniformNr m_randClass;
 };
 
 #endif /* GAUSSIANPROCESS_IVMMULTIBINARY_H_ */

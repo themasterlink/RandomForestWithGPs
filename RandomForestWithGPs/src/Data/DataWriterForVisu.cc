@@ -888,7 +888,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<do
 	Eigen::VectorXd vec(list.size());
 	unsigned int i = 0;
 	for(std::list<double>::const_iterator it = list.begin(); it != list.end(); ++it, ++i){
-		vec[i] = *it;
+		vec.coeffRef(i) = *it;
 	}
 	writeSvg(fileName, vec, drawLine);
 }

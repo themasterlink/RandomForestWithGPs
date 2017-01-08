@@ -17,13 +17,13 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 24
+			"height": 22
 		}
 	},
 	"IVM": {
 		"doEpUpdate": "false",
 		"lambda": 0.5,
-		"nrOfInducingPoints": 100,
+		"nrOfInducingPoints": 450,
 		"desiredMargin": 0.01,
 		"hasLengthMoreThanParam": "false",
 		"useNeighbourComparison": "true",
@@ -34,16 +34,8 @@
 		"kernelType": 0,
 		"useCmaes": "true"
 	},
-	"CMAES": {
-		"lowerBoundLen": 0.01,
-		"upperBoundLen": 2,
-		"lowerBoundFNoise": 0.01,
-		"upperBoundFNoise": 4,
-		"lowerBoundSNoise": 0.05,
-		"upperBoundSNoise": 0.1
-	},
 	"TotalStorage": {
-		"amountOfPointsUsedForTraining": 800,
+		"amountOfPointsUsedForTraining": 3000,
 		"shareForTraining": 0.9,
 		"folderLocReal": "..\/mnistOrg\/",
 		"folderLocFake": "..\/fakeData\/",
@@ -55,7 +47,7 @@
 		"minUsedDataFactor": 0.3,
 		"maxUsedDataFactor": 0.6,
 		"factorAmountOfUsedDims": 0.9,
-		"ownSamplingTime": 180,
+		"ownSamplingTime": 0.1,
 		"useBigDynmaicDecisionTrees": "true"
 	},
 	"Kernel": {
@@ -68,6 +60,14 @@
 		"samplingAmount": 450,
 		"maxDepth": 18,
 		"usePartitionInsteadOfLabels": "true"
+	},
+	"CMAES": {
+		"lowerBoundLen": 4,
+		"upperBoundLen": 6,
+		"lowerBoundFNoise": 6,
+		"upperBoundFNoise": 8,
+		"lowerBoundSNoise": 0.08,
+		"upperBoundSNoise": 0.1
 	},
 	"KernelParam": {
 		"len": 0.732498,
@@ -120,6 +120,6 @@
 		"visuFinalIvm": "true"
 	},
 	"main": {
-		"type": "ORFIVMs"
+		"type": "multiIvm"
 	}
 }

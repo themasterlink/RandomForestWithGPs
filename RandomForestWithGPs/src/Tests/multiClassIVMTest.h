@@ -22,8 +22,9 @@
 #include <thread>
 
 void testIvm(IVMMultiBinary& ivms, const ClassData& data){
-	int right = 0;
 	const int amountOfTestPoints = data.size();
+	do{
+	int right = 0;
 //	Eigen::Vector2i rightPerClass;
 //	rightPerClass[0] = rightPerClass[1] = 0;
 //	int amountOfBelow = 0;
@@ -40,7 +41,7 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 			++right;
 		}
 		if(label != UNDEF_CLASS_LABEL){
-			conv.coeffRef(data[i]->getLabel(), label) += 1;
+			conv(data[i]->getLabel(), label) += 1;
 		}
 		/*if(data[i]->getLabel() == label){
 			++amountPerClass[label];
@@ -74,6 +75,50 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 //	std::cout << "Amount of 1 in total: " << (double) amountPerClass[0] / amountOfTestPoints * 100.0 << "%" << std::endl;
 //	std::cout << ivm.getKernel().prettyString() << std::endl;
 //	std::cout << RESET;
+	}while(false);
+	do{
+	Labels labels2;
+	std::vector<std::vector<double> > probs;
+	ivms.predictData(data, labels2, probs);
+	std::fstream output;
+	output.open("resultForEachPoint.csv", std::fstream::out | std::fstream::trunc);
+	std::vector<int> classCounter(ivms.amountOfClasses(),0);
+	if(output.is_open()){
+		output << "real;predicted";
+		for(unsigned int i = 0; i < ivms.amountOfClasses(); ++i){
+			output << ";" << i;
+		}
+		output << "\n";
+		for(int i = 0; i < amountOfTestPoints; ++i){
+			if(classCounter[data[i]->getLabel()] < 100){
+				++classCounter[data[i]->getLabel()];
+				output << data[i]->getLabel() << ";" << labels2[i];
+				for(unsigned int j = 0; j < ivms.amountOfClasses(); ++j){
+					output << ";" << number2String(probs[i][j], 5);
+				}
+				output << "\n";
+			}
+		}
+	}
+	output.close();
+	std::string out = "";
+	std::ifstream input("resultForEachPoint.csv");
+	if(input.is_open()){
+		std::string line;
+		while(std::getline(input, line)){
+			for(unsigned int i = 0; i < line.length(); ++i){
+				if(line[i] == '.'){
+					line[i] = ',';
+				}
+			}
+			out += line + "\n";
+		}
+	}
+	std::fstream output2;
+	output2.open("resultForEachPoint.csv", std::fstream::out | std::fstream::trunc);
+	output2.write(out.c_str(), out.length());
+	output2.close();
+	}while(false);
 }
 
 void executeForMutliClassIVM(){

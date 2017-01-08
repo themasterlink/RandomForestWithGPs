@@ -68,7 +68,7 @@ void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv){
 			for(int k = 0; k < covMaxSize - amountOfAct; ++k){
 				stream2 << " ";
 			}
-			stream2 << (int) conv(i,j);
+			stream2 << (int) conv.coeff(i,j);
 		}
 		ScreenOutput::print(stream2.str());
 	}

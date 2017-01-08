@@ -21,7 +21,9 @@ IVMMultiBinary::IVMMultiBinary(OnlineStorage<ClassPoint*>& storage,
 		m_correctAmountForTrainingData(0),
 		m_orfForKernel(nullptr),
 		m_orfClassLabel(orfClassLabel),
-		m_amountOfAllClasses(0){
+		m_amountOfAllClasses(0),
+		m_randClass(0,0, 1) // must be inited again!
+{
 	m_storage.attach(this);
 }
 
@@ -36,6 +38,8 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 			// assumption that the correct OnlineStorage is callig and not a false one -> no check
 			const unsigned int lastUpdateIndex = m_storage.getLastUpdateIndex();
 			if(!m_init && lastUpdateIndex == 0){
+				m_randClass.setMinAndMax(0, ClassKnowledge::amountOfClasses() - 1);
+				m_randClass.setSeed((m_orfClassLabel + 1) * 937);
 				// to find out the amount of used classes in this ivm look at the data
 				std::map<unsigned int, unsigned int> classCounter;
 				for(ClassData::const_iterator it = m_storage.begin(); it != m_storage.end(); ++it){
@@ -418,6 +422,28 @@ void IVMMultiBinary::trainInParallel(IVM* ivm, const int usedIvm, const double t
 //	mutex.unlock();
 }
 
+unsigned int IVMMultiBinary::getLabelFrom(const std::vector<double>& probs) const{
+	unsigned int highestArg = 0;
+	double highestValue = 0;
+	bool foundValue = false;
+	unsigned int plusOneCounter = 0;
+	for(unsigned int i = 0; i < amountOfClasses(); ++i){
+		if(probs[i] > highestValue){
+			highestValue = probs[i];
+			highestArg = i;
+			foundValue = true;
+		}
+		if(fabs(probs[i] - 1.0) < EPSILON){
+			++plusOneCounter;
+		}
+	}
+	if(foundValue && plusOneCounter < 2){
+		return highestArg;
+	}else{
+		return m_randClass(); // return a random class if no knowledge can be extracted from the ivms
+	}
+}
+
 void IVMMultiBinary::predict(const DataPoint& point, std::vector<double>& probabilities) const{
 	probabilities.resize(m_amountOfAllClasses);
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
@@ -430,7 +456,7 @@ void IVMMultiBinary::predict(const DataPoint& point, std::vector<double>& probab
 int IVMMultiBinary::predict(const DataPoint& point) const{
 	std::vector<double> probs(m_amountOfAllClasses, 0.);
 	predict(point, probs);
-	return std::distance(probs.cbegin(), std::max_element(probs.cbegin(), probs.cend()));
+	return getLabelFrom(probs);
 }
 
 int IVMMultiBinary::predict(const ClassPoint& point) const{
@@ -440,7 +466,7 @@ int IVMMultiBinary::predict(const ClassPoint& point) const{
 			probs[m_classOfIVMs[i]] = m_ivms[i]->predict(point);
 		}
 	}
-	return std::distance(probs.cbegin(), std::max_element(probs.cbegin(), probs.cend()));
+	return getLabelFrom(probs);
 }
 
 void IVMMultiBinary::predictData(const Data& points, Labels& labels) const{
@@ -473,17 +499,7 @@ void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector
 		SAVE_DELETE(packages[i]);
 	}
 	for(unsigned int i = 0; i < points.size(); ++i){
-		double highestValue = 0.;
-		int highestArg;
-		for(unsigned int j = 0; j < m_amountOfAllClasses; ++j){
-			//				probabilities[i][j] /= sum;
-			if(probabilities[i][j] > highestValue){
-				highestValue = probabilities[i][j];
-				highestArg = j;
-			}
-		}
-		labels[i] = highestArg;
-		//			}
+		labels[i] = getLabelFrom(probabilities[i]);
 	}
 }
 
@@ -509,15 +525,7 @@ void IVMMultiBinary::predictData(const ClassData& points, Labels& labels, std::v
 		SAVE_DELETE(packages[i]); // just to be sure
 	}
 	for(unsigned int i = 0; i < points.size(); ++i){
-		double highestValue = 0.;
-		int highestArg;
-		for(unsigned int j = 0; j < m_amountOfAllClasses; ++j){
-			if(probabilities[i][j] > highestValue){
-				highestValue = probabilities[i][j];
-				highestArg = j;
-			}
-		}
-		labels[i] = highestArg;
+		labels[i] = getLabelFrom(probabilities[i]);
 	}
 }
 
