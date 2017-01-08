@@ -52,6 +52,7 @@ void OnlineRandomForestIVMs::update(){
 //		m_orf.setDesiredAmountOfTrees(100);
 		OnlineStorage<ClassPoint*>* copyForORFs = new OnlineStorage<ClassPoint*>(m_storage);
 		m_orf.update(copyForORFs, OnlineStorage<ClassPoint*>::APPENDBLOCK);
+		m_orf.update();
 		std::list<int> predictedLabels;
 		unsigned int amountOfCorrect = 0;
 		Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(ClassKnowledge::amountOfClasses(), ClassKnowledge::amountOfClasses());
