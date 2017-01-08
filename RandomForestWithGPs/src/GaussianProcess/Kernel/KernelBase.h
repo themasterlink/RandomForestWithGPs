@@ -99,7 +99,7 @@ protected:
 
 	bool m_calcedDifferenceMatrix;
 
-	int m_dataPoints;
+	unsigned int m_dataPoints;
 
 	KernelType m_kernelParams;
 

@@ -87,7 +87,7 @@ void KernelBase<KernelType, nrOfParams>::init(const ClassData& data, const bool 
 			ReadWriterHelper::readMatrix(input, *m_differences);
 			input.close();
 			m_dataPoints = m_differences->cols();
-			read = m_differences->cols() == data.size(); // else this means the kernel data does not fit the actual load data
+			read = m_dataPoints == (unsigned int) data.size(); // else this means the kernel data does not fit the actual load data
 			m_calcedDifferenceMatrix = true;
 		}
 		if(!read && !useSharedDifferenceMatrix){
@@ -113,7 +113,7 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 			printError("The size of the matrix is incorrect!");
 			return;
 		}
-		for(int i = 0; i < m_dataPoints; ++i){
+		for(unsigned int i = 0; i < m_dataPoints; ++i){
 			++counter;
 			for(int j = i + 1; j < m_dataPoints; ++j){
 				if(counter >= start){
@@ -157,15 +157,15 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 
 template<typename KernelType, unsigned int nrOfParams>
 void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd& usedMatrix, const OnlineStorage<ClassPoint*>& storage, InformationPackage* package){
-	const int dataPoints = storage.size();
+	const unsigned int dataPoints = storage.size();
 	int counter = 0;
 	if(usedMatrix.rows() != dataPoints || usedMatrix.cols() != dataPoints){
 		printError("The size of the matrix is incorrect!");
 		return;
 	}
-	for(int i = 0; i < dataPoints; ++i){
+	for(unsigned int i = 0; i < dataPoints; ++i){
 		++counter;
-		for(int j = i + 1; j < dataPoints; ++j){
+		for(unsigned int j = i + 1; j < dataPoints; ++j){
 			if(counter >= start){
 				if(package != nullptr && ((counter - start) % ((int) ((end - start) * 0.001))) == 0){
 					std::stringstream str2;
