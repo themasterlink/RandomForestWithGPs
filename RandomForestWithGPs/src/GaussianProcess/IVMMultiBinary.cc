@@ -204,7 +204,6 @@ void IVMMultiBinary::train(){
 		}
 //		if(amountOfClasses() <= nrOfParallel){
 		if(m_orfClassLabel == UNDEF_CLASS_LABEL){
-
 			const bool fitParams = CommandSettings::get_samplingAndTraining();
 			if(fitParams){
 				InLinePercentageFiller::setActMaxTime(durationOfWholeTraining);
@@ -269,8 +268,8 @@ void IVMMultiBinary::train(){
 		for(unsigned int i = 0; i < amountOfClasses(); ++i){
 			if(m_isClassUsed[i]){
 				ThreadMaster::threadHasFinished(packages[i]);
-				SAVE_DELETE(packages[i]);
 			}
+			SAVE_DELETE(packages[i]);
 		}
 		groupForRetraining.join_all(); // to get a little bit of time until we wait on the finished training
 		for(std::list<InformationPackage*>::iterator it = packagesForRetrain.begin(); it != packagesForRetrain.end(); ++it){
@@ -504,8 +503,10 @@ void IVMMultiBinary::predictData(const ClassData& points, Labels& labels, std::v
 	}
 	group.join_all();
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
-		ThreadMaster::threadHasFinished(packages[i]);
-		SAVE_DELETE(packages[i]);
+		if(m_isClassUsed[i]){
+			ThreadMaster::threadHasFinished(packages[i]);
+		}
+		SAVE_DELETE(packages[i]); // just to be sure
 	}
 	for(unsigned int i = 0; i < points.size(); ++i){
 		double highestValue = 0.;
