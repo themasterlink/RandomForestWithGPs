@@ -21,6 +21,7 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, co
 		m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), UNDEF_CLASS_LABEL),
 		m_dataPositions(nullptr),
 		m_useOnlyThisDataPositions(nullptr){
+//	printOnScreen("Size is: " << (m_splitDim.size() * sizeof(int) + m_splitValues.size() * sizeof(double) + m_labelsOfWinningClassesInLeaves.size() * sizeof(int)));
 }
 
 // copy construct
@@ -39,6 +40,7 @@ DynamicDecisionTree::DynamicDecisionTree(const DynamicDecisionTree& tree):
 }
 
 DynamicDecisionTree::~DynamicDecisionTree(){
+	deleteDataPositions();
 }
 
 bool DynamicDecisionTree::train(int amountOfUsedDims,
@@ -166,7 +168,6 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 			m_splitDim[iActNode] = NODE_IS_NOT_USED; // do not split here
 			if(iActNode == 1){
 				m_splitDim[iActNode] = NODE_CAN_BE_USED; // there should be a split
-				// todo maybe avoid endless loop
 			}
 		}else{
 			dataPosition[iActNode].clear();
@@ -208,7 +209,7 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 		return false;
 	}
 	if(!saveDataPosition){ // if it is not saved this pointer is deleted
-		SAVE_DELETE(m_dataPositions);
+		deleteDataPositions();
 	}else{
 		for(unsigned int i = 0; i < m_maxInternalNodeNr; ++i){ // clear all the inner nodes just the leaves are important
 			(*m_dataPositions)[i].clear();
@@ -392,3 +393,6 @@ unsigned int DynamicDecisionTree::amountOfClasses() const{
 	return m_amountOfClasses;
 }
 
+void DynamicDecisionTree::deleteDataPositions(){
+	SAVE_DELETE(m_dataPositions);
+}

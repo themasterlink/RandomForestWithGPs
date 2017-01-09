@@ -62,6 +62,8 @@ public:
 
 	std::vector<std::vector<int> >* getDataPositions(){ return m_dataPositions; };
 
+	void deleteDataPositions();
+
 	void setUsedDataPositions(std::vector<int>* usedDataPositions){ m_useOnlyThisDataPositions = usedDataPositions; };
 
 private:

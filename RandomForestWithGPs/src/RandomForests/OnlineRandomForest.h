@@ -73,7 +73,8 @@ private:
 
 	void predictDataProbInParallel(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const int start, const int end) const;
 
-	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const int amountOfTrees);
+	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const int amountOfTrees,
+			std::vector<std::vector<int> >* counterForClasses, boost::mutex* mutexForCounter);
 
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
@@ -83,6 +84,9 @@ private:
 			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, int* counter);
 
 	void updateMinMaxValues(unsigned int event);
+
+	void tryAmountForLayers(RandomNumberGeneratorForDT* generator, const double secondsPerSplit, std::list<unsigned int>* layerValues,
+			boost::mutex* mutex, int* bestLayerSplit, double* bestCorrectness);
 
 	const int m_maxDepth;
 
@@ -120,6 +124,8 @@ private:
 	int m_desiredAmountOfTrees;
 
 	bool m_useBigDynamicDecisionTrees;
+
+	unsigned int m_amountOfUsedLayer;
 };
 
 

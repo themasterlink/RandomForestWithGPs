@@ -16,7 +16,9 @@
 void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 	int amountOfCorrect = 0;
 	Labels labels;
+	StopWatch sw;
 	orf.predictData(test.storage(), labels);
+	printOnScreen("Needed " << sw.elapsedAsTimeFrame());
 	Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(orf.amountOfClasses(), orf.amountOfClasses());
 	for(unsigned int i = 0; i < labels.size(); ++i){
 		if(test[i]->getLabel() == labels[i]){
@@ -49,8 +51,11 @@ void executeForBinaryClassORF(){
 	printOnScreen("Third test after orf.update() finished");
 
 	printOnScreen("Amount of Classes: " << TotalStorage::getAmountOfClass());
+
 	if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+		StopWatch sw;
 		DataWriterForVisu::writeImg("orf.png", &orf, train.storage());
+		printOnScreen("For drawing needed time: " << sw.elapsedAsTimeFrame());
 		openFileInViewer("orf.png");
 	}
 }

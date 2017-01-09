@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 30
+			"height": 21
 		}
 	},
 	"IVM": {
@@ -35,9 +35,9 @@
 		"useCmaes": "true"
 	},
 	"TotalStorage": {
-		"amountOfPointsUsedForTraining": 3000,
+		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
-		"folderLocReal": "..\/mnistOrg\/",
+		"folderLocReal": "..\/washington\/",
 		"folderLocFake": "..\/fakeData\/",
 		"normalizeData": "true",
 		"readFromFolder": "true"
@@ -47,8 +47,11 @@
 		"minUsedDataFactor": 0.3,
 		"maxUsedDataFactor": 0.6,
 		"factorAmountOfUsedDims": 0.9,
-		"ownSamplingTime": 15,
-		"useBigDynmaicDecisionTrees": "true"
+		"ownSamplingTime": 60,
+		"useBigDynmaicDecisionTrees": "true",
+		"layerAmountOfBigDDT": 3,
+		"determineBestLayerAmount": "false",
+		"printErrorForTraining": "true"
 	},
 	"Kernel": {
 		"path": "..\/realTest\/kernelData.kernel"
@@ -62,10 +65,10 @@
 		"usePartitionInsteadOfLabels": "true"
 	},
 	"CMAES": {
-		"lowerBoundLen": 4,
-		"upperBoundLen": 6,
-		"lowerBoundFNoise": 6,
-		"upperBoundFNoise": 8,
+		"lowerBoundLen": 0.2,
+		"upperBoundLen": 15,
+		"lowerBoundFNoise": 0.2,
+		"upperBoundFNoise": 15,
 		"lowerBoundSNoise": 0.08,
 		"upperBoundSNoise": 0.1
 	},
@@ -120,6 +123,6 @@
 		"visuFinalIvm": "true"
 	},
 	"main": {
-		"type": "multiIvm"
+		"type": "ORF"
 	}
 }

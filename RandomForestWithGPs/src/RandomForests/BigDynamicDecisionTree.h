@@ -12,7 +12,9 @@
 
 class BigDynamicDecisionTree : public DynamicDecisionTreeInterface {
 public:
-	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfClasses);
+	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfClasses, const int layerAmount = -1);
+
+	virtual ~BigDynamicDecisionTree();
 
 	void train(int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
 
@@ -32,8 +34,6 @@ public:
 	}
 
 	unsigned int amountOfClasses() const;
-
-	virtual ~BigDynamicDecisionTree();
 
 private:
 	OnlineStorage<ClassPoint*>& m_storage;

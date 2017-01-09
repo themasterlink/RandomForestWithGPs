@@ -350,7 +350,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								if(error <= 48.){
 //									arFunvals[i] = - m_logZ / (double) m_numberOfInducingPoints + (-correctness + 100) * 2;
 									const int diff = desiredAmountOfInducingsPoints - m_numberOfInducingPoints; // bad if not all inducing points were used
-									m_arFunvals[iLambda] = - m_logZ / (double) m_numberOfInducingPoints + error + diff / (double) desiredAmountOfInducingsPoints;
+									m_arFunvals[iLambda] = - m_logZ / (double) m_numberOfInducingPoints + error + diff / (double) desiredAmountOfInducingsPoints * 100.;
 									if(m_arFunvals[iLambda] < negBestLogZ * 1.2){
 										error = calcErrorOnTrainingsData(true, testPoints, oneError, minusOneError);
 										if(oneError > minusOneError){
