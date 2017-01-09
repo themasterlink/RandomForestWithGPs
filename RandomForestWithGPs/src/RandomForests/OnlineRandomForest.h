@@ -82,9 +82,9 @@ private:
 
 	void updateInParallel(SortedDecisionTreeList* list, const int amountOfSteps,
 			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, int* counter);
-
+public:
 	void updateMinMaxValues(unsigned int event);
-
+private:
 	void tryAmountForLayers(RandomNumberGeneratorForDT* generator, const double secondsPerSplit, std::list<unsigned int>* layerValues,
 			boost::mutex* mutex, int* bestLayerSplit, double* bestCorrectness);
 

@@ -37,7 +37,7 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
-		"folderLocReal": "..\/washington\/",
+		"folderLocReal": "..\/mnistOrg\/",
 		"folderLocFake": "..\/fakeData\/",
 		"normalizeData": "true",
 		"readFromFolder": "true"
@@ -49,9 +49,9 @@
 		"factorAmountOfUsedDims": 0.9,
 		"ownSamplingTime": 60,
 		"useBigDynmaicDecisionTrees": "true",
-		"layerAmountOfBigDDT": 3,
-		"determineBestLayerAmount": "false",
-		"printErrorForTraining": "true"
+		"layerAmountOfBigDDT": 4,
+		"determineBestLayerAmount": "true",
+		"printErrorForTraining": "false"
 	},
 	"Kernel": {
 		"path": "..\/realTest\/kernelData.kernel"

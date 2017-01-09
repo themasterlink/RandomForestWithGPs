@@ -115,7 +115,7 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 		}
 		for(unsigned int i = 0; i < m_dataPoints; ++i){
 			++counter;
-			for(int j = i + 1; j < m_dataPoints; ++j){
+			for(unsigned int j = i + 1; j < m_dataPoints; ++j){
 				if(counter >= start){
 					if(counter == end){
 						i = m_dataPoints;
@@ -131,8 +131,8 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 	}else if(m_pDataMat != nullptr){
 		m_dataPoints = m_pDataMat->cols();
 		int counter = 0;
-		for(int i = 0; i < m_dataPoints; ++i){
-			for(int j = i; j < m_dataPoints; ++j){
+		for(unsigned int i = 0; i < m_dataPoints; ++i){
+			for(unsigned int j = i; j < m_dataPoints; ++j){
 				if(counter >= start){
 					if(counter == end){
 						i = m_dataPoints;
