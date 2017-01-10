@@ -130,6 +130,7 @@ void BigDynamicDecisionTree::train(int amountOfUsedDims,
 		if(iTreeSmallLayer == 0){
 			// go over all of the last layer of the fast tree
 			for(unsigned int iRootId = 0; iRootId < rootsForTreesInThisLayer; ++iRootId){
+				printOnScreen("iRootId: " << iRootId);
 				trainChildrenForRoot(m_fastInnerTrees.back()[iRootId], it, actSmallInnerTreeStructure,
 						depthInThisLayer, leavesForTreesInThisLayer, iRootId,
 						leavesForTreesInTheFatherLayer, neededPointsForNewTree,
@@ -139,6 +140,7 @@ void BigDynamicDecisionTree::train(int amountOfUsedDims,
 		}else{
 			// just iterate over the used parents, avoid all other
 			for(SmallTreeInnerStructure::const_iterator itRoot = m_smallInnerTrees[iTreeSmallLayer - 1].begin(); itRoot != m_smallInnerTrees[iTreeSmallLayer - 1].end(); ++itRoot){
+				printOnScreen(iTreeSmallLayer << " in iRootId: " << itRoot->first << ", " << m_smallInnerTrees[iTreeSmallLayer - 1].size() << ", " << actSmallInnerTreeStructure.size());
 				trainChildrenForRoot(itRoot->second, it, actSmallInnerTreeStructure,
 						depthInThisLayer, leavesForTreesInThisLayer, itRoot->first,
 						leavesForTreesInTheFatherLayer, neededPointsForNewTree,
@@ -183,6 +185,10 @@ void BigDynamicDecisionTree::trainChildrenForRoot(DynamicDecisionTree* root, Sma
 	if(root != nullptr){ // if the father is not a nullpointer
 		std::vector<std::vector<int> >& dataPositions = *root->getDataPositions();
 		for(unsigned int iChild = 0; iChild < leavesForTreesInThisLayer; ++iChild){
+			printOnScreen("leavesForTreesInTheFatherLayer: " << leavesForTreesInTheFatherLayer << ", depth for trees in the father layer: " << leavesForTreesInTheFatherLayer
+					<< ", iChild: " << iChild << ", leaves for this layer: " << leavesForTreesInThisLayer << ", size: " << dataPositions.size());
+			printOnScreen("dataPositions[leavesForTreesInTheFatherLayer + iChild].size(): "
+					<< dataPositions[leavesForTreesInTheFatherLayer + iChild].size());
 			if(dataPositions[leavesForTreesInTheFatherLayer + iChild].size() > neededPointsForNewTree){ // min amount is that half of the leaves are filled which at least one point!
 				const unsigned int iChildIdInLayer = iChild + leavesForTreesInThisLayer * iRootId;
 				if(it != actSmallInnerTreeStructure.end() && false){	// it is given here to hint the position were it should be added
