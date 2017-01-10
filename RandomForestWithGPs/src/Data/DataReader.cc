@@ -136,7 +136,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 					const unsigned int label = std::stoi(elements.front());
 					ClassPoint* newEle = new ClassPoint(elements.size() - 1, label);
 					for(int i = 1; i < elements.size(); ++i){
-						newEle->coeffRef(i) = std::stod(elements[i]);
+						newEle->coeffRef(i - 1) = std::stod(elements[i]);
 					}
 					data.push_back(newEle);
 					if(data.size() == amountOfData){

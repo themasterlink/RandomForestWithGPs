@@ -67,6 +67,7 @@ void BigDynamicDecisionTree::train(int amountOfUsedDims,
 			saveDataPositions = false;
 			depthInThisLayer = m_maxDepth - m_fastInnerTrees.size() * m_depthPerLayer;
 		}
+		printOnScreen("iTreeLayer: " << iTreeLayer);
 		const unsigned int leavesForTreesInThisLayer = pow(2, depthInThisLayer); // amount of leaves of one of the layertrees
 		if(iTreeLayer == 0){
 			// first tree
