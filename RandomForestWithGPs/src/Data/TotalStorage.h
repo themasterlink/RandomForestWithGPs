@@ -16,6 +16,11 @@
 class TotalStorage {
 public:
 
+	enum Mode {
+		WHOLE = 0,
+		SEPERATE = 1
+	};
+
 	typedef DataSets InternalStorage;
 	typedef DataSetsIterator Iterator;
 	typedef DataSetsConstIterator ConstIterator;
@@ -48,7 +53,13 @@ private:
 
 	static InternalStorage m_storage;
 
+	static ClassData m_trainSet;
+
+	static ClassData m_testSet;
+
 	static ClassPoint m_defaultEle;
+
+	static Mode m_mode;
 
 	static unsigned int m_totalSize;
 

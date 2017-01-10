@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 24
+			"height": 30
 		}
 	},
 	"IVM": {
@@ -37,7 +37,7 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
-		"folderLocReal": "..\/mnistOrg\/",
+		"folderLocReal": "..\/washington\/",
 		"folderLocFake": "..\/fakeData\/",
 		"normalizeData": "true",
 		"readFromFolder": "true"
@@ -46,11 +46,11 @@
 		"amountOfPointsUntilRetrain": 200,
 		"minUsedDataFactor": 0.3,
 		"maxUsedDataFactor": 0.6,
-		"factorAmountOfUsedDims": 0.9,
+		"factorAmountOfUsedDims": 0,
 		"ownSamplingTime": 10,
 		"useBigDynmaicDecisionTrees": "true",
-		"layerAmountOfBigDDT": 6,
-		"determineBestLayerAmount": "false",
+		"layerAmountOfBigDDT": 7,
+		"determineBestLayerAmount": "true",
 		"printErrorForTraining": "false"
 	},
 	"Kernel": {

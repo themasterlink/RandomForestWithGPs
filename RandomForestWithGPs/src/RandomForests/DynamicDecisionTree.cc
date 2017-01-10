@@ -40,6 +40,7 @@ DynamicDecisionTree::DynamicDecisionTree(const DynamicDecisionTree& tree):
 }
 
 DynamicDecisionTree::~DynamicDecisionTree(){
+	m_useOnlyThisDataPositions = nullptr; // never delete this pointer! (does not belong to this object)
 	deleteDataPositions();
 }
 
@@ -90,7 +91,20 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 	std::vector<int> leftHisto(m_amountOfClasses), rightHisto(m_amountOfClasses);
 	m_dataPositions = new std::vector<std::vector<int> >(m_maxNodeNr + 1, std::vector<int>());
 	std::vector<std::vector<int> >& dataPosition(*m_dataPositions);
+//	int breakPoint = 3; // 1 + 2 -> should have at least 2 layers
+//	int actLayer = 2;
+//	bool atLeastPerformedOneSplit = false;
+	//  1
+	// 2 3
 	for(int iActNode = 1; iActNode < m_maxInternalNodeNr + 1; ++iActNode){ // first element is not used!
+//		if(iActNode == breakPoint){ // check if early breaking is possible, check is performed always at the start of a layer
+//			if(!atLeastPerformedOneSplit){
+//				break;
+//			}
+//			atLeastPerformedOneSplit = false;
+//			breakPoint += pow(2, actLayer); // first iteration from 3 -> 7, 7 -> 15, 15 -> 31
+//			++actLayer;
+//		}
 		if(m_splitDim[iActNode] == NODE_IS_NOT_USED){ // checks if node contains data or not
 			continue; // if node is not used, go to next node, if node can be used process it
 		}
@@ -170,9 +184,10 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 				m_splitDim[iActNode] = NODE_CAN_BE_USED; // there should be a split
 			}
 		}else{
+//			atLeastPerformedOneSplit = true;
 			dataPosition[iActNode].clear();
 			// set the use flag for children:
-			if(rightPos < m_maxInternalNodeNr + 1){ // if right is leave, than left is too -> just control one
+			if(rightPos < m_maxInternalNodeNr + 1){ // if right is not a leave, than left is too -> just control one
 				m_splitDim[leftPos] = foundDataLeft > 0 ? NODE_CAN_BE_USED : NODE_IS_NOT_USED;
 				m_splitDim[rightPos] = foundDataRight > 0 ? NODE_CAN_BE_USED : NODE_IS_NOT_USED;
 			}
@@ -210,10 +225,6 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 	}
 	if(!saveDataPosition){ // if it is not saved this pointer is deleted
 		deleteDataPositions();
-	}else{
-		for(unsigned int i = 0; i < m_maxInternalNodeNr; ++i){ // clear all the inner nodes just the leaves are important
-			(*m_dataPositions)[i].clear();
-		}
 	}
 	return true;
 }

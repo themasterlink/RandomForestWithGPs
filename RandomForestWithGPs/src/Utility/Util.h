@@ -85,6 +85,34 @@ inline void openFileInViewer(const std::string& filename){
 	}
 }
 
+inline bool endsWith(const std::string& first, const std::string& second){
+	if(first.size() > second.size()){
+		int t = first.size() - 1;
+		if(second.size() == 0){
+			return false;
+		}
+		for(int i = second.size() - 1; i > -1; --i, --t){
+			if(second[i] != first[t]){
+				return false;
+			}
+		}
+		return true;
+	}else if(first.size() < second.size()){
+		int t = second.size() - 1;
+		if(first.size() == 0){
+			return false;
+		}
+		for(int i = first.size() - 1; i > -1; --i, --t){
+			if(second[t] != first[i]){
+				return false;
+			}
+		}
+		return true;
+	}else{
+		return first == second;
+	}
+}
+
 #ifdef USE_SCREEN_OUPUT
 
 #define printError(message) \

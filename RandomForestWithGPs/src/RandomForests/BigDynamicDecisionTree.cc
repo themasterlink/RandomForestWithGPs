@@ -8,7 +8,7 @@
 #include "BigDynamicDecisionTree.h"
 #include "../Base/Settings.h"
 
-BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfClasses, const int layerAmount):
+BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfClasses, const int layerAmount, const int layerAmountForFast):
 	m_storage(storage),
 	m_maxDepth(maxDepth),
 	m_amountOfClasses(amountOfClasses){
@@ -16,7 +16,7 @@ BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& stora
 	if(layerAmount < 1){ // 0 and -1, ...
 		Settings::getValue("OnlineRandomForest.layerAmountOfBigDDT", amountOfLayers);
 	}
-	const int amountForFast = std::min(2, amountOfLayers);
+	const int amountForFast = std::min(std::max(layerAmountForFast, 1), amountOfLayers);
 	const int amountForSmall = std::max(amountOfLayers - amountForFast, 0);
 	m_depthPerLayer = m_maxDepth / (double) amountOfLayers;
 	m_fastInnerTrees.resize(amountForFast); // the last layer is not be placed with trees
@@ -28,11 +28,16 @@ BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& stora
 }
 
 BigDynamicDecisionTree::~BigDynamicDecisionTree() {
-//	for(TreeStructure::iterator it = m_fastInnerTrees.begin(); it != m_fastInnerTrees.end(); ++it){
-//		for(TreeInnerStructure::iterator itInner = it->begin(); itInner != it->end(); ++itInner){
-//			SAVE_DELETE(*itInner); // nullptr can also be deleted
-//		}
-//	}
+	for(FastTreeStructure::iterator it = m_fastInnerTrees.begin(); it != m_fastInnerTrees.end(); ++it){
+		for(FastTreeInnerStructure::iterator itInner = it->begin(); itInner != it->end(); ++itInner){
+			SAVE_DELETE(*itInner); // nullptr can also be deleted
+		}
+	}
+	for(SmallTreeStructure::iterator it = m_smallInnerTrees.begin(); it != m_smallInnerTrees.end(); ++it){
+		for(SmallTreeInnerStructure::iterator itInner = it->begin(); itInner != it->end(); ++itInner){
+			SAVE_DELETE(itInner->second); 
+		}
+	}
 }
 
 void BigDynamicDecisionTree::train(int amountOfUsedDims,
@@ -45,7 +50,7 @@ void BigDynamicDecisionTree::train(int amountOfUsedDims,
 		}
 		for(SmallTreeStructure::iterator it = m_smallInnerTrees.begin(); it != m_smallInnerTrees.end(); ++it){
 			for(SmallTreeInnerStructure::iterator itInner = it->begin(); itInner != it->end(); ++itInner){
-				SAVE_DELETE(itInner->second); // nullptr can also be deleted
+				SAVE_DELETE(itInner->second);
 			}
 			it->clear(); // clear map
 		}
@@ -92,7 +97,7 @@ void BigDynamicDecisionTree::train(int amountOfUsedDims,
 							m_fastInnerTrees[iTreeLayer][iChildIdInLayer] = new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses);
 							m_fastInnerTrees[iTreeLayer][iChildIdInLayer]->setUsedDataPositions(&dataPositions[leavesForTreesInTheFatherLayer + iChild]); // set the values of the storage which should be used in this tree
 							const bool trained = m_fastInnerTrees[iTreeLayer][iChildIdInLayer]->train(amountOfUsedDims, generator, 0, saveDataPositions);
-							//							m_fastInnerTrees[iTreeLayer][iChildIdInLayer]->setUsedDataPositions(nullptr); // erase pointer to used dataPositions
+							m_fastInnerTrees[iTreeLayer][iChildIdInLayer]->setUsedDataPositions(nullptr); // erase pointer to used dataPositions
 							if(!trained){
 								SAVE_DELETE(m_fastInnerTrees[iTreeLayer][iChildIdInLayer]);
 							}
@@ -121,48 +126,22 @@ void BigDynamicDecisionTree::train(int amountOfUsedDims,
 		const unsigned int amountOfChildrenInThisLayer = rootsForTreesInThisLayer * leavesForTreesInThisLayer;
 		SmallTreeInnerStructure& actSmallInnerTreeStructure = m_smallInnerTrees[iTreeSmallLayer];
 		SmallTreeInnerStructure::iterator it = actSmallInnerTreeStructure.end();
-		for(unsigned int iRootId = 0; iRootId < rootsForTreesInThisLayer; ++iRootId){
-			//				printOnScreen("Rootid: " << iRootId);
-			DynamicDecisionTree* root = nullptr;
-			if(iTreeSmallLayer == 0){
-				root = m_fastInnerTrees.back()[iRootId];
-			}else{
-				// improve just use the ones, which are relevant
-				const SmallTreeInnerStructure::const_iterator itRoot = m_smallInnerTrees[iTreeSmallLayer - 1].find(iRootId);
-				if(itRoot != m_smallInnerTrees[iTreeSmallLayer - 1].end()){
-					root = itRoot->second;
-				}
+		if(iTreeSmallLayer == 0){
+			// go over all of the last layer of the fast tree
+			for(unsigned int iRootId = 0; iRootId < rootsForTreesInThisLayer; ++iRootId){
+				trainChildrenForRoot(m_fastInnerTrees.back()[iRootId], it, actSmallInnerTreeStructure,
+						depthInThisLayer, leavesForTreesInThisLayer, iRootId,
+						leavesForTreesInTheFatherLayer, neededPointsForNewTree,
+						amountOfUsedDims, generator, saveDataPositions, foundAtLeastOneChild);
 			}
-			if(root != nullptr){ // if the father is not a nullpointer
-				std::vector<std::vector<int> >& dataPositions = *root->getDataPositions();
-				for(unsigned int iChild = 0; iChild < leavesForTreesInThisLayer; ++iChild){
-					if(dataPositions[leavesForTreesInTheFatherLayer + iChild].size() > neededPointsForNewTree){ // min amount is that half of the leaves are filled which at least one point!
-						const unsigned int iChildIdInLayer = iChild + leavesForTreesInThisLayer * iRootId;
-						if(it != actSmallInnerTreeStructure.end() && false){	// it is given here to hint the position were it should be added
-							it = actSmallInnerTreeStructure.insert(it, SmallTreeInnerPair(iChildIdInLayer, new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses)));
-						}else{
-							actSmallInnerTreeStructure.insert(SmallTreeInnerPair(iChildIdInLayer, new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses)));
-							it = actSmallInnerTreeStructure.find(iChildIdInLayer);
-						}
-						if(it != actSmallInnerTreeStructure.end()){
-							it->second->setUsedDataPositions(&dataPositions[leavesForTreesInTheFatherLayer + iChild]); // set the values of the storage which should be used in this tree
-							const bool trained = it->second->train(amountOfUsedDims, generator, 0, saveDataPositions);
-							//							m_fastInnerTrees[iTreeLayer][iChildIdInLayer]->setUsedDataPositions(nullptr); // erase pointer to used dataPositions
-							if(!trained){
-								SAVE_DELETE(it->second);
-								actSmallInnerTreeStructure.erase(it);
-//								it = actSmallInnerTreeStructure.find(iChildIdInLayer);
-//								if(it != actSmallInnerTreeStructure.end()){
-//									printError("This should never happen!");
-//								}
-							}else{
-								foundAtLeastOneChild = true;
-							}
-						}else{
-							printError("This should never happen!");
-						}
-					}
-				}
+
+		}else{
+			// just iterate over the used parents, avoid all other
+			for(SmallTreeInnerStructure::const_iterator itRoot = m_smallInnerTrees[iTreeSmallLayer - 1].begin(); itRoot != m_smallInnerTrees[iTreeSmallLayer - 1].end(); ++itRoot){
+				trainChildrenForRoot(itRoot->second, it, actSmallInnerTreeStructure,
+						depthInThisLayer, leavesForTreesInThisLayer, itRoot->first,
+						leavesForTreesInTheFatherLayer, neededPointsForNewTree,
+						amountOfUsedDims, generator, saveDataPositions, foundAtLeastOneChild);
 			}
 		}
 		if(!foundAtLeastOneChild){
@@ -187,13 +166,45 @@ void BigDynamicDecisionTree::train(int amountOfUsedDims,
 //		}
 //	}
 //	printOnScreen(amountOfUsedTrees);
-//	for(unsigned int iTreeLayer = 0; iTreeLayer < m_fastInnerTrees.size(); ++iTreeLayer){
-//		for(unsigned int iChild = 0; iChild < m_fastInnerTrees[iTreeLayer].size(); ++iChild){
-//			if(m_fastInnerTrees[iTreeLayer][iChild] != nullptr){
-//				m_fastInnerTrees[iTreeLayer][iChild]->deleteDataPositions();
-//			}
-//		}
-//	}
+	for(unsigned int iTreeLayer = 0; iTreeLayer < m_fastInnerTrees.size(); ++iTreeLayer){
+		for(unsigned int iChild = 0; iChild < m_fastInnerTrees[iTreeLayer].size(); ++iChild){
+			if(m_fastInnerTrees[iTreeLayer][iChild] != nullptr){
+				m_fastInnerTrees[iTreeLayer][iChild]->deleteDataPositions();
+			}
+		}
+	}
+}
+
+void BigDynamicDecisionTree::trainChildrenForRoot(DynamicDecisionTree* root, SmallTreeInnerStructure::iterator& it, SmallTreeInnerStructure& actSmallInnerTreeStructure,
+		const unsigned int depthInThisLayer, const unsigned int leavesForTreesInThisLayer, const unsigned int iRootId,
+		const unsigned int leavesForTreesInTheFatherLayer, const unsigned int neededPointsForNewTree,
+		const int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const bool saveDataPositions, bool& foundAtLeastOneChild){
+	if(root != nullptr){ // if the father is not a nullpointer
+		std::vector<std::vector<int> >& dataPositions = *root->getDataPositions();
+		for(unsigned int iChild = 0; iChild < leavesForTreesInThisLayer; ++iChild){
+			if(dataPositions[leavesForTreesInTheFatherLayer + iChild].size() > neededPointsForNewTree){ // min amount is that half of the leaves are filled which at least one point!
+				const unsigned int iChildIdInLayer = iChild + leavesForTreesInThisLayer * iRootId;
+				if(it != actSmallInnerTreeStructure.end() && false){	// it is given here to hint the position were it should be added
+					it = actSmallInnerTreeStructure.insert(it, SmallTreeInnerPair(iChildIdInLayer, new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses)));
+				}else{
+					actSmallInnerTreeStructure.insert(SmallTreeInnerPair(iChildIdInLayer, new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses)));
+					it = actSmallInnerTreeStructure.find(iChildIdInLayer);
+				}
+				if(it != actSmallInnerTreeStructure.end()){
+					it->second->setUsedDataPositions(&dataPositions[leavesForTreesInTheFatherLayer + iChild]); // set the values of the storage which should be used in this tree
+					const bool trained = it->second->train(amountOfUsedDims, generator, 0, saveDataPositions);
+					if(!trained){
+						SAVE_DELETE(it->second);
+						actSmallInnerTreeStructure.erase(it);
+					}else{
+						foundAtLeastOneChild = true;
+					}
+				}else{
+					printError("This should never happen!");
+				}
+			}
+		}
+	}
 }
 
 

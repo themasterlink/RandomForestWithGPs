@@ -21,9 +21,9 @@ public:
 
 	static void readFromFiles(DataSets& dataSets, const std::string& folderLocation, const int amountOfData, const bool readTxt, bool& didNormalizeData);
 
-private:
-
 	static void readFromFile(ClassData& data, const std::string& inputName, const int amountOfData, const unsigned int classNr, const bool readTxt = false);
+
+private:
 
 	DataReader();
 	~DataReader();
