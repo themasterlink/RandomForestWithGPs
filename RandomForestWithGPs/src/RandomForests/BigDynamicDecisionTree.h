@@ -44,10 +44,14 @@ private:
 
 	int m_depthPerLayer;
 
-	typedef std::vector<DynamicDecisionTree*> TreeInnerStructure;
-	typedef std::vector<TreeInnerStructure> TreeStructure;
+	typedef std::map<unsigned int, DynamicDecisionTree*> SmallTreeInnerStructure;
+	typedef std::pair<unsigned int, DynamicDecisionTree*> SmallTreeInnerPair;
+	typedef std::vector<SmallTreeInnerStructure> SmallTreeStructure;
+	typedef std::vector<DynamicDecisionTree*> FastTreeInnerStructure;
+	typedef std::vector<FastTreeInnerStructure> FastTreeStructure;
 
-	TreeStructure m_innerTrees;
+	FastTreeStructure m_fastInnerTrees;
+	SmallTreeStructure m_smallInnerTrees;
 };
 
 #endif /* RANDOMFORESTS_BIGDYNAMICDECISIONTREE_H_ */
