@@ -93,11 +93,11 @@ void OnlineRandomForest::train(){
 		boost::thread_group layerGroup;
 		std::list<unsigned int> layerValues; // from 2 to
 		const int start = std::max(2, (int)std::ceil(m_maxDepth / (double) 20)); // at least 2 layers, but one layer can not be bigger than 20
-//		for(unsigned int i = start; m_maxDepth / i > 3; ++i){
-//			layerValues.push_back(i);
-//			printOnScreen("Try: " << i);
-//		}
-		layerValues.push_back(8);
+		for(unsigned int i = start; m_maxDepth / i > 3; ++i){
+			layerValues.push_back(i);
+			printOnScreen("Try: " << i);
+		}
+//		layerValues.push_back(4);
 		const double secondsSpendPerSplit = 10;
 		boost::mutex layerMutex;
 		int bestLayerSplit = -1;

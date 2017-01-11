@@ -21,6 +21,9 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, co
 		m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), UNDEF_CLASS_LABEL),
 		m_dataPositions(nullptr),
 		m_useOnlyThisDataPositions(nullptr){
+	if(m_maxDepth <= 0 || m_maxDepth > 30){
+		printError("This height is not supported here: " << m_maxDepth);
+	}
 //	printOnScreen("Size is: " << (m_splitDim.size() * sizeof(int) + m_splitValues.size() * sizeof(double) + m_labelsOfWinningClassesInLeaves.size() * sizeof(int)));
 }
 
@@ -195,8 +198,8 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 	}
 	const int leafAmount = pow(2, m_maxDepth);
 	const int offset = leafAmount; // pow(2, maxDepth - 1)
+	std::vector<unsigned int> histo(m_amountOfClasses, 0u);
 	for(int i = 0; i < leafAmount; ++i){
-		std::vector<int> histo(m_amountOfClasses, 0);
 		int lastValue = i + offset;
 		int actNode = lastValue / 2;
 		while(m_splitDim[actNode] == NODE_IS_NOT_USED && actNode > 1){
@@ -208,7 +211,7 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 				it != dataPosition[lastValue].cend(); ++it){
 			++histo[m_storage[*it]->getLabel()];
 		}
-		int maxEle = 0, labelWithHighestOcc = 0;
+		unsigned int maxEle = 0, labelWithHighestOcc = 0;
 		for(int k = 0; k < m_amountOfClasses; ++k){
 			if(histo[k] > maxEle){
 				maxEle = histo[k];
@@ -216,6 +219,9 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 			}
 		}
 		m_labelsOfWinningClassesInLeaves[i] = labelWithHighestOcc;
+		if(i + 1 != leafAmount){
+			std::fill(histo.begin(), histo.end(), 0u);
+		}
 	}
 	if(m_splitDim[1] == NODE_CAN_BE_USED && tryCounter < 5){ // five splits are enough to try
 		// try again!
@@ -248,7 +254,7 @@ double DynamicDecisionTree::trySplitFor(const int actNode, const double usedValu
 		const int stepSize = dataInNode.size() / 100;
 		generator.setRandFromRange(1, stepSize);
 		const int dataSize = dataInNode.size();
-		for(int i = 0; i < dataSize; i += generator.getRandFromRange()){
+		for(int i = generator.getRandFromRange(); i < dataSize; i += generator.getRandFromRange()){
 			if(i < dataSize){
 				const int val = dataInNode[i];
 				if(usedValue < m_storage[val]->coeff(usedDim)){ // TODO check < or <=
