@@ -73,7 +73,7 @@ void ScreenOutput::run(){
 		mvprintw(1,5, firstLine.c_str());
 //		clear();
 		std::string completeWhite = "";
-		for(unsigned int i = 0; i < COLS; ++i){
+		for(unsigned int i = 0; i < (unsigned int) COLS; ++i){
 			completeWhite += " ";
 		}
 		const int progressBar = LINES - 3;
@@ -100,7 +100,7 @@ void ScreenOutput::run(){
 		mvprintw(actLine,amountOfThreadsString.length() + 5, runningThreadAsString.c_str());
 		attroff(A_BOLD);
 		attron(COLOR_PAIR(1));
-		if(m_runningThreads->size() == 0 || (modeNr < 8 && modeNr + 1 > m_runningThreads->size())){
+		if(m_runningThreads->size() == 0 || (modeNr < 8 && modeNr + 1 > (int) m_runningThreads->size())){
 			modeNr = -1;
 		}
 		if(modeNr > -1 && modeNr < 8){
@@ -134,14 +134,14 @@ void ScreenOutput::run(){
 						updateRunningPackage(it, rowCounter, 0, true, col, heightOfThreadInfo, actLine, startOfRight, windows, panels);
 					}
 				}
-				for(unsigned int i = 0; i < 8; ++i){
+				for(int i = 0; i < 8; ++i){
 					if(panels[i] != nullptr && i != modeNr){
 						hide_panel(panels[i]);
 					}
 				}
 			}
 		}else{ // hide everything
-			for(unsigned int i = 0; i < 8; ++i){
+			for(int i = 0; i < 8; ++i){
 				if(panels[i] != nullptr && i != modeNr){
 					hide_panel(panels[i]);
 				}
@@ -301,7 +301,7 @@ void ScreenOutput::updateRunningPackage(ThreadMaster::PackageList::const_iterato
 	// header information after fillwindow, has a clean operation
 	const std::string standartLine = (*it)->m_standartInfo + ((*it)->m_additionalInformation.length() > 0 ? (", " + (*it)->m_additionalInformation) : "");
 	wattron(win, COLOR_PAIR(6));
-	if(standartLine.length() > width){
+	if((int) standartLine.length() > width){
 		mvwprintw(win, 1, 1, (standartLine.substr(0, width - 3) + "...").c_str());
 	}else{
 		mvwprintw(win, 1, (width - standartLine.length()) / 2, standartLine.c_str());
@@ -428,23 +428,23 @@ void ScreenOutput::drawWindow(WINDOW** window, PANEL** panel, int givenHeight, i
 void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, const int width, const int height, const bool hasHeadLine, const int color){
 	std::string whiteSpacesForWindow = "";
 	wattron(win, COLOR_PAIR(color));
-	for(unsigned int i = 0; i < width; ++i){
+	for(int i = 0; i < width; ++i){
 		whiteSpacesForWindow += " ";
 	}
 	if(hasHeadLine){
 		mvwprintw(win, 1, 2, whiteSpacesForWindow.c_str()); // erases the header information
-		for(unsigned int i = 3; i < height - 1; ++i){
+		for(int i = 3; i < height - 1; ++i){
 			mvwprintw(win, i, 2, whiteSpacesForWindow.c_str());
 		}
 	}else{
-		for(unsigned int i = 1; i < height - 1; ++i){
+		for(int i = 1; i < height - 1; ++i){
 			mvwprintw(win, i, 2, whiteSpacesForWindow.c_str());
 		}
 	}
 	int counter = hasHeadLine ? 3 : 0;
 	int amountOfNeededLines = 0;
 	for(std::list<std::string>::const_iterator itLine = lines.begin(); itLine != lines.end(); ++itLine){
-		if(itLine->length() > width){
+		if((int) itLine->length() > width){
 			amountOfNeededLines += ceil((itLine->length() - width) / (double) width) + 1;
 		}else{
 			++amountOfNeededLines;
@@ -456,12 +456,12 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 			++itLine; // jump over elements in the list which are no needed at the moment
 		}
 		for(; itLine != lines.end(); ++itLine, ++counter){
-			if(itLine->length() < width){
+			if((int) itLine->length() < width){
 				mvwprintw(win, counter, 2, itLine->c_str());
 			}else{
 				std::string line = *itLine;
 				int diff = 0;
-				while(line.length() > width){
+				while((int) line.length() > width){
 					mvwprintw(win, counter, 2 + diff, line.substr(0, width - diff).c_str());
 					++counter;
 					line = line.substr(width, line.length() - width);
@@ -474,7 +474,7 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 		counter = 2;
 		const int forStartLine = hasHeadLine ? 2 : 0;
 		for(std::list<std::string>::const_reverse_iterator itLine = lines.rbegin(); itLine != lines.rend(); ++itLine, ++counter){
-			if(itLine->length() < width){
+			if((int) itLine->length() < width){
 				if(counter + forStartLine < height){ // -1 for the start line
 					mvwprintw(win, height - counter, 2, itLine->c_str());
 				}
@@ -483,7 +483,7 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 				const int neededLen = ceil(itLine->length() / (double) width) - 1; // the last line will be printed normally
 				counter += neededLen;
 				int diff = 0;
-				while(line.length() > width){
+				while((int) line.length() > width){
 					if(counter + forStartLine < height){ // -1 for the start line
 						mvwprintw(win, height - counter, 2 + diff, line.substr(0, width - diff).c_str());
 					}

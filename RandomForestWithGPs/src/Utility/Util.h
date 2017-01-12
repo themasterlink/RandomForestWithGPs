@@ -15,6 +15,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include "StopWatch.h"
 #include "InLinePercentageFiller.h"
 #include "../Base/ScreenOutput.h"
@@ -46,6 +47,10 @@
 #define SAVE_DELETE(pointer) \
 	delete(pointer); \
 	pointer = nullptr \
+
+// for not implemented functions and params which have no use in a function, because for example they are inherited
+#define UNUSED(expr) \
+ 	 (void)(expr) \
 
 inline std::string number2String(const double& in, const int precision = -1){
 	if(precision != -1){
@@ -83,6 +88,10 @@ inline void openFileInViewer(const std::string& filename){
 		Logger::addSpecialLineToFile("open " + filename, "System");
 		system(("open " + filename).c_str());
 	}
+}
+// much fast than pow(2, exp)
+inline unsigned int pow2(const unsigned int exponent){
+	return ((unsigned int) 1u) << exponent;
 }
 
 inline bool endsWith(const std::string& first, const std::string& second){
@@ -142,14 +151,6 @@ inline bool endsWith(const std::string& first, const std::string& second){
 	 std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl; \
 
 #endif
-
-template<class T> const T& min(const T& a, const T& b){
-	return !(b < a) ? a : b;     // or: return !comp(b,a)?a:b; for version (2)
-}
-
-template<class T> const T& max(const T& a, const T& b){
-	return !(b > a) ? a : b;     // or: return !comp(b,a)?a:b; for version (2)
-}
 
 inline int_fast32_t highEndian2LowEndian(int_fast32_t i) {
     unsigned char c1, c2, c3, c4;

@@ -50,9 +50,9 @@ void executeForMultiClass(const std::string& path){
 	f << std::endl;
 	for(unsigned int i = 0; i < amountOfClass; ++i){ // calc the covariance matrix for each f_c
 		Eigen::MatrixXd cov_c = covariance; //  * y.segment(i*dataPoints, dataPoints).transpose();
-		for(int j = 0; j < dataPoints; ++j){
+		for(unsigned int j = 0; j < dataPoints; ++j){
 			if(i == data[j]->getLabel()){
-				for(int k = 0; k < dataPoints; ++k){
+				for(unsigned int k = 0; k < dataPoints; ++k){
 					cov_c(j,k) = 0;
 					cov_c(k,j) = 0;
 				}

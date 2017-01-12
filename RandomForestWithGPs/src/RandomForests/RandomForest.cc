@@ -26,7 +26,7 @@ void RandomForest::init(const int amountOfTrees){
 
 void RandomForest::generateTreeBasedOnData(const DecisionTreeData& data, const int element){
 	*(const_cast<int*>(&m_amountOfClasses)) = data.amountOfClasses;
-	if(m_trees.size() > element){
+	if((int) m_trees.size() > element){
 		m_trees[element].initFromData(data);
 	}else{
 		printError("The element is bigger than the size: " << element);
@@ -34,7 +34,7 @@ void RandomForest::generateTreeBasedOnData(const DecisionTreeData& data, const i
 }
 
 void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
-		const Eigen::Vector2i minMaxUsedData){
+		const Eigen::Vector2i& minMaxUsedData){
 	if(data.size() < 2){
 		printError("There must be at least two points!");
 		return;
@@ -49,7 +49,7 @@ void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
 	const int nrOfParallel = boost::thread::hardware_concurrency();
 	boost::thread_group group;
 	TreeCounter counter;
-	m_counterIncreaseValue = min(max(2, m_amountOfTrees / nrOfParallel / 100), 100);
+	m_counterIncreaseValue = std::min(std::max(2, m_amountOfTrees / nrOfParallel / 100), 100);
 	std::vector<RandomNumberGeneratorForDT*> generators;
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int seed = i;
@@ -91,8 +91,8 @@ void RandomForest::trainInParallel(const ClassData& data,
 	}
 }
 
-int RandomForest::predict(const DataPoint& point) const{
-	std::vector<int> values(m_amountOfClasses, 0);
+unsigned int RandomForest::predict(const DataPoint& point) const{
+	std::vector<unsigned int> values(m_amountOfClasses, 0);
 	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
 		++values[it->predict(point)];
 	}
@@ -100,8 +100,8 @@ int RandomForest::predict(const DataPoint& point) const{
 	return std::distance(values.cbegin(), std::max_element(values.cbegin(), values.cend()));
 }
 
-int RandomForest::predict(const ClassPoint& point) const{
-	std::vector<int> values(m_amountOfClasses, 0);
+unsigned int RandomForest::predict(const ClassPoint& point) const{
+	std::vector<unsigned int> values(m_amountOfClasses, 0);
 	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
 		++values[it->predict(point)];
 	}
@@ -151,7 +151,7 @@ void RandomForest::predictDataInParallel(const Data& points, Labels* labels, con
 
 void RandomForest::getLeafNrFor(const ClassData& data, std::vector<int>& leafNrs){
 	leafNrs = std::vector<int>(m_amountOfClasses, 0);
-	for(int i = 0; i < data.size(); ++i){
+	for(unsigned int i = 0; i < (unsigned int) data.size(); ++i){
 		leafNrs[predict(*data[i])] += 1;
 	}
 }

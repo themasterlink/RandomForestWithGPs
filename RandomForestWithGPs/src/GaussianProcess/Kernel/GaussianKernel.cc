@@ -175,9 +175,9 @@ double GaussianKernel::kernelFuncDerivativeToFNoise(const int row, const int col
 
 void GaussianKernel::calcCovariance(Eigen::MatrixXd& cov) const{
 	cov = Eigen::MatrixXd(m_dataPoints, m_dataPoints);
-	for(int i = 0; i < m_dataPoints; ++i){
+	for(unsigned int i = 0; i < m_dataPoints; ++i){
 		cov.coeffRef(i,i) = calcDiagElement(i);
-		for(int j = i + 1; j < m_dataPoints; ++j){
+		for(unsigned int j = i + 1; j < m_dataPoints; ++j){
 			cov.coeffRef(i,j) = kernelFunc(i, j);
 			cov.coeffRef(j,i) = cov.coeff(i,j);
 		}
@@ -208,6 +208,7 @@ void GaussianKernel::calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& 
 }
 
 double GaussianKernel::calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const{
+	UNUSED(row);
 	if(type->getKernelNr() == m_kernelParams.m_length.getKernelNr()){
 		return m_kernelParams.m_fNoise.getSquaredValue();
 	}else if(type->getKernelNr() == m_kernelParams.m_fNoise.getKernelNr()){
@@ -222,9 +223,9 @@ double GaussianKernel::calcDerivativeDiagElement(unsigned int row, const OwnKern
 
 void GaussianKernel::calcCovarianceDerivative(Eigen::MatrixXd& cov, const OwnKernelElement* type) const{
 	cov = Eigen::MatrixXd(m_dataPoints, m_dataPoints);
-	for(int i = 0; i < m_dataPoints; ++i){
+	for(unsigned int i = 0; i < m_dataPoints; ++i){
 		cov.coeffRef(i,i) = calcDerivativeDiagElement(i, type);
-		for(int j = i + 1; j < m_dataPoints; ++j){
+		for(unsigned int j = i + 1; j < m_dataPoints; ++j){
 			cov.coeffRef(i,j) = kernelFuncDerivativeToParam(i, j, type);
 			cov.coeffRef(j,i) = cov.coeff(i,j);
 		}
@@ -233,7 +234,7 @@ void GaussianKernel::calcCovarianceDerivative(Eigen::MatrixXd& cov, const OwnKer
 
 void GaussianKernel::calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const{
 	res = Eigen::VectorXd(m_dataPoints);
-	for(int i = 0; i < m_dataPoints; ++i){
+	for(unsigned int i = 0; i < m_dataPoints; ++i){
 		res.coeffRef(i) = (double) kernelFuncVec(vector, dataMat.col(i));
 	}
 }

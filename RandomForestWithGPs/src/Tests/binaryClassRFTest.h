@@ -29,7 +29,7 @@ void executeForRFBinaryClass(){
 	for(DataSetsIterator itData = datas.begin(); itData != datas.end(); ++itData){
 		const int amountOfElements = itData->second.size();
 		for(int i = 0; i < amountOfElements; ++i){
-			if(i <= min(300, (int) (0.8 * amountOfElements))){
+			if(i <= std::min(300, (int) (0.8 * amountOfElements))){
 				// train data
 				data.push_back(itData->second[i]);
 			}else{
@@ -55,7 +55,7 @@ void executeForRFBinaryClass(){
 	trees[3] = 100000;
 	trees[4] = 1000000;
 
-	for(int i = 0; i < heights.size(); ++i){
+	for(int i = 0; i < (int) heights.size(); ++i){
 		int maxTree = trees.size();
 		if(heights[i] > 10){
 			maxTree = 3;
@@ -91,7 +91,7 @@ void executeForRFBinaryClass(){
 			int right = 0;
 			Labels predictedLabels;
 			forest.predictData(testData, predictedLabels);
-			for(int j = 0; j < testData.size(); ++j){
+			for(int j = 0; j < (int) testData.size(); ++j){
 				if(testData[j]->getLabel() == predictedLabels[j]){
 					++right;
 				}
@@ -144,7 +144,7 @@ void executeForRFBinaryClass(const std::string& path){
 	forest.predictData(testData, guessedLabels);
 
 	int wrong = 0;
-	for(int i = 0; i < testData.size(); ++i){
+	for(int i = 0; i < (int) testData.size(); ++i){
 		if(guessedLabels[i] != testData[i]->getLabel()){
 			++wrong;
 		}
@@ -168,7 +168,7 @@ void executeForRFBinaryClass(const std::string& path){
 	newForest.predictData(testData, guessedLabels2);
 
 	wrong = 0;
-	for(int i = 0; i < testData.size(); ++i){
+	for(int i = 0; i < (int) testData.size(); ++i){
 		if(guessedLabels2[i] != testData[i]->getLabel()){
 			++wrong;
 		}

@@ -16,20 +16,23 @@ public:
 
 	virtual ~BigDynamicDecisionTree();
 
-	void train(int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
+	void train(const unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
 
-	int predict(const DataPoint& point) const;
+	unsigned int predict(const DataPoint& point) const;
 
 	bool predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const{
+		UNUSED(point1); UNUSED(point2); UNUSED(usedHeight);
 		printError("This function is not implemented!");
 		return false;
 	}
 
 	void predictData(const Data& data, Labels& labels) const{
+		UNUSED(data); UNUSED(labels);
 		printError("This function is not implemented!");
 	}
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
 

@@ -31,10 +31,10 @@ public:
 	static void toRandDataMatrix(const ClassData& data, Eigen::MatrixXd& result, Eigen::VectorXd& y, const int ele);
 
 	static void toRandUniformDataMatrix(const ClassData& data, const std::vector<int>& classCounts, Eigen::MatrixXd& result,
-			Eigen::VectorXd& y, const int ele, const int actClass);
+			Eigen::VectorXd& y, const int ele, const unsigned int actClass);
 
 	static void toRandClassAndHalfUniformDataMatrix(const ClassData& data, const std::vector<int>& classCounts, Eigen::MatrixXd& result,
-			Eigen::VectorXd& y, const int ele, const int actClass, std::vector<bool>& usedElements, const std::vector<bool>& blockElements);
+			Eigen::VectorXd& y, const int ele, const unsigned int actClass, std::vector<bool>& usedElements, const std::vector<bool>& blockElements);
 
 	static void getMinMax(const Data& data, double& min, double& max, const bool ignoreDBL_MAX_NEG = false);
 

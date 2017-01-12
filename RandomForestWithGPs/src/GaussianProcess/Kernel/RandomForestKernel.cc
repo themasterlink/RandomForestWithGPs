@@ -47,16 +47,18 @@ void RandomForestKernel::update(Subject* subject, unsigned int event){
 }
 
 double RandomForestKernel::calcDiagElement(unsigned int row) const{
+	UNUSED(row);
 	return 1; // because decision trees are deterministic
 }
 
 double RandomForestKernel::calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const{
+	UNUSED(row); UNUSED(type);
 	return 0;
 }
 
 void RandomForestKernel::calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const{
 	res = Eigen::VectorXd(m_dataPoints);
-	for(int i = 0; i < m_dataPoints; ++i){
+	for(unsigned int i = 0; i < m_dataPoints; ++i){
 		res.coeffRef(i) = (double) kernelFuncVec(vector, dataMat.col(i));
 	}
 }
@@ -100,5 +102,6 @@ void RandomForestKernel::setSeed(const int seed){
 }
 
 double RandomForestKernel::kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element) const{
+	UNUSED(row); UNUSED(col); UNUSED(type); UNUSED(element);
 	return 0.;
 }

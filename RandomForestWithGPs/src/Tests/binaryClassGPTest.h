@@ -22,7 +22,7 @@
 #include <chrono>
 #include <thread>
 
-void executeForBinaryClass(const std::string& path, const bool useRealData){
+void executeForBinaryClass(const bool useRealData){
 	ClassData data;
 	ClassData testData;
 	DataSets datas;
@@ -229,9 +229,9 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		Eigen::MatrixXd confusion = Eigen::MatrixXd::Zero(datas.size(), datas.size());
 		int unknownCounter = 0;
 		InLinePercentageFiller::setActMax(dataRef.size());
-		for(int j = 0; j < dataRef.size(); ++j){
+		for(int j = 0; j < (int) dataRef.size(); ++j){
 			ClassPoint& ele = *dataRef[j];
-			const int label = gp.predict(ele, prob);
+			const unsigned int label = gp.predict(ele, prob);
 			if(ele.getLabel() == label){
 				++right;
 			}
@@ -340,7 +340,7 @@ void executeForBinaryClass(const std::string& path, const bool useRealData){
 		int right = 0;
 		int amountOfBelow = 0;
 		int amountOfAbove = 0;
-		for(int j = 0; j < data.size(); ++j){
+		for(int j = 0; j < (int) data.size(); ++j){
 			gp.resetFastPredict();
 			ClassPoint& ele = *data[j];
 			double prob = gp.predict(ele, 100000);

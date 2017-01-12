@@ -25,15 +25,17 @@ public:
 
 	void train(const ClassData& data, const Labels* guessedLabels = NULL);
 
-	int predict(const DataPoint& point, std::vector<double>& prob) const;
+	unsigned int predict(const DataPoint& point, std::vector<double>& prob) const;
 
-	int predict(const DataPoint& point) const;
+	unsigned int predict(const DataPoint& point) const;
 
 	void predictData(const Data& data, Labels& labels) const{
+		UNUSED(data); UNUSED(labels);
 		printError("This function is not implemented!");
 	}
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
 
@@ -45,7 +47,7 @@ private:
 			const int amountOfHyperPoints, const ClassData& data,
 			const std::vector<int>& classCounts, GaussianProcess* actGp);
 
-	void optimizeHyperParams(const int iActClass,
+	void optimizeHyperParams(const unsigned int iActClass,
 			const int amountOfHyperPoints, const ClassData& data,
 			const std::vector<int>& classCounts, const std::vector<bool>& elementsUsedForValidation,
 			const Eigen::MatrixXd& testDataMat, const Eigen::VectorXd& testYGpInit, BestHyperParams* bestHyperParams);

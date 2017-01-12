@@ -21,7 +21,7 @@ class PredictorMultiClass {
 public:
 	virtual ~PredictorMultiClass(){};
 
-	virtual int predict(const DataPoint& point) const = 0;
+	virtual unsigned int predict(const DataPoint& point) const = 0;
 
 	virtual void predictData(const Data& points, Labels& labels) const = 0;
 

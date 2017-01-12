@@ -28,15 +28,17 @@ public:
 
 	virtual ~RandomForestGaussianProcess();
 
-	int predict(const DataPoint& data, std::vector<double>& prob) const;
+	unsigned int predict(const DataPoint& data, std::vector<double>& prob) const;
 
-	int predict(const DataPoint& point) const;
+	unsigned int predict(const DataPoint& point) const;
 
 	void predictData(const Data& data, Labels& labels) const{
+		UNUSED(data); UNUSED(labels);
 		printError("This function is not implemented!");
 	}
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
 
@@ -46,7 +48,7 @@ public:
 
 private:
 
-	void trainInParallel(const int iActClass, const int amountOfDataInRfRes,
+	void trainInParallel(const unsigned int iActClass, const int amountOfDataInRfRes,
 			const int amountOfHyperPoints,
 			const int iActRfClass, const ClassData& dataOfActRf,
 			const std::vector<int>& classCounts,

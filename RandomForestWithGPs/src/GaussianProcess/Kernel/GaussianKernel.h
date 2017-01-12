@@ -24,7 +24,7 @@ public:
 	GaussianKernel(bool simpleLength = true);
 	virtual ~GaussianKernel();
 
-	const bool hasLengthMoreThanOneDim() const{ return m_kernelParams.m_length.hasMoreThanOneDim(); };
+	bool hasLengthMoreThanOneDim() const{ return m_kernelParams.m_length.hasMoreThanOneDim(); };
 
 	void changeKernelConfig(const bool useAllDimForLen);
 
@@ -72,6 +72,7 @@ private:
 
 inline
 double GaussianKernel::calcDiagElement(unsigned int row) const{ // row is not used in this kernel!
+	UNUSED(row);
 	return m_kernelParams.m_fNoise.getSquaredValue() + m_kernelParams.m_sNoise.getSquaredValue();
 }
 

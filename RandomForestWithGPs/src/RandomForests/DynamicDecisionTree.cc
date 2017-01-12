@@ -10,18 +10,18 @@
 #include "../Data/ClassKnowledge.h"
 #include <algorithm>
 
-DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfClasses):
+DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth, const unsigned int amountOfClasses):
 		m_storage(storage),
 		m_maxDepth(maxDepth),
-		m_maxNodeNr(pow(2, maxDepth + 1) - 1),
-		m_maxInternalNodeNr(pow(2, maxDepth) - 1),
+		m_maxNodeNr(pow2(maxDepth + 1) - 1),
+		m_maxInternalNodeNr(pow2(maxDepth) - 1),
 		m_amountOfClasses(amountOfClasses),
 		m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
 		m_splitDim(m_maxInternalNodeNr + 1, NODE_IS_NOT_USED),
-		m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), UNDEF_CLASS_LABEL),
+		m_labelsOfWinningClassesInLeaves(pow2(maxDepth), UNDEF_CLASS_LABEL),
 		m_dataPositions(nullptr),
 		m_useOnlyThisDataPositions(nullptr){
-	if(m_maxDepth <= 0 || m_maxDepth > 30){
+	if(m_maxDepth <= 0 || m_maxDepth >= 28){
 		printError("This height is not supported here: " << m_maxDepth);
 	}
 //	printOnScreen("Size is: " << (m_splitDim.size() * sizeof(int) + m_splitValues.size() * sizeof(double) + m_labelsOfWinningClassesInLeaves.size() * sizeof(int)));
@@ -47,8 +47,7 @@ DynamicDecisionTree::~DynamicDecisionTree(){
 	deleteDataPositions();
 }
 
-bool DynamicDecisionTree::train(int amountOfUsedDims,
-		RandomNumberGeneratorForDT& generator, const int tryCounter, const bool saveDataPosition){
+bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const unsigned int tryCounter, const bool saveDataPosition){
 	if(m_splitDim[1] != NODE_IS_NOT_USED || m_splitDim[1] != NODE_CAN_BE_USED){
 		// reset training
 		std::fill(m_splitDim.begin(), m_splitDim.end(), NODE_IS_NOT_USED);
@@ -61,7 +60,7 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 //		}
 //	}else{
 	generator.setRandForDim(0, ClassKnowledge::amountOfDims() - 1);
-	for(int i = 0; i < amountOfUsedDims; ++i){
+	for(unsigned int i = 0; i < amountOfUsedDims; ++i){
 		bool doAgain = false;
 		int counter = 0;
 		do{
@@ -76,7 +75,7 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 				amountOfUsedDims = i;
 				break;
 			}
-			for(int j = 0; j < i; ++j){
+			for(unsigned int j = 0; j < i; ++j){
 				if(randNr == usedDims[j]){
 					doAgain = true;
 					break;
@@ -91,21 +90,21 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 	generator.setRandForDim(0, amountOfUsedDims - 1);
 //	}
 	m_splitDim[1] = NODE_CAN_BE_USED; // init the root value
-	std::vector<int> leftHisto(m_amountOfClasses), rightHisto(m_amountOfClasses);
-	m_dataPositions = new std::vector<std::vector<int> >(m_maxNodeNr + 1, std::vector<int>());
-	std::vector<std::vector<int> >& dataPosition(*m_dataPositions);
+	std::vector<unsigned int> leftHisto(m_amountOfClasses), rightHisto(m_amountOfClasses);
+	m_dataPositions = new std::vector<std::vector<unsigned int> >(m_maxNodeNr + 1, std::vector<unsigned int>());
+	std::vector<std::vector<unsigned int> >& dataPosition(*m_dataPositions);
 //	int breakPoint = 3; // 1 + 2 -> should have at least 2 layers
 //	int actLayer = 2;
 //	bool atLeastPerformedOneSplit = false;
 	//  1
 	// 2 3
-	for(int iActNode = 1; iActNode < m_maxInternalNodeNr + 1; ++iActNode){ // first element is not used!
+	for(int iActNode = 1; iActNode < (int) m_maxInternalNodeNr + 1; ++iActNode){ // first element is not used!
 //		if(iActNode == breakPoint){ // check if early breaking is possible, check is performed always at the start of a layer
 //			if(!atLeastPerformedOneSplit){
 //				break;
 //			}
 //			atLeastPerformedOneSplit = false;
-//			breakPoint += pow(2, actLayer); // first iteration from 3 -> 7, 7 -> 15, 15 -> 31
+//			breakPoint += pow2(actLayer); // first iteration from 3 -> 7, 7 -> 15, 15 -> 31
 //			++actLayer;
 //		}
 		if(m_splitDim[iActNode] == NODE_IS_NOT_USED){ // checks if node contains data or not
@@ -122,7 +121,7 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 			//const int randElementId = generator.getRandNextDataEle();
 			//const double usedValue = (*m_storage[usedNode])[usedDim];
 			const double usedValue = generator.getRandSplitValueInDim(randDim);
-			const double score = trySplitFor(iActNode, usedValue, randDim,
+			const double score = trySplitFor(usedValue, randDim,
 					dataPosition[iActNode], leftHisto, rightHisto, generator);
 			if(score > actScore){
 				actScore = score;
@@ -163,7 +162,7 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 		}else{
 			dataPosition[leftPos].reserve(dataPosition[iActNode].size());
 			dataPosition[rightPos].reserve(dataPosition[iActNode].size());
-			for(std::vector<int>::const_iterator it = dataPosition[iActNode].cbegin();
+			for(std::vector<unsigned int>::const_iterator it = dataPosition[iActNode].cbegin();
 					it != dataPosition[iActNode].cend(); ++it){
 				if(m_storage[*it]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
 					dataPosition[rightPos].push_back(*it);
@@ -190,14 +189,14 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 //			atLeastPerformedOneSplit = true;
 			dataPosition[iActNode].clear();
 			// set the use flag for children:
-			if(rightPos < m_maxInternalNodeNr + 1){ // if right is not a leave, than left is too -> just control one
+			if(rightPos < (int) m_maxInternalNodeNr + 1){ // if right is not a leave, than left is too -> just control one
 				m_splitDim[leftPos] = foundDataLeft > 0 ? NODE_CAN_BE_USED : NODE_IS_NOT_USED;
 				m_splitDim[rightPos] = foundDataRight > 0 ? NODE_CAN_BE_USED : NODE_IS_NOT_USED;
 			}
 		}
 	}
-	const int leafAmount = pow(2, m_maxDepth);
-	const int offset = leafAmount; // pow(2, maxDepth - 1)
+	const int leafAmount = pow2(m_maxDepth);
+	const int offset = leafAmount; // pow2(maxDepth - 1)
 	std::vector<unsigned int> histo(m_amountOfClasses, 0u);
 	for(int i = 0; i < leafAmount; ++i){
 		int lastValue = i + offset;
@@ -207,12 +206,12 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 			actNode /= 2; // if node is not take parent and try again
 		}
 
-		for(std::vector<int>::const_iterator it = dataPosition[lastValue].cbegin();
+		for(std::vector<unsigned int>::const_iterator it = dataPosition[lastValue].cbegin();
 				it != dataPosition[lastValue].cend(); ++it){
 			++histo[m_storage[*it]->getLabel()];
 		}
 		unsigned int maxEle = 0, labelWithHighestOcc = 0;
-		for(int k = 0; k < m_amountOfClasses; ++k){
+		for(unsigned int k = 0; k < m_amountOfClasses; ++k){
 			if(histo[k] > maxEle){
 				maxEle = histo[k];
 				labelWithHighestOcc = k;
@@ -235,14 +234,14 @@ bool DynamicDecisionTree::train(int amountOfUsedDims,
 	return true;
 }
 
-double DynamicDecisionTree::trySplitFor(const int actNode, const double usedValue, const int usedDim,
-		const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
-		std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator){
+double DynamicDecisionTree::trySplitFor(const double usedSplitValue, const unsigned int usedDim,
+		const std::vector<unsigned int>& dataInNode, std::vector<unsigned int>& leftHisto,
+		std::vector<unsigned int>& rightHisto, RandomNumberGeneratorForDT& generator){
 	double leftAmount = 0, rightAmount = 0;
 	if(dataInNode.size() < 100){ // under 100 take each value
-		for(std::vector<int>::const_iterator it = dataInNode.cbegin(); it != dataInNode.cend();
+		for(std::vector<unsigned int>::const_iterator it = dataInNode.cbegin(); it != dataInNode.cend();
 				++it){
-			if(usedValue < m_storage[*it]->coeff(usedDim)){ // TODO check < or <=
+			if(usedSplitValue < m_storage[*it]->coeff(usedDim)){ // TODO check < or <=
 				++leftAmount;
 				++leftHisto[m_storage[*it]->getLabel()];
 			}else{
@@ -257,7 +256,7 @@ double DynamicDecisionTree::trySplitFor(const int actNode, const double usedValu
 		for(int i = generator.getRandFromRange(); i < dataSize; i += generator.getRandFromRange()){
 			if(i < dataSize){
 				const int val = dataInNode[i];
-				if(usedValue < m_storage[val]->coeff(usedDim)){ // TODO check < or <=
+				if(usedSplitValue < m_storage[val]->coeff(usedDim)){ // TODO check < or <=
 					++leftAmount;
 					++leftHisto[m_storage[val]->getLabel()];
 				}else{
@@ -269,7 +268,7 @@ double DynamicDecisionTree::trySplitFor(const int actNode, const double usedValu
 	}
 	// Entropy -> TODO maybe Gini
 	double leftCost = 0, rightCost = 0;
-	for(int i = 0; i < m_amountOfClasses; ++i){
+	for(unsigned int i = 0; i < m_amountOfClasses; ++i){
 		const double normalizer = leftHisto[i] + rightHisto[i];
 		if(normalizer > 0){
 			const double leftClassProb = leftHisto[i] / normalizer;
@@ -286,24 +285,24 @@ double DynamicDecisionTree::trySplitFor(const int actNode, const double usedValu
 	return rightAmount * rightCost + leftAmount * leftCost;
 }
 
-int DynamicDecisionTree::predict(const DataPoint& point) const{
+unsigned int DynamicDecisionTree::predict(const DataPoint& point) const{
 	int iActNode = 1; // start in root
 	return predict(point, iActNode);
 }
 
-int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode) const { // is named iActNode here, is easier, but represents in the end the winningLeafNode
+unsigned int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode) const { // is named iActNode here, is easier, but represents in the end the winningLeafNode
 	iActNode = 1;
 	if(m_splitDim[1] != NODE_IS_NOT_USED && m_splitDim[1] != NODE_CAN_BE_USED){
-		while(iActNode <= m_maxInternalNodeNr){
+		while(iActNode <= (int) m_maxInternalNodeNr){
 			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
 				// if there is a node which isn't used on the way down to the leave
-				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;
 			}else if(m_splitDim[iActNode] == NODE_CAN_BE_USED){
 				// if there is a node which isn't used on the way down to the leave
-				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;
@@ -314,7 +313,7 @@ int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode) const { 
 				++iActNode; // go to right node
 			}
 		}
-		return m_labelsOfWinningClassesInLeaves[iActNode - pow(2, m_maxDepth)];
+		return m_labelsOfWinningClassesInLeaves[iActNode - pow2(m_maxDepth)];
 	}else{
 		printError("A tree must be trained before it can predict anything!");
 		return UNDEF_CLASS_LABEL;
@@ -325,16 +324,16 @@ bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const DataPoin
 	int iActNode = 1; // start in root
 	int actLevel = 1;
 	if(m_splitDim[1] != NODE_IS_NOT_USED && m_splitDim[1] != NODE_CAN_BE_USED){
-		while(iActNode <= m_maxInternalNodeNr){
+		while(iActNode <= (int) m_maxInternalNodeNr){
 			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
 				// if there is a node which isn't used on the way down to the leave
-				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;
 			}else if(m_splitDim[iActNode] == NODE_CAN_BE_USED){
 				// if there is a node which isn't used on the way down to the leave
-				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;
@@ -362,20 +361,20 @@ bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const DataPoin
 
 void DynamicDecisionTree::adjustToNewData(){
 	std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), 0);
-	const int leafAmount = pow(2, m_maxDepth);
+	const unsigned int leafAmount = pow2(m_maxDepth);
 	std::vector< std::vector<int> > histo(leafAmount, std::vector<int>(m_amountOfClasses, 0));
 	for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 		int iActNode = 1; // start in root
-		while(iActNode <= m_maxInternalNodeNr){
+		while(iActNode <= (int) m_maxInternalNodeNr){
 			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
 				// if there is a node which isn't used on the way down to the leave
-				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;
 			}else if(m_splitDim[iActNode] == NODE_CAN_BE_USED){
 				// if there is a node which isn't used on the way down to the leave
-				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;
@@ -402,8 +401,8 @@ void DynamicDecisionTree::adjustToNewData(){
 	}
 }
 
-int DynamicDecisionTree::getNrOfLeaves(){
-	return pow(2, m_maxDepth);
+unsigned int DynamicDecisionTree::getNrOfLeaves(){
+	return pow2(m_maxDepth);
 }
 
 unsigned int DynamicDecisionTree::amountOfClasses() const{

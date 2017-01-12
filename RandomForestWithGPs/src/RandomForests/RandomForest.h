@@ -26,21 +26,22 @@ public:
 	void addForest(const RandomForest& forest);
 
 	void train(const ClassData& data, const int amountOfUsedDims,
-			const Eigen::Vector2i minMaxUsedData);
+			const Eigen::Vector2i& minMaxUsedData);
 
 	void init(const int amountOfTrees);
 
 	void generateTreeBasedOnData(const DecisionTreeData& data, const int element);
 
-	int predict(const DataPoint& point) const;
+	unsigned int predict(const DataPoint& point) const;
 
-	int predict(const ClassPoint& point) const;
+	unsigned int predict(const ClassPoint& point) const;
 
 	void predictData(const Data& points, Labels& labels) const;
 
 	void predictData(const ClassData& points, Labels& labels) const;
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
 

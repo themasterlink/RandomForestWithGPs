@@ -192,7 +192,7 @@ void IVMMultiBinary::train(){
 		double durationOfTraining = CommandSettings::get_samplingAndTraining();
 		boost::thread_group group;
 		boost::thread_group groupForRetraining;
-		const int nrOfParallel = boost::thread::hardware_concurrency();
+		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
 		StopWatch sw;
 		std::vector<int> counterRes(amountOfClasses(), 0);
 		std::vector<bool> stillWorking(amountOfClasses(), true);
@@ -223,7 +223,7 @@ void IVMMultiBinary::train(){
 		std::vector<unsigned char> stateOfIvms(amountOfClasses(), 0);
 		for(unsigned int i = 0; i < amountOfClasses(); ++i){
 			if(m_isClassUsed[i]){
-				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, m_ivms[i], i, durationOfTraining, packages[i])));
+				group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, m_ivms[i], i, packages[i])));
 				stateOfIvms[i] = 1;
 			}
 		}
@@ -348,7 +348,7 @@ void IVMMultiBinary::train(){
 	int amountOfCorrect = 0;
 	std::vector<int> counterClass(m_amountOfAllClasses, 0);
 	for(unsigned int i = 0; i < m_storage.size(); ++i){ // always test the whole data set
-		const int correctLabel = m_storage[i]->getLabel();
+		const unsigned int correctLabel = m_storage[i]->getLabel();
 		if(correctLabel == predict(*m_storage[i])){
 			++m_correctAmountForTrainingDataForClasses[correctLabel];
 			++amountOfCorrect;
@@ -395,7 +395,7 @@ void IVMMultiBinary::initInParallel(const int startOfKernel, const int endOfKern
 	package->finishedTask();
 }
 
-void IVMMultiBinary::trainInParallel(IVM* ivm, const int usedIvm, const double trainTime, InformationPackage* package){
+void IVMMultiBinary::trainInParallel(IVM* ivm, const int usedIvm, InformationPackage* package){
 	if(ivm != nullptr){
 		ivm->setInformationPackage(package);
 		ivm->setClassName(m_orfClassLabel);
@@ -453,13 +453,13 @@ void IVMMultiBinary::predict(const DataPoint& point, std::vector<double>& probab
 	}
 }
 
-int IVMMultiBinary::predict(const DataPoint& point) const{
+unsigned int IVMMultiBinary::predict(const DataPoint& point) const{
 	std::vector<double> probs(m_amountOfAllClasses, 0.);
 	predict(point, probs);
 	return getLabelFrom(probs);
 }
 
-int IVMMultiBinary::predict(const ClassPoint& point) const{
+unsigned int IVMMultiBinary::predict(const ClassPoint& point) const{
 	std::vector<double> probs(m_amountOfAllClasses, 0.);
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
 		if(m_isClassUsed[i]){

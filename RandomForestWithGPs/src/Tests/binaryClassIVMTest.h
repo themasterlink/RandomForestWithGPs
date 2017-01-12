@@ -82,7 +82,7 @@ GaussianKernelParams sampleParams(OnlineStorage<ClassPoint*>& storage, int numbe
 		const std::vector<double>& means, const std::vector<double>& sds){
 	boost::thread_group group;
 	boost::mutex mutex;
-	const int nrOfParallel = boost::thread::hardware_concurrency();
+	const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
 	double bestLogZ = NEG_DBL_MAX;
 	const double durationOfTraining = CommandSettings::get_samplingAndTraining();
 	std::vector<IVM*> ivms(nrOfParallel);
@@ -110,6 +110,7 @@ GaussianKernelParams sampleParams(OnlineStorage<ClassPoint*>& storage, int numbe
 }
 
 void trainIVM(IVM* ivm, const int verboseLevel){
+	UNUSED(verboseLevel);
 	ivm->train(true, 1);
 }
 

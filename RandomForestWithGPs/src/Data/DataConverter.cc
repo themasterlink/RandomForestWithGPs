@@ -21,7 +21,7 @@ DataConverter::~DataConverter()
 
 void DataConverter::centerAndNormalizeData(DataSets& datas, DataPoint& center, DataPoint& var){
 	if(datas.size() > 0){
-		const int dim = datas.begin()->second[0]->rows();
+		const unsigned int dim = datas.begin()->second[0]->rows();
 		if(center.rows() != dim && var.rows() != dim){ // calc center and var first
 			center = DataPoint::Zero(dim);
 			DataPoint counter = DataPoint::Ones(dim);
@@ -147,7 +147,7 @@ void DataConverter::centerAndNormalizeData(ClassData& data, DataPoint& center, D
 }
 
 void DataConverter::toDataMatrix(const Data& data, Eigen::MatrixXd& result, const int ele){
-	const int min = ele < data.size() ? ele : data.size();
+	const int min = ele < (int) data.size() ? ele : (int) data.size();
 	result.conservativeResize(data[0]->rows(), min);
 	int i = 0;
 	for(DataConstIterator it = data.begin(); it != data.end() && i < min; ++it){
@@ -156,7 +156,7 @@ void DataConverter::toDataMatrix(const Data& data, Eigen::MatrixXd& result, cons
 }
 
 void DataConverter::toDataMatrix(const ClassData& data, Eigen::MatrixXd& result, Eigen::VectorXd& y, const int ele){
-	const int min = ele < data.size() ? ele : data.size();
+	const int min = ele < (int) data.size() ? ele : (int) data.size();
 	result.conservativeResize((long) data[0]->rows(), min);
 	y.conservativeResize(min);
 	int i = 0;
@@ -222,11 +222,11 @@ void DataConverter::toDataMatrix(const DataSets& datas, Eigen::MatrixXd& result,
 }
 
 void DataConverter::toRandDataMatrix(const ClassData& data, Eigen::MatrixXd& result, Eigen::VectorXd& y, const int ele){
-	if(ele == data.size()){
+	if(ele == (int) data.size()){
 		toDataMatrix(data, result, y, ele);
 		return;
 	}
-	const int min = ele < data.size() ? ele : data.size();
+	const int min = ele < (int) data.size() ? ele : (int) data.size();
 	result.conservativeResize(data[0]->rows(), min);
 	std::list<int> alreadyUsed;
 	y.conservativeResize(min);
@@ -250,16 +250,16 @@ void DataConverter::toRandDataMatrix(const ClassData& data, Eigen::MatrixXd& res
 }
 
 void DataConverter::toRandUniformDataMatrix(const ClassData& data, const std::vector<int>& classCounts,
-		Eigen::MatrixXd& result, Eigen::VectorXd& y, const int ele, const int actClass){
-	if(ele >= data.size()){ // use all
+		Eigen::MatrixXd& result, Eigen::VectorXd& y, const int ele, const unsigned int actClass){
+	if(ele >= (int) data.size()){ // use all
 		toDataMatrix(data, result, y, ele);
 		return;
 	}
-	const int amountOfClasses = classCounts.size();
+	const unsigned int amountOfClasses = classCounts.size();
 	result.conservativeResize(data[0]->rows(), ele);
 	y.conservativeResize(ele);
 	std::vector<bool> useWholeClass(amountOfClasses, false);
-	for(int i = 0; i < amountOfClasses; ++i){
+	for(unsigned int i = 0; i < amountOfClasses; ++i){
 		if(classCounts[i] < (int)(ele / (double) amountOfClasses )){
 			useWholeClass[i] = true;
 		}
@@ -267,9 +267,9 @@ void DataConverter::toRandUniformDataMatrix(const ClassData& data, const std::ve
 	int iResCounter = 0;
 	std::vector<bool> usedBeforeEle(data.size(), false);
 	// get a proper distribution in it
-	for(int iActClass = 0; iActClass < amountOfClasses; ++iActClass){
+	for(unsigned int iActClass = 0; iActClass < amountOfClasses; ++iActClass){
 		if(useWholeClass[iActClass]){ // copy whole class into result
-			for(int iEle = 0; iEle < data.size(); ++iEle){
+			for(unsigned int iEle = 0; iEle < (unsigned int) data.size(); ++iEle){
 				if(data[iEle]->getLabel() == iActClass){ // should copy this
 					result.col(iResCounter) = *data[iEle];
 					y[iResCounter] = data[iEle]->getLabel() == actClass ? 1 : -1;
@@ -318,19 +318,19 @@ void DataConverter::toRandUniformDataMatrix(const ClassData& data, const std::ve
 
 void DataConverter::toRandClassAndHalfUniformDataMatrix(const ClassData& data,
 		const std::vector<int>& classCounts, Eigen::MatrixXd& result, Eigen::VectorXd& y,
-		const int ele, const int actClass, std::vector<bool>& usedElements, const std::vector<bool>& blockElements){
-	if(ele >= data.size()){ // use all
+		const int ele, const unsigned int actClass, std::vector<bool>& usedElements, const std::vector<bool>& blockElements){
+	if(ele >= (int) data.size()){ // use all
 		toDataMatrix(data, result, y, ele);
 		return;
 	}
-	const int amountOfClasses = classCounts.size();
+	const unsigned int amountOfClasses = classCounts.size();
 	result.conservativeResize(data[0]->rows(), ele);
 	y.conservativeResize(ele);
 	std::vector<bool> useWholeClass(amountOfClasses, false);
-	const int amountForActClass = min(classCounts[actClass], ele / 2); // should use the half of the actclass or if
+	const int amountForActClass = std::min(classCounts[actClass], ele / 2); // should use the half of the actclass or if
 	const int amountForRestClass = ele - amountForActClass;
 	useWholeClass[actClass] = classCounts[actClass] <= ele / 2;
-	for(int i = 0; i < amountOfClasses; ++i){
+	for(unsigned int i = 0; i < amountOfClasses; ++i){
 		if(i != actClass && classCounts[i] < (int)(amountForRestClass / (double) amountOfClasses )){
 			useWholeClass[i] = true;
 		}
@@ -345,11 +345,11 @@ void DataConverter::toRandClassAndHalfUniformDataMatrix(const ClassData& data,
 	}
 	//std::vector<bool> usedBeforeEle(data.size(), false);
 	// get a proper distribution in it
-	const int amountOfRestClasses = amountOfClasses - 1;
-	for(int iActClass = 0; iActClass < amountOfClasses; ++iActClass){
+	const unsigned int amountOfRestClasses = amountOfClasses - 1;
+	for(unsigned int iActClass = 0; iActClass < amountOfClasses; ++iActClass){
 		const int actualLabel = iActClass == actClass ? 1 : -1;
 		if(useWholeClass[iActClass]){ // copy whole class into result
-			for(int iEle = 0; iEle < data.size(); ++iEle){
+			for(unsigned int iEle = 0; iEle < data.size(); ++iEle){
 				if(data[iEle]->getLabel() == iActClass && !blockElements[iEle]){ // should copy this
 					result.col(iResCounter) = *data[iEle];
 					y[iResCounter] = actualLabel;

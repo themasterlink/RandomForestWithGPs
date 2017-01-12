@@ -29,7 +29,7 @@ public:
 	void train(const ClassData& data, const int amountOfUsedDims,
 			RandomNumberGeneratorForDT& generator);
 
-	double trySplitFor(const int actNode, const int usedNode, const int usedDim, const ClassData& data,
+	double trySplitFor(const int usedNode, const int usedDim, const ClassData& data,
 			const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
 			std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator);
 
@@ -41,15 +41,15 @@ public:
 
 	DecisionTree& operator=(const DecisionTree& tree);
 
-	int getNrOfLeaves(){return pow(2, m_maxDepth);};
+	int getNrOfLeaves(){return pow2(m_maxDepth);};
 
 private:
 	// max depth allowed in this tree
 	const int m_maxDepth;
 	// max number of nodes possible in this tree
-	const int m_maxNodeNr; // = pow(2, m_maxDepth +1) - 1
+	const int m_maxNodeNr; // = pow2(m_maxDepth +1) - 1
 	// max number of nodes, which have children
-	const int m_maxInternalNodeNr; // = pow(2, m_maxDepth) - 1
+	const int m_maxInternalNodeNr; // = pow2(m_maxDepth) - 1
 
 	const int m_amountOfClasses;
 	// contains the split values for the nodes:

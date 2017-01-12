@@ -19,9 +19,9 @@ public:
 
 	void update(Subject* caller, unsigned int event);
 
-	int predict(const DataPoint& point) const;
+	unsigned int predict(const DataPoint& point) const;
 
-	int predict(const ClassPoint& point) const;
+	unsigned int predict(const ClassPoint& point) const;
 
 	void predictData(const Data& points, Labels& labels) const;
 

@@ -94,10 +94,10 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 	m_y = Vector(m_storage.size());
 	int amountOfOneClass = 0;
 	for(unsigned int i = 0; i < m_y.rows(); ++i){ // convert usuall mutli class labels in 1 and -1
-		if(m_storage[i]->getLabel() == m_labelsForClasses.coeff(0)){
+		if(m_storage[i]->getLabel() == getLabelForOne()){
 			m_y.coeffRef(i) = 1;
 			++amountOfOneClass;
-		}else if(((int) m_storage[i]->getLabel() == m_labelsForClasses.coeff(1)) || oneVsAllCase){
+		}else if((m_storage[i]->getLabel() == getLabelForMinusOne()) || oneVsAllCase){
 			m_y.coeffRef(i) = -1;
 		}else{
 			printError("This IVM contains data, which does not belong to one of the two classes!");
@@ -1174,9 +1174,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				denom = 1.0 + deltaTau.coeff(i) * oldSigmaCol.coeff(i); // <=> 1.0 + deltaTau[i] * si[i] for si = Sigma.col(i)
 				const double fac = deltaTau.coeff(i) / denom;
 				// is the same as Sigma -= (deltaTau[i] / denom) * (si * si.transpose()); but faster
-				for(int p = 0; p < m_I.size(); ++p){
+				for(int p = 0; p < (int) m_I.size(); ++p){
 					Sigma.coeffRef(p,p) -= fac * oldSigmaCol.coeff(p) * oldSigmaCol.coeff(p);
-					for(int q = p + 1; q < m_I.size(); ++q){
+					for(int q = p + 1; q < (int) m_I.size(); ++q){
 						const double sub = fac * oldSigmaCol.coeff(p) * oldSigmaCol.coeff(q);
 						Sigma.coeffRef(p,q) -= sub;
 						Sigma.coeffRef(q,p) -= sub;
@@ -1339,9 +1339,9 @@ void IVM::calcLogZ(){
 			muL0.coeffRef(i) = sum / (double) llt.coeff(i,i);
 		}
 		Vector muL1 = Vector::Zero(m_numberOfInducingPoints);
-		for(int i= (int) m_numberOfInducingPoints - 1; i >= 0; --i){
+		for(int i = (int) m_numberOfInducingPoints - 1; i >= 0; --i){
 			double sum = muL0.coeff(i);
-			for(int k = i+1; k < m_numberOfInducingPoints; ++k){
+			for(unsigned int k = i+1; k < m_numberOfInducingPoints; ++k){
 				sum -= (double)llt.coeff(k,i) * muL1.coeff(k);
 			}
 			muL1.coeffRef(i) = sum / (double)llt.coeff(i,i);
@@ -1468,7 +1468,7 @@ double IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const List<unsigne
 	int oneCounter = 0;
 	if(wholeDataSet){
 		for(unsigned int i = 0; i < m_dataPoints; ++i){
-			const int label = m_storage[i]->getLabel();
+			const unsigned int label = m_storage[i]->getLabel();
 			const double prob = predictOnTraining(i);
 			if(label == getLabelForOne()){
 				plusError += 1.0 - prob;
@@ -1482,7 +1482,7 @@ double IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const List<unsigne
 		return (oneError + minusError) * 0.5;
 	}else{
 		for(List<unsigned int>::const_iterator it = testPoints.cbegin(); it != testPoints.cend(); ++it){
-			const int label = m_storage[*it]->getLabel();
+			const unsigned int label = m_storage[*it]->getLabel();
 			const double prob = predictOnTraining(*it);
 			if(label == getLabelForOne()){
 				plusError += 1.0 - prob;
@@ -1504,7 +1504,7 @@ void IVM::testOnTrainingsData(int & amountOfOneChecks, int& amountOfOnesCorrect,
 	amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
 	if(wholeDataSet){
 		for(unsigned int i = 0; i < m_dataPoints; ++i){
-			const int label = m_storage[i]->getLabel();
+			const unsigned int label = m_storage[i]->getLabel();
 			const double prob = predictOnTraining(i);
 			if(label == getLabelForOne()){
 				if(prob > 0.5 + probDiff){
@@ -1520,7 +1520,7 @@ void IVM::testOnTrainingsData(int & amountOfOneChecks, int& amountOfOnesCorrect,
 		}
 	}else{
 		for(List<unsigned int>::const_iterator it = testPoints.cbegin(); it != testPoints.cend(); ++it){
-			const int label = m_storage[*it]->getLabel();
+			const unsigned int label = m_storage[*it]->getLabel();
 			const double prob = predictOnTraining(*it);
 			if(label == getLabelForOne()){
 				if(prob > 0.5 + probDiff){

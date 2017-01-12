@@ -19,12 +19,12 @@
 DecisionTree::DecisionTree(const int maxDepth,
 	const int amountOfClasses)
 		: m_maxDepth(maxDepth),
-			m_maxNodeNr(pow(2, maxDepth + 1) - 1),
-			m_maxInternalNodeNr(pow(2, maxDepth) - 1),
+			m_maxNodeNr(pow2(maxDepth + 1) - 1),
+			m_maxInternalNodeNr(pow2(maxDepth) - 1),
 			m_amountOfClasses(amountOfClasses),
 			m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
 			m_splitDim(m_maxInternalNodeNr + 1, NODE_IS_NOT_USED),
-			m_labelsOfWinningClassesInLeaves(pow(2, maxDepth), UNDEF_CLASS_LABEL){
+			m_labelsOfWinningClassesInLeaves(pow2(maxDepth), UNDEF_CLASS_LABEL){
 }
 
 DecisionTree::DecisionTree(const DecisionTree& tree):
@@ -94,7 +94,7 @@ void DecisionTree::train(const ClassData& data,
 		double actScore = -1000; // TODO check magic number
 		for(int j = 0; j < amountOfUsedData; ++j){ // amount of checks for a specified split
 			const int randElementId = generator.getRandNextDataEle();
-			const double score = trySplitFor(iActNode, randElementId, randDim, data,
+			const double score = trySplitFor(randElementId, randDim, data,
 					dataPosition[iActNode], leftHisto, rightHisto, generator);
 			if(score > actScore){
 				actScore = score;
@@ -110,7 +110,7 @@ void DecisionTree::train(const ClassData& data,
 		if(iActNode == 1){ // splitting like this avoids copying the whole stuff into the dataPosition[1]
 			dataPosition[leftPos].reserve(dataPosition[iActNode].size());
 			dataPosition[rightPos].reserve(dataPosition[iActNode].size());
-			for(int i = 0; i < data.size(); ++i){
+			for(unsigned int i = 0; i < (unsigned int) data.size(); ++i){
 				if((*data[i])[randDim] >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
 					dataPosition[rightPos].push_back(i);
 					++foundDataRight;
@@ -155,8 +155,8 @@ void DecisionTree::train(const ClassData& data,
 			}
 		}
 	}
-	const int leafAmount = pow(2, m_maxDepth);
-	const int offset = leafAmount; // pow(2, maxDepth - 1)
+	const int leafAmount = pow2(m_maxDepth);
+	const int offset = leafAmount; // pow2(maxDepth - 1)
 	for(int i = 0; i < leafAmount; ++i){
 		std::vector<int> histo(m_amountOfClasses, 0);
 		int lastValue = i + offset;
@@ -185,8 +185,7 @@ void DecisionTree::train(const ClassData& data,
 	}
 }
 
-double DecisionTree::trySplitFor(const int actNode,
-		const int usedNode, const int usedDim,
+double DecisionTree::trySplitFor(const int usedNode, const int usedDim,
 		const ClassData& data,
 		const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
 		std::vector<int>& rightHisto,
@@ -263,7 +262,7 @@ int DecisionTree::predict(const DataPoint& point) const{
 				break;
 			}
 		}
-		return m_labelsOfWinningClassesInLeaves[iActNode - pow(2, m_maxDepth)];
+		return m_labelsOfWinningClassesInLeaves[iActNode - pow2(m_maxDepth)];
 	}else{
 		printError("A tree must be trained before it can predict anything!");
 		return UNDEF_CLASS_LABEL;
@@ -282,7 +281,7 @@ void DecisionTree::writeToData(DecisionTreeData& data) const{
 
 void DecisionTree::initFromData(const DecisionTreeData& data){
 	*(const_cast<int*>(&m_maxDepth)) = data.height; // change of const value
-	*(const_cast<int*>(&m_maxNodeNr)) = pow(2, m_maxDepth + 1) - 1;
+	*(const_cast<int*>(&m_maxNodeNr)) = pow2(m_maxDepth + 1) - 1;
 	*(const_cast<int*>(&m_maxInternalNodeNr)) = data.nrOfInternalNodes;
 	*(const_cast<int*>(&m_amountOfClasses)) = data.amountOfClasses;
 	m_splitValues = data.splitValues;

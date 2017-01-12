@@ -68,6 +68,7 @@ void GaussianProcess::train(){
 }
 
 GaussianProcess::Status GaussianProcess::trainBayOpt(double& logZ, const double lambda){
+	UNUSED(lambda);
 	Eigen::MatrixXd K;
 	//const Eigen::VectorXd ones = Eigen::VectorXd::Ones(m_dataPoints);
 	m_kernel.calcCovariance(K);
@@ -149,6 +150,9 @@ void GaussianProcess::trainWithoutKernelOptimize(){
 
 GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 		const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y){
+	UNUSED(dataPoints);
+	UNUSED(dataMat);
+	UNUSED(y);
 /*
 	Eigen::Vector2d min,max;
 	min << 0,0;
@@ -233,7 +237,7 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 			const double lastLearningRate = sqrt(EPSILON + ESquared[j]); // 0,001
 			ESquared[j] = 0.9 * ESquared[j] + 0.1 * dLogZ[j] * dLogZ[j]; // 0,0000000099856
 			const double actLearningRate = sqrt(EPSILON + ESquared[j]);  // 0,0001413704354
-			const double fac = max(0.0,(-counter + 100.0) / 100.0);
+			const double fac = std::max(0.0,(double) (-counter + 100.0) / 100.0);
 			if(j == 1){
 				stepSize[j] = 0.00001; // 0,001222106928
 			}else{

@@ -30,13 +30,13 @@ public:
 	void train();
 
 	// if amountOfTrees == 0 -> the samplingTime is used
-	void setDesiredAmountOfTrees(const int desiredAmountOfTrees){ m_desiredAmountOfTrees = desiredAmountOfTrees; }
+	void setDesiredAmountOfTrees(const unsigned int desiredAmountOfTrees){ m_desiredAmountOfTrees = desiredAmountOfTrees; }
 
-	int predict(const DataPoint& point) const;
+	unsigned int predict(const DataPoint& point) const;
 
-	double predict(const DataPoint& point1, const DataPoint& point2, const int sampleAmount) const;
+	double predict(const DataPoint& point1, const DataPoint& point2, const unsigned int sampleAmount) const;
 
-	double predictPartitionEquality(const DataPoint& point1, const DataPoint& point2, RandomUniformNr& uniformNr, int amountOfSamples) const;
+	double predictPartitionEquality(const DataPoint& point1, const DataPoint& point2, RandomUniformNr& uniformNr, unsigned int amountOfSamples) const;
 
 	void predictData(const Data& points, Labels& labels) const;
 
@@ -67,30 +67,30 @@ private:
 	typedef typename std::pair<DecisionTreeIterator, double> SortedDecisionTreePair;
 	typedef typename std::list<SortedDecisionTreePair > SortedDecisionTreeList;
 
-	void predictDataInParallel(const Data& points, Labels* labels, const int start, const int end) const;
+	void predictDataInParallel(const Data& points, Labels* labels, const unsigned int start, const unsigned int end) const;
 
-	void predictClassDataInParallel(const ClassData& points, Labels* labels, const int start, const int end) const;
+	void predictClassDataInParallel(const ClassData& points, Labels* labels, const unsigned int start, const unsigned int end) const;
 
-	void predictDataProbInParallel(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const int start, const int end) const;
+	void predictDataProbInParallel(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const unsigned int start, const unsigned int end) const;
 
-	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const int amountOfTrees,
-			std::vector<std::vector<int> >* counterForClasses, boost::mutex* mutexForCounter);
+	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const unsigned int amountOfTrees,
+			std::vector<std::vector<unsigned int> >* counterForClasses, boost::mutex* mutexForCounter);
 
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
 	void internalAppendToSortedList(SortedDecisionTreeList* list, DecisionTreeIterator& itTree, double correctVal);
 
-	void updateInParallel(SortedDecisionTreeList* list, const int amountOfSteps,
+	void updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps,
 			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, int* counter);
-public:
+
 	void updateMinMaxValues(unsigned int event);
-private:
+
 	void tryAmountForLayers(RandomNumberGeneratorForDT* generator, const double secondsPerSplit, std::list<unsigned int>* layerValues,
 			boost::mutex* mutex, int* bestLayerSplit, double* bestCorrectness);
 
-	const int m_maxDepth;
+	const unsigned int m_maxDepth;
 
-	const int m_amountOfClasses;
+	const unsigned int m_amountOfClasses;
 
 	int m_amountOfPointsUntilRetrain;
 
@@ -121,7 +121,7 @@ private:
 
 	double m_ownSamplingTime;
 
-	int m_desiredAmountOfTrees;
+	unsigned int m_desiredAmountOfTrees;
 
 	bool m_useBigDynamicDecisionTrees;
 

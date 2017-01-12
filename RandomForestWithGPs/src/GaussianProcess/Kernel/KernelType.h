@@ -9,6 +9,7 @@
 #define GAUSSIANPROCESS_KERNEL_KERNELTYPE_H_
 
 #include "../../Data/ClassKnowledge.h"
+#include "../../Utility/Util.h"
 #include <vector>
 
 class KernelElement {
@@ -39,7 +40,7 @@ public:
 
 	void addToFirstValue(const double value);
 
-	const double getValue() const { return m_values[0]; };
+	double getValue() const { return m_values[0]; };
 
 	void changeAmountOfDims(const bool hasMoreThanOneDim);
 
@@ -213,9 +214,9 @@ public:
 
 	void setAllValuesTo(const double value);
 
-	void writeToFile(const std::string& file){}; // read and write trees to the file
+	void writeToFile(const std::string& file){UNUSED(file);}; // read and write trees to the file
 
-	void readFromFile(const std::string& file){};
+	void readFromFile(const std::string& file){UNUSED(file);};
 };
 
 std::ostream& operator<<(std::ostream& stream, const RandomForestKernelParams& params);

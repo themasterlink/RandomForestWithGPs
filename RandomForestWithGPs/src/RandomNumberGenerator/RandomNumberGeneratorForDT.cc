@@ -24,6 +24,7 @@ RandomNumberGeneratorForDT::~RandomNumberGeneratorForDT(){
 }
 
 void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
+	UNUSED(event);
 	if(caller != nullptr && caller->classType() == ClassTypeSubject::ONLINERANDOMFOREST){
 		OnlineRandomForest* forest = dynamic_cast<OnlineRandomForest*>(caller);
 		OnlineStorage<ClassPoint*>& storage = forest->getStorageRef();

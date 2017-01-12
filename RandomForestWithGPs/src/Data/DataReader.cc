@@ -9,6 +9,7 @@
 #include "DataBinaryWriter.h"
 #include <iostream>
 #include "../Utility/ReadWriterHelper.h"
+#include "../Utility/Util.h"
 #include "ClassKnowledge.h"
 #include "DataConverter.h"
 #include <opencv2/core/core.hpp>
@@ -20,13 +21,17 @@ DataReader::DataReader(){
 DataReader::~DataReader(){
 }
 
-void DataReader::readFromBinaryFile(ClassData& data, const std::string& inputName, const int amountOfData){
+void DataReader::readFromBinaryFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData){
+	UNUSED(amountOfData);
 	std::string line;
 	std::fstream input(inputName);
 	if(input.is_open()){
 		long size;
 		input.read((char*) &size, sizeof(long));
 		data.resize(size);
+		if(amountOfData > size){
+			printWarning("The amount of data provided is smaller than the desired amount!");
+		}
 		for(ClassDataIterator it = data.begin(); it != data.end(); ++it){
 			*it = new ClassPoint();
 			ReadWriterHelper::readPoint(input, **it);
@@ -35,7 +40,7 @@ void DataReader::readFromBinaryFile(ClassData& data, const std::string& inputNam
 			}
 		}
 		if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
-			ClassKnowledge::setAmountOfDims(data[0]->rows());
+			ClassKnowledge::setAmountOfDims((unsigned int) data[0]->rows());
 		}
 		input.close();
 	}else{
@@ -43,7 +48,7 @@ void DataReader::readFromBinaryFile(ClassData& data, const std::string& inputNam
 	}
 }
 
-void DataReader::readFromFile(ClassData& data, const std::string& inputName, const int amountOfData){
+void DataReader::readFromFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData){
 	std::string line;
 	std::ifstream input(inputName);
 	if(input.is_open()){
@@ -55,11 +60,11 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName, con
 				elements.push_back(item);
 			}
 			ClassPoint* newEle = new ClassPoint(elements.size() - 1, std::stoi(elements.back()));
-			for(int i = 0; i < elements.size() - 1; ++i){
+			for(int i = 0; i < (int) elements.size() - 1; ++i){
 				(*newEle)[i] = std::stod(elements[i]);
 			};
 			data.push_back(newEle);
-			if(data.size() == amountOfData){
+			if((unsigned int) data.size() == amountOfData){
 				break;
 			}
 		}
@@ -73,7 +78,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName, con
 }
 
 void DataReader::readFromFile(ClassData& data, const std::string& inputName,
-		const int amountOfData, const unsigned int classNr, const bool readTxt){
+		const unsigned int amountOfData, const unsigned int classNr, const bool readTxt){
 	std::string inputPath(inputName);
 	if(boost::filesystem::exists(inputName + ".binary") && !readTxt){
 		// is a binary file -> faster loading!
@@ -82,8 +87,8 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		if(input.is_open()){
 			long size;
 			input.read((char*) &size, sizeof(long));
-			data.resize(min(amountOfData,(int)size));
-			for(long i = 0; i < min(amountOfData,(int)size); ++i){
+			data.resize(std::min((long) amountOfData, size));
+			for(long i = 0; i < std::min((long) amountOfData,size); ++i){
 				data[i] = new ClassPoint();
 				ReadWriterHelper::readPoint(input, *data[i]);
 				data[i]->setLabel(classNr);
@@ -106,11 +111,11 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 					elements.push_back(item);
 				}
 				ClassPoint* newEle = new ClassPoint(elements.size(), classNr);
-				for(int i = 0; i < elements.size(); ++i){
+				for(unsigned int i = 0; i < elements.size(); ++i){
 					newEle->coeffRef(i) = std::stod(elements[i]);
 				}
 				data.push_back(newEle);
-				if(data.size() == amountOfData){
+				if(data.size() == (unsigned int) amountOfData){
 					break;
 				}
 			}
@@ -135,11 +140,11 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 				if(elements.size() > 0){
 					const unsigned int label = std::stoi(elements.front());
 					ClassPoint* newEle = new ClassPoint(elements.size() - 1, label);
-					for(int i = 1; i < elements.size(); ++i){
+					for(unsigned int i = 1; i < elements.size(); ++i){
 						newEle->coeffRef(i - 1) = std::stod(elements[i]);
 					}
 					data.push_back(newEle);
-					if(data.size() == amountOfData){
+					if(data.size() == (unsigned int) amountOfData){
 						break;
 					}
 				}
@@ -155,7 +160,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		printError("File was not found for .txt or .binary: " << inputName);
 	}
 	if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
-		ClassKnowledge::setAmountOfDims(data[0]->rows());
+		ClassKnowledge::setAmountOfDims((unsigned int) data[0]->rows());
 	}
 }
 
@@ -212,15 +217,15 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 								int_fast32_t cols;
 								input.read((char*) &cols, 4);
 								cols = highEndian2LowEndian(cols);
-								if(labels.size() != size){
+								if(labels.size() != (unsigned long) size){
 									printError("The labels should be read first!");
 									getchar();
 									return;
 								}
-								for(unsigned int i = 0; i < size; ++i){
+								for(unsigned int i = 0; i < (unsigned int) size; ++i){
 									ClassPoint* newEle = new ClassPoint(rows * cols, labels[i]);
-									for(unsigned int r = 0; r < rows; ++r){
-										for(unsigned int c = 0; c < cols; ++c){
+									for(unsigned int r = 0; r < (unsigned int) rows; ++r){
+										for(unsigned int c = 0; c < (unsigned int) cols; ++c){
 											unsigned char ele;
 											input.read((char*) &ele, 1);
 											(*newEle).coeffRef(r * rows + c) = ele;
@@ -233,7 +238,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 								input.read((char*) &size, 4);
 								size = highEndian2LowEndian(size);
 								labels.resize(size);
-								for(unsigned int i = 0; i < size; ++i){
+								for(unsigned int i = 0; i < (unsigned int) size; ++i){
 									input.read((char*) &labels[i], 1);
 								}
 							}else{

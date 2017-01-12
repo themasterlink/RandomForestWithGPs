@@ -196,7 +196,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
 	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
 	std::ofstream file;
-	const int classAmount = predictor->amountOfClasses();
+	const unsigned int classAmount = predictor->amountOfClasses();
 	openSvgFile(fileName, 820., (double) (max[0] - min[0]), (double) (max[1] - min[1]), file);
 	Data points;
 	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
@@ -512,9 +512,9 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 						break;
 					}
 				}
-				if(!addNew && closestsPoints.size() < k){
+				if(!addNew && (int) closestsPoints.size() < k){
 					closestsPoints.push_back(std::pair<double, double>(*itValue, dist));
-				}else if(closestsPoints.size() > k){
+				}else if((int) closestsPoints.size() > k){
 					closestsPoints.pop_back();
 				}
 			}
@@ -594,7 +594,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	std::vector<double> labels;
 	const double elementInX = ceil((double)((max[0] - min[0]) / stepSize[0])) + 1;
 	const double elementInY = ceil((double)((max[1] - min[1]) / stepSize[1])) + 1;
-	const int classAmount = predictor->amountOfClasses();
+	const unsigned int classAmount = predictor->amountOfClasses();
 	Data points;
 	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 		//for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
@@ -627,7 +627,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	for(unsigned int i = 0; i < classAmount; ++i){ // save all colors
 		ColorConverter::HSV2LAB((i + 1) / (double) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
 	}
-	int fac = 32;
+	const unsigned int fac = 32;
 	cv::Mat img(elementInY * fac, elementInX * fac, CV_8UC3, cv::Scalar(0, 0, 0));
 	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 		if(iX >= elementInX){
@@ -896,13 +896,14 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<do
 void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 		const double startX, const double startY, const double startXForData, const double startYForData, const double xSize,
 		const double ySize, const double min, const double max, const double width, const double heigth, const bool useAllXSegments){
+	UNUSED(ySize);
 	file << "<path d=\"M " << startX / 100. * width << " "<< startY / 100. * heigth
 		 << " l " << (100. - 2. * startX) / 100. * width  << " 0"
 		 << " M " << startX / 100. * width << " "<< startY / 100. * heigth
 		 << " l 0 " << (100. - 2. * startY) / 100. * heigth
 		 << "\" fill=\"transparent\" stroke=\"black\"/> \n";
 	const double widthOfMarks = 8;
-	int amountOfSegm = useAllXSegments ? xSize - 1 : std::min(10, (int) xSize - 1);
+	unsigned int amountOfSegm = useAllXSegments ? xSize - 1 : std::min(10, (int) xSize - 1);
 	double segmentWidth = ((100 - startXForData - startXForData) / 100. * width) / amountOfSegm;
 	file << "<path d=\"";//M " << startXForData / 100. * width << " "  << startY / 100. *heigth - widthOfMarks / 2;
 	for(unsigned int i = 0; i <= amountOfSegm; ++i){
@@ -944,7 +945,7 @@ void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 
 void DataWriterForVisu::drawSvgCoords2D(std::ofstream& file,
 		const double startX, const double startY, const double startXForData, const double startYForData, const Eigen::Vector2d& min,
-		const Eigen::Vector2d& max, const int amountOfSegm, const double width, const double heigth){
+		const Eigen::Vector2d& max, const unsigned int amountOfSegm, const double width, const double heigth){
 	file << "<path d=\"M " << startX / 100. * width << " "<< startY / 100. * heigth
 			<< " l " << (100. - 2. * startX) / 100. * width  << " 0"
 			<< " M " << startX / 100. * width << " "<< startY / 100. * heigth

@@ -27,6 +27,7 @@ OnlineRandomForestIVMs::~OnlineRandomForestIVMs() {
 }
 
 void OnlineRandomForestIVMs::update(Subject* caller, unsigned int event){
+	UNUSED(caller);
 	switch(event){
 	case OnlineStorage<ClassPoint*>::APPEND:{
 		printError("This is not implemented yet!");
@@ -52,7 +53,7 @@ void OnlineRandomForestIVMs::update(){
 		OnlineStorage<ClassPoint*>* copyForORFs = new OnlineStorage<ClassPoint*>(m_storage);
 		m_orf.update(copyForORFs, OnlineStorage<ClassPoint*>::APPENDBLOCK);
 		m_orf.update();
-		std::list<int> predictedLabels;
+		std::list<unsigned int> predictedLabels;
 		unsigned int amountOfCorrect = 0;
 		Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(ClassKnowledge::amountOfClasses(), ClassKnowledge::amountOfClasses());
 		for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
@@ -74,8 +75,8 @@ void OnlineRandomForestIVMs::update(){
 		for(unsigned int iClassNr = 0; iClassNr < amountOfClasses(); ++iClassNr){
 			// for each class find all predicted values which should be considered in this class
 			datasForPredictedClasses[iClassNr] = new ClassData();
-			std::list<int>::const_iterator itPredictedLabel = predictedLabels.begin();
-			std::vector<int> classCounter(amountOfClasses(), 0);
+			std::list<unsigned int>::const_iterator itPredictedLabel = predictedLabels.begin();
+			std::vector<unsigned int> classCounter(amountOfClasses(), 0);
 			for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it, ++itPredictedLabel){
 				if(*itPredictedLabel == iClassNr){
 					datasForPredictedClasses[iClassNr]->push_back(*it);
@@ -109,7 +110,7 @@ void OnlineRandomForestIVMs::trainIvm(const int usedIvm, const int nrOfInducingP
 	m_onlineStoragesForIvms[usedIvm]->append(*data); // this append will call the update of the ivm and will start the training
 }
 
-int OnlineRandomForestIVMs::predict(const DataPoint& point) const{
+unsigned int OnlineRandomForestIVMs::predict(const DataPoint& point) const{
 	const int label = m_orf.predict(point);
 	if(label != UNDEF_CLASS_LABEL){
 		if(m_ivms[label] != nullptr){
@@ -120,7 +121,7 @@ int OnlineRandomForestIVMs::predict(const DataPoint& point) const{
 	return UNDEF_CLASS_LABEL;
 }
 
-int OnlineRandomForestIVMs::predict(const ClassPoint& point) const{
+unsigned int OnlineRandomForestIVMs::predict(const ClassPoint& point) const{
 	const int label = m_orf.predict(point);
 	if(label != UNDEF_CLASS_LABEL){
 		if(m_ivms[label] != nullptr){
@@ -152,7 +153,7 @@ void OnlineRandomForestIVMs::predictData(const Data& points, Labels& labels, std
 	int i = 0;
 	for(DataConstIterator it = points.begin(); it != points.end(); ++it, ++i){
 		if(m_ivms[labels[i]] != nullptr){
-			for(int j = 0; j < amountOfClasses(); ++j){
+			for(unsigned int j = 0; j < amountOfClasses(); ++j){
 				probabilities[i][j] = 0;
 			}
 			m_ivms[labels[i]]->predict(**it, probabilities[i]);

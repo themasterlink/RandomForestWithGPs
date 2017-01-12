@@ -67,7 +67,7 @@ void ThreadMaster::threadHasFinished(InformationPackage* package){
 void ThreadMaster::run(){
 	int nrOfInducingPoints;
 	Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
-	const int amountOfPointsNeededForIvms = nrOfInducingPoints * 1.2;
+//	const int amountOfPointsNeededForIvms = nrOfInducingPoints * 1.2;
 	while(true){
 		m_mutex.lock();
 //		if(m_counter < m_maxCounter){
@@ -85,7 +85,7 @@ void ThreadMaster::run(){
 				printInPackageOnScreen(*it, "This thread has only 1 element");
 			}
 		}
-		sortWaitingList(amountOfPointsNeededForIvms, minAmountOfPoints, maxAmountOfPoints);
+		sortWaitingList(minAmountOfPoints, maxAmountOfPoints);
 		while(m_counter < m_maxCounter && m_waitingList.size() > 0){
 			PackageList::const_iterator selectedValue = m_waitingList.begin();
 			if(selectedValue != m_waitingList.end()){
@@ -148,7 +148,7 @@ void ThreadMaster::run(){
 	}
 }
 
-void ThreadMaster::sortWaitingList(const int amountOfPointsNeededForIvms, const int minAmountOfPoints, const int maxAmountOfPoints){
+void ThreadMaster::sortWaitingList(const int minAmountOfPoints, const int maxAmountOfPoints){
 	if(m_waitingList.size() > 1){
 		for(unsigned int k = 0; k < m_waitingList.size(); ++k){
 			bool somethingChange = false;

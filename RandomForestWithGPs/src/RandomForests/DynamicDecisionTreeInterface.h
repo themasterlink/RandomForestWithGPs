@@ -15,7 +15,7 @@ class DynamicDecisionTreeInterface : public PredictorMultiClass {
 public:
 	virtual ~DynamicDecisionTreeInterface(){};
 
-	virtual void train(int amountOfUsedDims, RandomNumberGeneratorForDT& generator) = 0;
+	virtual void train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator) = 0;
 
 	virtual bool predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const = 0;
 };

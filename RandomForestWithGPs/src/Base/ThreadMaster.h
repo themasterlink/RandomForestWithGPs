@@ -35,7 +35,7 @@ public:
 private:
 	static void run();
 
-	static void sortWaitingList(const int amountOfPointsNeededForIvms, const int minAmountOfPoints, const int maxAmountOfPoints);
+	static void sortWaitingList(const int minAmountOfPoints, const int maxAmountOfPoints);
 
 	ThreadMaster();
 	virtual ~ThreadMaster();

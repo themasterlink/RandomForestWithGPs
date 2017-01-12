@@ -28,7 +28,7 @@ void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv){
 	}
 	int maxLength = 0;
 	for(unsigned int i = 0; i < ClassKnowledge::amountOfClasses(); ++i){
-		if(ClassKnowledge::getNameFor(i).length() > maxLength){
+		if((int) ClassKnowledge::getNameFor(i).length() > maxLength){
 			maxLength = ClassKnowledge::getNameFor(i).length();
 		}
 	}
@@ -63,7 +63,7 @@ void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv){
 		for(int k = ClassKnowledge::getNameFor(i).length(); k < maxLength; ++k)
 			stream2 << " ";
 		for(int j = 0; j < conv.rows(); ++j){
-			const int covMaxSize = max(maxSize[j], (int) ClassKnowledge::getNameFor(j).length());
+			const int covMaxSize = std::max(maxSize[j], (int) ClassKnowledge::getNameFor(j).length());
 			const int amountOfAct = amountOfDigits((int)conv(i,j));
 			for(int k = 0; k < covMaxSize - amountOfAct; ++k){
 				stream2 << " ";

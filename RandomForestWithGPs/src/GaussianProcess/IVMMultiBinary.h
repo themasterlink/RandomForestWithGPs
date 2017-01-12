@@ -23,9 +23,9 @@ public:
 
 	void train();
 
-	int predict(const DataPoint& point) const;
+	unsigned int predict(const DataPoint& point) const;
 
-	int predict(const ClassPoint& point) const;
+	unsigned int predict(const ClassPoint& point) const;
 
 	void predict(const DataPoint& point, std::vector<double>& probabilities) const;
 
@@ -45,7 +45,7 @@ private:
 
 	void retrainAllIvmsIfNeeded(InformationPackage* wholePackage);
 
-	void trainInParallel(IVM* ivm, const int usedIvm, const double trainTime, InformationPackage* package);
+	void trainInParallel(IVM* ivm, const int usedIvm, InformationPackage* package);
 
 	void predictDataInParallel(IVM* ivm, const Data& points, const int usedIvm,
 			std::vector< std::vector<double> >* probabilities, InformationPackage* package) const;

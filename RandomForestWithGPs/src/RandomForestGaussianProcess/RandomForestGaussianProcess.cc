@@ -101,7 +101,7 @@ void RandomForestGaussianProcess::train(){
 	m_forest.predictData(data, guessedLabels);
 	// count the occurence of each pre class of the random forest
 	std::vector<int> countClasses(m_amountOfUsedClasses, 0);
-	for(int i = 0; i < guessedLabels.size(); ++i){
+	for(unsigned int i = 0; i < (unsigned int) guessedLabels.size(); ++i){
 		countClasses[guessedLabels[i]] += 1;
 	}
 	// sort the data based on the pre classes of the rf
@@ -196,7 +196,7 @@ void RandomForestGaussianProcess::train(){
 					usleep(0.35 * 1e6);
 				}
 				group.add_thread(new boost::thread(boost::bind(&RandomForestGaussianProcess::trainInParallel, this, iActClass, amountOfDataInRfRes,
-						min(maxNrOfPointsForBayesOpt, pointsPerClassForBayOpt * amountOfClassesOverThreshold),
+						std::min(maxNrOfPointsForBayesOpt, pointsPerClassForBayOpt * amountOfClassesOverThreshold),
 						iActRfRes, dataOfActRf, classCounts, m_gps[iActRfRes][iActClass])));
 				/*trainInParallel(iActClass, amountOfDataInRfRes,
 						pointsPerClassForBayOpt, amountOfClassesOverThreshold,
@@ -218,7 +218,7 @@ void RandomForestGaussianProcess::train(){
 	std::cout << "Amount of gps: " << c << std::endl;
 }
 
-void RandomForestGaussianProcess::trainInParallel(const int iActClass,
+void RandomForestGaussianProcess::trainInParallel(const unsigned int iActClass,
 		const int amountOfDataInRfRes, const int amountOfHyperPoints,
 		const int iActRfClass, const ClassData& dataOfActRf, const std::vector<int>& classCounts,
 		GaussianProcess* actGp) {
@@ -239,7 +239,7 @@ void RandomForestGaussianProcess::trainInParallel(const int iActClass,
 	std::string betweenNames = ", for " + m_classNames[iActClass] + " in " + m_classNames[iActRfClass] + ", which has " + number2String(amountOfDataInRfRes);
 	m_output.printSwitchingColor("Start parallel" + betweenNames);
 	Eigen::VectorXd y(amountOfDataInRfRes);
-	const int size = min(300, (int)(dataOfActRf.size()));
+	const int size = std::min(300, (int)(dataOfActRf.size()));
 	int bestRight = -1;
 	double len = 10, sigmaF = 0.4;
 	StopWatch sw;
@@ -358,7 +358,7 @@ std::cout << "One: " << oneCounter << std::endl;
 	--m_nrOfRunningThreads;
 }
 
-int RandomForestGaussianProcess::predict(const DataPoint& point, std::vector<double>& prob) const {
+unsigned int RandomForestGaussianProcess::predict(const DataPoint& point, std::vector<double>& prob) const {
 	const int rfLabel = m_forest.predict(point);
 	return rfLabel;
 	if(m_pureClassLabelForRfClass[rfLabel] != GP_USED){ // is pure
@@ -396,7 +396,7 @@ int RandomForestGaussianProcess::predict(const DataPoint& point, std::vector<dou
 	return std::distance(prob.cbegin(), std::max_element(prob.cbegin(), prob.cend()));
 }
 
-int RandomForestGaussianProcess::predict(const DataPoint& point) const{
+unsigned int RandomForestGaussianProcess::predict(const DataPoint& point) const{
 	std::vector<double> prob;
 	return predict(point, prob);
 }

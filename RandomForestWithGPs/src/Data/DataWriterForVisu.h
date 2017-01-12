@@ -87,7 +87,7 @@ private:
 
 	static void drawSvgCoords2D(std::ofstream& file,
 			const double startX, const double startY, const double startXForData, const double startYForData, const Eigen::Vector2d& min,
-			const Eigen::Vector2d& max, const int amountOfSegm, const double width, const double heigth);
+			const Eigen::Vector2d& max, const unsigned int amountOfSegm, const double width, const double heigth);
 
 
 	DataWriterForVisu();

@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 26
+			"height": 40
 		}
 	},
 	"IVM": {
@@ -51,7 +51,7 @@
 		"useBigDynmaicDecisionTrees": "true",
 		"layerAmountOfBigDDT": 2,
 		"determineBestLayerAmount": "true",
-		"printErrorForTraining": "true"
+		"printErrorForTraining": "false"
 	},
 	"Kernel": {
 		"path": "..\/realTest\/kernelData.kernel"

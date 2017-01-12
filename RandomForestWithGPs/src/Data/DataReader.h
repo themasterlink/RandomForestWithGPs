@@ -15,13 +15,13 @@ class DataReader{
 
 public:
 
-	static void readFromFile(ClassData& data, const std::string& inputName, const int amountOfData);
+	static void readFromFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData);
 
-	static void readFromBinaryFile(ClassData& data, const std::string& inputName, const int amountOfData);
+	static void readFromBinaryFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData);
 
 	static void readFromFiles(DataSets& dataSets, const std::string& folderLocation, const int amountOfData, const bool readTxt, bool& didNormalizeData);
 
-	static void readFromFile(ClassData& data, const std::string& inputName, const int amountOfData, const unsigned int classNr, const bool readTxt = false);
+	static void readFromFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData, const unsigned int classNr, const bool readTxt = false);
 
 private:
 
