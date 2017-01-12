@@ -36,7 +36,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	m_minMaxUsedDataFactor[1] = val;
 	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	Settings::getValue("OnlineRandomForest.useBigDynmaicDecisionTrees", m_useBigDynamicDecisionTrees);
-	//setDesiredAmountOfTrees(150);
+	setDesiredAmountOfTrees(250);
 }
 
 OnlineRandomForest::~OnlineRandomForest(){
@@ -249,7 +249,7 @@ void OnlineRandomForest::tryAmountForLayers(RandomNumberGeneratorForDT* generato
 			StopWatch sw;
 			DecisionTreesContainer trees;
 			while(sw.elapsedSeconds() < secondsPerSplit){
-//				printOnScreen("Train new tree! " << trees.size());
+				printOnScreen("Train new tree! " << trees.size());
 				trees.push_back(new BigDynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, layerAmount));
 				trees.back()->train(m_amountOfUsedDims, *generator);
 			}
@@ -321,10 +321,10 @@ bool OnlineRandomForest::update(){
 	}else{
 		std::list<std::pair<DecisionTreeIterator, double> >* list = new std::list<std::pair<DecisionTreeIterator, double> >();
 		sortTreesAfterPerformance(*list);
-		if(list->begin()->second > 90.){
-			printDebug("No update needed!");
-			return false;
-		}
+//		if(list->begin()->second > 90.){
+//			printDebug("No update needed!");
+//			return false;
+//		}
 		boost::thread_group group;
 		const unsigned int nrOfParallel = std::min((int) boost::thread::hardware_concurrency(), (int) m_trees.size());
 		boost::mutex* mutex = new boost::mutex();

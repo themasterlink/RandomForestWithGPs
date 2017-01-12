@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 40
+			"height": 30
 		}
 	},
 	"IVM": {
@@ -37,7 +37,7 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
-		"folderLocReal": "..\/mnistOrg\/",
+		"folderLocReal": "..\/washington\/",
 		"folderLocFake": "..\/fakeData\/",
 		"normalizeData": "true",
 		"readFromFolder": "true"
