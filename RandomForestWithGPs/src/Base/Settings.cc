@@ -10,6 +10,7 @@
 boost::property_tree::ptree Settings::m_root;
 boost::mutex Settings::m_mutex;
 bool Settings::m_init = false;
+std::string Settings::m_filePath = "";
 
 Settings::Settings(){
 	// TODO Auto-generated constructor stub
@@ -21,6 +22,7 @@ Settings::~Settings(){
 }
 
 void Settings::init(const std::string& settingsfile){
+	m_filePath = settingsfile;
 	m_mutex.lock();
 	try{
 		boost::property_tree::read_json(settingsfile, m_root);

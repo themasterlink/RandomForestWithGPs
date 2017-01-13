@@ -255,7 +255,7 @@ void OnlineRandomForest::tryAmountForLayers(RandomNumberGeneratorForDT* generato
 			}
 			unsigned int correctAmount = 0;
 			for(unsigned int i = 0; i < m_storage.size(); ++i){
-				std::vector<unsigned int> classes(trees.size(), 0);
+				std::vector<unsigned int> classes(amountOfClasses(), 0);
 				for(DecisionTreeConstIterator it = trees.begin(); it != trees.end(); ++it){
 					++classes[(**it).predict(*m_storage[i])];
 				}

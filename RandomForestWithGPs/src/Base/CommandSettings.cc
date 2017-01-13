@@ -58,3 +58,25 @@ void CommandSettings::setValues(boost::program_options::variables_map& vm){
 	}
 }
 
+void CommandSettings::printAllSettingsToLog(){
+	std::stringstream line;
+	line << "Program was started with:";
+	for(std::list<Param>::iterator itParam = m_params.begin(); itParam != m_params.end(); ++itParam){
+		line << " ";
+		const std::string type = itParam->type();
+		if(type == "bool"){
+			if(*(bool*)itParam->ref){
+				line << itParam->name;
+			}
+		}else if(type == "int"){
+			line << itParam->name << " " << *(int*)itParam->ref;
+		}else if(type == "double"){
+			line << itParam->name << " " << *(double*)itParam->ref;
+		}else if(type == "string" || type == "std::string"){
+			line << itParam->name << " " << *(std::string*)itParam->ref;
+		}else{
+			printError("Unknown type: " << type);
+		}
+	}
+	Logger::addSpecialLineToFile(line.str(), "CommandSettings");
+}

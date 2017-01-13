@@ -29,7 +29,7 @@ void DataWriterForVisu::writeData(const std::string& fileName, const ClassData& 
 			return;
 		}
 		std::ofstream file;
-		file.open(fileName);
+		file.open(Logger::getActDirectory() + fileName);
 		if(file.is_open()){
 			for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it){
 				file << (**it)[x] << " " << (**it)[y] << " " << (*it)->getLabel() << "\n";
@@ -96,7 +96,7 @@ void DataWriterForVisu::generateGrid(const std::string& fileName,
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
 	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	std::ofstream file;
-	file.open(fileName);
+	file.open(Logger::getActDirectory() + fileName);
 	Data points;
 	points.reserve(amountOfPointsOnOneAxis * (amountOfPointsOnOneAxis + 1));
 	int amount = 0;
@@ -1034,7 +1034,7 @@ void DataWriterForVisu::drawSvgDots(std::ofstream& file, const Eigen::VectorXd v
 }
 
 bool DataWriterForVisu::openSvgFile(const std::string& fileName, const double width, const double problemWidth, const double problemHeight, std::ofstream& file){
-	file.open(fileName);
+	file.open(Logger::getActDirectory() + fileName);
 	const double height = (width / problemHeight *  problemWidth);
 	file << "<svg version=\"1.1\" " <<
 			"\nbaseProfile=\"full\"" <<

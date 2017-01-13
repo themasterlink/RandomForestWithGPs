@@ -25,15 +25,19 @@ public:
 
 	static void forcedWrite();
 
-	static std::string nameOfLogFile(){ return m_filePath; };
+	static std::string nameOfLogFile(){ return m_fileName; };
 
 	static bool isUsed(){ return m_init;}
+
+	static std::string getActDirectory(){ return m_actualDirectory; };
 
 private:
 
 	static void write();
 
 	static void run();
+
+	static std::string m_actualDirectory;
 
 	static boost::mutex m_mutex;
 
@@ -45,7 +49,7 @@ private:
 
 	static std::string m_text;
 
-	static std::string m_filePath;
+	static std::string m_fileName;
 
 	static double m_timeToSleep;
 

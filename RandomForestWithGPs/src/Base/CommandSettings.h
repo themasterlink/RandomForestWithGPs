@@ -57,6 +57,8 @@ public:
 
 	static void setValues(boost::program_options::variables_map& vm);
 
+	static void printAllSettingsToLog();
+
 private:
 	static std::list<Param> m_params;
 

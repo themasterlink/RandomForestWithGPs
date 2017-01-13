@@ -90,7 +90,7 @@
 	},
 	"Logger": {
 		"useLogger": "true",
-		"filePath": "log.txt"
+		"fileName": "log.txt"
 	},
 	"RealData": {
 		"folderPath": "..\/realTest\/"

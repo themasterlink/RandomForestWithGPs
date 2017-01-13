@@ -16,7 +16,7 @@ BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& stora
 	if(layerAmount < 1){ // 0 and -1, ...
 		Settings::getValue("OnlineRandomForest.layerAmountOfBigDDT", amountOfLayers);
 	}
-	const int amountForFast = std::min(std::max(layerAmountForFast, 1), amountOfLayers);
+	const int amountForFast = std::min(std::max(layerAmountForFast, 2), amountOfLayers);
 	const int amountForSmall = std::max(amountOfLayers - amountForFast, 0);
 	if(m_maxDepth % amountOfLayers == 0){ // that is the easy case
 		m_depthPerLayer = m_maxDepth / amountOfLayers;
@@ -85,7 +85,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 		bool saveDataPositions = true;  // only in the last layer the data positions don't need to be saved
 		unsigned int depthInThisLayer = m_depthPerLayer;
 		if(iTreeLayer + 1 == m_fastInnerTrees.size() && m_smallInnerTrees.size() == 0){ // is the last layer
-			saveDataPositions = false;
+//			saveDataPositions = false;
 			depthInThisLayer = m_maxDepth - (m_fastInnerTrees.size() - 1) * m_depthPerLayer;
 		}
 //		printOnScreen("iTreeLayer: " << iTreeLayer);
@@ -139,7 +139,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 		bool saveDataPositions = true;  // only in the last layer the data positions don't need to be saved
 		unsigned int depthInThisLayer = m_depthPerLayer;
 		if(iTreeSmallLayer + 1 == m_smallInnerTrees.size()){ // is the last layer
-			saveDataPositions = false;
+//			saveDataPositions = false;
 			depthInThisLayer = m_maxDepth - (m_fastInnerTrees.size() + m_smallInnerTrees.size() - 1) * m_depthPerLayer;
 		}
 //		const unsigned int leavesForTreesInThisLayer = pow2(depthInThisLayer); // amount of leaves of one of the layertrees

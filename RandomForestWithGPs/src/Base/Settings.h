@@ -36,6 +36,8 @@ public:
 
 	static double getDirectDoubleValue(const std::string& nameOfValue);
 
+	static std::string getFilePath(){ return m_filePath; };
+
 private:
 	Settings();
 	virtual ~Settings();
@@ -45,6 +47,8 @@ private:
 	static boost::mutex m_mutex;
 
 	static bool m_init;
+
+	static std::string m_filePath;
 };
 
 template<typename T>

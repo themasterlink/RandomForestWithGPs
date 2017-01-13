@@ -266,6 +266,7 @@ int main(int ac, char** av){
 		exit(0);
 	}
 	Logger::start();
+	CommandSettings::printAllSettingsToLog();
 	if(CommandSettings::get_samplingAndTraining() > 0){
 		printOnScreen("Training time: " << TimeFrame(CommandSettings::get_samplingAndTraining()));
 	}
