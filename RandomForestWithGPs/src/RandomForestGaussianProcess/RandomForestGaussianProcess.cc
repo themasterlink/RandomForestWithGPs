@@ -75,17 +75,17 @@ void RandomForestGaussianProcess::train(){
 	if(!m_didLoadTree){
 		// calc min used data for training of random forest bool useFixedValuesForMinMaxUsedData;
 		bool useFixedValuesForMinMaxUsedData;
-		Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
+		Settings::getValue("MinMaxUsedSplits.useFixedValuesForMinMaxUsedSplits", useFixedValuesForMinMaxUsedData);
 		Eigen::Vector2i minMaxUsedData;
 		if(useFixedValuesForMinMaxUsedData){
 			int minVal = 0, maxVal = 0;
-			Settings::getValue("MinMaxUsedData.minValue", minVal);
-			Settings::getValue("MinMaxUsedData.maxValue", maxVal);
+			Settings::getValue("MinMaxUsedSplits.minValue", minVal);
+			Settings::getValue("MinMaxUsedSplits.maxValue", maxVal);
 			minMaxUsedData << minVal, maxVal;
 		}else{
 			double minVal = 0, maxVal = 0;
-			Settings::getValue("MinMaxUsedData.minValueFraction", minVal);
-			Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
+			Settings::getValue("MinMaxUsedSplits.minValueFractionDependsOnDataSize", minVal);
+			Settings::getValue("MinMaxUsedSplits.maxValueFractionDependsOnDataSize", maxVal);
 			minMaxUsedData << (int) (minVal * data.size()),  (int) (maxVal * data.size());
 		}
 		std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";

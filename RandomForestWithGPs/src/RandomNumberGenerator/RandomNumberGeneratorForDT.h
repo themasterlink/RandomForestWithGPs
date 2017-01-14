@@ -25,7 +25,7 @@ public:
 	typedef boost::variate_generator<base_generator_type, uniform_distribution_int> variante_generator;
 
 	RandomNumberGeneratorForDT(const int dim, const int minUsedData, const int maxUsedData,
-			const int amountOfData, const int seed);
+			const int amountOfData, const int seed, const int amountOfDataUsedPerTree);
 
 	virtual ~RandomNumberGeneratorForDT();
 
@@ -45,14 +45,21 @@ public:
 
 	void update(Subject* caller, unsigned int event);
 
-	bool useDim(const int dim){ return m_useDim[dim]; }
+	bool useDim(const int dim) const{ return m_useDim[dim]; }
+
+	bool useWholeDataSet() const{ return m_stepSize < 1; };
+
+	unsigned int getRandStepOverStorage();
 
 private:
+	int m_stepSize;  // > 1 means no step size used
+
 	base_generator_type m_generator;
 
 	uniform_distribution_int m_uniformDistDimension;
 	uniform_distribution_int m_uniformDistUsedData;
 	uniform_distribution_int m_uniformDistData;
+	uniform_distribution_int m_uniformStepOverStorage;
 
 	uniform_distribution_int m_uniformDistRange;
 
@@ -61,10 +68,12 @@ private:
 	variante_generator m_varGenDimension;
 	variante_generator m_varGenUsedData;
 	variante_generator m_varGenData;
+	variante_generator m_varGenStepOverStorage;
 
 	boost::mutex m_mutex;
 
 	std::vector<bool> m_useDim;
+
 };
 
 inline int RandomNumberGeneratorForDT::getRandDim(){
@@ -78,6 +87,11 @@ inline int RandomNumberGeneratorForDT::getRandAmountOfUsedData(){
 inline int RandomNumberGeneratorForDT::getRandNextDataEle(){
 	return m_varGenData();
 }
+
+inline unsigned int RandomNumberGeneratorForDT::getRandStepOverStorage(){
+	return m_varGenStepOverStorage();
+}
+
 
 inline void RandomNumberGeneratorForDT::setRandFromRange(const int min, const int max){
 	m_uniformDistRange.param(uniform_distribution_int::param_type(min, max));
@@ -93,9 +107,9 @@ inline int RandomNumberGeneratorForDT::getRandFromRange(){
 
 inline double RandomNumberGeneratorForDT::getRandSplitValueInDim(const unsigned int dim){
 	if(m_uniformSplitValues.size() > dim && m_useDim[dim]){
-		m_mutex.lock();
+//		m_mutex.lock();
 		const double val =  m_uniformSplitValues[dim](m_generator);
-		m_mutex.unlock();
+//		m_mutex.unlock();
 		return val;
 	}else{
 		printError("The rand split value generator has not been set yet!");

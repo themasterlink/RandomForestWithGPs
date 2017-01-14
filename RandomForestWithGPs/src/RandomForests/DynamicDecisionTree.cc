@@ -138,13 +138,26 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			dataPosition[leftPos].reserve(dataPosition[iActNode].size());
 			dataPosition[rightPos].reserve(dataPosition[iActNode].size());
 			if(m_useOnlyThisDataPositions == nullptr){
-				for(unsigned int i = 0; i < m_storage.size(); ++i){
-					if(m_storage[i]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
-						dataPosition[rightPos].push_back(i);
-						++foundDataRight;
-					}else{
-						dataPosition[leftPos].push_back(i);
-						++foundDataLeft;
+				if(generator.useWholeDataSet()){
+					for(unsigned int i = 0; i < m_storage.size(); ++i){
+						if(m_storage[i]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
+							dataPosition[rightPos].push_back(i);
+							++foundDataRight;
+						}else{
+							dataPosition[leftPos].push_back(i);
+							++foundDataLeft;
+						}
+					}
+				}else{
+					// -1 that the first value in the storage is used too
+					for(unsigned int i = generator.getRandStepOverStorage() - 1; i < m_storage.size(); i += generator.getRandStepOverStorage()){
+						if(m_storage[i]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
+							dataPosition[rightPos].push_back(i);
+							++foundDataRight;
+						}else{
+							dataPosition[leftPos].push_back(i);
+							++foundDataLeft;
+						}
 					}
 				}
 			}else{

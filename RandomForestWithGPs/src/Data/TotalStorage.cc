@@ -52,17 +52,32 @@ void TotalStorage::readData(const int amountOfData){
 			const int testNr = 2;
 			boost::filesystem::path targetDir(folderLocation);
 			boost::filesystem::directory_iterator end_itr;
+			ClassData wholeTrainingSet;
 			for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 				if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".csv"){
 					const std::string inputPath(itr->path().c_str());
 					if(!endsWith(inputPath, "rgbd_features_train_split" + number2String(testNr) + "_5th.csv")){
 						printOnScreen("As training:");
-						DataReader::readFromFile(m_trainSet, inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
+						DataReader::readFromFile(wholeTrainingSet, inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
 					}else{
 						printOnScreen("As test:");
 						DataReader::readFromFile(m_testSet,  inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
 					}
 				}
+			}
+			const unsigned int jumper = 1;
+			if(jumper > 1){
+				m_trainSet.reserve(wholeTrainingSet.size() + jumper);
+				for(unsigned int i = 0; i < wholeTrainingSet.size(); ++i){
+					if(i % jumper == 0){
+						m_trainSet.push_back(wholeTrainingSet[i]);
+					}else{
+						delete wholeTrainingSet[i]; // remove point from the memory
+					}
+				}
+				printOnScreen("Jumper for washington is " << jumper << " reduced from: " << wholeTrainingSet.size() << " to " << m_trainSet.size());
+			}else{
+				m_trainSet = wholeTrainingSet;
 			}
 			std::set<unsigned int> classes;
 			for(ClassDataConstIterator it = m_trainSet.begin(); it != m_trainSet.end(); ++it){

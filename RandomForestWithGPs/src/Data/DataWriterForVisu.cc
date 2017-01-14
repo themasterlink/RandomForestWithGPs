@@ -295,7 +295,7 @@ void DataWriterForVisu::writeHisto(const std::string&fileName, const std::list<d
 	std::ofstream file;
 	openSvgFile(fileName, 820., 1., 1., file);
 	const double startOfData = 7.5;
-	drawSvgCoords(file, 5., 5., 7.5, 7.5, nrOfBins + 1, maxCounter, 0, maxCounter, 820, 820, true);
+	drawSvgCoords(file, 5., 5., 7.5, 7.5, nrOfBins + 1, maxCounter, 0, 100., 820, 820, true, 0., 1.);
 	const double dataWidth = (100.0 - 2. * startOfData);
 	const double width = (1. / (double) nrOfBins *  (dataWidth * 0.95));
 	const double offset = (1. / (double) nrOfBins * (dataWidth * 0.05));
@@ -895,7 +895,8 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<do
 
 void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 		const double startX, const double startY, const double startXForData, const double startYForData, const double xSize,
-		const double ySize, const double min, const double max, const double width, const double heigth, const bool useAllXSegments){
+		const double ySize, const double min, const double max, const double width, const double heigth, const bool useAllXSegments
+		, const double minX, const double maxX){
 	UNUSED(ySize);
 	file << "<path d=\"M " << startX / 100. * width << " "<< startY / 100. * heigth
 		 << " l " << (100. - 2. * startX) / 100. * width  << " 0"
@@ -912,11 +913,20 @@ void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 			 << " l " << "0 " << widthOfMarks;
 	}
 	file << "\" fill=\"transparent\" stroke=\"black\"/> \n";
-	for(unsigned int i = 0; i <= amountOfSegm; ++i){ // transform=\"translate(0,10) scale(1,-1) translate(0,-10)\"
-		file << "<text x=\"" << startXForData / 100. * width + i * segmentWidth
-			 << "\" y=\"" << -(startY / 100. * heigth - widthOfMarks / 2. - 20)<< "\" transform=\"scale(1,-1)\" "
-			 << "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
-			 << (int)((xSize - 1) / amountOfSegm * i) + 1 << "</text>\n";
+	if(minX == maxX){
+		for(unsigned int i = 0; i <= amountOfSegm; ++i){ // transform=\"translate(0,10) scale(1,-1) translate(0,-10)\"
+			file << "<text x=\"" << startXForData / 100. * width + i * segmentWidth
+					<< "\" y=\"" << -(startY / 100. * heigth - widthOfMarks / 2. - 20)<< "\" transform=\"scale(1,-1)\" "
+					<< "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
+					<< (int)((xSize - 1) / amountOfSegm * i) + 1 << "</text>\n";
+		}
+	}else{
+		for(unsigned int i = 0; i <= amountOfSegm; ++i){ // transform=\"translate(0,10) scale(1,-1) translate(0,-10)\"
+			file << "<text x=\"" << startXForData / 100. * width + i * segmentWidth
+					<< "\" y=\"" << -(startY / 100. * heigth - widthOfMarks / 2. - 20)<< "\" transform=\"scale(1,-1)\" "
+					<< "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
+					<< number2String(((maxX - minX) * i / (double) amountOfSegm + minX), 3) << "</text>\n";
+		}
 	}
 	amountOfSegm = 10;
 	segmentWidth = ((100 - startXForData - startXForData) / 100. * width) / amountOfSegm;
@@ -931,7 +941,7 @@ void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 		file << "<text x=\"" << (startY / 100. * heigth - widthOfMarks / 2. - 20)
 			 << "\" y=\"" << -(startXForData / 100. * width + i * segmentWidth) << "\" transform=\"scale(1,-1)\" "
 			 << "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
-			 << number2String(((max - min) * i / (double) amountOfSegm + min), 5) << "</text>\n";
+			 << number2String(((max - min) * i / (double) amountOfSegm + min), 3) << "</text>\n";
 	}
 	file << "<path d=\"M " << startX / 100. * heigth - widthOfMarks / 2 << " " << (100. - startY) / 100. * width
 		 << " l " << widthOfMarks << " " << 0 << " l " << - widthOfMarks / 2.0 << " " << widthOfMarks * 1.5

@@ -44,6 +44,8 @@ public:
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
 
+	void predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
+
 	void getLeafNrFor(std::vector<int>& leafNrs);
 
 	int getNrOfTrees() const { return m_trees.size(); };
@@ -85,8 +87,11 @@ private:
 
 	void updateMinMaxValues(unsigned int event);
 
-	void tryAmountForLayers(RandomNumberGeneratorForDT* generator, const double secondsPerSplit, std::list<unsigned int>* layerValues,
-			boost::mutex* mutex, int* bestLayerSplit, double* bestCorrectness);
+	void tryAmountForLayers(RandomNumberGeneratorForDT* generator, const double secondsPerSplit, std::list<std::pair<unsigned int, unsigned int> >* layerValues,
+			boost::mutex* mutex, std::pair<int, int>* bestLayerSplit, double* bestCorrectness);
+
+	void predictClassDataProbInParallel(const ClassData& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const unsigned int start, const unsigned int end) const;
+
 
 	const unsigned int m_maxDepth;
 
@@ -125,7 +130,7 @@ private:
 
 	bool m_useBigDynamicDecisionTrees;
 
-	unsigned int m_amountOfUsedLayer;
+	std::pair<unsigned int, unsigned int> m_amountOfUsedLayer;
 };
 
 

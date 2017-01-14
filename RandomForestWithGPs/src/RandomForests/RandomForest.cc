@@ -53,7 +53,8 @@ void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
 	std::vector<RandomNumberGeneratorForDT*> generators;
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int seed = i;
-		generators.push_back(new RandomNumberGeneratorForDT(data[0]->rows(), minMaxUsedData[0], minMaxUsedData[1], data.size(), seed));
+		const int useWholeDataSet = 0; // means that the whole set is used
+		generators.push_back(new RandomNumberGeneratorForDT(data[0]->rows(), minMaxUsedData[0], minMaxUsedData[1], data.size(), seed, useWholeDataSet));
 		const int start = (i / (double) nrOfParallel) * m_amountOfTrees;
 		const int end = ((i + 1) / (double) nrOfParallel) * m_amountOfTrees;
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::trainInParallel, this, data, amountOfUsedDims, generators[i], start, end, &counter)));

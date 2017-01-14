@@ -84,9 +84,9 @@ inline std::string number2String(const T& in){
 }
 
 inline void openFileInViewer(const std::string& filename){
-	if(boost::filesystem::exists(filename)){
+	if(boost::filesystem::exists(Logger::getActDirectory() + filename)){
 		Logger::addSpecialLineToFile("open " + filename, "System");
-		system(("open " + filename).c_str());
+		system(("open " + Logger::getActDirectory() + filename).c_str());
 	}
 }
 // much fast than pow(2, exp)

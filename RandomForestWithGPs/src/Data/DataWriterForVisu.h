@@ -83,7 +83,8 @@ private:
 
 	static void drawSvgCoords(std::ofstream& file,
 			const double startX, const double startY, const double startXForData, const double startYForData, const double xSize,
-			const double ySize, const double min, const double max, const double width, const double heigth, const bool useAllXSegments = false);
+			const double ySize, const double min, const double max, const double width, const double heigth, const bool useAllXSegments = false,
+			const double minX = 0, const double maxX = 0);
 
 	static void drawSvgCoords2D(std::ofstream& file,
 			const double startX, const double startY, const double startXForData, const double startYForData, const Eigen::Vector2d& min,

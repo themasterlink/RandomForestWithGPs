@@ -17,18 +17,37 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 	int amountOfCorrect = 0;
 	Labels labels;
 	StopWatch sw;
-	orf.predictData(test.storage(), labels);
+	std::vector<std::vector<double> > probs;
+	orf.predictData(test.storage(), labels, probs);
 	printOnScreen("Needed " << sw.elapsedAsTimeFrame());
 	Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(orf.amountOfClasses(), orf.amountOfClasses());
+	std::vector<std::list<double> > lists(orf.amountOfClasses(), std::list<double>());
 	for(unsigned int i = 0; i < labels.size(); ++i){
-		if(test[i]->getLabel() == labels[i]){
-			++amountOfCorrect;
+		if(labels[i] != UNDEF_CLASS_LABEL){
+			if(test[i]->getLabel() == labels[i]){
+				++amountOfCorrect;
+			}
+			lists[labels[i]].push_back(probs[i][labels[i]]); // adds only the winning label to the list
+			conv(test[i]->getLabel(), labels[i]) += 1;
 		}
-		conv(test[i]->getLabel(), labels[i]) += 1;
 	}
 	printOnScreen("Test size: " << test.size());
 	printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %");
 	ConfusionMatrixPrinter::print(conv);
+
+	for(unsigned int i = 0; i < orf.amountOfClasses(); ++i){
+		double avg = 0;
+		for(std::list<double>::const_iterator it = lists[i].begin(); it != lists[i].end(); ++it){
+			avg += *it;
+		}
+		avg /= lists[i].size();
+		printOnScreen("Avg for " << i << " is " << avg << " has " << lists[i].size() << " elements");
+		if(CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0){
+			const std::string fileName = "histForOrf" + number2String(i) + ".svg";
+			DataWriterForVisu::writeHisto(fileName, lists[i], 10, 0, 1);
+			openFileInViewer(fileName);
+		}
+	}
 }
 
 void executeForBinaryClassORF(){
