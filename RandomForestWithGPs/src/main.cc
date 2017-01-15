@@ -57,6 +57,7 @@ void handleProgrammOptions(int ac, char* av[]){
 					("onlyDataView", "only visualize the data, no training performed")
 					("samplingAndTraining", boost::program_options::value<double>()->default_value(0), "sample and train the hyper params, else just use be configured params")
 					("plotHistos", "should some histogramms be plotted")
+					("settingsFile", boost::program_options::value<std::string>()->default_value("../Settings/init.json"), "Give the filepath of the settingsfile")
 					;
 	boost::program_options::variables_map vm;
 	try{
@@ -247,7 +248,8 @@ int main(int ac, char** av){
 //		socketsTest();
 //	}
 //	return 0;
-	Settings::init("../Settings/init.json");
+	const std::string settingsFile = CommandSettings::get_settingsFile();
+	Settings::init(settingsFile);
 	ThreadMaster::start(); // must be performed after Settings init!
 	ScreenOutput::start(); // should be started after ThreadMaster and Settings
 	ClassKnowledge::init();
@@ -266,6 +268,7 @@ int main(int ac, char** av){
 		exit(0);
 	}
 	Logger::start();
+	printOnScreen("Settingsfile: " << settingsFile);
 	CommandSettings::printAllSettingsToLog();
 	if(CommandSettings::get_samplingAndTraining() > 0){
 		printOnScreen("Training time: " << TimeFrame(CommandSettings::get_samplingAndTraining()));
@@ -346,9 +349,9 @@ int main(int ac, char** av){
 		printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
 	}
 
-	printOnScreen("Press any key to quit application");
+//	printOnScreen("Press any key to quit application");
 	Logger::forcedWrite();
-	getchar();
+//	getchar();
 
 	return 0;
 }

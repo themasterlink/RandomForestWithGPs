@@ -37,8 +37,9 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
-		"folderLocReal": "..\/washington\/",
-		"folderLocFake": "..\/fakeData\/",
+		"folderLocReal": "../washington/",
+		"folderLocFake": "../fakeData/",
+		"folderTestNr": 5,
 		"normalizeData": "true",
 		"readFromFolder": "true"
 	},
@@ -55,7 +56,7 @@
 		"printErrorForTraining": "false"
 	},
 	"Kernel": {
-		"path": "..\/realTest\/kernelData.kernel"
+		"path": "../realTest/kernelData.kernel"
 	},
 	"ThreadMaster": {
 		"useMultiThread": "true"
@@ -85,7 +86,7 @@
 		"sNoiseVar": 0.01
 	},
 	"Training": {
-		"path": "..\/fakeData\/",
+		"path": "../fakeData/",
 		"amount": 200,
 		"dim": 2
 	},
@@ -94,19 +95,19 @@
 		"fileName": "log.txt"
 	},
 	"RealData": {
-		"folderPath": "..\/realTest\/"
+		"folderPath": "../realTest/"
 	},
 	"Test": {
-		"path": "..\/testData\/testInput3.txt",
+		"path": "../testData/testInput3.txt",
 		"amount": 1000
 	},
 	"WriteBinarySaveOfTrees": {
 		"doWriting": "true",
-		"path": "..\/testData\/trees.binary"
+		"path": "../testData/trees.binary"
 	},
 	"Write2D": {
-		"testPath": "..\/testData\/visuTestResult.txt",
-		"gridPath": "..\/testData\/visuGridResult.txt",
+		"testPath": "../testData/visuTestResult.txt",
+		"gridPath": "../testData/visuGridResult.txt",
 		"doWriting": "true",
 		"printX": 0,
 		"printY": 1

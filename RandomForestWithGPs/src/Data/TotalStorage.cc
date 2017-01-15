@@ -49,7 +49,8 @@ void TotalStorage::readData(const int amountOfData){
 	if(Settings::getDirectBoolValue("TotalStorage.readFromFolder")){
 		if(folderLocation == "../washington/"){
 			m_mode = SEPERATE; // seperate train und test set
-			const int testNr = 2;
+			int testNr = 2;
+			Settings::getValue("TotalStorage.folderTestNr", testNr);
 			boost::filesystem::path targetDir(folderLocation);
 			boost::filesystem::directory_iterator end_itr;
 			ClassData wholeTrainingSet;

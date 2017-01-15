@@ -52,6 +52,7 @@ public:
 	ADD_PARAM(bool, onlyDataView, false, "Only visualizes the data, without any training");
 	ADD_PARAM(double, samplingAndTraining, false, "The training and sampling is performed, if the value in seconds is bigger than 0.");
 	ADD_PARAM(bool, plotHistos, false, "Should some histogramms be plotted");
+	ADD_PARAM(std::string, settingsFile, "../Settings/init.json", "location of the settings file");
 
 	static void init();
 
