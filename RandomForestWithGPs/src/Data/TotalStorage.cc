@@ -62,7 +62,7 @@ void TotalStorage::readData(const int amountOfData){
 						DataReader::readFromFile(wholeTrainingSet, inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
 					}else{
 						printOnScreen("As test:");
-						DataReader::readFromFile(m_testSet,  inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
+//						DataReader::readFromFile(m_testSet,  inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
 					}
 				}
 			}

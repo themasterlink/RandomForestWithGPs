@@ -53,16 +53,24 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 void executeForBinaryClassORF(){
 	const int trainAmount = readAllData();
 	OnlineStorage<ClassPoint*> train;
-	OnlineStorage<ClassPoint*> test;
+	OnlineStorage<ClassPoint*> test2;
 	int height;
 	Settings::getValue("Forest.Trees.height", height);
 	OnlineRandomForest orf(train, height, TotalStorage::getAmountOfClass());
 	// starts the training by its own
-	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
+	TotalStorage::getOnlineStorageCopyWithTest(train, test2, trainAmount);
 	printOnScreen("Training finished");
 	performTest(orf, train);
 	printOnScreen("First test finished");
 
+
+	int testNr = 2;
+	Settings::getValue("TotalStorage.folderTestNr", testNr);
+
+	OnlineStorage<ClassPoint*> test;
+	ClassData testData;
+	DataReader::readFromFile(testData,  "rgbd_features_train_split" + number2String(testNr) + "_5th.csv", INT_MAX, UNDEF_CLASS_LABEL, true);
+	test.append(testData);
 	performTest(orf, test);
 	printOnScreen("Second test finished");
 	orf.update();
