@@ -11,7 +11,8 @@
 BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfClasses, const int layerAmount, const int layerAmountForFast):
 	m_storage(storage),
 	m_maxDepth(maxDepth),
-	m_amountOfClasses(amountOfClasses){
+	m_amountOfClasses(amountOfClasses),
+	m_usedMemory(0){ // 16 for ints, 24 for the pointer
 	int amountOfLayers = layerAmount;
 	if(layerAmount < 1){ // 0 and -1, ...
 		Settings::getValue("OnlineRandomForest.layerAmountOfBigDDT", amountOfLayers);
@@ -63,6 +64,7 @@ BigDynamicDecisionTree::~BigDynamicDecisionTree() {
 
 void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 		RandomNumberGeneratorForDT& generator){
+	m_usedMemory = 40 + (m_fastInnerTrees.size() + m_smallInnerTrees.size()) * 8; // 40 fix values, 8 for the first pointer of the layer
 	if(m_fastInnerTrees.size() > 0 && m_fastInnerTrees[0][0] != nullptr){ // in the case of a retraining that all trees are removed
 		for(FastTreeStructure::iterator it = m_fastInnerTrees.begin(); it != m_fastInnerTrees.end(); ++it){
 			for(FastTreeInnerStructure::iterator itInner = it->begin(); itInner != it->end(); ++itInner){
@@ -103,6 +105,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 			const unsigned int leavesForTreesInTheFatherLayer = pow2(depthInTheFatherLayer); // amount of leaves of one of the layer trees
 			const unsigned int amountOfRootsInThisLayer = amountOfRootsInTheFatherLayer * leavesForTreesInTheFatherLayer;
 			m_fastInnerTrees[iTreeLayer].resize(amountOfRootsInThisLayer);
+			m_usedMemory += (MemoryType) amountOfRootsInThisLayer * 8;
 			std::fill(m_fastInnerTrees[iTreeLayer].begin(), m_fastInnerTrees[iTreeLayer].end(), nullptr); // set all values to null
 			for(unsigned int iRootOfFatherLayerId = 0; iRootOfFatherLayerId < amountOfRootsInTheFatherLayer; ++iRootOfFatherLayerId){
 //				printOnScreen("Rootid: " << iRootId);
@@ -122,6 +125,8 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 							m_fastInnerTrees[iTreeLayer][iChildIdInLayer]->setUsedDataPositions(nullptr); // erase pointer to used dataPositions
 							if(!trained){
 								SAVE_DELETE(m_fastInnerTrees[iTreeLayer][iChildIdInLayer]);
+							}else{
+								m_usedMemory += m_fastInnerTrees[iTreeLayer][iChildIdInLayer]->getMemSize();
 							}
 						}
 					}
@@ -228,6 +233,7 @@ void BigDynamicDecisionTree::trainChildrenForRoot(DynamicDecisionTree* root, Sma
 						SAVE_DELETE(it->second);
 						actSmallInnerTreeStructure.erase(it);
 					}else{
+						m_usedMemory += it->second->getMemSize() + 16; // 16 for each node
 						foundAtLeastOneChild = true;
 					}
 				}else{

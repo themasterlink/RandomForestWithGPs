@@ -26,6 +26,13 @@ RandomNumberGeneratorForDT::RandomNumberGeneratorForDT(const int dim, const int 
 RandomNumberGeneratorForDT::~RandomNumberGeneratorForDT(){
 }
 
+void RandomNumberGeneratorForDT::setMinAndMaxForSplitInDim(const unsigned int dim, const double min, const double max){
+	m_useDim[dim] = min < max;
+	if(m_useDim[dim]){
+		m_uniformSplitValues[dim].param(uniform_distribution_real::param_type(min, max));
+	}
+}
+
 void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 	UNUSED(event);
 	if(caller != nullptr && caller->classType() == ClassTypeSubject::ONLINERANDOMFOREST){
@@ -43,10 +50,7 @@ void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 		m_mutex.lock();
 		const std::vector<Eigen::Vector2d >& minMaxValues = forest->getMinMaxValues();
 		for(unsigned int i = 0; i < dim; ++i){
-			m_useDim[i] = minMaxValues[i][0] < minMaxValues[i][1];
-			if(m_useDim[i]){
-				m_uniformSplitValues[i].param(uniform_distribution_real::param_type(minMaxValues[i][0], minMaxValues[i][1]));
-			}
+			setMinAndMaxForSplitInDim(i, minMaxValues[i][0], minMaxValues[i][1]);
 //			else{
 //				m_useDim[i] = false;
 				// just to get any value -> else this will throw an execption

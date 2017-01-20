@@ -691,7 +691,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 		cv::circle(img, cv::Point(dx, dy), fac / 2 * amountOfPointsOnOneAxis / 50, actColor, CV_FILLED, CV_AA);
 		cv::circle(img, cv::Point(dx, dy), fac / 2 * amountOfPointsOnOneAxis / 50, black, fac / 6 * amountOfPointsOnOneAxis / 50, CV_AA);
 	}
-	cv::imwrite(fileName, img);
+	cv::imwrite(Logger::getActDirectory() + fileName, img);
 	for(unsigned int i = 0; i < points.size(); ++i){
 		SAVE_DELETE(points[i]);
 	}

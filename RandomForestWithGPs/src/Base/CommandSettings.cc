@@ -17,6 +17,7 @@ DEFINE_PARAM(bool, onlyDataView);
 DEFINE_PARAM(double, samplingAndTraining);
 DEFINE_PARAM(bool, plotHistos);
 DEFINE_PARAM(std::string, settingsFile);
+DEFINE_PARAM(std::string, convertFile);
 
 Param::Param(std::string name, const std::string (*type)(), void* ref){
 	this->name = name;
@@ -32,6 +33,7 @@ void CommandSettings::init(){
 	INIT_PARAM(double, samplingAndTraining);
 	INIT_PARAM(bool, plotHistos);
 	INIT_PARAM(std::string, settingsFile);
+	INIT_PARAM(std::string, convertFile);
 }
 
 void CommandSettings::setValues(boost::program_options::variables_map& vm){

@@ -58,6 +58,7 @@ void handleProgrammOptions(int ac, char* av[]){
 					("samplingAndTraining", boost::program_options::value<double>()->default_value(0), "sample and train the hyper params, else just use be configured params")
 					("plotHistos", "should some histogramms be plotted")
 					("settingsFile", boost::program_options::value<std::string>()->default_value("../Settings/init.json"), "Give the filepath of the settingsfile")
+					("convertFile", boost::program_options::value<std::string>()->default_value(""), "Give the filepath of the desired file which should be converted into binary")
 					;
 	boost::program_options::variables_map vm;
 	try{
@@ -94,104 +95,104 @@ std::string make_daytime_string(){
   return std::ctime(&now);
 }
 
-void socketsTest(){
-	try
-	{
-		// Any program that uses asio need to have at least one io_service object
-		boost::asio::io_service io_service;
-
-		// acceptor object needs to be created to listen for new connections
-		boost::asio::ip::tcp::acceptor acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 13));
-
-		for (;;){
-			// creates a socket
-			boost::asio::ip::tcp::socket socket(io_service);
-
-			// wait and listen
-			acceptor.accept(socket);
-			std::cout << "huh" << std::endl;
-
-			// prepare message to send back to client
-			std::string message = make_daytime_string();
-
-			boost::system::error_code ignored_error;
-
-			// writing the message for current time
-			boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
-		}
-	}
-	catch (std::exception& e)
-	{
-		std::cerr << e.what() << std::endl;
-	}
-}
-
-void clientTest(char* av[]){
-	try
-	{
-		// the user should specify the server - the 2nd argument
-
-		// Any program that uses asio need to have at least one io_service object
-		boost::asio::io_service io_service;
-
-		// Convert the server name that was specified as a parameter to the application, to a TCP endpoint.
-		// To do this, we use an ip::tcp::resolver object.
-		boost::asio::ip::tcp::resolver resolver(io_service);
-
-		// A resolver takes a query object and turns it into a list of endpoints.
-		// We construct a query using the name of the server, specified in argv[1],
-		// and the name of the service, in this case "daytime".
-		boost::asio::ip::tcp::resolver::query query(av[1], "daytime");
-
-		// The list of endpoints is returned using an iterator of type ip::tcp::resolver::iterator.
-		// A default constructed ip::tcp::resolver::iterator object can be used as an end iterator.
-		boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-
-		// Now we create and connect the socket.
-		// The list of endpoints obtained above may contain both IPv4 and IPv6 endpoints,
-		// so we need to try each of them until we find one that works.
-		// This keeps the client program independent of a specific IP version.
-		// The boost::asio::connect() function does this for us automatically.
-		// The connection is open. All we need to do now is read the response from the daytime service.
-		while(true){
-			boost::asio::ip::tcp::socket socket(io_service);
-			boost::asio::connect(socket, endpoint_iterator);
-
-			while(true){
-				// We use a boost::array to hold the received data.
-				boost::array<char, 128> buf;
-				boost::system::error_code error;
-				std::cout << "ask for something" << std::endl;
-				// The boost::asio::buffer() function automatically determines
-				// the size of the array to help prevent buffer overruns.
-				size_t len = socket.read_some(boost::asio::buffer(buf), error);
-
-				// When the server closes the connection,
-				// the ip::tcp::socket::read_some() function will exit with the boost::asio::error::eof error,
-				// which is how we know to exit the loop.
-				if (error == boost::asio::error::eof)
-					break; // Connection closed cleanly by peer.
-				//				else if (error)
-				//					throw boost::system::system_error(error); // Some other error.
-
-				std::cout.write(buf.data(), len);
-			}
-			sleep(1);
-		}
-	}
-	// handle any exceptions that may have been thrown.
-	catch (std::exception& e)
-	{
-		std::cerr << e.what() << std::endl;
-	}
-}
+//void socketsTest(){
+//	try
+//	{
+//		// Any program that uses asio need to have at least one io_service object
+//		boost::asio::io_service io_service;
+//
+//		// acceptor object needs to be created to listen for new connections
+//		boost::asio::ip::tcp::acceptor acceptor(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 13));
+//
+//		for (;;){
+//			// creates a socket
+//			boost::asio::ip::tcp::socket socket(io_service);
+//
+//			// wait and listen
+//			acceptor.accept(socket);
+//			std::cout << "huh" << std::endl;
+//
+//			// prepare message to send back to client
+//			std::string message = make_daytime_string();
+//
+//			boost::system::error_code ignored_error;
+//
+//			// writing the message for current time
+//			boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
+//		}
+//	}
+//	catch (std::exception& e)
+//	{
+//		std::cerr << e.what() << std::endl;
+//	}
+//}
+//
+//void clientTest(char* av[]){
+//	try
+//	{
+//		// the user should specify the server - the 2nd argument
+//
+//		// Any program that uses asio need to have at least one io_service object
+//		boost::asio::io_service io_service;
+//
+//		// Convert the server name that was specified as a parameter to the application, to a TCP endpoint.
+//		// To do this, we use an ip::tcp::resolver object.
+//		boost::asio::ip::tcp::resolver resolver(io_service);
+//
+//		// A resolver takes a query object and turns it into a list of endpoints.
+//		// We construct a query using the name of the server, specified in argv[1],
+//		// and the name of the service, in this case "daytime".
+//		boost::asio::ip::tcp::resolver::query query(av[1], "daytime");
+//
+//		// The list of endpoints is returned using an iterator of type ip::tcp::resolver::iterator.
+//		// A default constructed ip::tcp::resolver::iterator object can be used as an end iterator.
+//		boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+//
+//		// Now we create and connect the socket.
+//		// The list of endpoints obtained above may contain both IPv4 and IPv6 endpoints,
+//		// so we need to try each of them until we find one that works.
+//		// This keeps the client program independent of a specific IP version.
+//		// The boost::asio::connect() function does this for us automatically.
+//		// The connection is open. All we need to do now is read the response from the daytime service.
+//		while(true){
+//			boost::asio::ip::tcp::socket socket(io_service);
+//			boost::asio::connect(socket, endpoint_iterator);
+//
+//			while(true){
+//				// We use a boost::array to hold the received data.
+//				boost::array<char, 128> buf;
+//				boost::system::error_code error;
+//				std::cout << "ask for something" << std::endl;
+//				// The boost::asio::buffer() function automatically determines
+//				// the size of the array to help prevent buffer overruns.
+//				size_t len = socket.read_some(boost::asio::buffer(buf), error);
+//
+//				// When the server closes the connection,
+//				// the ip::tcp::socket::read_some() function will exit with the boost::asio::error::eof error,
+//				// which is how we know to exit the loop.
+//				if (error == boost::asio::error::eof)
+//					break; // Connection closed cleanly by peer.
+//				//				else if (error)
+//				//					throw boost::system::system_error(error); // Some other error.
+//
+//				std::cout.write(buf.data(), len);
+//			}
+//			sleep(1);
+//		}
+//	}
+//	// handle any exceptions that may have been thrown.
+//	catch (std::exception& e)
+//	{
+//		std::cerr << e.what() << std::endl;
+//	}
+//}
 
 int main(int ac, char** av){
 //	system("cd \"Debug OpenCV2\"");
 //	system("pwd");
 #ifdef DEBUG
 	printOnScreen("Debug does not use inputParams!");
-	std::vector<std::string> input = {"RandomForest", "--samplingAndTraining", "2"}; // , "--useFakeData"
+	std::vector<std::string> input = {"RandomForest", "--useFakeData", "--samplingAndTraining", "2"}; //
 	ac = input.size();
 	av = new char*[ac];
 	for(int i = 0; i < ac; ++i){
@@ -265,6 +266,19 @@ int main(int ac, char** av){
 		printOnScreen("TotalStorage::getTotalSize(): " << TotalStorage::getTotalSize());
 		DataWriterForVisu::writeSvg("justData.svg", train.storage());
 		system("open justData.svg");
+		exit(0);
+	}else if(CommandSettings::get_convertFile().length() > 0){
+		printOnScreen("Convert file mode:");
+		ClassData data;
+		const std::string inputPath = CommandSettings::get_convertFile();
+		const std::string typeLessPath = inputPath.substr(0, inputPath.length() - 4); // for txt and csv
+		if(!boost::filesystem::exists(boost::filesystem::path(typeLessPath + ".binary"))){
+			DataReader::readFromFile(data, typeLessPath, INT_MAX, UNDEF_CLASS_LABEL, true);
+			DataBinaryWriter::toFile(data, typeLessPath + ".binary");
+		}else{
+			printOnScreen("This file was already converted!");
+			sleep(2);
+		}
 		exit(0);
 	}
 	Logger::start();

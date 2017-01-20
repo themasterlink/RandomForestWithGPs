@@ -15,7 +15,12 @@
 #include "../Base/Predictor.h"
 #include "DynamicDecisionTreeInterface.h"
 
+class ReadWriterHelper;
+
 class DynamicDecisionTree : public DynamicDecisionTreeInterface {
+
+friend ReadWriterHelper;
+
 public:
 	enum NodeType{ // saved in m_splitDim
 		NODE_IS_NOT_USED = -1,
@@ -23,6 +28,9 @@ public:
 	};
 
 	DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth, const unsigned int amountOfClasses);
+
+	// construct empty tree
+	DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage);
 
 	// copy construct
 	DynamicDecisionTree(const DynamicDecisionTree& tree);
@@ -68,7 +76,11 @@ public:
 
 	void setUsedDataPositions(std::vector<unsigned int>* usedDataPositions){ m_useOnlyThisDataPositions = usedDataPositions; };
 
+	MemoryType getMemSize() const;
 private:
+	// this function is only called if the empty tree constructor was used!
+	void prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses);
+
 	OnlineStorage<ClassPoint*>& m_storage;
 	// max depth allowed in this tree
 	const unsigned int m_maxDepth;

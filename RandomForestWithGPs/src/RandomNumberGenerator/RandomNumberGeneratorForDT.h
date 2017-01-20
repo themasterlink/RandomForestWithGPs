@@ -41,6 +41,8 @@ public:
 
 	int getRandFromRange();
 
+	void setMinAndMaxForSplitInDim(const unsigned int dim, const double min, const double max);
+
 	double getRandSplitValueInDim(const unsigned int dim);
 
 	void update(Subject* caller, unsigned int event);

@@ -40,15 +40,15 @@ public:
 
 	void predictData(const Data& points, Labels& labels) const;
 
-	void predictData(const ClassData& points, Labels& labels) const;
-
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
+
+	void predictData(const ClassData& points, Labels& labels) const;
 
 	void predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
 
 	void getLeafNrFor(std::vector<int>& leafNrs);
 
-	int getNrOfTrees() const { return m_trees.size(); };
+	int getNrOfTrees() const { return m_amountOfTrainedTrees; };
 
 	void update(Subject* caller, unsigned int event);
 
@@ -66,21 +66,27 @@ public:
 
 private:
 
-	typedef typename std::pair<DecisionTreeIterator, double> SortedDecisionTreePair;
+	typedef typename std::pair<DynamicDecisionTreeInterface*, double> SortedDecisionTreePair;
 	typedef typename std::list<SortedDecisionTreePair > SortedDecisionTreeList;
 
 	void predictDataInParallel(const Data& points, Labels* labels, const unsigned int start, const unsigned int end) const;
 
-	void predictClassDataInParallel(const ClassData& points, Labels* labels, const unsigned int start, const unsigned int end) const;
+	void predictDataProbInParallel(const Data& points, std::vector< std::vector<double> >* probabilities,
+			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
 
-	void predictDataProbInParallel(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const unsigned int start, const unsigned int end) const;
+	void predictClassDataProbInParallel(const ClassData& points, std::vector< std::vector<double> >* probabilities,
+			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
 
 	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const unsigned int amountOfTrees,
 			std::vector<std::vector<unsigned int> >* counterForClasses, boost::mutex* mutexForCounter);
 
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
-	void internalAppendToSortedList(SortedDecisionTreeList* list, DecisionTreeIterator& itTree, double correctVal);
+	void internalAppendToSortedList(SortedDecisionTreeList* list, DynamicDecisionTreeInterface* pTree, double correctVal);
+
+	void mergeSortedLists(SortedDecisionTreeList* aimList, SortedDecisionTreeList* other);
+
+	void sortTreesAfterPerformanceInParallel(SortedDecisionTreeList* list, DecisionTreesContainer* trees, boost::mutex* readMutex, boost::mutex* appendMutex, InformationPackage* package);
 
 	void updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps,
 			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, int* counter);
@@ -90,8 +96,9 @@ private:
 	void tryAmountForLayers(RandomNumberGeneratorForDT* generator, const double secondsPerSplit, std::list<std::pair<unsigned int, unsigned int> >* layerValues,
 			boost::mutex* mutex, std::pair<int, int>* bestLayerSplit, double* bestCorrectness);
 
-	void predictClassDataProbInParallel(const ClassData& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const unsigned int start, const unsigned int end) const;
+	void writeTreesToDisk(const unsigned int amountOfTrees) const;
 
+	void loadBatchOfTreesFromDisk(const unsigned int batchNr) const;
 
 	const unsigned int m_maxDepth;
 
@@ -112,7 +119,9 @@ private:
 
 	OnlineStorage<ClassPoint*>& m_storage;
 
-	DecisionTreesContainer m_trees;
+	mutable DecisionTreesContainer m_trees;
+
+	mutable std::vector<std::pair<std::string, std::string> > m_savedToDiskTreesFilePaths;
 
 	DecisionTreeIterator findWorstPerformingTree(double& correctAmount);
 
@@ -120,7 +129,7 @@ private:
 
 	std::vector<RandomNumberGeneratorForDT*> m_generators;
 
-	boost::mutex m_treesMutex;
+	mutable boost::mutex m_treesMutex;
 
 	bool m_firstTrainingDone;
 
@@ -131,6 +140,14 @@ private:
 	bool m_useBigDynamicDecisionTrees;
 
 	std::pair<unsigned int, unsigned int> m_amountOfUsedLayer;
+
+	std::string m_folderForSavedTrees;
+
+	bool m_savedAnyTreesToDisk;
+
+	unsigned int m_amountOfTrainedTrees;
+
+	mutable MemoryType m_usedMemory;
 };
 
 

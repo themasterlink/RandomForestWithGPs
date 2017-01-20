@@ -40,6 +40,8 @@
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
+typedef unsigned long MemoryType;
+
 #define EPSILON 1e-15
 
 #define NEG_DBL_MAX -DBL_MAX
@@ -76,6 +78,25 @@ inline std::string number2String(const double& in, const int precision = -1){
 	}
 }
 
+inline std::string convertMemorySpace(MemoryType mem){
+	std::stringstream ss;
+	bool useSpace = false;
+	std::vector<std::string> names = {" GB", " MB", " kB", " B"};
+	unsigned int i = 0;
+	for(MemoryType val = 1000000000; val > 0; val /= 1000){
+		if(mem >= val){
+			if(useSpace){
+				ss << " ";
+			}
+			ss << mem / val << names[i];
+			mem %= val;
+			useSpace = true;
+		}
+		++i;
+	}
+	return ss.str();
+}
+
 template<typename T>
 inline std::string number2String(const T& in){
 	std::stringstream ss;
@@ -92,6 +113,12 @@ inline void openFileInViewer(const std::string& filename){
 // much fast than pow(2, exp)
 inline unsigned int pow2(const unsigned int exponent){
 	return ((unsigned int) 1u) << exponent;
+}
+
+template<class T>
+void overwriteConst(const T& ref, const T& newValue){
+	T* iPointer = const_cast<T*>(&ref);
+	*iPointer = newValue;
 }
 
 inline bool endsWith(const std::string& first, const std::string& second){

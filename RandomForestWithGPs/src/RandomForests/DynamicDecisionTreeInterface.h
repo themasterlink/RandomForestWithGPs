@@ -18,6 +18,8 @@ public:
 	virtual void train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator) = 0;
 
 	virtual bool predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const = 0;
+
+	virtual MemoryType getMemSize() const = 0;
 };
 
 #endif /* RANDOMFORESTS_DYNAMICDECISIONTREEINTERFACE_H_ */

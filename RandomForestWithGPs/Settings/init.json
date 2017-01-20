@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 24
+			"height": 20
 		}
 	},
 	"IVM": {
@@ -39,7 +39,7 @@
 		"shareForTraining": 0.9,
 		"folderLocReal": "../washington/",
 		"folderLocFake": "../fakeData/",
-		"folderTestNr": 5,
+		"folderTestNr": 0,
 		"normalizeData": "true",
 		"readFromFolder": "true"
 	},
@@ -49,9 +49,9 @@
 		"maxUsedDataFactor": 0.6,
 		"stepSizeOverData": 120,
 		"factorAmountOfUsedDims": 1.0,
-		"ownSamplingTime": 750,
+		"ownSamplingTime": 100000,
 		"useBigDynmaicDecisionTrees": "true",
-		"layerAmountOfBigDDT": 3,
+		"layerAmountOfBigDDT": 2,
 		"determineBestLayerAmount": "true",
 		"printErrorForTraining": "false"
 	},
@@ -115,7 +115,7 @@
 	"MinMaxUsedSplits": {
 		"useFixedValuesForMinMaxUsedSplits": "true",
 		"minValue": 20,
-		"maxValue": 100,
+		"maxValue": 50,
 		"minValueFractionDependsOnDataSize": 0.2,
 		"maxValueFractionDependsOnDataSize": 0.6
 	},

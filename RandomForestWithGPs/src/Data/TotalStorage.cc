@@ -55,17 +55,30 @@ void TotalStorage::readData(const int amountOfData){
 			boost::filesystem::directory_iterator end_itr;
 			ClassData wholeTrainingSet;
 			for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
-				if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".csv"){
+				if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".binary"){
 					const std::string inputPath(itr->path().c_str());
-					if(!endsWith(inputPath, "rgbd_features_train_split" + number2String(testNr) + "_5th.csv")){
+					bool endsWithBool = false;
+					for(unsigned int i = 0; i < 10; ++i){
+						if(i != testNr){
+							endsWithBool = endsWithBool || endsWith(inputPath, "rgbd_features_train_split" + number2String(i) + "_5th.binary");
+						}
+					}
+					if(endsWithBool){
 						printOnScreen("As training:");
-						DataReader::readFromFile(wholeTrainingSet, inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
-					}else{
+						DataReader::readFromBinaryFile(wholeTrainingSet, inputPath, INT_MAX);
+//						DataReader::readFromFile(wholeTrainingSet, inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
+					}else if(endsWith(inputPath, "rgbd_features_test_split" + number2String(testNr) + "_5th.binary")){
 						printOnScreen("As test:");
+						DataReader::readFromBinaryFile(m_testSet, inputPath, INT_MAX);
 //						DataReader::readFromFile(m_testSet,  inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
 					}
 				}
 			}
+//			if(m_testSet.size() == 0){
+//				printError("No test point found for testNr: " << testNr);
+//				Logger::forcedWrite();
+//				exit(0);
+//			}
 			const unsigned int jumper = 1;
 			if(jumper > 1){
 				m_trainSet.reserve(wholeTrainingSet.size() + jumper);
@@ -80,13 +93,13 @@ void TotalStorage::readData(const int amountOfData){
 			}else{
 				m_trainSet = wholeTrainingSet;
 			}
-			std::set<unsigned int> classes;
-			for(ClassDataConstIterator it = m_trainSet.begin(); it != m_trainSet.end(); ++it){
-				if(classes.find((**it).getLabel()) == classes.end()){
-					classes.insert((**it).getLabel());
-					ClassKnowledge::setNameFor(number2String((**it).getLabel()), (**it).getLabel());
-				}
-			}
+//			std::set<unsigned int> classes;
+//			for(ClassDataConstIterator it = m_trainSet.begin(); it != m_trainSet.end(); ++it){
+//				if(classes.find((**it).getLabel()) == classes.end()){
+//					classes.insert((**it).getLabel());
+//					ClassKnowledge::setNameFor(number2String((**it).getLabel()), (**it).getLabel());
+//				}
+//			}
 		}else{
 			DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt, didNormalizeStep);
 		}

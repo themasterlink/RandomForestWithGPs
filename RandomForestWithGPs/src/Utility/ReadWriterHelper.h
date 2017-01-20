@@ -14,6 +14,7 @@
 #include <iostream>
 #include "boost/filesystem.hpp"
 #include "../Data/ClassPoint.h"
+#include "../RandomForests/DynamicDecisionTree.h"
 
 class ReadWriterHelper {
 public:
@@ -35,6 +36,10 @@ public:
 
 	template<class T>
 	static void readVector(std::fstream& stream, std::vector<T>& vector);
+
+	static void writeDynamicTree(std::fstream& stream, const DynamicDecisionTree& tree);
+
+	static void readDynamicTree(std::fstream& stream, DynamicDecisionTree& tree);
 
 private:
 	ReadWriterHelper();

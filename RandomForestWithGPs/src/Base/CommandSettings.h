@@ -53,6 +53,7 @@ public:
 	ADD_PARAM(double, samplingAndTraining, false, "The training and sampling is performed, if the value in seconds is bigger than 0.");
 	ADD_PARAM(bool, plotHistos, false, "Should some histogramms be plotted");
 	ADD_PARAM(std::string, settingsFile, "../Settings/init.json", "location of the settings file");
+	ADD_PARAM(std::string, convertFile, "", "location of the desired file");
 
 	static void init();
 

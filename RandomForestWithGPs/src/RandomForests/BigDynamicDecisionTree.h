@@ -38,6 +38,8 @@ public:
 
 	unsigned int amountOfClasses() const;
 
+	MemoryType getMemSize() const { return m_usedMemory; };
+
 private:
 
 	typedef std::map<unsigned int, DynamicDecisionTree*> SmallTreeInnerStructure;
@@ -59,6 +61,8 @@ private:
 	const int m_amountOfClasses;
 
 	int m_depthPerLayer;
+
+	MemoryType m_usedMemory;
 
 	FastTreeStructure m_fastInnerTrees;
 	SmallTreeStructure m_smallInnerTrees;

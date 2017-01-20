@@ -22,21 +22,22 @@ DataReader::~DataReader(){
 }
 
 void DataReader::readFromBinaryFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData){
-	UNUSED(amountOfData);
 	std::string line;
 	std::fstream input(inputName);
 	if(input.is_open()){
 		long size;
 		input.read((char*) &size, sizeof(long));
-		data.resize(size);
-		if(amountOfData > size){
+		const unsigned int lastSize = data.size();
+		data.resize(size + lastSize);
+		printOnScreen("Read " << size << " points from binary: " << inputName);
+		if(amountOfData > size && amountOfData != (unsigned int) INT_MAX){
 			printWarning("The amount of data provided is smaller than the desired amount!");
 		}
-		for(ClassDataIterator it = data.begin(); it != data.end(); ++it){
-			*it = new ClassPoint();
-			ReadWriterHelper::readPoint(input, **it);
-			if(!ClassKnowledge::hasClassName((*it)->getLabel())){
-				ClassKnowledge::setNameFor(number2String((*it)->getLabel()), (*it)->getLabel());
+		for(unsigned int i = lastSize; i < data.size(); ++i){
+			data[i] = new ClassPoint();
+			ReadWriterHelper::readPoint(input, *data[i]);
+			if(!ClassKnowledge::hasClassName(data[i]->getLabel())){
+				ClassKnowledge::setNameFor(number2String(data[i]->getLabel()), data[i]->getLabel());
 			}
 		}
 		if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
@@ -99,7 +100,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		input.close();
 	}else if(boost::filesystem::exists(inputName + ".txt")){
 		inputPath += ".txt";
-		printOnScreen("Read txt from " + inputName);
+		printOnScreen("Read txt from " + inputPath);
 		std::ifstream input(inputPath);
 		if(input.is_open()){
 			std::string line;
@@ -126,7 +127,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		}
 	}else if(boost::filesystem::exists(inputName + ".csv")){
 		inputPath += ".csv";
-		printOnScreen("Read csv from " + inputName);
+		printOnScreen("Read csv from " + inputPath);
 		std::ifstream input(inputPath);
 		if(input.is_open()){
 			std::string line;

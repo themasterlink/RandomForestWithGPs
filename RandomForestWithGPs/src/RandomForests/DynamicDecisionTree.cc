@@ -27,6 +27,23 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, co
 //	printOnScreen("Size is: " << (m_splitDim.size() * sizeof(int) + m_splitValues.size() * sizeof(double) + m_labelsOfWinningClassesInLeaves.size() * sizeof(int)));
 }
 
+
+// construct empty tree
+DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage): DynamicDecisionTree(storage, 1, ClassKnowledge::amountOfClasses()){
+}
+
+// fill empty tree
+void DynamicDecisionTree::prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses){
+	if(m_maxDepth == 1 && maxDepth > 0 && maxDepth < 28){
+		overwriteConst(m_maxDepth, maxDepth);
+		overwriteConst(m_amountOfClasses, amountOfClasses);
+		overwriteConst(m_maxNodeNr, pow2(maxDepth + 1) - 1);
+		overwriteConst(m_maxInternalNodeNr, pow2(maxDepth) - 1);
+	}else{
+		printError("The empty tree constructor was not called before!");
+	}
+}
+
 // copy construct
 DynamicDecisionTree::DynamicDecisionTree(const DynamicDecisionTree& tree):
 		DynamicDecisionTreeInterface(tree),
@@ -98,6 +115,21 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 //	bool atLeastPerformedOneSplit = false;
 	//  1
 	// 2 3
+	if(m_useOnlyThisDataPositions == nullptr){
+		if(generator.useWholeDataSet()){
+			dataPosition[1].resize(m_storage.size());
+			std::iota(dataPosition[1].begin(), dataPosition[1].end(), 0);
+		}else{
+			dataPosition[1].reserve(m_storage.size());
+			// -1 that the first value in the storage is used too
+			for(unsigned int i = generator.getRandStepOverStorage() - 1; i < m_storage.size(); i += generator.getRandStepOverStorage()){
+				dataPosition[1].push_back(i);
+			}
+		}
+	}else{
+		dataPosition[1].insert(dataPosition[1].end(), m_useOnlyThisDataPositions->begin(), m_useOnlyThisDataPositions->end());
+	}
+	const unsigned int amountOfTriedDims = std::max((int) (usedDims.size() * 0.1), 2);
 	for(int iActNode = 1; iActNode < (int) m_maxInternalNodeNr + 1; ++iActNode){ // first element is not used!
 //		if(iActNode == breakPoint){ // check if early breaking is possible, check is performed always at the start of a layer
 //			if(!atLeastPerformedOneSplit){
@@ -113,8 +145,37 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		// calc actual nodes
 		// calc split value for each node
 		// choose dimension for split
-		const int randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
-		const int amountOfUsedData = generator.getRandAmountOfUsedData();
+		int randDim, amountOfUsedData;
+		double minDimValue, maxDimValue;
+		// try different dimension and find one where the points have a difference
+		for(unsigned int i = 0; i < amountOfTriedDims; ++i){
+			randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
+			amountOfUsedData = generator.getRandAmountOfUsedData();
+			minDimValue = DBL_MAX;
+			maxDimValue = NEG_DBL_MAX;
+			for(std::vector<unsigned int>::const_iterator it = dataPosition[iActNode].cbegin();
+					it != dataPosition[iActNode].cend(); ++it){
+				if(m_storage[*it]->coeff(randDim) > maxDimValue){
+					maxDimValue = m_storage[*it]->coeff(randDim);
+				}
+				if(m_storage[*it]->coeff(randDim) < minDimValue){
+					minDimValue = m_storage[*it]->coeff(randDim);
+				}
+			}
+			if(minDimValue < maxDimValue){ // there is a difference in this dimension
+				break;
+			}
+		}
+		if(minDimValue >= maxDimValue){ // splitting impossible
+			//				printError("No dimension was found, where a split could be performed!");
+			m_splitDim[iActNode] = NODE_IS_NOT_USED; // do not split here
+			if(iActNode == 1){
+				m_splitDim[iActNode] = NODE_CAN_BE_USED; // there should be a split
+			}
+			continue;
+		}
+		generator.setMinAndMaxForSplitInDim(randDim, minDimValue, maxDimValue);
+
 		double maxScoreElementValue = 0;
 		double actScore = NEG_DBL_MAX; // TODO check magic number
 		for(int j = 0; j < amountOfUsedData; ++j){ // amount of checks for a specified split
@@ -134,58 +195,19 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		// apply split to data
 		int foundDataLeft = 0, foundDataRight = 0;
 		const int leftPos = iActNode * 2, rightPos = iActNode * 2 + 1;
-		if(iActNode == 1){ // splitting like this avoids copying the whole stuff into the dataPosition[1]
-			dataPosition[leftPos].reserve(dataPosition[iActNode].size());
-			dataPosition[rightPos].reserve(dataPosition[iActNode].size());
-			if(m_useOnlyThisDataPositions == nullptr){
-				if(generator.useWholeDataSet()){
-					for(unsigned int i = 0; i < m_storage.size(); ++i){
-						if(m_storage[i]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
-							dataPosition[rightPos].push_back(i);
-							++foundDataRight;
-						}else{
-							dataPosition[leftPos].push_back(i);
-							++foundDataLeft;
-						}
-					}
-				}else{
-					// -1 that the first value in the storage is used too
-					for(unsigned int i = generator.getRandStepOverStorage() - 1; i < m_storage.size(); i += generator.getRandStepOverStorage()){
-						if(m_storage[i]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
-							dataPosition[rightPos].push_back(i);
-							++foundDataRight;
-						}else{
-							dataPosition[leftPos].push_back(i);
-							++foundDataLeft;
-						}
-					}
-				}
+		dataPosition[leftPos].reserve(dataPosition[iActNode].size());
+		dataPosition[rightPos].reserve(dataPosition[iActNode].size());
+		for(std::vector<unsigned int>::const_iterator it = dataPosition[iActNode].cbegin();
+				it != dataPosition[iActNode].cend(); ++it){
+			if(m_storage[*it]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
+				dataPosition[rightPos].push_back(*it);
+				++foundDataRight;
 			}else{
-				for(unsigned int j = 0; j < m_useOnlyThisDataPositions->size(); ++j){
-					const unsigned int i = (*m_useOnlyThisDataPositions)[j];
-					if(m_storage[i]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
-						dataPosition[rightPos].push_back(i);
-						++foundDataRight;
-					}else{
-						dataPosition[leftPos].push_back(i);
-						++foundDataLeft;
-					}
-				}
-			}
-		}else{
-			dataPosition[leftPos].reserve(dataPosition[iActNode].size());
-			dataPosition[rightPos].reserve(dataPosition[iActNode].size());
-			for(std::vector<unsigned int>::const_iterator it = dataPosition[iActNode].cbegin();
-					it != dataPosition[iActNode].cend(); ++it){
-				if(m_storage[*it]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
-					dataPosition[rightPos].push_back(*it);
-					++foundDataRight;
-				}else{
-					dataPosition[leftPos].push_back(*it);
-					++foundDataLeft;
-				}
+				dataPosition[leftPos].push_back(*it);
+				++foundDataLeft;
 			}
 		}
+
 		/*std::cout << "i: " << iActNode << std::endl;
 			 std::cout << "length: " << dataPosition[iActNode].size() << std::endl;
 			 std::cout << "Found data left  " << foundDataLeft << std::endl;
@@ -424,4 +446,8 @@ unsigned int DynamicDecisionTree::amountOfClasses() const{
 
 void DynamicDecisionTree::deleteDataPositions(){
 	SAVE_DELETE(m_dataPositions);
+}
+
+MemoryType DynamicDecisionTree::getMemSize() const{
+	return ((MemoryType) m_maxInternalNodeNr + 1) * 16 + 40; // 16 + 24 = 40, 16 general info, 40 pointers and ref
 }

@@ -6,6 +6,7 @@
  */
 
 #include "ReadWriterHelper.h"
+#include "../Data/ClassKnowledge.h"
 
 ReadWriterHelper::ReadWriterHelper() {
 	// TODO Auto-generated constructor stub
@@ -60,4 +61,39 @@ void ReadWriterHelper::writePoint(std::fstream& stream, const ClassPoint& vector
 	stream.write((char*) vector.data(), rows*sizeof(Eigen::MatrixXd::Scalar));
 	unsigned int label = vector.getLabel();
 	stream.write((char*) (&label), sizeof(unsigned int));
+}
+
+void ReadWriterHelper::writeDynamicTree(std::fstream& stream, const DynamicDecisionTree& tree){
+	// write standart information
+	const unsigned int amountOfDims = ClassKnowledge::amountOfDims();
+	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	stream.write((char*) (&amountOfDims), sizeof(unsigned int));
+	stream.write((char*) (&amountOfClasses), sizeof(unsigned int));
+	stream.write((char*) (&tree.m_amountOfClasses), sizeof(unsigned int));
+	stream.write((char*) (&tree.m_maxDepth), sizeof(unsigned int));
+	writeVector(stream, tree.m_splitValues);
+	writeVector(stream, tree.m_splitDim);
+	writeVector(stream, tree.m_labelsOfWinningClassesInLeaves);
+}
+
+void ReadWriterHelper::readDynamicTree(std::fstream& stream, DynamicDecisionTree& tree){
+	// read standart information
+	const unsigned int amountOfDims = ClassKnowledge::amountOfDims();
+	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	unsigned int readDims = 0;
+	unsigned int readClasses = 0;
+	stream.read((char*) (&readDims), sizeof(unsigned int));
+	stream.read((char*) (&readClasses), sizeof(unsigned int));
+	if(readDims == amountOfDims && readClasses == amountOfClasses){ // check standart information
+		unsigned int amountOfUsedClasses = 0;
+		unsigned int depth = 0;
+		stream.read((char*) (&amountOfUsedClasses), sizeof(unsigned int));
+		stream.read((char*) (&depth), sizeof(unsigned int));
+		tree.prepareForSetting(depth, amountOfUsedClasses);
+		readVector(stream, tree.m_splitValues);
+		readVector(stream, tree.m_splitDim);
+		readVector(stream, tree.m_labelsOfWinningClassesInLeaves);
+	}else{
+		printError("The reading process failed the saved tree was not trained on this data set! Had dims: " << readDims << " and classes: " << readClasses);
+	}
 }

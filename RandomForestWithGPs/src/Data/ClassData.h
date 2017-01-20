@@ -11,17 +11,6 @@
 #include "ClassPoint.h"
 #include <vector>
 
-/*
-class ClassData : public std::vector<ClassPoint*> {
-public:
-	ClassData();
-
-	ClassData(const int size);
-
-	virtual ~ClassData();
-};
-*/
-
 typedef typename std::vector<ClassPoint*> ClassData;
 
 typedef typename ClassData::iterator ClassDataIterator;
