@@ -15,6 +15,7 @@
 #include "boost/filesystem.hpp"
 #include "../Data/ClassPoint.h"
 #include "../RandomForests/DynamicDecisionTree.h"
+#include "../RandomForests/BigDynamicDecisionTree.h"
 
 class ReadWriterHelper {
 public:
@@ -40,6 +41,10 @@ public:
 	static void writeDynamicTree(std::fstream& stream, const DynamicDecisionTree& tree);
 
 	static void readDynamicTree(std::fstream& stream, DynamicDecisionTree& tree);
+
+	static void writeBigDynamicTree(std::fstream& stream, const BigDynamicDecisionTree& tree);
+
+	static void readBigDynamicTree(std::fstream& stream, BigDynamicDecisionTree& tree);
 
 private:
 	ReadWriterHelper();

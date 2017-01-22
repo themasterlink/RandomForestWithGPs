@@ -40,7 +40,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	m_minMaxUsedDataFactor[1] = val;
 	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	Settings::getValue("OnlineRandomForest.useBigDynmaicDecisionTrees", m_useBigDynamicDecisionTrees);
-//	setDesiredAmountOfTrees(700);
+//	setDesiredAmountOfTrees(150);
 }
 
 OnlineRandomForest::~OnlineRandomForest(){
@@ -177,8 +177,10 @@ void OnlineRandomForest::train(){
 	}
 	group.join_all();
 	if(m_savedAnyTreesToDisk){
-		writeTreesToDisk(m_trees.size()); // will delete all trees from memory
+		writeTreesToDisk(m_trees.size()); // will delete all trees fsrom memory
 		loadBatchOfTreesFromDisk(0); // load first batch
+	}else{
+		printOnScreen("Used memory: " << convertMemorySpace(m_usedMemory));
 	}
 	printOnScreen("Calculated " << m_trees.size() << " trees with depth: " << m_maxDepth);
 	if(m_desiredAmountOfTrees == 0){
@@ -203,6 +205,8 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 		std::vector<std::vector<unsigned int> >* counterForClasses, boost::mutex* mutexForCounter){
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
+	MemoryType maxAmountOfUsedMemory;
+	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
 	int i = 0;
 	const bool printErrorGraph = counterForClasses != nullptr;
 	Labels* labels = nullptr;
@@ -211,16 +215,16 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 	}
 	while(true){ // the thread master will eventually kill this training
 		m_treesMutex.lock();
-		if(amountOfTrees > 0 && (unsigned int) m_trees.size() == amountOfTrees){
+		if(amountOfTrees > 0 && (unsigned int) m_trees.size() >= amountOfTrees){
 			m_treesMutex.unlock();
 			break;
 		}
-//		const unsigned int treeAmount = m_trees.size();
+		const unsigned int treeAmount = m_trees.size();
 		m_treesMutex.unlock();
 		// check if the memory consumption is to high -> write trees to disk
 		mutexForCounter->lock();
 //		printInPackageOnScreen(package, "Mem: " << getPercentageForUsedMemory());
-		if(m_usedMemory > 5000000000){
+		if(m_usedMemory > maxAmountOfUsedMemory){
 			package->abortTraing();
 //			printOnScreen("Save to file");
 //			m_savedAnyTreesToDisk = true;
@@ -284,7 +288,9 @@ void OnlineRandomForest::writeTreesToDisk(const unsigned int amountOfTrees) cons
 					DynamicDecisionTreeInterface* tree = m_trees.front();
 					m_trees.pop_front();
 					if(m_useBigDynamicDecisionTrees){
-						printError("Not implemented yet!");
+						BigDynamicDecisionTree* dtTree = dynamic_cast<BigDynamicDecisionTree*>(tree);
+						ReadWriterHelper::writeBigDynamicTree(output, *dtTree);
+						SAVE_DELETE(dtTree);
 					}else{
 						DynamicDecisionTree* dtTree = dynamic_cast<DynamicDecisionTree*>(tree);
 						ReadWriterHelper::writeDynamicTree(output, *dtTree);
@@ -317,7 +323,10 @@ void OnlineRandomForest::loadBatchOfTreesFromDisk(const unsigned int batchNr) co
 					output.read((char*) (&amountOfTrees), sizeof(unsigned int));
 					for(unsigned int i = 0; i < amountOfTrees; ++i){
 						if(m_useBigDynamicDecisionTrees){
-							printError("Not implemented yet!");
+							BigDynamicDecisionTree* newTree = new BigDynamicDecisionTree(m_storage);
+							ReadWriterHelper::readBigDynamicTree(output, *newTree);
+							m_trees.push_back(newTree);
+							m_usedMemory += newTree->getMemSize();
 						}else{
 							DynamicDecisionTree* newTree = new DynamicDecisionTree(m_storage);
 							ReadWriterHelper::readDynamicTree(output, *newTree);

@@ -10,9 +10,18 @@
 
 #include "DynamicDecisionTree.h"
 
+class ReadWriterHelper;
+
 class BigDynamicDecisionTree : public DynamicDecisionTreeInterface {
+
+friend ReadWriterHelper;
+
 public:
-	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfClasses, const int layerAmount = -1, const int layerAmountForFast = -1);
+	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth, const unsigned int amountOfClasses, const int layerAmount = -1, const int layerAmountForFast = -1);
+
+	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage);
+
+	void prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses, const unsigned int amountOfLayers, const unsigned int amountForFast, const unsigned int amountForSmall);
 
 	virtual ~BigDynamicDecisionTree();
 
@@ -56,11 +65,11 @@ private:
 
 	OnlineStorage<ClassPoint*>& m_storage;
 	// max depth allowed in this tree
-	const int m_maxDepth;
+	const unsigned int m_maxDepth;
 
-	const int m_amountOfClasses;
+	const unsigned int m_amountOfClasses;
 
-	int m_depthPerLayer;
+	unsigned int m_depthPerLayer;
 
 	MemoryType m_usedMemory;
 

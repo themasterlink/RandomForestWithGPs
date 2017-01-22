@@ -8,46 +8,25 @@
 #include "BigDynamicDecisionTree.h"
 #include "../Base/Settings.h"
 
-BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfClasses, const int layerAmount, const int layerAmountForFast):
+BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth, const unsigned int amountOfClasses, const int layerAmount, const int layerAmountForFast):
 	m_storage(storage),
 	m_maxDepth(maxDepth),
 	m_amountOfClasses(amountOfClasses),
+	m_depthPerLayer(0),
 	m_usedMemory(0){ // 16 for ints, 24 for the pointer
 	int amountOfLayers = layerAmount;
 	if(layerAmount < 1){ // 0 and -1, ...
 		Settings::getValue("OnlineRandomForest.layerAmountOfBigDDT", amountOfLayers);
 	}
-	const int amountForFast = std::min(std::max(layerAmountForFast, 2), amountOfLayers);
-	const int amountForSmall = std::max(amountOfLayers - amountForFast, 0);
-	if(m_maxDepth % amountOfLayers == 0){ // that is the easy case
-		m_depthPerLayer = m_maxDepth / amountOfLayers;
-	}else{
-		// we can adjust the height of the last layer
-		const unsigned int higherHeight = std::ceil(m_maxDepth/ (double) amountOfLayers); // use bigger depth for all layers
-		const unsigned int lowerHeight = m_maxDepth / (double) amountOfLayers; // truncs by its own
-		// now take the values which minimizes the height of the last layer:
-		if(m_maxDepth - (higherHeight * (amountOfLayers - 1)) < m_maxDepth - (lowerHeight * (amountOfLayers - 1))){
-			// take the higher height: example:
-			// 		amount of layers = 8 and m_maxDepth = 30 -> the height of the layer here is: 2, instead of 6
-			m_depthPerLayer = higherHeight;
-		}else if(m_maxDepth - (higherHeight * (amountOfLayers - 1)) > m_maxDepth - (lowerHeight * (amountOfLayers - 1))){
-			// take the lower height: example:
-			//		amount of layer = 6
-			m_depthPerLayer = lowerHeight;
-		}else if(higherHeight > lowerHeight){
-			m_depthPerLayer = higherHeight;
-		}else{
-			m_depthPerLayer = lowerHeight;
-		}
-//		printOnScreen("For depth: " << m_maxDepth << " choosen " << amountOfLayers << " layers with depth of " << m_depthPerLayer);
-	}
-	m_fastInnerTrees.resize(amountForFast); // the last layer is not be placed with trees
-	m_smallInnerTrees.resize(amountForSmall);
-	if(amountForFast > 0){
-		m_fastInnerTrees[0].resize(1); // start node
-		m_fastInnerTrees[0][0] = nullptr;
-	}
+	const unsigned int amountForFast = std::min(std::max(layerAmountForFast, 2), amountOfLayers);
+	const unsigned int amountForSmall = std::max(amountOfLayers - amountForFast, 0u);
+	prepareForSetting(maxDepth, m_amountOfClasses, amountOfLayers, amountForFast, amountForSmall);
 }
+
+BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage):
+		m_storage(storage), m_maxDepth(0), m_amountOfClasses(0), m_depthPerLayer(0), m_usedMemory(0){
+}
+
 
 BigDynamicDecisionTree::~BigDynamicDecisionTree() {
 	for(FastTreeStructure::iterator it = m_fastInnerTrees.begin(); it != m_fastInnerTrees.end(); ++it){
@@ -59,6 +38,44 @@ BigDynamicDecisionTree::~BigDynamicDecisionTree() {
 		for(SmallTreeInnerStructure::iterator itInner = it->begin(); itInner != it->end(); ++itInner){
 			SAVE_DELETE(itInner->second); 
 		}
+	}
+}
+
+// fill empty tree
+void BigDynamicDecisionTree::prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses, const unsigned int amountOfLayers, const unsigned int amountForFast, const unsigned int amountForSmall){
+	if(maxDepth > 0 && maxDepth < 28){
+		overwriteConst(m_maxDepth, maxDepth);
+		if(m_maxDepth % amountOfLayers == 0){ // that is the easy case
+			m_depthPerLayer = m_maxDepth / amountOfLayers;
+		}else{
+			// we can adjust the height of the last layer
+			const unsigned int higherHeight = std::ceil(m_maxDepth/ (double) amountOfLayers); // use bigger depth for all layers
+			const unsigned int lowerHeight = m_maxDepth / (double) amountOfLayers; // truncs by its own
+			// now take the values which minimizes the height of the last layer:
+			if(m_maxDepth - (higherHeight * (amountOfLayers - 1)) < m_maxDepth - (lowerHeight * (amountOfLayers - 1))){
+				// take the higher height: example:
+				// 		amount of layers = 8 and m_maxDepth = 30 -> the height of the layer here is: 2, instead of 6
+				m_depthPerLayer = higherHeight;
+			}else if(m_maxDepth - (higherHeight * (amountOfLayers - 1)) > m_maxDepth - (lowerHeight * (amountOfLayers - 1))){
+				// take the lower height: example:
+				//		amount of layer = 6
+				m_depthPerLayer = lowerHeight;
+			}else if(higherHeight > lowerHeight){
+				m_depthPerLayer = higherHeight;
+			}else{
+				m_depthPerLayer = lowerHeight;
+			}
+			//		printOnScreen("For depth: " << m_maxDepth << " choosen " << amountOfLayers << " layers with depth of " << m_depthPerLayer);
+		}
+		m_fastInnerTrees.resize(amountForFast); // the last layer is not be placed with trees
+		m_smallInnerTrees.resize(amountForSmall);
+		if(amountForFast > 0){
+			m_fastInnerTrees[0].resize(1); // start node
+			m_fastInnerTrees[0][0] = nullptr;
+		}
+		overwriteConst(m_amountOfClasses, amountOfClasses);
+	}else{
+		printError("The empty tree constructor was not called before!");
 	}
 }
 

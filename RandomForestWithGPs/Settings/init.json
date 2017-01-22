@@ -49,10 +49,11 @@
 		"maxUsedDataFactor": 0.6,
 		"stepSizeOverData": 120,
 		"factorAmountOfUsedDims": 1.0,
-		"ownSamplingTime": 100000,
+		"ownSamplingTime": 1000000,
+		"maxAmountOfUsedMemory": 12000000000,
 		"useBigDynmaicDecisionTrees": "true",
 		"layerAmountOfBigDDT": 2,
-		"determineBestLayerAmount": "true",
+		"determineBestLayerAmount": "false",
 		"printErrorForTraining": "false"
 	},
 	"Kernel": {

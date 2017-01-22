@@ -192,7 +192,7 @@ int main(int ac, char** av){
 //	system("pwd");
 #ifdef DEBUG
 	printOnScreen("Debug does not use inputParams!");
-	std::vector<std::string> input = {"RandomForest", "--useFakeData", "--samplingAndTraining", "2"}; //
+	std::vector<std::string> input = {"RandomForest", "--samplingAndTraining", "2"}; //, "--useFakeData"
 	ac = input.size();
 	av = new char*[ac];
 	for(int i = 0; i < ac; ++i){
