@@ -29,6 +29,8 @@ public:
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
 
+	void predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
+
 	unsigned int amountOfClasses() const;
 
 private:

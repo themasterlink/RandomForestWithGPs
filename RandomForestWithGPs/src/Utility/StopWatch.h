@@ -10,6 +10,7 @@
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "TimeFrame.h"
+#include "AvgNumber.h"
 
 class StopWatch{
 public:
@@ -34,7 +35,7 @@ public:
 	static double getActTime();
 
 	// returns the counter from the avg time measurment
-	unsigned int getAvgCounter() const { return counter; };
+	unsigned int getAvgCounter() const { return (unsigned int) avgTime.counter(); };
 
 private:
 
@@ -42,8 +43,7 @@ private:
 	typedef boost::posix_time::time_duration TimeDuration;
 
 	Time m_start, m_stop;
-	int counter;
-	double avgTime;
+	AvgNumber avgTime;
 };
 
 inline
@@ -80,7 +80,7 @@ const std::string StopWatch::elapsedAsPrettyTime() const{
 
 inline
 TimeFrame StopWatch::elapsedAvgAsTimeFrame() const{
-	return TimeFrame(avgTime);
+	return TimeFrame(avgTime.mean());
 }
 
 inline

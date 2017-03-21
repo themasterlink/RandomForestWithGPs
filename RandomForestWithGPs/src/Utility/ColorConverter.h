@@ -13,6 +13,11 @@
 
 namespace ColorConverter{
 
+static const double firstColor[3] = {1,1,0};
+static const double secondColor[3] = {0,0,1};
+static const double thirdColor[3] = {1,0,0};
+static const double fourthColor[3] = {0,1,1};
+
 void openCVColorChange(const int code, const double i, const double j,
 		const double k, double& u, double& v, double& w) {
 	cv::Mat_<cv::Vec3f> start(cv::Vec3f(i, j, k));
@@ -53,6 +58,19 @@ void HSV2LAB(const double h, const double s, const double v, double& l,
 	HSV2RGB(h,s,v,r,g,b);
 	RGB2LAB(r,g,b,l,a,b);
 }
+
+void getProbColorForBinaryRGB(const double prob, double& r, double& g, double& b){
+	r = prob * firstColor[0] + (1-prob) * secondColor[0];
+	g = prob * firstColor[1] + (1-prob) * secondColor[1];
+	b = prob * firstColor[2] + (1-prob) * secondColor[2];
+}
+
+void getProbColorForSecondBinaryRGB(const double prob, double& r, double& g, double& b){
+	r = prob * thirdColor[0] + (1-prob) * fourthColor[0];
+	g = prob * thirdColor[1] + (1-prob) * fourthColor[1];
+	b = prob * thirdColor[2] + (1-prob) * fourthColor[2];
+}
+
 
 }
 

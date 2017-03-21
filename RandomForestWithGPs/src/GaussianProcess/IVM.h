@@ -19,7 +19,7 @@
 #include "../CMAES/cmaes.h"
 #include "../CMAES/boundary_transformation.h"
 
-class IVM {
+class IVM : public PredictorBinaryClass {
 public:
 	enum KernelType {
 		GAUSS = 0,
@@ -48,7 +48,7 @@ public:
 
 	double predictSigma(const Vector& input) const;
 
-	const List<unsigned int>& getSelectedInducingPoints(){ return m_I; };
+	const List<unsigned int>& getSelectedInducingPoints() const { return m_I; };
 
 	void setDerivAndLogZFlag(const bool doLogZ, const bool doDerivLogZ);
 

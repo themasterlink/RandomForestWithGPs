@@ -13,11 +13,11 @@
 class InLinePercentageFiller {
 public:
 
-	static void setActMax(const int iMax);
+	static void setActMax(const long iMax);
 
 	static void setActMaxTime(const double dMax);
 
-	static void setActValueAndPrintLine(const int iAct);
+	static void setActValueAndPrintLine(const long iAct);
 
 	static void printLineWithRestTimeBasedOnMaxTime(const unsigned long amountOfCalcedElements, const bool lastElement = false);
 
@@ -27,7 +27,7 @@ private:
 	InLinePercentageFiller();
 	virtual ~InLinePercentageFiller();
 
-	static int m_max;
+	static long m_max;
 
 	static double m_dMax;
 
@@ -35,7 +35,7 @@ private:
 };
 
 inline
-void InLinePercentageFiller::setActMax(const int iMax){
+void InLinePercentageFiller::setActMax(const long iMax){
 	m_max = iMax - 1;
 	m_sw.startTime();
 }

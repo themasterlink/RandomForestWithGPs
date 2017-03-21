@@ -57,11 +57,12 @@ private:
 	typedef std::vector<DynamicDecisionTree*> FastTreeInnerStructure;
 	typedef std::vector<FastTreeInnerStructure> FastTreeStructure;
 
+	bool shouldNewTreeBeCalculatedFor(std::vector<unsigned int>& dataPositions);
 
 	void trainChildrenForRoot(DynamicDecisionTree* root, SmallTreeInnerStructure::iterator& it, SmallTreeInnerStructure& actSmallInnerTreeStructure,
 			const unsigned int depthInThisLayer, const unsigned int iRootId,
-			const unsigned int leavesForTreesInTheFatherLayer, const unsigned int neededPointsForNewTree,
-			const int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const bool saveDataPositions, bool& foundAtLeastOneChild);
+			const unsigned int leavesForTreesInTheFatherLayer, const int amountOfUsedDims,
+			RandomNumberGeneratorForDT& generator, const bool saveDataPositions, bool& foundAtLeastOneChild);
 
 	OnlineStorage<ClassPoint*>& m_storage;
 	// max depth allowed in this tree

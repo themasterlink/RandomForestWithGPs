@@ -71,6 +71,12 @@ private:
 
 	void predictDataInParallel(const Data& points, Labels* labels, const unsigned int start, const unsigned int end) const;
 
+	void predictClassDataInParallel(const ClassData& points, Labels* labels, const unsigned int start, const unsigned int end) const;
+
+	void predictDataProbInParallelStartEnd(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const unsigned int start, const unsigned int end) const;
+
+	void predictClassDataProbInParallelStartEnd(const ClassData& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const unsigned int start, const unsigned int end) const;
+
 	void predictDataProbInParallel(const Data& points, std::vector< std::vector<double> >* probabilities,
 			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
 

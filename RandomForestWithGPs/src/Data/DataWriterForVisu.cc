@@ -144,7 +144,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorBin
 	std::ofstream file;
 	openSvgFile(fileName, 820., (double) (max[0] - min[0]), (double) (max[1] - min[1]), file);
 	const bool complex = CommandSettings::get_visuRes() > 0;
-	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
+	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 		iY = 0;
 		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
 			DataPoint ele(dim);
@@ -162,8 +162,10 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorBin
 			if(!complex){
 				val = val >= 0.5 ? 1 : 0.;
 			}
+			double r, g, b;
+			ColorConverter::getProbColorForBinaryRGB(val, r, g, b);
 			drawSvgRect(file, iX / elementInX * 100., iY / elementInY  * 100.,
-					100.0 / elementInX, 100.0 / elementInY, val * 100, 0, (1.-val) * 100);
+					100.0 / elementInX, 100.0 / elementInY, r * 100, g * 100, b * 100);
 			++amount;
 			++iY;
 		}
@@ -386,7 +388,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 					ele[i] = 0;
 				}
 			}
-			double prob;
+			double prob = 0;
 			if(type == 0){
 				prob = ivm.predict(ele);
 			}else if(type == 1){
@@ -397,10 +399,10 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 			if(!complex){
 				prob = prob > 0.5 ? 1 : 0;
 			}
-			double r, g, b_;
 			double l = prob * colors[0][0] + (1-prob) * colors[1][0];
 			double a = prob * colors[0][1] + (1-prob) * colors[1][1];
 			double b = prob * colors[0][2] + (1-prob) * colors[1][2];
+			double r, g, b_;
 			ColorConverter::LAB2RGB(l, a, b, r, g, b_);
 
 			//double val = fmax(fmin(1.0,), 0.0);
@@ -461,7 +463,7 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 	const int amountOfSeg = 10;
 	drawSvgCoords2D(file, 7.5, 7.5, 10, 10, min, max, amountOfSeg, 820., height);
 	double minUsedValue = minVal;
-	const int k = CommandSettings::get_visuRes() > 0 ? 7 : CommandSettings::get_visuResSimple() > 0 ? 1 : 0;
+	const int k = CommandSettings::get_visuRes() > 0 ? 20 : CommandSettings::get_visuResSimple() > 0 ? 1 : 0;
 	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
 	const Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	double red[3];
@@ -496,6 +498,7 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 	}
 	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
 	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
+	std::list<std::pair<double, std::pair<double, double> > > imgPixel;
 	for(double dX = min[0]; dX < max[0]; dX += stepSize[0]){
 		for(double dY = min[1]; dY < max[1]; dY += stepSize[1]){
 			std::list<std::pair<double, double> > closestsPoints;
@@ -533,20 +536,33 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 			}
 			const double xPos = ((dX - min[0]) / (max[0] - min[0]) * 80. + 10.); // see 10. in drawSvgCoords2D
 			const double yPos = ((dY - min[1]) / (max[1] - min[1]) * 80. + 10.);
-			double r = 0, g = 0, b = 0;
-			if(val >= minVal){
-				if(val > minUsedValue){
-					val = (val - minUsedValue) / (maxVal - minUsedValue);
-				}else{
-					val = 0.;
-				}
-				double l = red[0] * val + blue[0] * (1. - val);
-				double a = red[1] * val + blue[1] * (1. - val);
-				double b_ = red[2] * val + blue[2] * (1. - val);
-				ColorConverter::LAB2RGB(l,a,b_, r,g,b);
-			}
-			drawSvgRect(file, xPos, yPos, 100. / elementInX, 100. / elementInY, r * 100,g * 100,b * 100);
+			imgPixel.push_back(std::pair<double, std::pair<double, double> >(val,  std::pair<double, double>(xPos, yPos)));
 		}
+	}
+	double newMinVal = DBL_MAX;
+	double newMaxVal = -DBL_MAX;
+	for(std::list<std::pair<double, std::pair<double, double> > >::iterator it = imgPixel.begin(); it != imgPixel.end();++it){
+		if(it->first < newMinVal){
+			newMinVal = it->first;
+		}
+		if(it->first > newMaxVal){
+			newMaxVal = it->first;
+		}
+	}
+	for(std::list<std::pair<double, std::pair<double, double> > >::iterator it = imgPixel.begin(); it != imgPixel.end();++it){
+		double val = it->first;
+		const double xPos = it->second.first;
+		const double yPos = it->second.second;
+		if(val >= minVal){
+			if(val > minUsedValue){
+				val = (val - newMinVal) / (newMaxVal - newMinVal);
+			}else{
+				val = 0.;
+			}
+		}
+		double r,g,b;
+		ColorConverter::getProbColorForBinaryRGB(val, r,g,b);
+		drawSvgRect(file, xPos, yPos, 100. / elementInX, 100. / elementInY, r * 100,g * 100,b * 100);
 	}
 	std::list<double>::const_iterator itValues = values.cbegin();
 
@@ -562,18 +578,254 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 			}else{
 				val = 0.;
 			}
-			double l = red[0] * val + blue[0] * (1. - val);
-			double a = red[1] * val + blue[1] * (1. - val);
-			double b_ = red[2] * val + blue[2] * (1. - val);
-			ColorConverter::LAB2RGB(l,a,b_, r,g,b);
+			ColorConverter::getProbColorForBinaryRGB(val, r,g,b);
 		}
 		file << "<circle cx=\"" << dx << "\" cy=\"" << dy << "\" r=\"8\" fill=\"rgb(" << r * 100. << "%," << g * 100. << "%," << b * 100. << "%)\" stroke=\"black\" stroke-width=\"2\"/> \n";
 	}
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMultiClass* predictor,
+void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorBinaryClass* predictor,
 		const ClassData& data, const int x, const int y){
+	if(data.size() == 0){
+		printError("No data is given, this data is needed to find min and max!");
+		return;
+	}
+	const int dim = data[0]->rows();
+	Eigen::Vector2i dimVec;
+	dimVec << x,y;
+	Eigen::Vector2d min, max;
+	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
+	const Eigen::Vector2d diff = max - min;
+	max[0] += diff[0] * 0.2;
+	max[1] += diff[1] * 0.2;
+	min[0] -= diff[0] * 0.2;
+	min[1] -= diff[1] * 0.2;
+
+	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+//	stepSize[1] *= 0.5;
+	const double elementInX = ceil((double)((max[0] - min[0]) / stepSize[0])) + 1;
+	const double elementInY = ceil((double)((max[1] - min[1]) / stepSize[1])) + 1;
+	const bool complex = CommandSettings::get_visuRes() > 0;
+	int counter = 0;
+	std::vector< std::vector<double> > colors(2, std::vector<double>(3));
+	const bool modeLab = false;
+	if(modeLab){
+		ColorConverter::RGB2LAB(1,0,0, colors[0][0], colors[0][1], colors[0][2]);
+		ColorConverter::RGB2LAB(0,1,1, colors[1][0], colors[1][1], colors[1][2]);
+	}
+	unsigned int fac = 4;
+	cv::Mat img(elementInY * fac, elementInX * fac, CV_8UC3, cv::Scalar(0, 0, 0));
+	int iX = 0, iY;
+	if(predictor != nullptr){
+		for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+			if(iX >= elementInX){
+				printError("This should not happen for x: " << iX);
+				continue;
+			}
+			iY = 0;
+			for(double yVal = min[1]; yVal < max[1]; yVal += stepSize[1]){
+				if(iY >= elementInY){
+					printError("This should not happen for y: " << iY);
+					continue;
+				}
+				DataPoint* ele = new DataPoint(dim);
+				for(int i = 0; i < dim; ++i){
+					if(i == x){
+						(*ele)[i] = xVal;
+					}else if(i == y){
+						(*ele)[i] = yVal;
+					}else{
+						(*ele)[i] = 0;
+					}
+				}
+				double prob = predictor->predict(*ele);
+				delete ele;
+				//double val = fmax(fmin(1.0,), 0.0);
+				if(!complex){
+					prob = prob > 0.5 ? 1 : 0;
+				}
+				double r, g, b_;
+				if(modeLab){
+					double l = prob * colors[0][0] + (1-prob) * colors[1][0];
+					double a = prob * colors[0][1] + (1-prob) * colors[1][1];
+					double b = prob * colors[0][2] + (1-prob) * colors[1][2];
+					ColorConverter::LAB2RGB(l, a, b, r, g, b_);
+				}else{
+					ColorConverter::getProbColorForBinaryRGB(prob, r, g, b_);
+				}
+				const unsigned int xInPic = iX * fac;
+				const unsigned int yInPic = (elementInY - iY - 1) * fac;
+				for(unsigned int t = 0; t < fac; ++t){
+					for(unsigned int l = 0; l < fac; ++l){
+						cv::Vec3b& color = img.at<cv::Vec3b>(yInPic + t, xInPic + l);
+						color[0] = b_ * 255; // from rgb to bgr
+						color[1] = g * 255;
+						color[2] = r * 255;
+					}
+				}
+				++counter;
+				++iY;
+			}
+			++iX;
+		}
+	}else{
+		cv::Scalar white(255,255,255);
+		img.setTo(white);
+	}
+	cv::Scalar black(0,0,0);
+	unsigned int oldFac = fac;
+	fac = 3;
+	for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it, ++counter){
+		const int dx = ((**it)[x] - min[0]) / (max[0] - min[0]) * elementInX * oldFac;
+		const int dy = (1. - ((**it)[y] - min[1]) / (max[1] - min[1])) * elementInY * oldFac;
+		const int label = (*it)->getLabel();
+		double r, g, b;
+		if(modeLab){
+			ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
+		}else{
+			ColorConverter::getProbColorForBinaryRGB(label == 1 ? 0.0 : 1.0, r, g, b);
+		}
+		cv::Scalar actColor(b * 255,g * 255,r * 255);// from rgb to bgr
+		cv::circle(img, cv::Point(dx, dy), (double) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
+		cv::circle(img, cv::Point(dx, dy), (double) fac * amountOfPointsOnOneAxis / 50.0, black, (double) fac / 4.0 * (double) amountOfPointsOnOneAxis / 50.0, CV_AA);
+	}
+	cv::imwrite(Logger::getActDirectory() + fileName, img);
+}
+
+void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predictor,
+		const ClassData& data, const int x, const int y){
+	if(data.size() == 0){
+		printError("No data is given, this data is needed to find min and max!");
+		return;
+	}
+	const int dim = data[0]->rows();
+	Eigen::Vector2i dimVec;
+	dimVec << x,y;
+	Eigen::Vector2d min, max;
+	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
+	const Eigen::Vector2d diff = max - min;
+	max[0] += diff[0] * 0.2;
+	max[1] += diff[1] * 0.2;
+	min[0] -= diff[0] * 0.2;
+	min[1] -= diff[1] * 0.2;
+
+	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+//	stepSize[1] *= 0.5;
+	const double elementInX = ceil((double)((max[0] - min[0]) / stepSize[0])) + 1;
+	const double elementInY = ceil((double)((max[1] - min[1]) / stepSize[1])) + 1;
+	const bool complex = CommandSettings::get_visuRes() > 0;
+	int counter = 0;
+	std::vector< std::vector<double> > colors(4, std::vector<double>(3));
+	const bool modeLab = false;
+	if(modeLab){
+		ColorConverter::RGB2LAB(1,0,0, colors[0][0], colors[0][1], colors[0][2]);
+		ColorConverter::RGB2LAB(0,1,1, colors[1][0], colors[1][1], colors[1][2]);
+		ColorConverter::RGB2LAB(0,0,1, colors[2][0], colors[2][1], colors[2][2]);
+		ColorConverter::RGB2LAB(1,1,0, colors[3][0], colors[3][1], colors[3][2]);
+	}
+	unsigned int fac = 4;
+	cv::Mat img(elementInX * fac, elementInY * fac, CV_8UC3, cv::Scalar(0, 0, 0));
+	int iX = 0, iY;
+	cv::Scalar white(255,255,255);
+	if(predictor != nullptr){
+		for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+			if(iX >= elementInX){
+				printError("This should not happen for x: " << iX);
+				continue;
+			}
+			iY = 0;
+			for(double yVal = min[1]; yVal < max[1]; yVal += stepSize[1]){
+				if(iY >= elementInY){
+					printError("This should not happen for y: " << iY);
+					continue;
+				}
+				DataPoint* ele = new DataPoint(dim);
+				for(int i = 0; i < dim; ++i){
+					if(i == x){
+						(*ele)[i] = xVal;
+					}else if(i == y){
+						(*ele)[i] = yVal;
+					}else{
+						(*ele)[i] = 0;
+					}
+				}
+				double prob = predictor->predict(*ele);
+				delete ele;
+				//double val = fmax(fmin(1.0,), 0.0);
+				if(!complex){
+					prob = prob > 0.5 ? 1 : 0;
+				}
+				double r, g, b_;
+				if(modeLab){
+					double l = prob * colors[0][0] + (1-prob) * colors[1][0];
+					double a = prob * colors[0][1] + (1-prob) * colors[1][1];
+					double b = prob * colors[0][2] + (1-prob) * colors[1][2];
+					ColorConverter::LAB2RGB(l, a, b, r, g, b_);
+				}else{
+					ColorConverter::getProbColorForBinaryRGB(prob, r, g, b_);
+				}
+				const unsigned int xInPic = iX * fac;
+				const unsigned int yInPic = (elementInY - iY - 1) * fac;
+				for(unsigned int t = 0; t < fac; ++t){
+					for(unsigned int l = 0; l < fac; ++l){
+						cv::Vec3b& color = img.at<cv::Vec3b>(xInPic + l, yInPic + t);
+						color[0] = b_ * 255; // from rgb to bgr
+						color[1] = g * 255;
+						color[2] = r * 255;
+					}
+				}
+				++counter;
+				++iY;
+			}
+			++iX;
+		}
+	}else{
+		img.setTo(white);
+	}
+	cv::Scalar black(0,0,0);
+	unsigned int oldFac = fac;
+	fac = 3;
+	for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it, ++counter){
+		const int dx = ((**it)[x] - min[0]) / (max[0] - min[0]) * elementInX * oldFac;
+		const int dy = (1. - ((**it)[y] - min[1]) / (max[1] - min[1])) * elementInY * oldFac;
+		const int label = (*it)->getLabel();
+		double r, g, b;
+		if(modeLab){
+			ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
+		}else{
+			ColorConverter::getProbColorForBinaryRGB(label == 1 ? 0.0 : 1.0, r, g, b);
+		}
+		cv::Scalar actColor(b * 255,g * 255,r * 255);// from rgb to bgr
+		cv::circle(img, cv::Point(dy, dx), (double) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
+		cv::circle(img, cv::Point(dy, dx), (double) fac * amountOfPointsOnOneAxis / 50.0, black, (double) fac / 4.0 * (double) amountOfPointsOnOneAxis / 50.0, CV_AA);
+	}
+	for(IVM::List<unsigned int>::const_iterator itList = predictor->getSelectedInducingPoints().begin(); itList != predictor->getSelectedInducingPoints().end(); ++itList){
+		ClassPoint* it =  data[*itList];
+		const int dx = (it->coeff(x) - min[0]) / (max[0] - min[0]) * elementInX * oldFac;
+		const int dy = (1. - (it->coeff(y) - min[1]) / (max[1] - min[1])) * elementInY * oldFac;
+		const int label = it->getLabel();
+		double r, g, b;
+		double ir, ig, ib;
+		if(modeLab){
+			ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
+		}else{
+			ColorConverter::getProbColorForBinaryRGB(label == 1 ? 0.0 : 1.0, r, g, b);
+			ColorConverter::getProbColorForBinaryRGB(label == 0 ? 0.0 : 1.0, ir, ig, ib);
+		}
+		cv::Scalar actColor(b * 255,g * 255,r * 255);// from rgb to bgr
+		cv::Scalar induActColor(ib * 255,ig * 255,ir * 255);// from rgb to bgr
+		cv::circle(img, cv::Point(dy, dx), (double) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
+		cv::circle(img, cv::Point(dy, dx), (double) fac * amountOfPointsOnOneAxis / 50.0, black, (double) fac / 4.0 * (double) amountOfPointsOnOneAxis / 50.0, CV_AA);
+		cv::circle(img, cv::Point(dy, dx), (double) fac * amountOfPointsOnOneAxis / 200.0, induActColor, CV_FILLED, CV_AA);
+	}
+	cv::imwrite(Logger::getActDirectory() + fileName, img);
+}
+
+
+void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMultiClass* predictor, const ClassData& data, const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
@@ -624,8 +876,11 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	int counter = 0;
 	int iX = 0, iY;
 	std::vector< std::vector<double> > colors(classAmount, std::vector<double>(3));
-	for(unsigned int i = 0; i < classAmount; ++i){ // save all colors
-		ColorConverter::HSV2LAB((i + 1) / (double) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
+	const bool justTwoClasses = classAmount == 2;
+	if(!justTwoClasses){
+		for(unsigned int i = 0; i < classAmount; ++i){ // save all colors
+			ColorConverter::HSV2LAB((i + 1) / (double) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
+		}
 	}
 	const unsigned int fac = 32;
 	cv::Mat img(elementInY * fac, elementInX * fac, CV_8UC3, cv::Scalar(0, 0, 0));
@@ -648,18 +903,23 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 				for(unsigned int i = 0; i < classAmount; ++i){
 					sum += probs[counter][i];
 				}
-				if(sum > 0){
-					for(unsigned int i = 0; i < classAmount; ++i){
-						probs[counter][i] /= sum;
-//						probs[counter][i] = -(probs[counter][i] * probs[counter][i]) + 2. * probs[counter][i]; // strech more
+				if(!justTwoClasses){
+					if(sum > 0){
+						for(unsigned int i = 0; i < classAmount; ++i){
+							probs[counter][i] /= sum;
+							//						probs[counter][i] = -(probs[counter][i] * probs[counter][i]) + 2. * probs[counter][i]; // strech more
+						}
+						for(unsigned int i = 0; i < classAmount; ++i){
+							l += probs[counter][i] * colors[i][0];
+							a += probs[counter][i] * colors[i][1];
+							b += probs[counter][i] * colors[i][2];
+						}
 					}
-					for(unsigned int i = 0; i < classAmount; ++i){
-						l += probs[counter][i] * colors[i][0];
-						a += probs[counter][i] * colors[i][1];
-						b += probs[counter][i] * colors[i][2];
-					}
+					ColorConverter::LAB2RGB(l, a, b, r, g, b_);
+				}else{
+					const double prob = probs[counter][0] / sum;
+					ColorConverter::getProbColorForBinaryRGB(prob, r, g, b_);
 				}
-				ColorConverter::LAB2RGB(l, a, b, r, g, b_);
 			}else{
 				double l = 0, a = 0, b = 0;
 				l = colors[result[counter]][0];
@@ -670,9 +930,9 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 			for(unsigned int t = 0; t < fac; ++t){
 				for(unsigned int l = 0; l < fac; ++l){
 					cv::Vec3b& color = img.at<cv::Vec3b>((elementInY - iY - 1) * fac + t,iX * fac + l);
-					color[0] = r * 255;
+					color[0] = b_ * 255;
 					color[1] = g * 255;
-					color[2] = b_ * 255;
+					color[2] = r * 255;
 				}
 			}
 			++counter;
@@ -686,8 +946,12 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 		const int dy = (1. - ((**it)[y] - min[1]) / (max[1] - min[1])) * elementInY * fac;
 		const int label = (*it)->getLabel();
 		double r, g, b;
-		ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
-		cv::Scalar actColor(r * 255,g * 255,b * 255);
+		if(!justTwoClasses){
+			ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
+		}else{
+			ColorConverter::getProbColorForBinaryRGB(label == 1 ? 0.0 : 1.0, r, g, b);
+		}
+		cv::Scalar actColor(b * 255,g * 255,r * 255);
 		cv::circle(img, cv::Point(dx, dy), fac / 2 * amountOfPointsOnOneAxis / 50, actColor, CV_FILLED, CV_AA);
 		cv::circle(img, cv::Point(dx, dy), fac / 2 * amountOfPointsOnOneAxis / 50, black, fac / 6 * amountOfPointsOnOneAxis / 50, CV_AA);
 	}
@@ -749,17 +1013,21 @@ void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& 
 			const double dx = ((**it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
 			const double dy = ((**it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
 			if(amountOfClasses == 2){
-				std::string color = "blue";
+				double prob = 0;
 				if(ivm != nullptr){
 					if((*it)->getLabel() == ivm->getLabelForOne()){
-						color = "red";
+						prob = 1;
 					}
 				}else{
 					if((*it)->getLabel() == 0){
-						color = "red";
+						prob = 1;
 					}
 				}
-				file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
+				double r, g, b;
+				ColorConverter::getProbColorForBinaryRGB(prob, r,g,b);
+				std::stringstream color;
+				color << "rgb(" << r * 100. << "%," << g * 100. << "%," << b * 100. << "%)";
+				file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color.str() << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
 			}else{
 				double r, g, b;
 				//std::cout << "(*it)->getLabel(): " << (*it)->getLabel() + 1 << " " << amountOfClasses << ",";

@@ -45,6 +45,10 @@ public:
 
 	static InternalStorage& getStorage(){ return m_storage; };
 
+	static void getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<ClassPoint*> >& trains, OnlineStorage<ClassPoint*>& test);
+
+	static Mode getMode(){ return m_mode; };
+
 private:
 
 	static DataPoint m_center;

@@ -17,13 +17,14 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 20
+			"height": 35
 		}
 	},
 	"IVM": {
 		"doEpUpdate": "false",
 		"lambda": 0.5,
-		"nrOfInducingPoints": 450,
+		"trainingCanBeAbortedIfErrorIsAboveVal": 101.0,
+		"nrOfInducingPoints": 800,
 		"desiredMargin": 0.01,
 		"hasLengthMoreThanParam": "false",
 		"useNeighbourComparison": "true",
@@ -37,24 +38,26 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
-		"folderLocReal": "../washington/",
+		"folderLocReal": "../mnistOrg/",
 		"folderLocFake": "../fakeData/",
-		"folderTestNr": 0,
-		"normalizeData": "true",
+		"folderTestNr": 1,
+		"normalizeData": "false",
+		"removeUselessDimensions": "true",
 		"readFromFolder": "true"
 	},
 	"OnlineRandomForest": {
 		"amountOfPointsUntilRetrain": 200,
 		"minUsedDataFactor": 0.3,
 		"maxUsedDataFactor": 0.6,
-		"stepSizeOverData": 120,
+		"stepSizeOverData": 15,
 		"factorAmountOfUsedDims": 1.0,
-		"ownSamplingTime": 1000000,
-		"maxAmountOfUsedMemory": 12000000000,
+		"ownSamplingTime": 0,
+		"maxAmountOfUsedMemory": 0,
 		"useBigDynmaicDecisionTrees": "true",
-		"layerAmountOfBigDDT": 2,
+		"layerAmountOfBigDDT": 3,
+		"layerFastAmountOfBigDDT": 2,
 		"determineBestLayerAmount": "false",
-		"printErrorForTraining": "false"
+		"printErrorForTraining": "true"
 	},
 	"Kernel": {
 		"path": "../realTest/kernelData.kernel"
@@ -63,22 +66,23 @@
 		"useMultiThread": "true"
 	},
 	"RandomForestKernel": {
-		"samplingAmount": 450,
-		"maxDepth": 18,
+		"samplingAmount": 200,
+		"maxDepth": 14,
 		"usePartitionInsteadOfLabels": "true"
 	},
 	"CMAES": {
-		"lowerBoundLen": 0.2,
-		"upperBoundLen": 15,
-		"lowerBoundFNoise": 0.2,
-		"upperBoundFNoise": 15,
-		"lowerBoundSNoise": 0.08,
-		"upperBoundSNoise": 0.1
+		"lowerBoundLen": 1,
+		"upperBoundLen": 10,
+		"lowerBoundFNoise": 1,
+		"upperBoundFNoise": 10,
+		"lowerBoundSNoise": 0.18,
+		"upperBoundSNoise": 0.2,
+		"minErrorForCheck": 40.0
 	},
 	"KernelParam": {
-		"len": 0.732498,
-		"fNoise": 3.51785,
-		"sNoise": 0.0832458,
+		"len": 4.2576,
+		"fNoise": 3.26699,
+		"sNoise": 0.01,
 		"lenMean": 0.9,
 		"lenVar": 0.7,
 		"fNoiseMean": 1.5,
@@ -88,7 +92,7 @@
 	},
 	"Training": {
 		"path": "../fakeData/",
-		"amount": 200,
+		"amount": 600,
 		"dim": 2
 	},
 	"Logger": {
@@ -123,9 +127,9 @@
 	"VisuParams": {
 		"visuHyperParamSampling2D": "false",
 		"visuEntropyForFinalIvm": "false",
-		"visuFinalIvm": "true"
+		"visuFinalIvm": "false"
 	},
 	"main": {
-		"type": "ORF"
+		"type": "binaryIvm"
 	}
 }

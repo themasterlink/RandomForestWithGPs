@@ -28,17 +28,29 @@ void DataReader::readFromBinaryFile(ClassData& data, const std::string& inputNam
 		long size;
 		input.read((char*) &size, sizeof(long));
 		const unsigned int lastSize = data.size();
-		data.resize(size + lastSize);
+		data.reserve(size + lastSize);
 		printOnScreen("Read " << size << " points from binary: " << inputName);
 		if(amountOfData > size && amountOfData != (unsigned int) INT_MAX){
 			printWarning("The amount of data provided is smaller than the desired amount!");
 		}
-		for(unsigned int i = lastSize; i < data.size(); ++i){
-			data[i] = new ClassPoint();
-			ReadWriterHelper::readPoint(input, *data[i]);
-			if(!ClassKnowledge::hasClassName(data[i]->getLabel())){
-				ClassKnowledge::setNameFor(number2String(data[i]->getLabel()), data[i]->getLabel());
-			}
+		for(unsigned int i = lastSize; i < size + lastSize; ++i){
+			ClassPoint* p = new ClassPoint();
+			ReadWriterHelper::readPoint(input, *p);
+//			if(p->getLabel() == 20 || p->getLabel() == 31 || p->getLabel() == 35){
+//				if(p->getLabel() == 20){
+//					p->setLabel(0);
+//				}else if(p->getLabel() == 31){
+//					p->setLabel(1);
+//				}else if(p->getLabel() == 35){
+//					p->setLabel(2);
+//				}
+				if(!ClassKnowledge::hasClassName(p->getLabel())){
+					ClassKnowledge::setNameFor(number2String(p->getLabel()), p->getLabel());
+				}
+				data.push_back(p);
+//			}else{
+//				delete p;
+//			}
 		}
 		if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
 			ClassKnowledge::setAmountOfDims((unsigned int) data[0]->rows());
@@ -171,12 +183,17 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 	// cycle through the directory
 	unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
 	int type = 0;
-	if(targetDir.parent_path().filename() == "mnistOrg"){
+	if(targetDir.parent_path().parent_path().filename() == "mnistOrg"){
 		type = 1;
-	}else if(targetDir.parent_path().filename() == "uspsOrg"){
+	}else if(targetDir.parent_path().parent_path().filename() == "uspsOrg"){
 		type = 2;
 	}else if(targetDir.parent_path().filename() == "washington"){
 		type = 3;
+	}else if(targetDir.parent_path().filename() == "simon"){
+		type = 4;
+	}else{
+		printError("This type is not supported here!");
+		return;
 	}
 	if(targetDir.parent_path().filename() == "mnist" && type == 0){
 //		didNormalizeData = true; // did perform that before write out mnistOrg
@@ -196,69 +213,70 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		}
 	}else if(type == 1){
 		ClassData data[10];
-		for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
-			std::vector<unsigned char> labels;
-			if(boost::filesystem::is_directory(itr->path())){
-				const std::string inputPath(itr->path().c_str());
-				if(boost::filesystem::exists(inputPath + "/labels.mnist") && boost::filesystem::exists(inputPath + "/data.mnist")){
-					for(std::string fileName : {"/labels.mnist", "/data.mnist"}){
-						std::ifstream input(inputPath + fileName);
-						if(input.is_open()){
-							input.seekg(0);
-							int_fast32_t magicNumber;
-							input.read((char*) &magicNumber, 4);
-							magicNumber = highEndian2LowEndian(magicNumber);
-							if(magicNumber == 2051){
-								int_fast32_t size;
-								input.read((char*) &size, 4);
-								size = highEndian2LowEndian(size);
-								int_fast32_t rows;
-								input.read((char*) &rows, 4);
-								rows = highEndian2LowEndian(rows);
-								int_fast32_t cols;
-								input.read((char*) &cols, 4);
-								cols = highEndian2LowEndian(cols);
-								if(labels.size() != (unsigned long) size){
-									printError("The labels should be read first!");
-									getchar();
-									return;
-								}
-								for(unsigned int i = 0; i < (unsigned int) size; ++i){
-									ClassPoint* newEle = new ClassPoint(rows * cols, labels[i]);
-									for(unsigned int r = 0; r < (unsigned int) rows; ++r){
-										for(unsigned int c = 0; c < (unsigned int) cols; ++c){
-											unsigned char ele;
-											input.read((char*) &ele, 1);
-											(*newEle).coeffRef(r * rows + c) = ele;
-										}
-									}
-									data[labels[i]].push_back(newEle);
-								}
-							}else if(magicNumber == 2049){
-								int_fast32_t size;
-								input.read((char*) &size, 4);
-								size = highEndian2LowEndian(size);
-								labels.resize(size);
-								for(unsigned int i = 0; i < (unsigned int) size; ++i){
-									input.read((char*) &labels[i], 1);
-								}
-							}else{
-								printError("This .mnist type is unknown!");
-							}
+		std::vector<unsigned char> labels;
+		const std::string inputPath(folderLocation);
+		if(boost::filesystem::exists(inputPath + "/labels.mnist") && boost::filesystem::exists(inputPath + "/data.mnist")){
+			for(std::string fileName : {"/labels.mnist", "/data.mnist"}){
+				std::ifstream input(inputPath + fileName);
+				if(input.is_open()){
+					input.seekg(0);
+					int_fast32_t magicNumber;
+					input.read((char*) &magicNumber, 4);
+					magicNumber = highEndian2LowEndian(magicNumber);
+					if(magicNumber == 2051){
+						int_fast32_t size;
+						input.read((char*) &size, 4);
+						size = highEndian2LowEndian(size);
+						int_fast32_t rows;
+						input.read((char*) &rows, 4);
+						rows = highEndian2LowEndian(rows);
+						int_fast32_t cols;
+						input.read((char*) &cols, 4);
+						cols = highEndian2LowEndian(cols);
+						if(labels.size() != (unsigned long) size){
+							printError("The labels should be read first!");
+							getchar();
+							return;
 						}
-						input.close();
+						for(unsigned int i = 0; i < (unsigned int) size; ++i){
+							ClassPoint* newEle = new ClassPoint(rows * cols, labels[i]);
+							for(unsigned int r = 0; r < (unsigned int) rows; ++r){
+								for(unsigned int c = 0; c < (unsigned int) cols; ++c){
+									unsigned char ele;
+									input.read((char*) &ele, 1);
+									(*newEle).coeffRef(r * rows + c) = ele;
+								}
+							}
+							data[labels[i]].push_back(newEle);
+						}
+					}else if(magicNumber == 2049){
+						int_fast32_t size;
+						input.read((char*) &size, 4);
+						size = highEndian2LowEndian(size);
+						labels.resize(size);
+						for(unsigned int i = 0; i < (unsigned int) size; ++i){
+							input.read((char*) &labels[i], 1);
+						}
+					}else{
+						printError("This .mnist type is unknown!");
 					}
-				}else{
-					printError("There is no data.mnist and labels.mnist file in this folder: " + inputPath);
 				}
+				input.close();
 			}
+		}else{
+			printError("There is no data.mnist and labels.mnist file in this folder: " + inputPath);
 		}
+
+
 		if(data[0].size() == 0){
-			printError("Class 0 is not represented here!");
+			printError("No data was read!");
 			return;
 		}
+		const bool createNewClasses = ClassKnowledge::amountOfClasses() == 0;
 		for(unsigned int i = 0; i < 10; ++i){
-			ClassKnowledge::setNameFor(number2String(i), i);
+			if(createNewClasses){
+				ClassKnowledge::setNameFor(number2String(i), i);
+			}
 			dataSets.insert( DataSetPair(number2String(i), data[i]));
 		}
 //		const unsigned int amountOfDim = data[0][0]->rows();
@@ -365,68 +383,67 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 //		DataConverter::centerAndNormalizeData(dataSets, center, var);
 		didNormalizeData = true;
 
-		std::string mnistFolder = targetDir.parent_path().parent_path().c_str();
-			mnistFolder += "/mnist/";
-		if(!boost::filesystem::exists(mnistFolder)){
-			system(("mkdir " + mnistFolder).c_str());
-		}
-		for(unsigned int i = 0; i < 10; ++i){
-			if(!boost::filesystem::exists(mnistFolder + number2String(i))){
-				system(("mkdir " + mnistFolder + number2String(i)).c_str());
-			}
-			DataBinaryWriter::toFile(data[i], mnistFolder + number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
-		}
+//		std::string mnistFolder = targetDir.parent_path().parent_path().c_str();
+//			mnistFolder += "/mnist/";
+//		if(!boost::filesystem::exists(mnistFolder)){
+//			system(("mkdir " + mnistFolder).c_str());
+//		}
+//		for(unsigned int i = 0; i < 10; ++i){
+//			if(!boost::filesystem::exists(mnistFolder + number2String(i))){
+//				system(("mkdir " + mnistFolder + number2String(i)).c_str());
+//			}
+//			DataBinaryWriter::toFile(data[i], mnistFolder + number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
+//		}
 	}else if(type == 2){
 		ClassData data[10];
-		for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
-			if(boost::filesystem::is_regular_file(itr->path())){
-				const std::string inputPath(itr->path().c_str());
-				const std::string fileName = itr->path().filename().c_str();
-				if(boost::filesystem::extension(itr->path()) == ".txt"){
-					std::ifstream input(inputPath);
-					if(input.is_open()){
-						std::string line;
-						std::getline(input, line);
-						if(line.length() != 0){
-							std::vector<std::string> elements;
-							std::stringstream ss(line);
-							std::string item;
-							while(std::getline(ss, item, ' ')){
-								elements.push_back(item);
-							}
-							if(elements[0] != "10" || elements[1] != "256"){
-								printError("The size or the dimension is wrong!");
-								return;
-							}
-						}
-						while(std::getline(input, line)){
-							if(line.length() != 0){
-								std::vector<std::string> elements;
-								std::stringstream ss(line);
-								std::string item;
-								while(std::getline(ss, item, ' ')){
-									elements.push_back(item);
-								}
-								if(elements.size() == 257){
-									ClassPoint* newEle = new ClassPoint(256, std::stoi(elements[0]));
-									for(unsigned int i = 1; i < 257; ++i){
-										(*newEle)[i-1] = std::stod(elements[i]);
-									}
-									data[newEle->getLabel()].push_back(newEle);
-								}else if(elements.size() > 0 && elements[0] == "-1"){
-									break;
-								}else{
-									printError("Something went wrong!");
-								}
-							}
-						}
-					}
-					input.close();
+		std::ifstream input(folderLocation + "data.txt");
+		if(input.is_open()){
+			std::string line;
+			std::getline(input, line);
+			if(line.length() != 0){
+				std::vector<std::string> elements;
+				std::stringstream ss(line);
+				std::string item;
+				while(std::getline(ss, item, ' ')){
+					elements.push_back(item);
+				}
+				if(elements[0] != "10" || elements[1] != "256"){
+					printError("The size or the dimension is wrong!");
+					return;
 				}
 			}
+			while(std::getline(input, line)){
+				if(line.length() != 0){
+					std::vector<std::string> elements;
+					elements.reserve(260);
+					std::stringstream ss(line);
+					std::string item;
+					while(std::getline(ss, item, ' ')){
+						elements.push_back(item);
+					}
+					if(elements.size() == 257){
+						ClassPoint* newEle = new ClassPoint(256, std::stoi(elements[0]));
+						for(unsigned int i = 1; i < 257; ++i){
+							newEle->coeffRef(i-1) = std::stod(elements[i]);
+						}
+						data[newEle->getLabel()].push_back(newEle);
+					}else if(elements.size() > 0 && elements[0] == "-1"){
+						break;
+					}else{
+						printError("Something went wrong!");
+					}
+				}
+			}
+		}else{
+			printError("File: " << folderLocation << "data.txt" << " could not be opened!");
+			return;
 		}
+		input.close();
+		const bool firstTime = ClassKnowledge::amountOfClasses() == 0;
 		for(unsigned int i = 0; i < 10; ++i){
-			ClassKnowledge::setNameFor(number2String(i), i);
+			if(firstTime){
+				ClassKnowledge::setNameFor(number2String(i), i);
+			}
 			dataSets.insert( DataSetPair(number2String(i), data[i]));
 		}
 		if(data[0].size() == 0){
@@ -436,20 +453,20 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		const unsigned int dimValue = data[0][0]->rows();
 		ClassKnowledge::setAmountOfDims(dimValue);
 
-		std::string uspsFolder = targetDir.parent_path().parent_path().c_str();
-		uspsFolder += "/usps/";
-		if(!boost::filesystem::exists(uspsFolder)){
-			system(("mkdir " + uspsFolder).c_str());
-		}
-		for(unsigned int i = 0; i < 10; ++i){
-			if(!boost::filesystem::exists(uspsFolder + number2String(i))){
-				system(("mkdir " + uspsFolder + number2String(i)).c_str());
-			}
-			if(data[i].size() > 0)
-				DataBinaryWriter::toFile(data[i], uspsFolder + number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
-		}
+//		std::string uspsFolder = targetDir.parent_path().parent_path().c_str();
+//		uspsFolder += "/usps/";
+//		if(!boost::filesystem::exists(uspsFolder)){
+//			system(("mkdir " + uspsFolder).c_str());
+//		}
+//		for(unsigned int i = 0; i < 10; ++i){
+//			if(!boost::filesystem::exists(uspsFolder + number2String(i))){
+//				system(("mkdir " + uspsFolder + number2String(i)).c_str());
+//			}
+//			if(data[i].size() > 0)
+//				DataBinaryWriter::toFile(data[i], uspsFolder + number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
+//		}
 
-	}else if(type == 3){
+	}else if(type == 3 || type == 4){
 		ClassData data;
 		for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 			if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".csv"){
@@ -476,6 +493,10 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			ClassKnowledge::setAmountOfDims(dimValue);
 		}
 	}
-	printOnScreen("Finished Reading all Folders");
+	unsigned int totalSize = 0;
+	for(DataSetsConstIterator it = dataSets.begin(); it != dataSets.end(); ++it){
+		totalSize += it->second.size();
+	}
+	printOnScreen("Finished Reading all Folders for " << folderLocation << ", amount of points: " << totalSize);
 }
 

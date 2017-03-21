@@ -30,6 +30,12 @@ public:
 	static void writeSvg(const std::string& fileName, const PredictorMultiClass* predictor,
 			const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 
+	static void writeImg(const std::string& fileName, const PredictorBinaryClass* predictor,
+			const ClassData& dataForMinMax, const int x = 0, const int y = 1);
+
+	static void writeImg(const std::string& fileName, const IVM* predictor,
+			const ClassData& dataForMinMax, const int x = 0, const int y = 1);
+
 	static void writeImg(const std::string& fileName, const PredictorMultiClass* predictor,
 			const ClassData& dataForMinMax, const int x = 0, const int y = 1);
 

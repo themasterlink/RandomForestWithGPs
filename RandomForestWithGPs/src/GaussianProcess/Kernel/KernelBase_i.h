@@ -58,7 +58,7 @@ void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, co
 		}
 		if(!read && !useSharedDifferenceMatrix){
 			const int amountOfElementsInTriangluarMatrix = (m_pData->size() * m_pData->size() + m_pData->size()) / 2;
-			m_differences = new Eigen::MatrixXd();
+			m_differences = new Eigen::MatrixXd(m_dataPoints, m_dataPoints);
 			calcDifferenceMatrix(0, amountOfElementsInTriangluarMatrix, m_differences);
 			std::fstream output(path, std::ios::binary | std::ios::out);
 			ReadWriterHelper::writeMatrix(output, *m_differences);
@@ -92,7 +92,7 @@ void KernelBase<KernelType, nrOfParams>::init(const ClassData& data, const bool 
 		}
 		if(!read && !useSharedDifferenceMatrix){
 			const int amountOfElementsInTriangluarMatrix = (m_pData->size() * m_pData->size() + m_pData->size()) / 2;
-			m_differences = new Eigen::MatrixXd(m_dataPoints, m_dataPoints);
+			m_differences = new Eigen::MatrixXd();
 			calcDifferenceMatrix(0, amountOfElementsInTriangluarMatrix, m_differences);
 			m_calcedDifferenceMatrix = true;
 			std::fstream output(path, std::ios::binary | std::ios::out);
@@ -110,8 +110,7 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 		m_dataPoints = m_pData->size();
 		int counter = 0;
 		if(usedMatrix->rows() != m_dataPoints || usedMatrix->cols() != m_dataPoints){
-			printError("The size of the matrix is incorrect!");
-			return;
+			m_differences->resize(m_dataPoints, m_dataPoints);
 		}
 		for(unsigned int i = 0; i < m_dataPoints; ++i){
 			++counter;

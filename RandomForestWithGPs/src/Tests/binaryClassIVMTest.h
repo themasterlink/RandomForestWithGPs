@@ -30,17 +30,30 @@ void testIvm(IVM& ivm, const OnlineStorage<ClassPoint*>& data){
 	std::list<double> probs;
 	Eigen::Vector2i amountPerClass;
 	amountPerClass[0] = amountPerClass[1] = 0;
+	AvgNumber neg, pos;
+	AvgNumber ocPos, ocNeg;
+	StopWatch sw;
 	for(int i = 0; i < amountOfTestPoints; ++i){
 		double prob = ivm.predict(*data[i]);
 		if(data[i]->getLabel() == ivm.getLabelForOne()){
 			++amountPerClass[0];
-		}else if(data[i]->getLabel() == ivm.getLabelForMinusOne()){
+			pos.addNew(prob);
+		}else if(data[i]->getLabel() != ivm.getLabelForOne()){
 			++amountPerClass[1];
+			neg.addNew(prob);
 		}
-		if(prob > 0.5 && data[i]->getLabel() == ivm.getLabelForOne()){
+		if(prob >= 0.5 && data[i]->getLabel() == ivm.getLabelForOne()){
 			++right; ++rightPerClass[0];
-		}else if(prob < 0.5 && data[i]->getLabel() == ivm.getLabelForMinusOne()){
+			ocPos.addNew(prob);
+		}else if(prob < 0.5 && data[i]->getLabel() != ivm.getLabelForOne()){
 			++right; ++rightPerClass[1];
+			ocPos.addNew(1-prob);
+		}else{
+			if(data[i]->getLabel() == ivm.getLabelForOne()){
+				ocNeg.addNew(prob);
+			}else{
+				ocNeg.addNew(1-prob);
+			}
 		}
 		if(prob > 0.5){
 			++amountOfAbove;
@@ -49,18 +62,25 @@ void testIvm(IVM& ivm, const OnlineStorage<ClassPoint*>& data){
 		}
 		probs.push_back(prob);
 	}
+	printOnScreen("Prediction took: " << sw.elapsedAsPrettyTime());
 	if(amountOfTestPoints > 0 && CommandSettings::get_plotHistos()){
 		DataWriterForVisu::writeHisto("histo.svg", probs, 14, 0, 1);
 		openFileInViewer("histo.svg");
 	}
-	printOnScreen("Amount of right: " << (double) right / amountOfTestPoints * 100.0 << "%");
-	printOnScreen("Amount of above: " << (double) amountOfAbove / amountOfTestPoints * 100.0 << "%");
-	printOnScreen("Amount of below: " << (double) amountOfBelow / amountOfTestPoints * 100.0 << "%");
-	printOnScreen("Recall for  1: " << (double) rightPerClass[0] / (double) amountPerClass[0] * 100.0 << "%");
-	printOnScreen("Recall for -1: " << (double) rightPerClass[1] / (double) amountPerClass[1] * 100.0 << "%");
-	printOnScreen("Precision for  1: " << (double) rightPerClass[0] / right * 100.0 << "%");
-	printOnScreen("Precision for -1: " << (double) rightPerClass[1] / right * 100.0 << "%");
-	printOnScreen("Amount of 1 in total: " << (double) amountPerClass[0] / amountOfTestPoints * 100.0 << "%");
+	printOnScreen("Amount of 1: " << amountPerClass[0] << ", amount of -1: " << amountPerClass[1]);
+	printOnScreen("Amount of right: " << (double) right / amountOfTestPoints * 100.0 << " %%");
+	printOnScreen("Amount of above: " << (double) amountOfAbove / amountOfTestPoints * 100.0 << " %%");
+	printOnScreen("Amount of below: " << (double) amountOfBelow / amountOfTestPoints * 100.0 << " %%");
+	printOnScreen("Recall for  1: " << (double) rightPerClass[0] / (double) amountPerClass[0] * 100.0 << " %%");
+	printOnScreen("Recall for -1: " << (double) rightPerClass[1] / (double) amountPerClass[1] * 100.0 << " %%");
+	printOnScreen("Precision for  1: " << (double) rightPerClass[0] / right * 100.0 << "%%");
+	printOnScreen("Precision for -1: " << (double) rightPerClass[1] / right * 100.0 << "%%");
+	printOnScreen("Avg for  1: " << (double) pos.mean() * 100.0 << "%%");
+	printOnScreen("Avg for -1: " << (double) neg.mean() * 100.0 << "%%");
+	printOnScreen("Overconf right: " << (double) ocPos.mean() * 100.0 << "%%");
+	printOnScreen("Overconf wrong: " << (double) ocNeg.mean() * 100.0 << "%%");
+
+	printOnScreen("Amount of 1 in total: " << (double) amountPerClass[0] / amountOfTestPoints * 100.0 << " %%");
 }
 
 void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, double* bestLogZ, boost::mutex* mutex, const double durationOfTraining, int* counter){
@@ -111,7 +131,8 @@ GaussianKernelParams sampleParams(OnlineStorage<ClassPoint*>& storage, int numbe
 
 void trainIVM(IVM* ivm, const int verboseLevel){
 	UNUSED(verboseLevel);
-	ivm->train(true, 1);
+	printLine();
+	ivm->train(CommandSettings::get_samplingAndTraining() > 0, 1, false);
 }
 
 void executeForBinaryClassIVM(){
@@ -141,7 +162,7 @@ void executeForBinaryClassIVM(){
 		package->setStandartInformation("Binary Ivm Training");
 		IVM ivm(train);
 		ivm.setInformationPackage(package);
-		ivm.init(nrOfInducingPoints, usedClasses, doEpUpdate);
+		ivm.init(nrOfInducingPoints, usedClasses, doEpUpdate, false);
 		boost::thread_group group;
 		group.add_thread(new boost::thread(boost::bind(&trainIVM, &ivm, 1)));
 		ThreadMaster::appendThreadToList(package);
@@ -152,9 +173,18 @@ void executeForBinaryClassIVM(){
 			testIvm(ivm, train);
 			printOnScreen("On " << test.size() << " points from real test data:");
 			testIvm(ivm, test);
+			if(CommandSettings::get_visuRes() > 0){
+			DataWriterForVisu::writeImg("test.png", &ivm, train.storage());
+			openFileInViewer("test.png");
+			}
+//			DataWriterForVisu::writeSvg("test.svg", &ivm, train.storage());
+//			openFileInViewer("test.svg");
+//			DataWriterForVisu::writeImg("empty.png", (PredictorBinaryClass*)nullptr, train.storage());
+	//		DataWriterForVisu::writeSvg("test.svg", &ivm, test.storage());
 		}else{
 			printError("The ivm could not be trained!");
 		}
+//		openFileInViewer("empty.png");
 	}else{
 		double sNoise = Settings::getDirectDoubleValue("KernelParam.sNoise");
 		if(CommandSettings::get_samplingAndTraining() > 0.){

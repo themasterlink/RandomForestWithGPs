@@ -97,7 +97,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 					const unsigned int nrOfParallel = (unsigned int) boost::thread::hardware_concurrency();
 					const unsigned int size = (m_storage.size() * m_storage.size() + m_storage.size()) / 2;
 					const unsigned int sizeOfPart =  size / nrOfParallel;
-					if(kernelType == 0 && amountOfUsedClasses > 0){ // GAUSS, calc the kernel matrix
+					if(kernelType == 0 && amountOfUsedClasses > 0 && m_storage.size() <= 10000){ // GAUSS, calc the kernel matrix
 						Eigen::MatrixXd* differenceMatrix = new Eigen::MatrixXd(m_storage.size(), m_storage.size());
 						boost::thread_group* group = new boost::thread_group();
 						std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
@@ -439,8 +439,24 @@ unsigned int IVMMultiBinary::getLabelFrom(const std::vector<double>& probs) cons
 	}
 	if(foundValue && plusOneCounter < 2){
 		return highestArg;
+	}else if(foundValue){
+		std::vector<bool> isOne(amountOfClasses(), false);
+		for(unsigned int i = 0; i < amountOfClasses(); ++i){
+			if(fabs(probs[i] - 1.0) < EPSILON){
+				isOne[i] = true;
+			}
+		}
+		for(unsigned int i = 0; i < 100000; ++i){
+			const unsigned int val = m_randClass();
+			if(isOne[val]){
+				return val;
+			}
+		}
+		printError("This should not happen!");
+		return m_randClass();
 	}else{
-		return m_randClass(); // return a random class if no knowledge can be extracted from the ivms
+		printError("All IVMs where zero!");
+		return m_randClass();
 	}
 }
 

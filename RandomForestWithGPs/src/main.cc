@@ -353,6 +353,9 @@ int main(int ac, char** av){
 	}else if(type == "multiIvm"){
 		executeForMutliClassIVM();
 		printOnScreen("For IVMs: " << sw.elapsedAsTimeFrame());
+	}else if(type == "binaryORF"){
+		executeForBinaryClassORF();
+		printOnScreen("For binary ORFs: " << sw.elapsedAsTimeFrame());
 	}else if(type == "ORF"){
 		executeForBinaryClassORF();
 		printOnScreen("For ORFs: " << sw.elapsedAsTimeFrame());
@@ -363,9 +366,11 @@ int main(int ac, char** av){
 		printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
 	}
 
-//	printOnScreen("Press any key to quit application");
 	Logger::forcedWrite();
-//	getchar();
+	if(CommandSettings::get_settingsFile().length() == 0){
+		printOnScreen("Press any key to quit application");
+		getchar();
+	}
 
 	return 0;
 }

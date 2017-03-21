@@ -20,6 +20,8 @@ ClassKnowledge::~ClassKnowledge() {
 }
 
 void ClassKnowledge::init(){
+	m_names.clear();
+	m_amountOfDims = 0;
 	m_names.insert(LabelNamePair(UNDEF_CLASS_LABEL, "undefined"));
 }
 

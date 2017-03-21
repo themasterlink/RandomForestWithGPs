@@ -10,13 +10,13 @@ restarts 0                    # read by example_restarts.c, remark that restarts
 ## --- OBLIGATORY SETTINGS
 # these settings, if read, overwrite the input values to cmaes_init 
 
- N 3        # Problem dimension, overwrites parameter in cmaes_init
+ N 2        # Problem dimension, overwrites parameter in cmaes_init
  initialX 1:   # Initial search point. Syntax: 1==read one number, see also end of file. 
    0.5e0       #    these are the read value(s)!
  typicalX 1:   # Typical search point (useful for restarts, cave: boundaries), overwritten by initialX 
     0.0        #    these are the read value(s)
- initialStandardDeviations 3:   #  1==read only one number for all coordinates
-	25.0 25.0 0.3                    #  numbers should not differ by orders of magnitude
+ initialStandardDeviations 2:   #  1==read only one number for all coordinates
+	5.0 5.0                     #  numbers should not differ by orders of magnitude
 	                             #  should be roughly 1/4 of the search interval
                                  #  this number essentially influences the global 
                                  #  search ability (ie. the horizon where to search
@@ -68,7 +68,7 @@ maxTimeFractionForEigendecompostion 1  # maximal CPU-time fraction for eigensyst
 ## --- Strategy internal parameter ---
 ##     default values are set in cmaes_readpara_SupplementDefaults()
 ## -- Selection related parameters
- lambda 400        # number of offspring == samplesize
+ lambda 5        # number of offspring == samplesize
 # mu  
 # weights      log # possible values: log (==default), 
                    #   lin (==linearely decreasing), or equal 

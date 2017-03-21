@@ -10,7 +10,7 @@
 #include "Util.h"
 #include "../Base/ScreenOutput.h"
 
-int InLinePercentageFiller::m_max = 0;
+long InLinePercentageFiller::m_max = 0;
 double InLinePercentageFiller::m_dMax = 0;
 StopWatch InLinePercentageFiller::m_sw;
 
@@ -23,7 +23,7 @@ InLinePercentageFiller::~InLinePercentageFiller(){
 }
 
 
-void InLinePercentageFiller::setActValueAndPrintLine(const int iAct){
+void InLinePercentageFiller::setActValueAndPrintLine(const long iAct){
 	if(iAct <= m_max && iAct >= 0){
 		setActPercentageAndPrintLine((double) iAct / (double) m_max * 100.0, iAct == m_max);
 	}else{
@@ -35,8 +35,8 @@ void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned 
 	std::stringstream str;
 	const double seconds = m_sw.elapsedSeconds();
 	const double dAct = !lastElement ? std::min(seconds / m_dMax * 100., 100.) : 100.;
-	const int amountOfElements = std::max(COLS / 2, 100);
-	for(int i = 0; i < amountOfElements; ++i){
+	const long amountOfElements = std::max(COLS / 2, 100);
+	for(long i = 0; i < amountOfElements; ++i){
 		const double t = i / (double) amountOfElements * 100.;
 		if(t <= dAct){
 			str << "#";
@@ -61,8 +61,8 @@ void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned 
 void InLinePercentageFiller::setActPercentageAndPrintLine(const double dAct, const bool lastElement){
 	if(dAct >= 0 && dAct <= 100.0){
 		std::stringstream str;
-		const int amountOfElements = std::max(COLS / 2, 100);
-		for(int i = 0; i < amountOfElements; ++i){
+		const long amountOfElements = std::max(COLS / 2, 100);
+		for(long i = 0; i < amountOfElements; ++i){
 			const double t = i / (double) amountOfElements * 100.;
 			if(t <= dAct){
 				str << "#";

@@ -51,6 +51,8 @@ public:
 
 	bool useWholeDataSet() const{ return m_stepSize < 1; };
 
+	int getStepSize(){ return m_stepSize; };
+
 	unsigned int getRandStepOverStorage();
 
 private:

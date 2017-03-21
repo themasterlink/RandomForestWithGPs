@@ -108,6 +108,7 @@ void ThreadMaster::run(){
 			if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime * 0.05 || (*it)->isTaskFinished()){ // each training have to take at least 5 seconds!
 				if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime && !(*it)->shouldTrainingBeAborted() && (*it)->canBeAbortedAfterCertainTime()){
 //					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
+					printInPackageOnScreen(*it, "Abort training in thread master");
 					(*it)->abortTraing(); // break the training
 				}
 				if(selectedValue != m_waitingList.end()){

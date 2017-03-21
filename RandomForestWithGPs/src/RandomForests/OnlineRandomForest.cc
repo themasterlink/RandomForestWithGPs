@@ -123,9 +123,12 @@ void OnlineRandomForest::train(){
 		}
 	}else if(m_useBigDynamicDecisionTrees && m_maxDepth > 5){
 		Settings::getValue("OnlineRandomForest.layerAmountOfBigDDT", m_amountOfUsedLayer.first);
-		m_amountOfUsedLayer.second = 2; // default
+		Settings::getValue("OnlineRandomForest.layerFastAmountOfBigDDT", m_amountOfUsedLayer.second);
 	}else{
 		m_useBigDynamicDecisionTrees = false;
+	}
+	if(m_useBigDynamicDecisionTrees){
+		printOnScreen("First layer amount: " << m_amountOfUsedLayer.first << ", amount of second layers: " << m_amountOfUsedLayer.second);
 	}
 	std::vector<std::vector<unsigned int> >* counterForClasses = nullptr;
 	if(Settings::getDirectBoolValue("OnlineRandomForest.printErrorForTraining")){
@@ -140,8 +143,17 @@ void OnlineRandomForest::train(){
 		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i], m_desiredAmountOfTrees, counterForClasses, &mutexForCounter)));
 	}
 	int stillOneRunning = 1;
+	const unsigned long maxTime = 86400;// more than a day
+	MemoryType maxAmountOfUsedMemory;
+	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
+	printOnScreen(m_desiredAmountOfTrees << "; " << trainingsTime << "; " << maxTime);
+
 	if(m_desiredAmountOfTrees == 0){
-		InLinePercentageFiller::setActMaxTime(trainingsTime);
+		if(trainingsTime > maxTime){
+			InLinePercentageFiller::setActMax((long) maxAmountOfUsedMemory);
+		}else{
+			InLinePercentageFiller::setActMaxTime(trainingsTime);
+		}
 	}else{
 		InLinePercentageFiller::setActMax(m_desiredAmountOfTrees);
 	}
@@ -157,7 +169,11 @@ void OnlineRandomForest::train(){
 			}
 		}
 		if(m_desiredAmountOfTrees == 0){
-			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size());
+			if(trainingsTime > maxTime){
+				InLinePercentageFiller::setActValueAndPrintLine((long) std::min(m_usedMemory, maxAmountOfUsedMemory));
+			}else{
+				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size());
+			}
 		}else{
 			InLinePercentageFiller::setActValueAndPrintLine(m_trees.size());
 		}
@@ -216,16 +232,18 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 	while(true){ // the thread master will eventually kill this training
 		m_treesMutex.lock();
 		if(amountOfTrees > 0 && (unsigned int) m_trees.size() >= amountOfTrees){
+			printOnScreen("Abort because to many trees");
 			m_treesMutex.unlock();
 			break;
 		}
-		const unsigned int treeAmount = m_trees.size();
+//		const unsigned int treeAmount = m_trees.size();
 		m_treesMutex.unlock();
 		// check if the memory consumption is to high -> write trees to disk
 		mutexForCounter->lock();
 //		printInPackageOnScreen(package, "Mem: " << getPercentageForUsedMemory());
-		if(m_usedMemory > maxAmountOfUsedMemory){
+		if(maxAmountOfUsedMemory > 0 && m_usedMemory > maxAmountOfUsedMemory && package->canBeAbortedInGeneral()){
 			package->abortTraing();
+			printOnScreen("Abort because of memory");
 //			printOnScreen("Save to file");
 //			m_savedAnyTreesToDisk = true;
 //			writeTreesToDisk(treeAmount);
@@ -260,7 +278,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 		m_treesMutex.unlock();
 		if(package->shouldTrainingBePaused()){
 			package->wait();
-		}else if(package->shouldTrainingBeAborted()){ // if amountOfTrees == 0 -> ORF_TRAIN_FIX -> can not be aborted
+		}else if(package->shouldTrainingBeAborted()){ // if amountOfTrees != 0 -> ORF_TRAIN_FIX -> can not be aborted
 			break;
 		}
 	}
@@ -396,6 +414,7 @@ void OnlineRandomForest::update(Subject* caller, unsigned int event){
 	notify(event); // this should alert the generators two adjust to the new min and max values
 	switch(event){
 		case OnlineStorage<ClassPoint*>::APPEND:{
+			++m_counterForRetrain;
 			if(m_counterForRetrain >= m_amountOfPointsUntilRetrain){
 				update();
 				m_counterForRetrain = 0;
@@ -431,7 +450,7 @@ bool OnlineRandomForest::update(){
 		SortedDecisionTreeList* list = new SortedDecisionTreeList();
 		printOnScreen("Predict all trees on all data points and sort them");
 		sortTreesAfterPerformance(*list);
-		printOnScreen("Finished sorting");
+		printOnScreen("Finished sorting, worst tree has: " << list->begin()->second);
 //		if(list->begin()->second > 90.){
 //			printDebug("No update needed!");
 //			return false;
@@ -473,6 +492,7 @@ bool OnlineRandomForest::update(){
 		for(SortedDecisionTreeList::const_iterator it = list->begin(); it != list->end(); ++it){
 			m_trees.push_back(it->first);
 		}
+		printOnScreen("New worst tree has: " << list->begin()->second);
 		SAVE_DELETE(list);
 	}
 	return true;
@@ -518,13 +538,15 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 		for(SortedDecisionTreeList::iterator it = ownList.begin(); it != ownList.end(); ++it){
 			int correct = 0;
 			DynamicDecisionTreeInterface* tree = it->first;
-			for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-				const ClassPoint& point = *(*it);
+//			for(unsigned int k = m_storage.getLastUpdateIndex(); k < m_storage.size(); ++k){
+//				const ClassPoint& point = *(m_storage[k]);
+			for(OnlineStorage<ClassPoint*>::ConstIterator itPoint = m_storage.begin(); itPoint != m_storage.end(); ++itPoint){
+				ClassPoint& point = **itPoint;
 				if(point.getLabel() == tree->predict(point)){
 					++correct;
 				}
 			}
-			it->second = correct / (double) m_storage.size() * 100.;
+			it->second = correct / (double) (m_storage.size()) * 100.;
 		}
 		SortedDecisionTreeList sortedList;
 		for(SortedDecisionTreeList::iterator it = ownList.begin(); it != ownList.end(); ++it){
@@ -576,6 +598,7 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 	for(unsigned int i = 0; i < amountOfSteps; ++i){
 		switcher->train(m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
 		int correct = 0;
+//		for(unsigned int k = m_storage.getLastUpdateIndex(); k < m_storage.size(); ++k){
 		for(OnlineStorage<ClassPoint*>::ConstIterator itPoint = m_storage.begin(); itPoint != m_storage.end(); ++itPoint){
 			ClassPoint& point = **itPoint;
 			if(point.getLabel() == switcher->predict(point)){
@@ -594,11 +617,11 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 			addToList = switcher;
 			switcher = pair.first;
 			// add to list again!
-			printInPackageOnScreen(package, "Performed new step with better correctness of: " << number2String(correctVal, 2) << " %%");
+			printInPackageOnScreen(package, "Performed new step with better correctness of: " << number2String(correctVal, 2) << " %%, worst had: " << pair.second);
 		}else{
 			addToList = pair.first;
 			// no switch -> the switcher is trys to improve itself
-			printInPackageOnScreen(package, "Performed new step with worse correctness of " << number2String(correctVal, 2) << " %% not used");
+			printInPackageOnScreen(package, "Performed new step with worse correctness of " << number2String(correctVal, 2) << " %% not used, worst had: " << pair.second);
 		}
 		mutex->lock();
 		*counter += 1; // is already protected in mutex lock
@@ -727,8 +750,11 @@ double OnlineRandomForest::predictPartitionEquality(const DataPoint& point1, con
 		return 0;
 	}
 	if(m_firstTrainingDone && m_trees.size() > 0){
-		if(amountOfSamples > (unsigned int) m_trees.size() || m_maxDepth <= 3 || amountOfSamples == 0){
-			printError("This should not happen!");
+		if(amountOfSamples > (unsigned int) m_trees.size()){
+			amountOfSamples = (unsigned int)  m_trees.size();
+		}
+		if(m_maxDepth <= 3 || amountOfSamples == 0){
+			printError("Amount of samples: " << amountOfSamples << ", tree size: " << m_trees.size() << ", max depth: " << m_maxDepth);
 			return -1;
 		}
 		int sameLeaveCounter = 0;
@@ -747,99 +773,145 @@ double OnlineRandomForest::predictPartitionEquality(const DataPoint& point1, con
 
 
 void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
-	std::vector<std::vector<double> > probs;
-	predictData(points, labels, probs);
+	if(m_savedAnyTreesToDisk){
+		std::vector<std::vector<double> > probs;
+		predictData(points, labels, probs);
+	}else{
+		labels.resize(points.size());
+		boost::thread_group group;
+		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		for(unsigned int i = 0; i < nrOfParallel; ++i){
+			const int start = i / (double) nrOfParallel * points.size();
+			const int end = (i + 1) / (double) nrOfParallel * points.size();
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictDataInParallel, this, points, &labels, start, end)));
+		}
+		group.join_all();
+	}
 }
 
 void OnlineRandomForest::predictData(const ClassData& points, Labels& labels) const{
-	std::vector<std::vector<double> > probs;
-	predictData(points, labels, probs);
+	if(m_savedAnyTreesToDisk){
+		std::vector<std::vector<double> > probs;
+		predictData(points, labels, probs);
+	}else{
+		labels.resize(points.size());
+		boost::thread_group group;
+		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		for(unsigned int i = 0; i < nrOfParallel; ++i){
+			const int start = i / (double) nrOfParallel * points.size();
+			const int end = (i + 1) / (double) nrOfParallel * points.size();
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictClassDataInParallel, this, points, &labels, start, end)));
+		}
+		group.join_all();
+	}
 }
 
 void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
 	labels.resize(points.size());
 	probabilities.resize(points.size());
-	boost::thread_group group;
-	const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
-	std::vector<std::vector<std::vector<double> > >* probsForThreads = new std::vector<std::vector<std::vector<double> > >(nrOfParallel);
-	unsigned int batchNr = 0;
-	if(m_trees.size() == 0 && m_savedAnyTreesToDisk && batchNr < m_savedToDiskTreesFilePaths.size()){
-		loadBatchOfTreesFromDisk(batchNr);
-		++batchNr;
-	} // else means the save mode is not used
-	boost::mutex mutexForTrees;
-	DecisionTreeIterator it = m_trees.begin();
-	for(unsigned int i = 0; i < nrOfParallel; ++i){
-		std::vector<std::vector<double> >* actProb = &((*probsForThreads)[i]);
-		actProb->resize(points.size());
-		for(unsigned int j = 0; j < points.size(); ++j){
-			(*actProb)[j].resize(m_amountOfClasses);
-		}
-		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictDataProbInParallel, this, points, actProb, &batchNr, &mutexForTrees, &it)));
-	}
-	group.join_all();
-	for(unsigned int i = 0; i < points.size(); ++i){
-		unsigned int iMax = UNDEF_CLASS_LABEL;
-		double max = 0.;
-		const double fac = 1. / getNrOfTrees();
-		probabilities[i].resize(m_amountOfClasses);
-		for(unsigned int j = 0; j < m_amountOfClasses; ++j){
-			double val = 0;
-			for(unsigned int k = 0; k < nrOfParallel; ++k){
-				val += (*probsForThreads)[k][i][j];
+	if(m_savedAnyTreesToDisk){
+		boost::thread_group group;
+		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		std::vector<std::vector<std::vector<double> > >* probsForThreads = new std::vector<std::vector<std::vector<double> > >(nrOfParallel);
+		unsigned int batchNr = 0;
+		if(m_trees.size() == 0 && m_savedAnyTreesToDisk && batchNr < m_savedToDiskTreesFilePaths.size()){
+			loadBatchOfTreesFromDisk(batchNr);
+			++batchNr;
+		} // else means the save mode is not used
+		boost::mutex mutexForTrees;
+		DecisionTreeIterator it = m_trees.begin();
+		for(unsigned int i = 0; i < nrOfParallel; ++i){
+			std::vector<std::vector<double> >* actProb = &((*probsForThreads)[i]);
+			actProb->resize(points.size());
+			for(unsigned int j = 0; j < points.size(); ++j){
+				(*actProb)[j].resize(m_amountOfClasses);
 			}
-			probabilities[i][j] = val * fac;
-			if(max < probabilities[i][j]){
-				max = probabilities[i][j];
-				iMax = j;
-			}
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictDataProbInParallel, this, points, actProb, &batchNr, &mutexForTrees, &it)));
 		}
-		labels[i] = iMax;
+		group.join_all();
+		for(unsigned int i = 0; i < points.size(); ++i){
+			unsigned int iMax = UNDEF_CLASS_LABEL;
+			double max = 0.;
+			const double fac = 1. / getNrOfTrees();
+			probabilities[i].resize(m_amountOfClasses);
+			for(unsigned int j = 0; j < m_amountOfClasses; ++j){
+				double val = 0;
+				for(unsigned int k = 0; k < nrOfParallel; ++k){
+					val += (*probsForThreads)[k][i][j];
+				}
+				probabilities[i][j] = val * fac;
+				if(max < probabilities[i][j]){
+					max = probabilities[i][j];
+					iMax = j;
+				}
+			}
+			labels[i] = iMax;
+		}
+		SAVE_DELETE(probsForThreads);
+	}else{
+		boost::thread_group group;
+		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		for(unsigned int i = 0; i < nrOfParallel; ++i){
+			const int start = i / (double) nrOfParallel * points.size();
+			const int end = (i + 1) / (double) nrOfParallel * points.size();
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictDataProbInParallelStartEnd, this, points, &labels, &probabilities, start, end)));
+		}
+		group.join_all();
 	}
-	SAVE_DELETE(probsForThreads);
 }
 
 void OnlineRandomForest::predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
 	labels.resize(points.size());
 	probabilities.resize(points.size());
-	boost::thread_group group;
-	const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
-	std::vector<std::vector<std::vector<double> > >* probsForThreads = new std::vector<std::vector<std::vector<double> > >(nrOfParallel);
-	unsigned int batchNr = 0;
-	if(m_trees.size() == 0 && m_savedAnyTreesToDisk && batchNr < m_savedToDiskTreesFilePaths.size()){
-		loadBatchOfTreesFromDisk(batchNr);
-		++batchNr;
-	} // else means the save mode is not used
-	boost::mutex mutexForTrees;
-	DecisionTreeIterator it = m_trees.begin();
-	for(unsigned int i = 0; i < nrOfParallel; ++i){
-		std::vector<std::vector<double> >* actProb = &((*probsForThreads)[i]);
-		actProb->resize(points.size());
-		for(unsigned int j = 0; j < points.size(); ++j){
-			(*actProb)[j].resize(m_amountOfClasses);
-		}
-		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictClassDataProbInParallel, this, points, actProb, &batchNr, &mutexForTrees, &it)));
-	}
-	group.join_all();
-	for(unsigned int i = 0; i < points.size(); ++i){
-		unsigned int iMax = UNDEF_CLASS_LABEL;
-		double max = 0.;
-		const double fac = 1. / getNrOfTrees();
-		probabilities[i].resize(m_amountOfClasses);
-		for(unsigned int j = 0; j < m_amountOfClasses; ++j){
-			double val = 0;
-			for(unsigned int k = 0; k < nrOfParallel; ++k){
-				val += (*probsForThreads)[k][i][j];
+	if(m_savedAnyTreesToDisk){
+		boost::thread_group group;
+		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		std::vector<std::vector<std::vector<double> > >* probsForThreads = new std::vector<std::vector<std::vector<double> > >(nrOfParallel);
+		unsigned int batchNr = 0;
+		if(m_trees.size() == 0 && m_savedAnyTreesToDisk && batchNr < m_savedToDiskTreesFilePaths.size()){
+			loadBatchOfTreesFromDisk(batchNr);
+			++batchNr;
+		} // else means the save mode is not used
+		boost::mutex mutexForTrees;
+		DecisionTreeIterator it = m_trees.begin();
+		for(unsigned int i = 0; i < nrOfParallel; ++i){
+			std::vector<std::vector<double> >* actProb = &((*probsForThreads)[i]);
+			actProb->resize(points.size());
+			for(unsigned int j = 0; j < points.size(); ++j){
+				(*actProb)[j].resize(m_amountOfClasses);
 			}
-			probabilities[i][j] = val * fac;
-			if(max < probabilities[i][j]){
-				max = probabilities[i][j];
-				iMax = j;
-			}
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictClassDataProbInParallel, this, points, actProb, &batchNr, &mutexForTrees, &it)));
 		}
-		labels[i] = iMax;
+		group.join_all();
+		for(unsigned int i = 0; i < points.size(); ++i){
+			unsigned int iMax = UNDEF_CLASS_LABEL;
+			double max = 0.;
+			const double fac = 1. / getNrOfTrees();
+			probabilities[i].resize(m_amountOfClasses);
+			for(unsigned int j = 0; j < m_amountOfClasses; ++j){
+				double val = 0;
+				for(unsigned int k = 0; k < nrOfParallel; ++k){
+					val += (*probsForThreads)[k][i][j];
+				}
+				probabilities[i][j] = val * fac;
+				if(max < probabilities[i][j]){
+					max = probabilities[i][j];
+					iMax = j;
+				}
+			}
+			labels[i] = iMax;
+		}
+		SAVE_DELETE(probsForThreads);
+	}else{
+		boost::thread_group group;
+		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		for(unsigned int i = 0; i < nrOfParallel; ++i){
+			const int start = i / (double) nrOfParallel * points.size();
+			const int end = (i + 1) / (double) nrOfParallel * points.size();
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictClassDataProbInParallelStartEnd, this, points, &labels, &probabilities, start, end)));
+		}
+		group.join_all();
 	}
-	SAVE_DELETE(probsForThreads);
 }
 
 void OnlineRandomForest::predictDataProbInParallel(const Data& points, std::vector< std::vector<double> >* probabilities,
@@ -929,6 +1001,62 @@ void OnlineRandomForest::predictClassDataProbInParallel(const ClassData& points,
 			}
 			mutex->unlock();
 		}while(hasNewTrees);
+	}
+}
+
+void OnlineRandomForest::predictDataProbInParallelStartEnd(const Data& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const unsigned int start, const unsigned int end) const{
+	if(m_firstTrainingDone){
+		for(unsigned int i = start; i < end; ++i){
+			(*probabilities)[i].resize(m_amountOfClasses);
+			for(DecisionTreeConstIterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
+				(*probabilities)[i][(*it)->predict(*points[i])] += 1;
+			}
+			unsigned int iMax = UNDEF_CLASS_LABEL;
+			double max = 0.;
+			const double fac = 1. / m_trees.size();
+			for(unsigned int j = 0; j < m_amountOfClasses; ++j){
+				(*probabilities)[i][j] *= fac;
+				if(max < (*probabilities)[i][j]){
+					max = (*probabilities)[i][j];
+					iMax = j;
+				}
+			}
+			(*labels)[i] = iMax;
+		}
+	}
+}
+
+void OnlineRandomForest::predictClassDataProbInParallelStartEnd(const ClassData& points, Labels* labels, std::vector< std::vector<double> >* probabilities, const unsigned int start, const unsigned int end) const{
+	if(m_firstTrainingDone){
+		for(unsigned int i = start; i < end; ++i){
+			(*probabilities)[i].resize(m_amountOfClasses);
+			for(DecisionTreeConstIterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
+				(*probabilities)[i][(*it)->predict(*points[i])] += 1;
+			}
+			unsigned int iMax = UNDEF_CLASS_LABEL;
+			double max = 0.;
+			const double fac = 1. / m_trees.size();
+			for(unsigned int j = 0; j < m_amountOfClasses; ++j){
+				(*probabilities)[i][j] *= fac;
+				if(max < (*probabilities)[i][j]){
+					max = (*probabilities)[i][j];
+					iMax = j;
+				}
+			}
+			(*labels)[i] = iMax;
+		}
+	}
+}
+
+void OnlineRandomForest::predictDataInParallel(const Data& points, Labels* labels, const unsigned int start, const unsigned int end) const{
+	for(unsigned int i = start; i < end; ++i){
+		(*labels)[i] = predict(*points[i]);
+	}
+}
+
+void OnlineRandomForest::predictClassDataInParallel(const ClassData& points, Labels* labels, const unsigned int start, const unsigned int end) const{
+	for(unsigned int i = start; i < end; ++i){
+		(*labels)[i] = predict(*points[i]);
 	}
 }
 

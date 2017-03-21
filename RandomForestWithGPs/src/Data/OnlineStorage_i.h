@@ -35,9 +35,7 @@ void OnlineStorage<T>::remove(const Iterator& it){
 
 template<typename T>
 void OnlineStorage<T>::append(const OnlineStorage<T>& storage){
-	m_lastUpdateIndex = size();
-	m_internal.push_back(storage.m_internal);
-	notify(APPENDBLOCK);
+	append(storage.m_internal); // just calls the internal append
 }
 
 template<typename T>

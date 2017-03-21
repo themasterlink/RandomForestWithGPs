@@ -43,7 +43,7 @@ BigDynamicDecisionTree::~BigDynamicDecisionTree() {
 
 // fill empty tree
 void BigDynamicDecisionTree::prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses, const unsigned int amountOfLayers, const unsigned int amountForFast, const unsigned int amountForSmall){
-	if(maxDepth > 0 && maxDepth < 28){
+	if(maxDepth > 0 && maxDepth < 50 && maxDepth / amountOfLayers <= 20){
 		overwriteConst(m_maxDepth, maxDepth);
 		if(m_maxDepth % amountOfLayers == 0){ // that is the easy case
 			m_depthPerLayer = m_maxDepth / amountOfLayers;
@@ -52,7 +52,9 @@ void BigDynamicDecisionTree::prepareForSetting(const unsigned int maxDepth, cons
 			const unsigned int higherHeight = std::ceil(m_maxDepth/ (double) amountOfLayers); // use bigger depth for all layers
 			const unsigned int lowerHeight = m_maxDepth / (double) amountOfLayers; // truncs by its own
 			// now take the values which minimizes the height of the last layer:
-			if(m_maxDepth - (higherHeight * (amountOfLayers - 1)) < m_maxDepth - (lowerHeight * (amountOfLayers - 1))){
+			if(m_maxDepth - (higherHeight * (amountOfLayers - 1)) == 0){
+				m_depthPerLayer = lowerHeight;
+			}else if(m_maxDepth - (higherHeight * (amountOfLayers - 1)) < m_maxDepth - (lowerHeight * (amountOfLayers - 1))){
 				// take the higher height: example:
 				// 		amount of layers = 8 and m_maxDepth = 30 -> the height of the layer here is: 2, instead of 6
 				m_depthPerLayer = higherHeight;
@@ -95,7 +97,6 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 			it->clear(); // clear map
 		}
 	}
-	const unsigned int neededPointsForNewTree = 2;
 //	const unsigned int leavesPerTree = pow2(m_depthPerLayer);
 	unsigned int amountOfRootsInTheFatherLayer = 1;
 	unsigned int depthInTheFatherLayer = m_depthPerLayer;
@@ -107,12 +108,16 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 //			saveDataPositions = false;
 			depthInThisLayer = m_maxDepth - (m_fastInnerTrees.size() - 1) * m_depthPerLayer;
 		}
+		if(depthInThisLayer == 0){
+			printError("This should not happen!");
+		}
 //		printOnScreen("iTreeLayer: " << iTreeLayer);
 //		const unsigned int leavesForTreesInThisLayer = pow2(depthInThisLayer); // amount of leaves of one of the layertrees
 		if(iTreeLayer == 0){
 			// first tree
-			m_fastInnerTrees[iTreeLayer][0] = new DynamicDecisionTree(m_storage, m_depthPerLayer, m_amountOfClasses);
-			const bool ret = m_fastInnerTrees[iTreeLayer][0]->train(amountOfUsedDims, generator, 0, saveDataPositions);
+//			printOnScreen("iTreeLayer: " << iTreeLayer << ", depthInThisLayer: " << depthInThisLayer);
+			m_fastInnerTrees[0][0] = new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses);
+			const bool ret = m_fastInnerTrees[0][0]->train(amountOfUsedDims, generator, 0, saveDataPositions);
 			if(!ret){
 				printError("The first split could not be performed!");
 				return;
@@ -124,15 +129,17 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 			m_fastInnerTrees[iTreeLayer].resize(amountOfRootsInThisLayer);
 			m_usedMemory += (MemoryType) amountOfRootsInThisLayer * 8;
 			std::fill(m_fastInnerTrees[iTreeLayer].begin(), m_fastInnerTrees[iTreeLayer].end(), nullptr); // set all values to null
+			unsigned int counter = 0;
 			for(unsigned int iRootOfFatherLayerId = 0; iRootOfFatherLayerId < amountOfRootsInTheFatherLayer; ++iRootOfFatherLayerId){
 //				printOnScreen("Rootid: " << iRootId);
 				if(m_fastInnerTrees[iTreeLayer - 1][iRootOfFatherLayerId] != nullptr){ // if the father is not a nullpointer
+					++counter;
 					std::vector<std::vector<unsigned int> >& dataPositions = *m_fastInnerTrees[iTreeLayer - 1][iRootOfFatherLayerId]->getDataPositions();
 					for(unsigned int iChildId = 0; iChildId < leavesForTreesInTheFatherLayer; ++iChildId){
 //						printOnScreen("size: " << dataPositions.size() << ", leaves: " << leavesForTreesInTheFatherLayer
 //									<< ", ichild: " << iChild << ", desired amount: " << leavesForTreesInThisLayer << ", root: " << iRootId
 //									<< "in data: " << dataPositions[leavesForTreesInTheFatherLayer + iChild].size());
-						if(dataPositions[leavesForTreesInTheFatherLayer + iChildId].size() > neededPointsForNewTree){ // min amount is that half of the leaves are filled which at least one point!
+						if(shouldNewTreeBeCalculatedFor(dataPositions[leavesForTreesInTheFatherLayer + iChildId])){ // min amount is that half of the leaves are filled which at least one point!
 							foundAtLeastOneChild = true;
 							const unsigned int iChildIdInLayer = iChildId + leavesForTreesInTheFatherLayer * iRootOfFatherLayerId;
 //							printOnScreen("Child: " << iChildIdInLayer);
@@ -149,8 +156,9 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 					}
 				}
 			}
+//			printOnScreen("iTreeLayer: " << iTreeLayer << ", depthInThisLayer: " << depthInThisLayer << ", amountOfRootsInThisLayer: " << amountOfRootsInThisLayer << ", leavesForTreesInTheFatherLayer: " << leavesForTreesInTheFatherLayer << ", correct: " << counter / (double) amountOfRootsInTheFatherLayer);
 			if(!foundAtLeastOneChild){
-				return; // no need for inserting anything in the m_smallerInnerTrees
+				break; // no need for inserting anything in the m_smallerInnerTrees
 			}
 			amountOfRootsInTheFatherLayer = amountOfRootsInThisLayer; // amount of children nodes in this level
 			depthInTheFatherLayer = depthInThisLayer;
@@ -163,6 +171,11 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 		if(iTreeSmallLayer + 1 == m_smallInnerTrees.size()){ // is the last layer
 //			saveDataPositions = false;
 			depthInThisLayer = m_maxDepth - (m_fastInnerTrees.size() + m_smallInnerTrees.size() - 1) * m_depthPerLayer;
+		}
+		if(depthInThisLayer == 0){
+//			25, 2, 4, 5, 5, 3
+			printError("This should not happen: " << m_maxDepth << ", " << m_fastInnerTrees.size() << ", " << m_smallInnerTrees.size() << ", " << m_depthPerLayer
+					<< ", " << (m_fastInnerTrees.size() + m_smallInnerTrees.size() - 1) << ", " << iTreeSmallLayer);
 		}
 //		const unsigned int leavesForTreesInThisLayer = pow2(depthInThisLayer); // amount of leaves of one of the layertrees
 		bool foundAtLeastOneChild = false;
@@ -178,8 +191,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 			for(unsigned int iRootId = 0; iRootId < amountOfRootsInTheFatherLayer; ++iRootId){
 //				printOnScreen("iRootId: " << iRootId);
 				trainChildrenForRoot(m_fastInnerTrees.back()[iRootId], it, actSmallInnerTreeStructure,
-						depthInThisLayer, iRootId, leavesForTreesInTheFatherLayer,
-						neededPointsForNewTree, amountOfUsedDims, generator, saveDataPositions,
+						depthInThisLayer, iRootId, leavesForTreesInTheFatherLayer, amountOfUsedDims, generator, saveDataPositions,
 						foundAtLeastOneChild);
 			}
 
@@ -188,8 +200,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 			for(SmallTreeInnerStructure::const_iterator itRoot = m_smallInnerTrees[iTreeSmallLayer - 1].begin(); itRoot != m_smallInnerTrees[iTreeSmallLayer - 1].end(); ++itRoot){
 //				printOnScreen(iTreeSmallLayer << " in iRootId: " << itRoot->first << ", " << m_smallInnerTrees[iTreeSmallLayer - 1].size() << ", " << actSmallInnerTreeStructure.size());
 				trainChildrenForRoot(itRoot->second, it, actSmallInnerTreeStructure,
-						depthInThisLayer, itRoot->first, leavesForTreesInTheFatherLayer,
-						neededPointsForNewTree, amountOfUsedDims, generator, saveDataPositions,
+						depthInThisLayer, itRoot->first, leavesForTreesInTheFatherLayer, amountOfUsedDims, generator, saveDataPositions,
 						foundAtLeastOneChild);
 			}
 		}
@@ -225,8 +236,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 }
 
 void BigDynamicDecisionTree::trainChildrenForRoot(DynamicDecisionTree* root, SmallTreeInnerStructure::iterator& it, SmallTreeInnerStructure& actSmallInnerTreeStructure,
-		const unsigned int depthInThisLayer, const unsigned int iRootId, const unsigned int leavesForTreesInTheFatherLayer,
-		const unsigned int neededPointsForNewTree, const int amountOfUsedDims, RandomNumberGeneratorForDT& generator,
+		const unsigned int depthInThisLayer, const unsigned int iRootId, const unsigned int leavesForTreesInTheFatherLayer, const int amountOfUsedDims, RandomNumberGeneratorForDT& generator,
 		const bool saveDataPositions, bool& foundAtLeastOneChild){
 	if(root != nullptr){ // if the father is not a nullpointer
 		std::vector<std::vector<unsigned int> >& dataPositions = *root->getDataPositions();
@@ -235,7 +245,7 @@ void BigDynamicDecisionTree::trainChildrenForRoot(DynamicDecisionTree* root, Sma
 //					<< ", iChild: " << iChild << ", leaves for this layer: " << leavesForTreesInThisLayer << ", size: " << dataPositions.size());
 //			printOnScreen("dataPositions[leavesForTreesInTheFatherLayer + iChild].size(): "
 //					<< dataPositions[leavesForTreesInTheFatherLayer + iChild].size());
-			if(dataPositions[leavesForTreesInTheFatherLayer + iChild].size() > neededPointsForNewTree){ // min amount is that half of the leaves are filled which at least one point!
+			if(shouldNewTreeBeCalculatedFor(dataPositions[leavesForTreesInTheFatherLayer + iChild])){ // min amount is that half of the leaves are filled which at least one point!
 				const unsigned int iChildIdInLayer = iChild + leavesForTreesInTheFatherLayer * iRootId;
 				if(it != actSmallInnerTreeStructure.end() && false){	// it is given here to hint the position were it should be added
 					it = actSmallInnerTreeStructure.insert(it, SmallTreeInnerPair(iChildIdInLayer, new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses)));
@@ -259,6 +269,21 @@ void BigDynamicDecisionTree::trainChildrenForRoot(DynamicDecisionTree* root, Sma
 			}
 		}
 	}
+}
+
+bool BigDynamicDecisionTree::shouldNewTreeBeCalculatedFor(std::vector<unsigned int>& dataPositions){
+//	const unsigned int neededPointsForNewTree = 2;
+//	return dataPositions.size() > neededPointsForNewTree;
+	if(dataPositions.size() > 2){
+		const unsigned int firstClass = m_storage[dataPositions[0]]->getLabel();
+		for(unsigned int i = 1; i < dataPositions.size(); ++i){
+			if(firstClass != m_storage[dataPositions[i]]->getLabel()){ // check if one of the elements is not equal the first class
+				return true;
+			}
+		}
+		return false;
+	}
+	return false;
 }
 
 unsigned int BigDynamicDecisionTree::predict(const DataPoint& point) const{

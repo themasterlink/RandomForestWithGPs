@@ -52,7 +52,7 @@ void OnlineRandomForestIVMs::update(){
 	if(!m_firstTrainedDone){
 		OnlineStorage<ClassPoint*>* copyForORFs = new OnlineStorage<ClassPoint*>(m_storage);
 		m_orf.update(copyForORFs, OnlineStorage<ClassPoint*>::APPENDBLOCK);
-		m_orf.update();
+//		m_orf.update();
 		std::list<unsigned int> predictedLabels;
 		unsigned int amountOfCorrect = 0;
 		Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(ClassKnowledge::amountOfClasses(), ClassKnowledge::amountOfClasses());
@@ -157,6 +157,21 @@ void OnlineRandomForestIVMs::predictData(const Data& points, Labels& labels, std
 				probabilities[i][j] = 0;
 			}
 			m_ivms[labels[i]]->predict(**it, probabilities[i]);
+			labels[i] = std::distance(probabilities[i].cbegin(), std::max_element(probabilities[i].cbegin(), probabilities[i].cend()));
+		}
+	}
+}
+
+void OnlineRandomForestIVMs::predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+	m_orf.predictData(points, labels, probabilities);
+	int i = 0;
+	for(ClassDataConstIterator it = points.begin(); it != points.end(); ++it, ++i){
+		if(m_ivms[labels[i]] != nullptr){
+			for(unsigned int j = 0; j < amountOfClasses(); ++j){
+				probabilities[i][j] = 0;
+			}
+			m_ivms[labels[i]]->predict(**it, probabilities[i]);
+			labels[i] = std::distance(probabilities[i].cbegin(), std::max_element(probabilities[i].cbegin(), probabilities[i].cend()));
 		}
 	}
 }

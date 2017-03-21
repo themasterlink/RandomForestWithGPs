@@ -14,6 +14,7 @@ RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, cons
 	m_mode(PARTITION){
 	if(createOrf){
 		m_rf = new OnlineRandomForest(storage, maxDepth, amountOfUsedClasses);
+		m_rf->setDesiredAmountOfTrees(samplingAmount+1);
 	}
 }
 
@@ -24,6 +25,7 @@ RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, cons
 	m_mode(PARTITION){
 	if(createOrf){
 		m_rf = new OnlineRandomForest(storage, initParams.m_maxDepth, initParams.m_amountOfUsedClasses);
+		m_rf->setDesiredAmountOfTrees(initParams.m_samplingAmount);
 	}
 }
 
