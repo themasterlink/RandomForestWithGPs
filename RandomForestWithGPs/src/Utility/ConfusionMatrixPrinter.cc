@@ -36,7 +36,7 @@ void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv){
 	for(int i = 0; i < conv.cols(); ++i){
 		maxSize[i] = ClassKnowledge::getNameFor(i).length();
 		for(int j = 0; j < conv.rows(); ++j){
-			const int res = amountOfDigits((int)conv(i,j));
+			const int res = amountOfDigits((int)conv.coeff(j,i));
 			if(res > maxSize[i]){
 				maxSize[i] = res;
 			}
@@ -57,47 +57,49 @@ void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv){
 		++l;
 	}
 	ScreenOutput::print(stream.str());
-	for(int i = 0; i < conv.cols(); ++i){
-		std::stringstream stream2;
-		stream2 << ClassKnowledge::getNameFor(i);
-		for(int k = ClassKnowledge::getNameFor(i).length(); k < maxLength; ++k)
-			stream2 << " ";
 		for(int j = 0; j < conv.rows(); ++j){
-			const int covMaxSize = std::max(maxSize[j], (int) ClassKnowledge::getNameFor(j).length());
-			const int amountOfAct = amountOfDigits((int)conv(i,j));
+		std::stringstream stream2;
+		stream2 << ClassKnowledge::getNameFor(j);
+		for(int k = ClassKnowledge::getNameFor(j).length(); k < maxLength; ++k)
+			stream2 << " ";
+		for(int i = 0; i < conv.cols(); ++i){
+			const int covMaxSize = maxSize[i];
+			const int amountOfAct = amountOfDigits((int)conv.coeff(j,i));
 			for(int k = 0; k < covMaxSize - amountOfAct; ++k){
 				stream2 << " ";
 			}
-			stream2 << (int) conv.coeff(i,j);
+			stream2 << (int) conv.coeff(j,i);
 		}
 		ScreenOutput::print(stream2.str());
 	}
 }
 
 int ConfusionMatrixPrinter::amountOfDigits(int x) {
+	const int minus = x < 0 ? 1 : 0;
+	x = abs(x);
 	if(x < 100){
 		if(x < 10){
-			return 1;
+			return 1 + minus;
 		}
-		return 2;
+		return 2 + minus;
 	}else if(x < 1000){
-		return 3;
+		return 3 + minus;
 	}
 	if (x >= 10000) {
 		if (x >= 10000000) {
 			if (x >= 100000000) {
 				if (x >= 1000000000)
-					return 10;
-				return 9;
+					return 10 + minus;
+				return 9 + minus;
 			}
-			return 8;
+			return 8 + minus;
 		}
 		if (x >= 100000) {
 			if (x >= 1000000)
-				return 7;
-			return 6;
+				return 7 + minus;
+			return 6 + minus;
 		}
-		return 5;
+		return 5 + minus;
 	}
-	return 4;
+	return 4 + minus;
 }

@@ -43,6 +43,8 @@ public:
 
 	static void getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train, OnlineStorage<ClassPoint*>& test, const int amountOfPointsForTraining);
 
+	static void getRemovedOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train, OnlineStorage<ClassPoint*>& test);
+
 	static InternalStorage& getStorage(){ return m_storage; };
 
 	static void getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<ClassPoint*> >& trains, OnlineStorage<ClassPoint*>& test);
@@ -60,6 +62,10 @@ private:
 	static ClassData m_trainSet;
 
 	static ClassData m_testSet;
+
+	static ClassData m_removeFromTrainSet;
+
+	static ClassData m_removeFromTestSet;
 
 	static ClassPoint m_defaultEle;
 

@@ -14,6 +14,9 @@
 #include "../Base/CommandSettings.h"
 
 void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
+	if(test.size() == 0){
+		return;
+	}
 	int amountOfCorrect = 0;
 	Labels labels;
 	StopWatch sw;
@@ -22,22 +25,47 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 	printOnScreen("Needed " << sw.elapsedAsTimeFrame());
 	Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(orf.amountOfClasses(), orf.amountOfClasses());
 //	std::vector<std::list<double> > lists(orf.amountOfClasses(), std::list<double>());
-	AvgNumber pos, neg;
+	AvgNumber oc, uc;
+	AvgNumber ocBVS, ucBVS;
+	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	const double logBase = log(amountOfClasses);
 	for(unsigned int i = 0; i < labels.size(); ++i){
 		if(labels[i] != UNDEF_CLASS_LABEL){
+			double entropy = 0;
+			for(unsigned int j = 0; j < amountOfClasses; ++j){
+				if(probs[i][j] > 0){
+					entropy -= probs[i][j] * log(probs[i][j]) / logBase;
+				}
+			}
+			double max1 = 0, max2 = 0;
+			for(unsigned int j = 0; j < amountOfClasses; ++j){
+				if(probs[i][j] > max1){
+					max2 = max1;
+					max1 = probs[i][j];
+				}
+			}
+			double entropyBVS = max2 / max1;
 			if(test[i]->getLabel() == labels[i]){
 				++amountOfCorrect;
-				pos.addNew(probs[i][labels[i]]);
+				uc.addNew(entropy);
+				ucBVS.addNew(entropyBVS);
 			}else{
-				neg.addNew(1.-probs[i][labels[i]]);
+				oc.addNew(1.-entropy);
+				ocBVS.addNew(1.-entropyBVS);
+//				printOnScreen("Class: " << ClassKnowledge::getNameFor(test[i]->getLabel()) << ", for 0: " << probs[i][0] << ", for 1: " << probs[i][1]);
 			}
 //			lists[labels[i]].push_back(probs[i][labels[i]]); // adds only the winning label to the list
 			conv(test[i]->getLabel(), labels[i]) += 1;
+
 		}
 	}
 	printOnScreen("Test size: " << test.size());
 	printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %");
-	printOnScreen("Overconfidence for correct: " << pos.mean() << ", for wrong: " << neg.mean());
+	printOnScreen("Overconf:  " << (double) oc.mean() * 100.0 << "%%");
+	printOnScreen("Underconf: " << (double) uc.mean() * 100.0 << "%%");
+	printOnScreen("Overconf BVS:  " << (double) ocBVS.mean() * 100.0 << "%%");
+	printOnScreen("Underconf BVS: " << (double) ucBVS.mean() * 100.0 << "%%");
+
 	ConfusionMatrixPrinter::print(conv);
 
 //	for(unsigned int i = 0; i < orf.amountOfClasses(); ++i){
@@ -58,14 +86,16 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 void executeForBinaryClassORF(){
 	const int trainAmount = readAllData();
 	if(TotalStorage::getMode() == TotalStorage::SEPERATE){
-		if(false){
+		OnlineRandomForest* newOrf = nullptr;
+		if(true){
 			//	OnlineStorage<ClassPoint*> train;
 			OnlineStorage<ClassPoint*> test;
 			int height;
 			Settings::getValue("Forest.Trees.height", height);
 			const unsigned int amountOfSplits = 10;
 			std::vector<OnlineStorage<ClassPoint*> > trains(amountOfSplits);
-			OnlineRandomForest orf(trains[0], height, TotalStorage::getAmountOfClass());
+			newOrf = new OnlineRandomForest(trains[0], height, TotalStorage::getAmountOfClass());
+			OnlineRandomForest& orf = *newOrf;
 			// starts the training by its own
 			//	TotalStorage::getOnlineStorageCopySplitsWithTest(trains, test);
 			//	const unsigned int dim =  trains[0].dim();
@@ -120,9 +150,9 @@ void executeForBinaryClassORF(){
 						classCounter[labels[j]] += 1;
 					}
 				}
-				for(unsigned int j = 0; j < orf.amountOfClasses(); ++j){
-					printOnScreen("Class: " << j << " with: " << classCounter[j]);
-				}
+//				for(unsigned int j = 0; j < orf.amountOfClasses(); ++j){
+//					printOnScreen("Class: " << j << " with: " << classCounter[j]);
+//				}
 				StopWatch sw2;
 				trains[0].append(wrongOnes);
 
@@ -141,7 +171,8 @@ void executeForBinaryClassORF(){
 			int height;
 			Settings::getValue("Forest.Trees.height", height);
 			OnlineStorage<ClassPoint*> train;
-			OnlineRandomForest orf(train, height, TotalStorage::getAmountOfClass());
+			newOrf = new OnlineRandomForest(train, height, TotalStorage::getAmountOfClass());
+			OnlineRandomForest& orf = *newOrf;
 
 			TotalStorage::getOnlineStorageCopyWithTest(train, test, 10000000);
 			printOnScreen("Training finished");
@@ -150,6 +181,18 @@ void executeForBinaryClassORF(){
 //			printOnScreen("Test on training set finished");
 			performTest(orf, test);
 			printOnScreen("Test on test set finished");
+		}
+		int removedClass;
+		Settings::getValue("TotalStorage.excludeClass",removedClass);
+		if(ClassKnowledge::hasClassName(removedClass) && newOrf != nullptr){
+			printOnScreen("Removed class: " << removedClass);
+			OnlineStorage<ClassPoint*> removedTrain;
+			OnlineStorage<ClassPoint*> removedTest;
+			TotalStorage::getRemovedOnlineStorageCopyWithTest(removedTrain, removedTest);
+			printOnScreen("On " << removedTrain.size() << " removed points from trainings data:");
+			performTest(*newOrf, removedTrain);
+			printOnScreen("On " << removedTest.size() << " removed points from real test data:");
+			performTest(*newOrf, removedTest);
 		}
 	}else{
 		OnlineStorage<ClassPoint*> train;

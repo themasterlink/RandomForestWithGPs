@@ -18,6 +18,8 @@
 TotalStorage::InternalStorage TotalStorage::m_storage;
 ClassData TotalStorage::m_trainSet;
 ClassData TotalStorage::m_testSet;
+ClassData TotalStorage::m_removeFromTrainSet;
+ClassData TotalStorage::m_removeFromTestSet;
 ClassPoint TotalStorage::m_defaultEle;
 unsigned int TotalStorage::m_totalSize(0);
 DataPoint TotalStorage::m_center;
@@ -286,6 +288,8 @@ void TotalStorage::readData(const int amountOfData){
 		Settings::getValue("main.type", type);
 		unsigned int usedClass = 0;
 		Settings::getValue("TotalStorage.folderTestNr", usedClass);
+		unsigned int removeClass;
+		Settings::getValue("TotalStorage.excludeClass", removeClass);
 		if(!type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView()){ // type starts with binary -> remove all classes
 			for(ClassData* it : {&m_trainSet, &m_testSet}){
 				for(unsigned int i = 0; i < it->size(); ++i){
@@ -301,6 +305,36 @@ void TotalStorage::readData(const int amountOfData){
 			ClassKnowledge::setAmountOfDims(amountOfDims);
 			ClassKnowledge::setNameFor(number2String(usedClass), 0);
 			ClassKnowledge::setNameFor("rest", 1);
+		}else if(ClassKnowledge::hasClassName(removeClass)){
+			std::list<ClassPoint*> trainList;
+			m_removeFromTrainSet.reserve(m_trainSet.size() / ClassKnowledge::amountOfClasses() * 2);
+			for(unsigned int i = 0; i < m_trainSet.size(); ++i){
+				if(m_trainSet[i]->getLabel() != removeClass){
+					trainList.push_back(m_trainSet[i]);
+				}else{
+					m_removeFromTrainSet.push_back(m_trainSet[i]);
+				}
+			}
+			m_trainSet.clear();
+			m_trainSet.reserve(trainList.size());
+			for(std::list<ClassPoint*>::const_iterator it = trainList.begin(); it != trainList.end(); ++it){
+				m_trainSet.push_back(*it);
+			}
+			std::list<ClassPoint*> testList;
+			m_removeFromTestSet.reserve(m_testSet.size() / ClassKnowledge::amountOfClasses() * 2);
+			for(unsigned int i = 0; i < m_testSet.size(); ++i){
+				if(m_testSet[i]->getLabel() != removeClass){
+					testList.push_back(m_testSet[i]);
+				}else{
+					m_removeFromTestSet.push_back(m_testSet[i]);
+				}
+			}
+			m_testSet.clear();
+			m_testSet.reserve(testList.size());
+			for(std::list<ClassPoint*>::const_iterator it = testList.begin(); it != testList.end(); ++it){
+				m_testSet.push_back(*it);
+			}
+			printOnScreen("Removed class: " << removeClass << " from train: " << m_removeFromTrainSet.size() << ", from test: " << m_removeFromTestSet.size());
 		}
 
 		m_totalSize = m_trainSet.size() + m_testSet.size();
@@ -371,6 +405,17 @@ void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& trai
 	}
 }
 
+void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train,
+		OnlineStorage<ClassPoint*>& test){
+	if(m_mode == WHOLE){
+		printError("Not implemented yet!");
+		Logger::forcedWrite();
+	}else{
+		train.append(m_removeFromTrainSet);
+		test.append(m_removeFromTestSet);
+	}
+}
+
 void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<ClassPoint*> >& trains, OnlineStorage<ClassPoint*>& test){
 	if(m_mode != WHOLE){
 		if(trains.size() != 0){
@@ -393,7 +438,6 @@ void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<
 		Logger::forcedWrite();
 	}
 }
-
 
 unsigned int TotalStorage::getSize(unsigned int classNr){
 	if(m_mode == WHOLE){

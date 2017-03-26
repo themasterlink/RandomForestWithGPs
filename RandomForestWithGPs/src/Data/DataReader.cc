@@ -191,8 +191,11 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		type = 3;
 	}else if(targetDir.parent_path().filename() == "simon"){
 		type = 4;
+	}else if(targetDir.parent_path().filename() == "fakeData"){
+		type = 0;
 	}else{
 		printError("This type is not supported here!");
+		Logger::forcedWrite();
 		return;
 	}
 	if(targetDir.parent_path().filename() == "mnist" && type == 0){

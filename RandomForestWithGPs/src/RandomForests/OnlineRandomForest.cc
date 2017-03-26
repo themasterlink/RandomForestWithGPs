@@ -146,7 +146,6 @@ void OnlineRandomForest::train(){
 	const unsigned long maxTime = 86400;// more than a day
 	MemoryType maxAmountOfUsedMemory;
 	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
-	printOnScreen(m_desiredAmountOfTrees << "; " << trainingsTime << "; " << maxTime);
 
 	if(m_desiredAmountOfTrees == 0){
 		if(trainingsTime > maxTime){
@@ -466,9 +465,11 @@ bool OnlineRandomForest::update(){
 		const int totalAmount = m_trees.size() / nrOfParallel * nrOfParallel;
 		const int amountOfElements = totalAmount / nrOfParallel;
 		InLinePercentageFiller::setActMax(totalAmount + 1);
+		MemoryType maxAmountOfUsedMemory;
+		Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
 		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
-			packages[i] = new InformationPackage(InformationPackage::ORF_TRAIN, 0., amountOfElements);
+			packages[i] = new InformationPackage(maxAmountOfUsedMemory > 0 ? InformationPackage::ORF_TRAIN_FIX : InformationPackage::ORF_TRAIN, 0., amountOfElements);
 			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::updateInParallel, this, list, amountOfElements, mutex, i, packages[i], &counter)));
 		}
 		int stillOneRunning = 1;

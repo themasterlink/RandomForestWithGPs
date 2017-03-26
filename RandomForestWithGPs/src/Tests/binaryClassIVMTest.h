@@ -31,7 +31,7 @@ void testIvm(IVM& ivm, const OnlineStorage<ClassPoint*>& data){
 	Eigen::Vector2i amountPerClass;
 	amountPerClass[0] = amountPerClass[1] = 0;
 	AvgNumber neg, pos;
-	AvgNumber ocPos, ocNeg;
+	AvgNumber oc, uc, ocBVS, ucBVS;
 	StopWatch sw;
 	for(int i = 0; i < amountOfTestPoints; ++i){
 		double prob = ivm.predict(*data[i]);
@@ -42,18 +42,33 @@ void testIvm(IVM& ivm, const OnlineStorage<ClassPoint*>& data){
 			++amountPerClass[1];
 			neg.addNew(prob);
 		}
+		double entropy = 0;
+		std::vector<double> probs = {prob, 1 - prob};
+		for(unsigned int j = 0; j < 2; ++j){
+			if(probs[j] > 0){
+				entropy -= probs[j] * log(probs[j]) / log(2);
+			}
+		}
+		double max1 = 0, max2 = 0;
+		for(unsigned int j = 0; j < 2; ++j){
+			if(probs[j] > max1){
+				max2 = max1;
+				max1 = probs[j];
+			}
+		}
+		double entropyBVS = max2 / max1;
 		if(prob >= 0.5 && data[i]->getLabel() == ivm.getLabelForOne()){
 			++right; ++rightPerClass[0];
-			ocPos.addNew(prob);
+			uc.addNew(entropy);
+			ucBVS.addNew(entropyBVS);
 		}else if(prob < 0.5 && data[i]->getLabel() != ivm.getLabelForOne()){
 			++right; ++rightPerClass[1];
-			ocPos.addNew(1-prob);
+			uc.addNew(entropy);
+			ucBVS.addNew(entropyBVS);
 		}else{
-			if(data[i]->getLabel() == ivm.getLabelForOne()){
-				ocNeg.addNew(prob);
-			}else{
-				ocNeg.addNew(1-prob);
-			}
+			oc.addNew(1.-entropy);
+			ocBVS.addNew(1.-entropyBVS);
+			printOnScreen("Class: " << ClassKnowledge::getNameFor(data[i]->getLabel()) << ", for 0: " << probs[0] << ", for 1: " << probs[1]);
 		}
 		if(prob > 0.5){
 			++amountOfAbove;
@@ -77,8 +92,10 @@ void testIvm(IVM& ivm, const OnlineStorage<ClassPoint*>& data){
 	printOnScreen("Precision for -1: " << (double) rightPerClass[1] / right * 100.0 << "%%");
 	printOnScreen("Avg for  1: " << (double) pos.mean() * 100.0 << "%%");
 	printOnScreen("Avg for -1: " << (double) neg.mean() * 100.0 << "%%");
-	printOnScreen("Overconf right: " << (double) ocPos.mean() * 100.0 << "%%");
-	printOnScreen("Overconf wrong: " << (double) ocNeg.mean() * 100.0 << "%%");
+	printOnScreen("Overconf:  " << (double) oc.mean() * 100.0 << "%%");
+	printOnScreen("Underconf: " << (double) uc.mean() * 100.0 << "%%");
+	printOnScreen("Overconf BVS:  " << (double) ocBVS.mean() * 100.0 << "%%");
+	printOnScreen("Underconf BVS: " << (double) ucBVS.mean() * 100.0 << "%%");
 
 	printOnScreen("Amount of 1 in total: " << (double) amountPerClass[0] / amountOfTestPoints * 100.0 << " %%");
 }
@@ -144,6 +161,7 @@ void executeForBinaryClassIVM(){
 	TotalStorage::readData(firstPoints);
 	DataSets datas;
 	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << " with " << TotalStorage::getAmountOfClass() << " classes");
+	sleep(2);
 	const int trainAmount = share * (std::min((int) TotalStorage::getSmallestClassSize(), firstPoints) * (double) TotalStorage::getAmountOfClass());
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;
@@ -177,6 +195,14 @@ void executeForBinaryClassIVM(){
 			DataWriterForVisu::writeImg("test.png", &ivm, train.storage());
 			openFileInViewer("test.png");
 			}
+//			OnlineStorage<ClassPoint*> removedTrain;
+//			OnlineStorage<ClassPoint*> removedTest;
+//			TotalStorage::getRemovedOnlineStorageCopyWithTest(train, test);
+//			printOnScreen("On " << train.size() << " removed points from trainings data:");
+//			testIvm(ivm, removedTrain);
+//			printOnScreen("On " << test.size() << " removed points from real test data:");
+//			testIvm(ivm, removedTest);
+
 //			DataWriterForVisu::writeSvg("test.svg", &ivm, train.storage());
 //			openFileInViewer("test.svg");
 //			DataWriterForVisu::writeImg("empty.png", (PredictorBinaryClass*)nullptr, train.storage());

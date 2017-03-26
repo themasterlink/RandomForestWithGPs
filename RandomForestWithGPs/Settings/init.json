@@ -7,10 +7,10 @@
 		"nrOfNoChanges": 6
 	}, 
 	"MultiBinaryGP": {
-		"lowerBoundNoise": 0.5,
+		"lowerBoundNoise": 0.1,
 		"upperBoundNoise": 5.0,
-		"lowerBoundLength": 1.0,
-		"upperBoundLength": 20.0,
+		"lowerBoundLength": 0.1,
+		"upperBoundLength": 5.0,
 		"trainingAmount": 400,
 		"testingAmount": 200
 	},
@@ -24,7 +24,7 @@
 		"doEpUpdate": "false",
 		"lambda": 0.5,
 		"trainingCanBeAbortedIfErrorIsAboveVal": 101.0,
-		"nrOfInducingPoints": 800,
+		"nrOfInducingPoints": 100,
 		"desiredMargin": 0.01,
 		"hasLengthMoreThanParam": "false",
 		"useNeighbourComparison": "true",
@@ -32,7 +32,7 @@
 			"useSavedHyperParams": "false",
 			"overwriteExistingHyperParams": "false"
 		},
-		"kernelType": 0,
+		"kernelType": 1,
 		"useCmaes": "true"
 	},
 	"TotalStorage": {
@@ -40,7 +40,8 @@
 		"shareForTraining": 0.9,
 		"folderLocReal": "../mnistOrg/",
 		"folderLocFake": "../fakeData/",
-		"folderTestNr": 1,
+		"folderTestNr": 9,
+		"excludeClass": 11,
 		"normalizeData": "false",
 		"removeUselessDimensions": "true",
 		"readFromFolder": "true"
@@ -49,10 +50,10 @@
 		"amountOfPointsUntilRetrain": 200,
 		"minUsedDataFactor": 0.3,
 		"maxUsedDataFactor": 0.6,
-		"stepSizeOverData": 15,
+		"stepSizeOverData": 5,
 		"factorAmountOfUsedDims": 1.0,
-		"ownSamplingTime": 0,
-		"maxAmountOfUsedMemory": 0,
+		"ownSamplingTime": 10000000,
+		"maxAmountOfUsedMemory": 16000000000,
 		"useBigDynmaicDecisionTrees": "true",
 		"layerAmountOfBigDDT": 3,
 		"layerFastAmountOfBigDDT": 2,
@@ -67,7 +68,7 @@
 	},
 	"RandomForestKernel": {
 		"samplingAmount": 200,
-		"maxDepth": 14,
+		"maxDepth": 17,
 		"usePartitionInsteadOfLabels": "true"
 	},
 	"CMAES": {
@@ -80,8 +81,8 @@
 		"minErrorForCheck": 40.0
 	},
 	"KernelParam": {
-		"len": 4.2576,
-		"fNoise": 3.26699,
+		"len": 2.7278,
+		"fNoise": 9.67526,
 		"sNoise": 0.01,
 		"lenMean": 0.9,
 		"lenVar": 0.7,
@@ -118,11 +119,11 @@
 		"printY": 1
 	},
 	"MinMaxUsedSplits": {
-		"useFixedValuesForMinMaxUsedSplits": "true",
-		"minValue": 20,
-		"maxValue": 50,
-		"minValueFractionDependsOnDataSize": 0.2,
-		"maxValueFractionDependsOnDataSize": 0.6
+		"useFixedValuesForMinMaxUsedSplits": "false",
+		"minValue": 1000,
+		"maxValue": 2000,
+		"minValueFractionDependsOnDataSize": 0.4,
+		"maxValueFractionDependsOnDataSize": 0.8
 	},
 	"VisuParams": {
 		"visuHyperParamSampling2D": "false",
@@ -130,6 +131,6 @@
 		"visuFinalIvm": "false"
 	},
 	"main": {
-		"type": "binaryIvm"
+		"type": "ORF"
 	}
 }
