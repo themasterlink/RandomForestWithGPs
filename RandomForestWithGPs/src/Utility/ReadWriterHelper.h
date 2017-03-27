@@ -22,7 +22,11 @@ public:
 
 	static 	void writeMatrix(std::fstream& stream, const Eigen::MatrixXd& matrix);
 
+	static 	void writeMatrix(std::fstream& stream, const Eigen::MatrixXf& matrix);
+
 	static 	void readMatrix(std::fstream& stream, Eigen::MatrixXd& matrix);
+
+	static 	void readMatrix(std::fstream& stream, Eigen::MatrixXf& matrix);
 
 	static 	void readVector(std::fstream& stream, Eigen::VectorXd& vector);
 

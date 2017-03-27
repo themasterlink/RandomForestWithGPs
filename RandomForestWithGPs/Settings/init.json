@@ -17,29 +17,29 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 35
+			"height": 14
 		}
 	},
 	"IVM": {
 		"doEpUpdate": "false",
 		"lambda": 0.5,
-		"trainingCanBeAbortedIfErrorIsAboveVal": 101.0,
-		"nrOfInducingPoints": 100,
+		"trainingCanBeAbortedIfErrorIsAboveVal": 99.99999,
+		"nrOfInducingPoints": 800,
 		"desiredMargin": 0.01,
 		"hasLengthMoreThanParam": "false",
-		"useNeighbourComparison": "true",
+		"useNeighbourComparison": "false",
 		"Training": {
 			"useSavedHyperParams": "false",
-			"overwriteExistingHyperParams": "false"
+			"overwriteExistingHyperParams": "true"
 		},
-		"kernelType": 1,
+		"kernelType": 0,
 		"useCmaes": "true"
 	},
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
 		"folderLocReal": "../mnistOrg/",
-		"folderLocFake": "../fakeData/",
+		"folderLocFake": "../fakeDataBinary/",
 		"folderTestNr": 9,
 		"excludeClass": 11,
 		"normalizeData": "false",
@@ -50,15 +50,15 @@
 		"amountOfPointsUntilRetrain": 200,
 		"minUsedDataFactor": 0.3,
 		"maxUsedDataFactor": 0.6,
-		"stepSizeOverData": 5,
+		"stepSizeOverData": 0,
 		"factorAmountOfUsedDims": 1.0,
-		"ownSamplingTime": 10000000,
+		"ownSamplingTime": 100,
 		"maxAmountOfUsedMemory": 16000000000,
-		"useBigDynmaicDecisionTrees": "true",
+		"useBigDynmaicDecisionTrees": "false",
 		"layerAmountOfBigDDT": 3,
 		"layerFastAmountOfBigDDT": 2,
 		"determineBestLayerAmount": "false",
-		"printErrorForTraining": "true"
+		"printErrorForTraining": "false"
 	},
 	"Kernel": {
 		"path": "../realTest/kernelData.kernel"
@@ -119,11 +119,11 @@
 		"printY": 1
 	},
 	"MinMaxUsedSplits": {
-		"useFixedValuesForMinMaxUsedSplits": "false",
-		"minValue": 1000,
-		"maxValue": 2000,
-		"minValueFractionDependsOnDataSize": 0.4,
-		"maxValueFractionDependsOnDataSize": 0.8
+		"useFixedValuesForMinMaxUsedSplits": "true",
+		"minValue": 200,
+		"maxValue": 600,
+		"minValueFractionDependsOnDataSize": 0.2,
+		"maxValueFractionDependsOnDataSize": 0.6
 	},
 	"VisuParams": {
 		"visuHyperParamSampling2D": "false",
@@ -131,6 +131,6 @@
 		"visuFinalIvm": "false"
 	},
 	"main": {
-		"type": "ORF"
+		"type": "ORFIVMs"
 	}
 }

@@ -10,6 +10,7 @@
 #include "DataReader.h"
 #include "../Base/Settings.h"
 #include "../Base/ScreenOutput.h"
+#include "../RandomNumberGenerator/RandomUniformNr.h"
 #include "../Base/CommandSettings.h"
 #include "../Data/DataConverter.h"
 #include <opencv2/core/core.hpp>
@@ -337,6 +338,17 @@ void TotalStorage::readData(const int amountOfData){
 			printOnScreen("Removed class: " << removeClass << " from train: " << m_removeFromTrainSet.size() << ", from test: " << m_removeFromTestSet.size());
 		}
 
+//		RandomUniformNr uniformNr(1,8,100);
+//		std::list<ClassPoint*> trainList;
+//		for(unsigned int i = uniformNr(); i < m_trainSet.size(); i+=uniformNr()){
+//			trainList.push_back(m_trainSet[i]);
+//		}
+//		printOnScreen("Reduced training size from: " << m_trainSet.size() << " to: " << trainList.size());
+//		m_trainSet.clear();
+//		m_trainSet.reserve(trainList.size());
+//		for(std::list<ClassPoint*>::const_iterator it = trainList.begin(); it != trainList.end(); ++it){
+//			m_trainSet.push_back(*it);
+//		}
 		m_totalSize = m_trainSet.size() + m_testSet.size();
 		if(Settings::getDirectBoolValue("TotalStorage.normalizeData") && !didNormalizeStep){
 			DataConverter::centerAndNormalizeData(m_trainSet, m_center, m_var); // first calc on training set

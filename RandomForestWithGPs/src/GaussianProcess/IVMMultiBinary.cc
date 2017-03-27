@@ -52,7 +52,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 					}
 				}
 				unsigned int amountOfUsedClasses = 0u;
-				const unsigned int minimumNeededAmountOfElements = 0.75 * m_numberOfInducingPointsPerIVM;
+				const unsigned int minimumNeededAmountOfElements = 100;
 				for (std::map<unsigned int, unsigned int>::const_iterator it = classCounter.begin(); it != classCounter.end(); ++it){
 					m_isClassUsed.push_back(it->second > minimumNeededAmountOfElements);
 					m_classOfIVMs.push_back(it->first); // guarentees that classOfIvms and isClassUsed have the same mapping
@@ -98,7 +98,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 					const unsigned int size = (m_storage.size() * m_storage.size() + m_storage.size()) / 2;
 					const unsigned int sizeOfPart =  size / nrOfParallel;
 					if(kernelType == 0 && amountOfUsedClasses > 0 && m_storage.size() <= 10000){ // GAUSS, calc the kernel matrix
-						Eigen::MatrixXd* differenceMatrix = new Eigen::MatrixXd(m_storage.size(), m_storage.size());
+						Eigen::MatrixXf* differenceMatrix = new Eigen::MatrixXf(m_storage.size(), m_storage.size());
 						boost::thread_group* group = new boost::thread_group();
 						std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 
@@ -387,7 +387,7 @@ void IVMMultiBinary::retrainIvmIfNeeded(IVM* ivm, InformationPackage* package, c
 	}
 }
 
-void IVMMultiBinary::initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix, InformationPackage* package){
+void IVMMultiBinary::initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXf* differenceMatrix, InformationPackage* package){
 	ThreadMaster::appendThreadToList(package);
 	package->setStandartInformation("Calc of difference matrix from: " + number2String(startOfKernel) + " to: " +  number2String(endOfKernel) + (m_orfClassLabel != UNDEF_CLASS_LABEL ? ", for orf class: " + number2String(m_orfClassLabel) : ""));
 	package->wait();
@@ -424,7 +424,7 @@ void IVMMultiBinary::trainInParallel(IVM* ivm, const int usedIvm, InformationPac
 
 unsigned int IVMMultiBinary::getLabelFrom(const std::vector<double>& probs) const{
 	unsigned int highestArg = 0;
-	double highestValue = 0;
+	double highestValue = 1e-7;
 	bool foundValue = false;
 	unsigned int plusOneCounter = 0;
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){

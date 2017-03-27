@@ -659,7 +659,10 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
 				return false;
 			}
-			printOnScreen("For IVM: " << m_className << " logZ: " << bestLogZ << ", "<< bestParams << ", has: " << m_package->correctlyClassified() << ", with IPs: " << m_numberOfInducingPoints);
+			printOnScreen("For IVM: " << getClassName() << " logZ: " << bestLogZ <<
+					", len: "<< number2String(bestParams.m_length.getValue(), 12) <<
+					 ", fNoise: "<< number2String(bestParams.m_fNoise.getValue(), 12) <<
+					 ", sNoise: "<< number2String(bestParams.m_sNoise.getValue(), 12) << ", has: " << m_package->correctlyClassified() << ", with IPs: " << m_numberOfInducingPoints);
 			m_gaussKernel->setHyperParamsWith(bestParams);
 			setDerivAndLogZFlag(false, false);
 			m_uniformNr.setMinAndMax(1, 1); // final training with all points considered

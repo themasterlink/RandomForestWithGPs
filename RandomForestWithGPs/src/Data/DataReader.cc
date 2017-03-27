@@ -10,6 +10,7 @@
 #include <iostream>
 #include "../Utility/ReadWriterHelper.h"
 #include "../Utility/Util.h"
+#include "../Base/Settings.h"
 #include "ClassKnowledge.h"
 #include "DataConverter.h"
 #include <opencv2/core/core.hpp>
@@ -182,6 +183,9 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 	boost::filesystem::directory_iterator end_itr;
 	// cycle through the directory
 	unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	std::string fakeDataLocation;
+	Settings::getValue("TotalStorage.folderLocFake", fakeDataLocation);
+	boost::filesystem::path fakeDataLoc(fakeDataLocation);
 	int type = 0;
 	if(targetDir.parent_path().parent_path().filename() == "mnistOrg"){
 		type = 1;
@@ -191,7 +195,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		type = 3;
 	}else if(targetDir.parent_path().filename() == "simon"){
 		type = 4;
-	}else if(targetDir.parent_path().filename() == "fakeData"){
+	}else if(targetDir.parent_path().filename() == fakeDataLoc.parent_path().filename()){
 		type = 0;
 	}else{
 		printError("This type is not supported here!");

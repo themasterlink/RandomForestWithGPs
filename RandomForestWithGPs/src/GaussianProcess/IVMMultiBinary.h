@@ -53,7 +53,7 @@ private:
 	void predictClassDataInParallel(IVM* ivm, const ClassData& points, const int usedIvm,
 			std::vector< std::vector<double> >* probabilities, InformationPackage* package) const;
 
-	void initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXd* differenceMatrix, InformationPackage* package);
+	void initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXf* differenceMatrix, InformationPackage* package);
 
 	void retrainIvmIfNeeded(IVM* ivm, InformationPackage* package, const int iClassNr);
 

@@ -23,7 +23,6 @@
 
 void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 	const int amountOfTestPoints = data.size();
-	do{
 	int right = 0;
 //	Eigen::Vector2i rightPerClass;
 //	rightPerClass[0] = rightPerClass[1] = 0;
@@ -34,11 +33,35 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 //	amountPerClass[0] = amountPerClass[1] = 0;
 	Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(ivms.amountOfClasses(), ivms.amountOfClasses());
 	Labels labels;
-	ivms.predictData(data, labels);
+	std::vector< std::vector<double> > probs;
+	ivms.predictData(data, labels, probs);
+	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	const double logBase = log(amountOfClasses);
+	AvgNumber oc, uc;
+	AvgNumber ocBVS, ucBVS;
 	for(int i = 0; i < amountOfTestPoints; ++i){
+		double entropy = 0;
+		for(unsigned int j = 0; j < amountOfClasses; ++j){
+			if(probs[i][j] > 0){
+				entropy -= probs[i][j] * log(probs[i][j]) / logBase;
+			}
+		}
+		double max1 = 0, max2 = 0;
+		for(unsigned int j = 0; j < amountOfClasses; ++j){
+			if(probs[i][j] > max1){
+				max2 = max1;
+				max1 = probs[i][j];
+			}
+		}
+		double entropyBVS = max2 / max1;
 		const unsigned int label = labels[i];
 		if(label == data[i]->getLabel()){
+			uc.addNew(entropy);
+			ucBVS.addNew(entropyBVS);
 			++right;
+		}else{
+			oc.addNew(1.-entropy);
+			ocBVS.addNew(1.-entropyBVS);
 		}
 		if(label != UNDEF_CLASS_LABEL){
 			conv(data[i]->getLabel(), label) += 1;
@@ -65,6 +88,10 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 //		openFileInViewer("histo.svg");
 //	}
 	ConfusionMatrixPrinter::print(conv);
+	printOnScreen("Overconf:  " << (double) oc.mean() * 100.0 << "%%");
+	printOnScreen("Underconf: " << (double) uc.mean() * 100.0 << "%%");
+	printOnScreen("Overconf BVS:  " << (double) ocBVS.mean() * 100.0 << "%%");
+	printOnScreen("Underconf BVS: " << (double) ucBVS.mean() * 100.0 << "%%");
 	printOnScreen("Amount of right: " << (double) right / amountOfTestPoints * 100.0 << "%%");
 //	std::cout << "Amount of above: " << (double) amountOfAbove / amountOfTestPoints * 100.0 << "%" << std::endl;
 //	std::cout << "Amount of below: " << (double) amountOfBelow / amountOfTestPoints * 100.0 << "%" << std::endl;
@@ -75,13 +102,8 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 //	std::cout << "Amount of 1 in total: " << (double) amountPerClass[0] / amountOfTestPoints * 100.0 << "%" << std::endl;
 //	std::cout << ivm.getKernel().prettyString() << std::endl;
 //	std::cout << RESET;
-	}while(false);
-	do{
-	Labels labels2;
-	std::vector<std::vector<double> > probs;
-	ivms.predictData(data, labels2, probs);
 	std::fstream output;
-	output.open("resultForEachPoint.csv", std::fstream::out | std::fstream::trunc);
+	output.open(Logger::getActDirectory() + "resultForEachPoint.csv", std::fstream::out | std::fstream::trunc);
 	std::vector<int> classCounter(ivms.amountOfClasses(),0);
 	if(output.is_open()){
 		output << "real;predicted";
@@ -92,7 +114,7 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 		for(int i = 0; i < amountOfTestPoints; ++i){
 			if(classCounter[data[i]->getLabel()] < 100){
 				++classCounter[data[i]->getLabel()];
-				output << data[i]->getLabel() << ";" << labels2[i];
+				output << data[i]->getLabel() << ";" << labels[i];
 				for(unsigned int j = 0; j < ivms.amountOfClasses(); ++j){
 					output << ";" << number2String(probs[i][j], 5);
 				}
@@ -102,7 +124,7 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 	}
 	output.close();
 	std::string out = "";
-	std::ifstream input("resultForEachPoint.csv");
+	std::ifstream input(Logger::getActDirectory() + "resultForEachPoint.csv");
 	if(input.is_open()){
 		std::string line;
 		while(std::getline(input, line)){
@@ -115,10 +137,9 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 		}
 	}
 	std::fstream output2;
-	output2.open("resultForEachPoint.csv", std::fstream::out | std::fstream::trunc);
+	output2.open(Logger::getActDirectory() + "resultForEachPoint.csv", std::fstream::out | std::fstream::trunc);
 	output2.write(out.c_str(), out.length());
 	output2.close();
-	}while(false);
 }
 
 void executeForMutliClassIVM(){

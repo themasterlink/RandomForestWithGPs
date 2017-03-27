@@ -40,7 +40,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	m_minMaxUsedDataFactor[1] = val;
 	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	Settings::getValue("OnlineRandomForest.useBigDynmaicDecisionTrees", m_useBigDynamicDecisionTrees);
-//	setDesiredAmountOfTrees(150);
+//	setDesiredAmountOfTrees(5);
 }
 
 OnlineRandomForest::~OnlineRandomForest(){
@@ -94,7 +94,8 @@ void OnlineRandomForest::train(){
 	}
 	const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
 	const double trainingsTime = m_ownSamplingTime > 0 ? m_ownSamplingTime : CommandSettings::get_samplingAndTraining();
-	std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
+	const unsigned int usedAmountOfPackages = std::min(nrOfParallel, trainingsTime > 0 ? nrOfParallel : m_desiredAmountOfTrees);
+	std::vector<InformationPackage*> packages(usedAmountOfPackages, nullptr);
 	if(m_maxDepth > 7 && m_useBigDynamicDecisionTrees && Settings::getDirectBoolValue("OnlineRandomForest.determineBestLayerAmount")){
 		boost::thread_group layerGroup;
 		std::list<std::pair<unsigned int, unsigned int> > layerValues; // from 2 to
@@ -136,7 +137,7 @@ void OnlineRandomForest::train(){
 	}
 	boost::mutex mutexForCounter;
 	boost::thread_group group;
-	for(unsigned int i = 0; i < nrOfParallel; ++i){
+	for(unsigned int i = 0; i < packages.size(); ++i){
 		packages[i] = new InformationPackage(m_desiredAmountOfTrees == 0 ? InformationPackage::ORF_TRAIN : InformationPackage::ORF_TRAIN_FIX, 0, (m_trees.size() / (double) nrOfParallel));
 		packages[i]->setStandartInformation("Train trees, thread nr: " + number2String(i));
 		packages[i]->setTrainingsTime(trainingsTime);
@@ -203,7 +204,7 @@ void OnlineRandomForest::train(){
 	}else{
 		InLinePercentageFiller::setActValueAndPrintLine(m_trees.size());
 	}
-	for(unsigned int i = 0; i < nrOfParallel; ++i){
+	for(unsigned int i = 0; i < packages.size(); ++i){
 		ThreadMaster::threadHasFinished(packages[i]);
 		SAVE_DELETE(packages[i]);
 	}
@@ -454,28 +455,30 @@ bool OnlineRandomForest::update(){
 //			printDebug("No update needed!");
 //			return false;
 //		}
+
 		boost::thread_group group;
+		sleep(2);
 		const unsigned int nrOfParallel = std::min((int) boost::thread::hardware_concurrency(), (int) m_trees.size());
 		boost::mutex* mutex = new boost::mutex();
 		if(list->size() != m_trees.size()){
 			printError("The sorting process failed, list size is: " << list->size() << ", should be: " << m_trees.size());
 			return false;
 		}
-		int counter = 0;
-		const int totalAmount = m_trees.size() / nrOfParallel * nrOfParallel;
-		const int amountOfElements = totalAmount / nrOfParallel;
+		unsigned int counter = 0;
+		const unsigned int totalAmount = std::max((unsigned int) m_trees.size(), (unsigned int) m_trees.size() / nrOfParallel * nrOfParallel);
+		const unsigned int amountOfElements = std::max((unsigned int) m_trees.size(), totalAmount / nrOfParallel);
 		InLinePercentageFiller::setActMax(totalAmount + 1);
 		MemoryType maxAmountOfUsedMemory;
 		Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
 		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
-		for(unsigned int i = 0; i < nrOfParallel; ++i){
+		for(unsigned int i = 0; i < packages.size(); ++i){
 			packages[i] = new InformationPackage(maxAmountOfUsedMemory > 0 ? InformationPackage::ORF_TRAIN_FIX : InformationPackage::ORF_TRAIN, 0., amountOfElements);
 			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::updateInParallel, this, list, amountOfElements, mutex, i, packages[i], &counter)));
 		}
 		int stillOneRunning = 1;
 		while(counter < totalAmount && stillOneRunning != 0){
 			stillOneRunning = 0;
-			for(unsigned int i = 0; i < nrOfParallel; ++i){
+			for(unsigned int i = 0; i < packages.size(); ++i){
 				if(!packages[i]->isTaskFinished()){
 					stillOneRunning += 1;
 				}
@@ -484,7 +487,7 @@ bool OnlineRandomForest::update(){
 			usleep(0.1 * 1e6);
 		}
 		group.join_all();
-		for(unsigned int i = 0; i < nrOfParallel; ++i){
+		for(unsigned int i = 0; i < packages.size(); ++i){
 			ThreadMaster::threadHasFinished(packages[i]);
 			SAVE_DELETE(packages[i]);
 		}
@@ -500,7 +503,7 @@ bool OnlineRandomForest::update(){
 }
 
 void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list){
-	const unsigned int nrOfParallel = std::min((int) boost::thread::hardware_concurrency(), (int) m_trees.size());
+	const unsigned int nrOfParallel = std::min((unsigned int) boost::thread::hardware_concurrency(), (unsigned int) m_trees.size());
 	boost::mutex read, append;
 	boost::thread_group group;
 	DecisionTreesContainer copyOfTrees;
@@ -520,6 +523,17 @@ void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list)
 void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeList* list, DecisionTreesContainer* trees,
 		boost::mutex* readMutex, boost::mutex* appendMutex, InformationPackage* package){
 	package->setStandartInformation("Sort trees after performance");
+	if(m_trees.size() == 1){
+		int correct = 0;
+		for(OnlineStorage<ClassPoint*>::ConstIterator itPoint = m_storage.begin(); itPoint != m_storage.end(); ++itPoint){
+			ClassPoint& point = **itPoint;
+			if(point.getLabel() == (*m_trees.begin())->predict(point)){
+				++correct;
+			}
+		}
+		list->push_back(SortedDecisionTreePair(*m_trees.begin(), correct / (double) (m_storage.size()) * 100));
+		return;
+	}
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
 	SortedDecisionTreeList ownList;
@@ -578,7 +592,7 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 	package->finishedTask();
 }
 
-void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps, boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, int* counter){
+void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps, boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, unsigned int* counter){
 	if(package == nullptr){
 		printError("This thread has no valid information package: " + number2String(threadNr));
 		return;

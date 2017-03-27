@@ -24,12 +24,27 @@ void ReadWriterHelper::writeMatrix(std::fstream& stream, const Eigen::MatrixXd& 
 	stream.write((char*) matrix.data(), rows*cols*sizeof(Eigen::MatrixXd::Scalar) );
 }
 
+void ReadWriterHelper::writeMatrix(std::fstream& stream, const Eigen::MatrixXf& matrix){
+	Eigen::MatrixXf::Index rows = matrix.rows(), cols=matrix.cols();
+	stream.write((char*) (&rows), sizeof(Eigen::MatrixXf::Index));
+	stream.write((char*) (&cols), sizeof(Eigen::MatrixXf::Index));
+	stream.write((char*) matrix.data(), rows*cols*sizeof(Eigen::MatrixXf::Scalar) );
+}
+
 void ReadWriterHelper::readMatrix(std::fstream& stream, Eigen::MatrixXd& matrix){
 	Eigen::MatrixXd::Index rows=0, cols=0;
 	stream.read((char*) (&rows),sizeof(Eigen::MatrixXd::Index));
 	stream.read((char*) (&cols),sizeof(Eigen::MatrixXd::Index));
 	matrix.resize(rows, cols);
 	stream.read( (char *) matrix.data() , rows*cols*sizeof(Eigen::MatrixXd::Scalar) );
+}
+
+void ReadWriterHelper::readMatrix(std::fstream& stream, Eigen::MatrixXf& matrix){
+	Eigen::MatrixXf::Index rows=0, cols=0;
+	stream.read((char*) (&rows),sizeof(Eigen::MatrixXf::Index));
+	stream.read((char*) (&cols),sizeof(Eigen::MatrixXf::Index));
+	matrix.resize(rows, cols);
+	stream.read( (char *) matrix.data() , rows*cols*sizeof(Eigen::MatrixXf::Scalar) );
 }
 
 void ReadWriterHelper::writeVector(std::fstream& stream, const Eigen::VectorXd& vector){

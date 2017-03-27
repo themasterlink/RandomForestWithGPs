@@ -49,7 +49,7 @@ void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, co
 		bool read = false;
 		if(boost::filesystem::exists(path) && m_differences == nullptr){
 			std::fstream input(path, std::ios::binary| std::ios::in);
-			m_differences = new Eigen::MatrixXd();
+			m_differences = new Eigen::MatrixXf();
 			ReadWriterHelper::readMatrix(input, *m_differences);
 			input.close();
 			m_dataPoints = m_differences->cols();
@@ -58,7 +58,7 @@ void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, co
 		}
 		if(!read && !useSharedDifferenceMatrix){
 			const int amountOfElementsInTriangluarMatrix = (m_pData->size() * m_pData->size() + m_pData->size()) / 2;
-			m_differences = new Eigen::MatrixXd(m_dataPoints, m_dataPoints);
+			m_differences = new Eigen::MatrixXf(m_dataPoints, m_dataPoints);
 			calcDifferenceMatrix(0, amountOfElementsInTriangluarMatrix, m_differences);
 			std::fstream output(path, std::ios::binary | std::ios::out);
 			ReadWriterHelper::writeMatrix(output, *m_differences);
@@ -92,7 +92,7 @@ void KernelBase<KernelType, nrOfParams>::init(const ClassData& data, const bool 
 		}
 		if(!read && !useSharedDifferenceMatrix){
 			const int amountOfElementsInTriangluarMatrix = (m_pData->size() * m_pData->size() + m_pData->size()) / 2;
-			m_differences = new Eigen::MatrixXd();
+			m_differences = new Eigen::MatrixXf();
 			calcDifferenceMatrix(0, amountOfElementsInTriangluarMatrix, m_differences);
 			m_calcedDifferenceMatrix = true;
 			std::fstream output(path, std::ios::binary | std::ios::out);
@@ -104,7 +104,7 @@ void KernelBase<KernelType, nrOfParams>::init(const ClassData& data, const bool 
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd* usedMatrix){
+void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf* usedMatrix){
 	m_differences = usedMatrix;
 	if(m_pData != nullptr){
 		m_dataPoints = m_pData->size();
@@ -155,7 +155,7 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd& usedMatrix, const OnlineStorage<ClassPoint*>& storage, InformationPackage* package){
+void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf& usedMatrix, const OnlineStorage<ClassPoint*>& storage, InformationPackage* package){
 	const unsigned int dataPoints = storage.size();
 	int counter = 0;
 	if(usedMatrix.rows() != dataPoints || usedMatrix.cols() != dataPoints){

@@ -87,7 +87,7 @@ void executeForBinaryClassORF(){
 	const int trainAmount = readAllData();
 	if(TotalStorage::getMode() == TotalStorage::SEPERATE){
 		OnlineRandomForest* newOrf = nullptr;
-		if(true){
+		if(false){
 			//	OnlineStorage<ClassPoint*> train;
 			OnlineStorage<ClassPoint*> test;
 			int height;
@@ -205,9 +205,9 @@ void executeForBinaryClassORF(){
 		performTest(orf, train);
 		printOnScreen("First test finished");
 		performTest(orf, test);
-		printOnScreen("Second test finished");
-		orf.update();
-		performTest(orf, test);
+//		printOnScreen("Second test finished");
+//		orf.update();
+//		performTest(orf, test);
 		printOnScreen("Third test after orf.update() finished");
 		printOnScreen("Amount of Classes: " << TotalStorage::getAmountOfClass());
 

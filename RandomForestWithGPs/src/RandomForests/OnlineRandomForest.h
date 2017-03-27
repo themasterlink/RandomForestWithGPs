@@ -95,7 +95,7 @@ private:
 	void sortTreesAfterPerformanceInParallel(SortedDecisionTreeList* list, DecisionTreesContainer* trees, boost::mutex* readMutex, boost::mutex* appendMutex, InformationPackage* package);
 
 	void updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps,
-			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, int* counter);
+			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, unsigned int* counter);
 
 	void updateMinMaxValues(unsigned int event);
 

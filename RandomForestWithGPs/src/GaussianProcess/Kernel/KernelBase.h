@@ -60,9 +60,9 @@ public:
 
 	unsigned int getNrOfParams(){ return nrOfParams; };
 
-	void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd* usedMatrix);
+	void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf* usedMatrix);
 
-	static void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXd& usedMatrix, const OnlineStorage<ClassPoint*>& storage, InformationPackage* package = nullptr);
+	static void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf& usedMatrix, const OnlineStorage<ClassPoint*>& storage, InformationPackage* package = nullptr);
 
 	virtual double calcDiagElement(unsigned int row) const = 0;
 
@@ -72,7 +72,7 @@ public:
 
 	virtual std::string prettyString() const = 0;
 
-	void setDifferenceMatrix(Eigen::MatrixXd* differenceMatrix){
+	void setDifferenceMatrix(Eigen::MatrixXf* differenceMatrix){
 		m_differences = differenceMatrix;
 		m_calcedDifferenceMatrix = true;
 	}
@@ -89,7 +89,7 @@ protected:
 
 	virtual double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const = 0;
 
-	Eigen::MatrixXd* m_differences;
+	Eigen::MatrixXf* m_differences;
 
 	Eigen::MatrixXd* m_pDataMat;
 
