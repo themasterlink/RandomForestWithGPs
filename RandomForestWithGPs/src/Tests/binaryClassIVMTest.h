@@ -148,7 +148,6 @@ GaussianKernelParams sampleParams(OnlineStorage<ClassPoint*>& storage, int numbe
 
 void trainIVM(IVM* ivm, const int verboseLevel){
 	UNUSED(verboseLevel);
-	printLine();
 	ivm->train(CommandSettings::get_samplingAndTraining() > 0, 1, false);
 }
 

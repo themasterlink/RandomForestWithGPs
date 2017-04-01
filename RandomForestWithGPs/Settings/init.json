@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 14
+			"height": 35
 		}
 	},
 	"IVM": {
@@ -27,7 +27,7 @@
 		"nrOfInducingPoints": 800,
 		"desiredMargin": 0.01,
 		"hasLengthMoreThanParam": "false",
-		"useNeighbourComparison": "false",
+		"useNeighbourComparison": "true",
 		"Training": {
 			"useSavedHyperParams": "false",
 			"overwriteExistingHyperParams": "true"
@@ -38,13 +38,14 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
-		"folderLocReal": "../mnistOrg/",
+		"folderLocReal": "../washington/",
 		"folderLocFake": "../fakeDataBinary/",
-		"folderTestNr": 9,
-		"excludeClass": 11,
+		"folderTestNr": 3,
+		"excludeClass": 1000,
 		"normalizeData": "false",
 		"removeUselessDimensions": "true",
-		"readFromFolder": "true"
+		"readFromFolder": "true",
+		"stepOverTrainingData": 0
 	},
 	"OnlineRandomForest": {
 		"amountOfPointsUntilRetrain": 200,
@@ -52,9 +53,9 @@
 		"maxUsedDataFactor": 0.6,
 		"stepSizeOverData": 0,
 		"factorAmountOfUsedDims": 1.0,
-		"ownSamplingTime": 100,
+		"ownSamplingTime": 30,
 		"maxAmountOfUsedMemory": 16000000000,
-		"useBigDynmaicDecisionTrees": "false",
+		"useBigDynmaicDecisionTrees": "true",
 		"layerAmountOfBigDDT": 3,
 		"layerFastAmountOfBigDDT": 2,
 		"determineBestLayerAmount": "false",
@@ -72,17 +73,17 @@
 		"usePartitionInsteadOfLabels": "true"
 	},
 	"CMAES": {
-		"lowerBoundLen": 1,
-		"upperBoundLen": 10,
-		"lowerBoundFNoise": 1,
-		"upperBoundFNoise": 10,
+		"lowerBoundLen": 0.3,
+		"upperBoundLen": 13,
+		"lowerBoundFNoise": 0.3,
+		"upperBoundFNoise": 13,
 		"lowerBoundSNoise": 0.18,
 		"upperBoundSNoise": 0.2,
 		"minErrorForCheck": 40.0
 	},
 	"KernelParam": {
-		"len": 2.7278,
-		"fNoise": 9.67526,
+		"len": 2.823406652571,
+		"fNoise": 10.275427014715,
 		"sNoise": 0.01,
 		"lenMean": 0.9,
 		"lenVar": 0.7,
@@ -131,6 +132,6 @@
 		"visuFinalIvm": "false"
 	},
 	"main": {
-		"type": "ORFIVMs"
+		"type": "ORF"
 	}
 }

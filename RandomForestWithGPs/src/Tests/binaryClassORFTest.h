@@ -176,7 +176,7 @@ void executeForBinaryClassORF(){
 
 			TotalStorage::getOnlineStorageCopyWithTest(train, test, 10000000);
 			printOnScreen("Training finished");
-//			performTest(orf, train);
+			performTest(orf, train);
 //
 //			printOnScreen("Test on training set finished");
 			performTest(orf, test);

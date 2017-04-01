@@ -246,7 +246,51 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 			bestParams.m_fNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.fNoise"));
 			bestParams.m_sNoise.setAllValuesTo(Settings::getDirectDoubleValue("KernelParam.sNoise"));
 		}
-		if(doSampling){
+		bool doSamplingCheck = doSampling;
+//		if(getClassName() == "7"){
+//			doSamplingCheck = true;
+//		}else{
+//			doSamplingCheck = false;
+//			bestParams.m_length.setAllValuesTo(0.1);
+//			if(getClassName() == "0"){
+//				bestParams.m_length.setAllValuesTo(3.851760014051);
+//				bestParams.m_fNoise.setAllValuesTo(5.940608150287);
+//			}else if(getClassName() == "1"){
+//				bestParams.m_length.setAllValuesTo(4.963171827074);
+//				bestParams.m_fNoise.setAllValuesTo(1.814790413357);
+//			}else if(getClassName() == "2"){
+//				bestParams.m_length.setAllValuesTo(3.371589058233);
+//				bestParams.m_fNoise.setAllValuesTo(9.926299268284);
+//			}else if(getClassName() == "3"){
+//				bestParams.m_length.setAllValuesTo(3.242048551338);
+//				bestParams.m_fNoise.setAllValuesTo(4.943687192986);
+//			}else if(getClassName() == "4"){
+//				bestParams.m_length.setAllValuesTo(4.712600148446);
+//				bestParams.m_fNoise.setAllValuesTo(8.246519895783);
+//			}else if(getClassName() == "5"){
+//				bestParams.m_length.setAllValuesTo(3.072963966233);
+//				bestParams.m_fNoise.setAllValuesTo(5.745909263566);
+//			}else if(getClassName() == "6"){
+//				bestParams.m_length.setAllValuesTo(3.999019009579);
+//				bestParams.m_fNoise.setAllValuesTo(6.138010790972);
+//			}
+////			else if(getClassName() == "7"){
+////				bestParams.m_length.setAllValuesTo(5.074664252044);
+////				bestParams.m_fNoise.setAllValuesTo(4.127306348955);
+////			}
+//			else if(getClassName() == "8"){
+//				bestParams.m_length.setAllValuesTo(3.325247527696);
+//				bestParams.m_fNoise.setAllValuesTo(9.416920820279);
+//			}else if(getClassName() == "9"){
+//				bestParams.m_length.setAllValuesTo(4.394986921304);
+//				bestParams.m_fNoise.setAllValuesTo(4.474911884497);
+//			}else{
+//				printError("This class is unknown!");
+//				sleep(5);
+//				exit(0);
+//			}
+//		}
+		if(doSamplingCheck){
 			printInPackageOnScreen(m_package, "Start sampling");
 			bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 			m_gaussKernel->changeKernelConfig(hasMoreThanOneLengthValue);

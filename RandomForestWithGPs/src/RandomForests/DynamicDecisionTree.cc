@@ -188,6 +188,9 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			const double usedValue = generator.getRandSplitValueInDim(randDim);
 			const double score = trySplitFor(usedValue, randDim,
 					actDataPos, leftHisto, rightHisto, generator);
+//			if(iActNode == 1 && randDim == 0){
+//				printOnScreen(usedValue <<"," << score);
+//			}
 			if(score > actScore){
 				actScore = score;
 				maxScoreElementValue = usedValue;
@@ -317,6 +320,12 @@ double DynamicDecisionTree::trySplitFor(const double usedSplitValue, const unsig
 			if(leftClassProb < 1.0){
 				rightCost -= (1. - leftClassProb) * log((1. - leftClassProb));
 			}
+//			if(leftClassProb > 0){
+//				leftCost += leftClassProb * (1- leftClassProb);
+//			}
+//			if(leftClassProb < 1.0){
+//				rightCost += (leftClassProb) * ((1. - leftClassProb));
+//			}
 		}
 		leftHisto[i] = 0;
 		rightHisto[i] = 0;

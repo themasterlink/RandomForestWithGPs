@@ -337,18 +337,38 @@ void TotalStorage::readData(const int amountOfData){
 			}
 			printOnScreen("Removed class: " << removeClass << " from train: " << m_removeFromTrainSet.size() << ", from test: " << m_removeFromTestSet.size());
 		}
-
-//		RandomUniformNr uniformNr(1,8,100);
-//		std::list<ClassPoint*> trainList;
-//		for(unsigned int i = uniformNr(); i < m_trainSet.size(); i+=uniformNr()){
-//			trainList.push_back(m_trainSet[i]);
-//		}
-//		printOnScreen("Reduced training size from: " << m_trainSet.size() << " to: " << trainList.size());
-//		m_trainSet.clear();
-//		m_trainSet.reserve(trainList.size());
-//		for(std::list<ClassPoint*>::const_iterator it = trainList.begin(); it != trainList.end(); ++it){
-//			m_trainSet.push_back(*it);
-//		}
+		int amountOfSizeStep = 0;
+		Settings::getValue("TotalStorage.stepOverTrainingData", amountOfSizeStep);
+		if(amountOfSizeStep > 1){
+			std::string type = "";
+			Settings::getValue("main.type", type);
+			std::list<ClassPoint*> trainList;
+			const bool useWholeClass = !type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView();
+			printOnScreen("Usewholeclass: " << useWholeClass);
+			if(useWholeClass){
+				for(unsigned int i = 0; i < m_trainSet.size(); ++i){
+					if(m_trainSet[i]->getLabel() == 0){
+						trainList.push_back(m_trainSet[i]);
+					}
+				}
+			}
+			RandomUniformNr uniformNr(1,amountOfSizeStep,100);
+			for(unsigned int i = uniformNr(); i < m_trainSet.size(); i+=uniformNr()){
+				if(useWholeClass){
+					if(m_trainSet[i]->getLabel() == 1){
+						trainList.push_back(m_trainSet[i]);
+					}
+				}else{
+					trainList.push_back(m_trainSet[i]);
+				}
+			}
+			printOnScreen("Reduced training size from: " << m_trainSet.size() << " to: " << trainList.size());
+			m_trainSet.clear();
+			m_trainSet.reserve(trainList.size());
+			for(std::list<ClassPoint*>::const_iterator it = trainList.begin(); it != trainList.end(); ++it){
+				m_trainSet.push_back(*it);
+			}
+		}
 		m_totalSize = m_trainSet.size() + m_testSet.size();
 		if(Settings::getDirectBoolValue("TotalStorage.normalizeData") && !didNormalizeStep){
 			DataConverter::centerAndNormalizeData(m_trainSet, m_center, m_var); // first calc on training set
