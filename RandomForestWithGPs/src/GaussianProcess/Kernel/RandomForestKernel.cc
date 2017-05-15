@@ -11,7 +11,7 @@ RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, cons
 	KernelBase<RandomForestKernelParams>(OwnKernelInitParams(maxDepth, samplingAmount, amountOfUsedClasses), false),
 	m_heightSampler(3, maxDepth, 234389),
 	m_rf(nullptr),
-	m_mode(PARTITION){
+	m_mode(KernelMode::PARTITION){
 	if(createOrf){
 		m_rf = new OnlineRandomForest(storage, maxDepth, amountOfUsedClasses);
 		m_rf->setDesiredAmountOfTrees(samplingAmount+1);
@@ -22,7 +22,7 @@ RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, cons
 	KernelBase<RandomForestKernelParams>(initParams),
 	m_heightSampler(3, initParams.m_maxDepth, 234389),
 	m_rf(nullptr),
-	m_mode(PARTITION){
+	m_mode(KernelMode::PARTITION){
 	if(createOrf){
 		m_rf = new OnlineRandomForest(storage, initParams.m_maxDepth, initParams.m_amountOfUsedClasses);
 		m_rf->setDesiredAmountOfTrees(initParams.m_samplingAmount);
@@ -35,9 +35,9 @@ RandomForestKernel::~RandomForestKernel(){
 void RandomForestKernel::init(){
 	m_init = true;
 	if(Settings::getDirectBoolValue("RandomForestKernel.usePartitionInsteadOfLabels")){
-		m_mode = PARTITION;
+		m_mode = KernelMode::PARTITION;
 	}else{
-		m_mode = LABEL;
+		m_mode = KernelMode::LABEL;
 	}
 }
 
@@ -86,9 +86,9 @@ double RandomForestKernel::kernelFunc(const int row, const int col) const{
 
 double RandomForestKernel::kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const{
 	if(m_init){
-		if(m_mode == LABEL){
+		if(m_mode == KernelMode::LABEL){
 			return m_rf->predict(lhs, rhs, (int) m_kernelParams.m_samplingAmount.getValue());
-		}else if(m_mode == PARTITION){
+		}else if(m_mode == KernelMode::PARTITION){
 			RandomUniformNr& sampler = const_cast<RandomUniformNr&>(m_heightSampler);
 			return m_rf->predictPartitionEquality(lhs, rhs, sampler, (int) m_kernelParams.m_samplingAmount.getValue());
 		}

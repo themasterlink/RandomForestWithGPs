@@ -23,8 +23,8 @@
 	"IVM": {
 		"doEpUpdate": "false",
 		"lambda": 0.5,
-		"trainingCanBeAbortedIfErrorIsAboveVal": 99.99999,
-		"nrOfInducingPoints": 800,
+		"trainingCanBeAbortedIfErrorIsAboveVal": 199.99999,
+		"nrOfInducingPoints": 40,
 		"desiredMargin": 0.01,
 		"hasLengthMoreThanParam": "false",
 		"useNeighbourComparison": "true",
@@ -38,14 +38,14 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
-		"folderLocReal": "../washington/",
+		"folderLocReal": "../mnistOrg/",
 		"folderLocFake": "../fakeDataBinary/",
-		"folderTestNr": 3,
+		"folderTestNr": 4,
 		"excludeClass": 1000,
 		"normalizeData": "false",
 		"removeUselessDimensions": "true",
 		"readFromFolder": "true",
-		"stepOverTrainingData": 0
+		"stepOverTrainingData": 10
 	},
 	"OnlineRandomForest": {
 		"amountOfPointsUntilRetrain": 200,
@@ -73,10 +73,10 @@
 		"usePartitionInsteadOfLabels": "true"
 	},
 	"CMAES": {
-		"lowerBoundLen": 0.3,
-		"upperBoundLen": 13,
-		"lowerBoundFNoise": 0.3,
-		"upperBoundFNoise": 13,
+		"lowerBoundLen": 0.11,
+		"upperBoundLen": 10,
+		"lowerBoundFNoise": 0.1,
+		"upperBoundFNoise": 10,
 		"lowerBoundSNoise": 0.18,
 		"upperBoundSNoise": 0.2,
 		"minErrorForCheck": 40.0
@@ -132,6 +132,6 @@
 		"visuFinalIvm": "false"
 	},
 	"main": {
-		"type": "ORF"
+		"type": "binaryIvm"
 	}
 }

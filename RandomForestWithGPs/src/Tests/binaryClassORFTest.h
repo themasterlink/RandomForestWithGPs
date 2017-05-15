@@ -85,7 +85,7 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 
 void executeForBinaryClassORF(){
 	const int trainAmount = readAllData();
-	if(TotalStorage::getMode() == TotalStorage::SEPERATE){
+	if(TotalStorage::getMode() == TotalStorage::Mode::SEPERATE){
 		OnlineRandomForest* newOrf = nullptr;
 		if(false){
 			//	OnlineStorage<ClassPoint*> train;

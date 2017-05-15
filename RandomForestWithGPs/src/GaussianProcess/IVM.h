@@ -21,13 +21,13 @@
 
 class IVM : public PredictorBinaryClass {
 public:
-	enum KernelType {
+	enum class KernelType {
 		GAUSS = 0,
 		RF = 1
 	};
 
-	typedef typename Eigen::VectorXd Vector;
-	typedef typename Eigen::MatrixXd Matrix;
+	using Vector = Eigen::VectorXd;
+	using Matrix = Eigen::MatrixXd;
 	template <typename T>
 	using List = std::list<T>;
 

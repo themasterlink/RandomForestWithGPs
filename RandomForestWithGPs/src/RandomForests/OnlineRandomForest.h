@@ -19,9 +19,9 @@
 class OnlineRandomForest : public Observer, public PredictorMultiClass, public Subject {
 public:
 
-	typedef typename std::list<DynamicDecisionTreeInterface*> DecisionTreesContainer;
-	typedef typename DecisionTreesContainer::iterator DecisionTreeIterator;
-	typedef typename DecisionTreesContainer::const_iterator DecisionTreeConstIterator;
+	using DecisionTreesContainer = std::list<DynamicDecisionTreeInterface*>;
+	using DecisionTreeIterator = DecisionTreesContainer::iterator;
+	using DecisionTreeConstIterator = DecisionTreesContainer::const_iterator;
 
 	OnlineRandomForest(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfUsedClasses);
 
@@ -32,15 +32,15 @@ public:
 	// if amountOfTrees == 0 -> the samplingTime is used
 	void setDesiredAmountOfTrees(const unsigned int desiredAmountOfTrees){ m_desiredAmountOfTrees = desiredAmountOfTrees; }
 
-	unsigned int predict(const DataPoint& point) const;
+	unsigned int predict(const DataPoint& point) const override;
 
 	double predict(const DataPoint& point1, const DataPoint& point2, const unsigned int sampleAmount) const;
 
 	double predictPartitionEquality(const DataPoint& point1, const DataPoint& point2, RandomUniformNr& uniformNr, unsigned int amountOfSamples) const;
 
-	void predictData(const Data& points, Labels& labels) const;
+	void predictData(const Data& points, Labels& labels) const override;
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const override;
 
 	void predictData(const ClassData& points, Labels& labels) const;
 
@@ -50,24 +50,24 @@ public:
 
 	int getNrOfTrees() const { return m_amountOfTrainedTrees; };
 
-	void update(Subject* caller, unsigned int event);
+	void update(Subject* caller, unsigned int event) override;
 
 	bool update();
 
-	unsigned int amountOfClasses() const;
+	unsigned int amountOfClasses() const override;
 
 	OnlineStorage<ClassPoint*>& getStorageRef();
 
 	const OnlineStorage<ClassPoint*>& getStorageRef() const;
 
-	ClassTypeSubject classType() const;
+	ClassTypeSubject classType() const override;
 
 	const std::vector<Eigen::Vector2d >& getMinMaxValues(){ return m_minMaxValues;};
 
 private:
 
-	typedef typename std::pair<DynamicDecisionTreeInterface*, double> SortedDecisionTreePair;
-	typedef typename std::list<SortedDecisionTreePair > SortedDecisionTreeList;
+	using SortedDecisionTreePair = std::pair<DynamicDecisionTreeInterface*, double>;
+	using SortedDecisionTreeList = std::list<SortedDecisionTreePair >;
 
 	void predictDataInParallel(const Data& points, Labels* labels, const unsigned int start, const unsigned int end) const;
 

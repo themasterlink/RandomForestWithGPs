@@ -17,9 +17,9 @@ class RandomGaussianNr{
 	friend GaussianProcessWriter;
 public:
 
-	typedef boost::random::mt19937 base_generator_type; // generator type
-	typedef boost::random::normal_distribution<> normal_distribution;
-	typedef boost::random::variate_generator<base_generator_type&, normal_distribution > variante_generator;
+	using base_generator_type = boost::random::mt19937; // generator type
+	using normal_distribution = boost::random::normal_distribution<>;
+	using variante_generator = boost::random::variate_generator<base_generator_type&, normal_distribution >;
 
 	RandomGaussianNr(const double mean = 0.0, const double sd = 1.0, const int seed = -1);
 	virtual ~RandomGaussianNr();

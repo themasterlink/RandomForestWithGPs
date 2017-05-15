@@ -40,7 +40,7 @@
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
-typedef unsigned long MemoryType;
+using MemoryType = unsigned long;
 
 #define EPSILON 1e-15
 
@@ -111,9 +111,22 @@ inline void openFileInViewer(const std::string& filename){
 	}
 }
 // much fast than pow(2, exp)
-inline unsigned int pow2(const unsigned int exponent){
-	return ((unsigned int) 1u) << exponent;
+// template ensures that it can be used with any kind of int, unsigned or not
+template<typename T>
+constexpr inline T pow2(const T exponent) noexcept {
+	return ((unsigned int) T(1)) << exponent;
 }
+
+// for this case the pow(2.0, exponent) should be used and not this constexpr function
+template<>
+constexpr inline double pow2(const double exponent) noexcept = delete;
+
+template<>
+constexpr inline char pow2(const char exponent) noexcept = delete; // prohibits the use with char
+
+template<>
+constexpr inline bool pow2(const bool exponent) noexcept = delete; // prohibits the use with char
+
 
 template<class T>
 void overwriteConst(const T& ref, const T& newValue){

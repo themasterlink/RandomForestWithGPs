@@ -24,7 +24,7 @@ class GaussianProcess : public PredictorBinaryClass {
 	friend BayesOptimizer;
 public:
 
-	enum Status {
+	enum class Status {
 		NANORINFERROR = -1,
 		ALLFINE = 0
 	};

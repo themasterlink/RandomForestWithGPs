@@ -85,7 +85,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 					for(unsigned int i = 0; i < amountOfClasses(); ++i){
 						if(m_isClassUsed[i]){
 							m_ivms[i] = new IVM(m_storage, true);
-							if(m_ivms[i]->getKernelType() == IVM::RF){
+							if(m_ivms[i]->getKernelType() == IVM::KernelType::RF){
 								m_ivms[i]->setOnlineRandomForest(m_orfForKernel);
 							}
 							Eigen::Vector2i usedClasses;
@@ -239,7 +239,7 @@ void IVMMultiBinary::train(){
 						stillOneRunning = true;
 						//							printOnScreen("Package: " << i << ", is still running");
 					}else{ // task is finished
-						if(stateOfIvms[i] == 1 && m_ivms[i]->getKernelType() == IVM::GAUSS){
+						if(stateOfIvms[i] == 1 && m_ivms[i]->getKernelType() == IVM::KernelType::GAUSS){
 							//								printOnScreen("Add " <<  m_ivms[i]->getClassName() << " to retrain");
 							//								// add to retrain
 							//								packagesForRetrain.push_back(new InformationPackage(InformationPackage::IVM_RETRAIN, packages[i]->correctlyClassified(), m_storage.size()));

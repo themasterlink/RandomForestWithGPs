@@ -157,8 +157,8 @@ private:
 
 class GaussianKernelParams {
 public:
-	typedef GaussianKernelElement OwnKernelElement;
-	typedef GaussianKernelInitParams OwnKernelInitParams;
+	using OwnKernelElement = GaussianKernelElement;
+	using OwnKernelInitParams = GaussianKernelInitParams;
 
 	static const unsigned int paramsAmount = 3;
 
@@ -193,8 +193,8 @@ std::ostream& operator<<(std::ostream& stream, const GaussianKernelParams& param
 
 class RandomForestKernelParams {
 public:
-	typedef RandomForestKernelElement OwnKernelElement;
-	typedef RandomForestKernelInitParams OwnKernelInitParams;
+	using OwnKernelElement = RandomForestKernelElement;
+	using OwnKernelInitParams = RandomForestKernelInitParams;
 
 	static const unsigned int paramsAmount = 3;
 

@@ -19,10 +19,10 @@
 class RandomNumberGeneratorForDT : public Observer {
 public:
 
-	typedef boost::random::mt19937 base_generator_type; // generator type
-	typedef boost::random::uniform_int_distribution<int> uniform_distribution_int; // generator type
-	typedef boost::uniform_real<double> uniform_distribution_real; // generator type
-	typedef boost::variate_generator<base_generator_type, uniform_distribution_int> variante_generator;
+	using base_generator_type = boost::random::mt19937; // generator type
+	using uniform_distribution_int = boost::random::uniform_int_distribution<int>; // generator type
+	using uniform_distribution_real = boost::uniform_real<double>; // generator type
+	using variante_generator = boost::variate_generator<base_generator_type, uniform_distribution_int>;
 
 	RandomNumberGeneratorForDT(const int dim, const int minUsedData, const int maxUsedData,
 			const int amountOfData, const int seed, const int amountOfDataUsedPerTree);
@@ -45,7 +45,7 @@ public:
 
 	double getRandSplitValueInDim(const unsigned int dim);
 
-	void update(Subject* caller, unsigned int event);
+	void update(Subject* caller, unsigned int event) override;
 
 	bool useDim(const int dim) const{ return m_useDim[dim]; }
 

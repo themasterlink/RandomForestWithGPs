@@ -39,8 +39,8 @@ public:
 
 private:
 
-	typedef boost::posix_time::ptime Time;
-	typedef boost::posix_time::time_duration TimeDuration;
+	using Time = boost::posix_time::ptime;
+	using TimeDuration = boost::posix_time::time_duration;
 
 	Time m_start, m_stop;
 	AvgNumber avgTime;

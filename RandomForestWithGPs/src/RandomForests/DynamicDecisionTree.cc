@@ -17,7 +17,7 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, co
 		m_maxInternalNodeNr(pow2(maxDepth) - 1),
 		m_amountOfClasses(amountOfClasses),
 		m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
-		m_splitDim(m_maxInternalNodeNr + 1, NODE_IS_NOT_USED),
+		m_splitDim(m_maxInternalNodeNr + 1, NodeType::NODE_IS_NOT_USED),
 		m_labelsOfWinningClassesInLeaves(pow2(maxDepth), UNDEF_CLASS_LABEL),
 		m_dataPositions(nullptr),
 		m_useOnlyThisDataPositions(nullptr){
@@ -65,9 +65,9 @@ DynamicDecisionTree::~DynamicDecisionTree(){
 }
 
 bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const unsigned int tryCounter, const bool saveDataPosition){
-	if(m_splitDim[1] != NODE_IS_NOT_USED || m_splitDim[1] != NODE_CAN_BE_USED){
+	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED || m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		// reset training
-		std::fill(m_splitDim.begin(), m_splitDim.end(), NODE_IS_NOT_USED);
+		std::fill(m_splitDim.begin(), m_splitDim.end(), NodeType::NODE_IS_NOT_USED);
 		std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), UNDEF_CLASS_LABEL);
 	}
 	std::vector<int> usedDims(amountOfUsedDims,-1);
@@ -106,7 +106,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		}
 		generator.setRandForDim(0, amountOfUsedDims - 1);
 	}
-	m_splitDim[1] = NODE_CAN_BE_USED; // init the root value
+	m_splitDim[1] = NodeType::NODE_CAN_BE_USED; // init the root value
 	std::vector<unsigned int> leftHisto(m_amountOfClasses), rightHisto(m_amountOfClasses);
 	m_dataPositions = new std::vector<std::vector<unsigned int> >(m_maxNodeNr + 1, std::vector<unsigned int>());
 	std::vector<std::vector<unsigned int> >& dataPosition(*m_dataPositions);
@@ -143,7 +143,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 //			breakPoint += pow2(actLayer); // first iteration from 3 -> 7, 7 -> 15, 15 -> 31
 //			++actLayer;
 //		}
-		if(m_splitDim[iActNode] == NODE_IS_NOT_USED){ // checks if node contains data or not
+		if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){ // checks if node contains data or not
 			continue; // if node is not used, go to next node, if node can be used process it
 		}
 		// calc actual nodes
@@ -172,9 +172,9 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		}
 		if(minDimValue >= maxDimValue){ // splitting impossible
 			//				printError("No dimension was found, where a split could be performed!");
-			m_splitDim[iActNode] = NODE_IS_NOT_USED; // do not split here
+			m_splitDim[iActNode] = NodeType::NODE_IS_NOT_USED; // do not split here
 			if(iActNode == 1){
-				m_splitDim[iActNode] = NODE_CAN_BE_USED; // there should be a split
+				m_splitDim[iActNode] = NodeType::NODE_CAN_BE_USED; // there should be a split
 			}
 			continue;
 		}
@@ -223,17 +223,17 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			// split is not needed
 			dataPosition[leftPos].clear();
 			dataPosition[rightPos].clear();
-			m_splitDim[iActNode] = NODE_IS_NOT_USED; // do not split here
+			m_splitDim[iActNode] = NodeType::NODE_IS_NOT_USED; // do not split here
 			if(iActNode == 1){
-				m_splitDim[iActNode] = NODE_CAN_BE_USED; // there should be a split
+				m_splitDim[iActNode] = NodeType::NODE_CAN_BE_USED; // there should be a split
 			}
 		}else{
 //			atLeastPerformedOneSplit = true;
 			actDataPos.clear();
 			// set the use flag for children:
 			if(rightPos < (int) m_maxInternalNodeNr + 1){ // if right is not a leave, than left is too -> just control one
-				m_splitDim[leftPos] = foundDataLeft > 0 ? NODE_CAN_BE_USED : NODE_IS_NOT_USED;
-				m_splitDim[rightPos] = foundDataRight > 0 ? NODE_CAN_BE_USED : NODE_IS_NOT_USED;
+				m_splitDim[leftPos] = foundDataLeft > 0 ? NodeType::NODE_CAN_BE_USED : NodeType::NODE_IS_NOT_USED;
+				m_splitDim[rightPos] = foundDataRight > 0 ? NodeType::NODE_CAN_BE_USED : NodeType::NODE_IS_NOT_USED;
 			}
 		}
 	}
@@ -243,7 +243,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 	for(int i = 0; i < leafAmount; ++i){
 		int lastValue = i + offset;
 		int actNode = lastValue / 2;
-		while(m_splitDim[actNode] == NODE_IS_NOT_USED && actNode > 1){
+		while(m_splitDim[actNode] == NodeType::NODE_IS_NOT_USED && actNode > 1){
 			lastValue = actNode; // save correct child
 			actNode /= 2; // if node is not take parent and try again
 		}
@@ -264,7 +264,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			std::fill(histo.begin(), histo.end(), 0u);
 		}
 	}
-	if(m_splitDim[1] == NODE_CAN_BE_USED && tryCounter < 5){ // five splits are enough to try
+	if(m_splitDim[1] == NodeType::NODE_CAN_BE_USED && tryCounter < 5){ // five splits are enough to try
 		// try again!
 		return train(amountOfUsedDims,generator, tryCounter + 1, saveDataPosition);
 	}else if(tryCounter >= 5){
@@ -340,15 +340,15 @@ unsigned int DynamicDecisionTree::predict(const DataPoint& point) const{
 
 unsigned int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode) const { // is named iActNode here, is easier, but represents in the end the winningLeafNode
 	iActNode = 1;
-	if(m_splitDim[1] != NODE_IS_NOT_USED && m_splitDim[1] != NODE_CAN_BE_USED){
+	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED && m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		while(iActNode <= (int) m_maxInternalNodeNr){
-			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
+			if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;
-			}else if(m_splitDim[iActNode] == NODE_CAN_BE_USED){
+			}else if(m_splitDim[iActNode] == NodeType::NODE_CAN_BE_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
@@ -371,15 +371,15 @@ unsigned int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode)
 bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const {
 	int iActNode = 1; // start in root
 	int actLevel = 1;
-	if(m_splitDim[1] != NODE_IS_NOT_USED && m_splitDim[1] != NODE_CAN_BE_USED){
+	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED && m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		while(iActNode <= (int) m_maxInternalNodeNr){
-			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
+			if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;
-			}else if(m_splitDim[iActNode] == NODE_CAN_BE_USED){
+			}else if(m_splitDim[iActNode] == NodeType::NODE_CAN_BE_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
@@ -414,13 +414,13 @@ void DynamicDecisionTree::adjustToNewData(){
 	for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 		int iActNode = 1; // start in root
 		while(iActNode <= (int) m_maxInternalNodeNr){
-			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
+			if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;
-			}else if(m_splitDim[iActNode] == NODE_CAN_BE_USED){
+			}else if(m_splitDim[iActNode] == NodeType::NODE_CAN_BE_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;

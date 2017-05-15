@@ -28,11 +28,11 @@ public:
 
 	void changeKernelConfig(const bool useAllDimForLen);
 
-	double calcDiagElement(unsigned int row) const;
+	double calcDiagElement(unsigned int row) const override;
 
-	double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const;
+	double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const override;
 
-	void calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const;
+	void calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const override;
 
 	void calcCovariance(Eigen::MatrixXd& cov) const;
 
@@ -40,7 +40,7 @@ public:
 
 	void calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& cov, const std::list<unsigned int>& activeSet, const OwnKernelElement* type, const int element = -1) const;
 
-	std::string prettyString() const;
+	std::string prettyString() const override;
 
 	void setHyperParams(double len, double noiseF);
 
@@ -58,15 +58,15 @@ public:
 
 	void getCopyOfParams(GaussianKernelParams& params);
 
-	double kernelFunc(const int row, const int col) const;
+	double kernelFunc(const int row, const int col) const override;
 
-	double kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const;
+	double kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const override;
 
-	double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const;
+	double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const override;
 
 private:
 
-	bool kernelCanHaveDifferenceMatrix() const{return true;};
+	bool kernelCanHaveDifferenceMatrix() const override {return true;};
 
 };
 

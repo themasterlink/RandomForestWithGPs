@@ -51,11 +51,11 @@ public:
 
 private:
 
-	typedef std::map<unsigned int, DynamicDecisionTree*> SmallTreeInnerStructure;
-	typedef std::pair<unsigned int, DynamicDecisionTree*> SmallTreeInnerPair;
-	typedef std::vector<SmallTreeInnerStructure> SmallTreeStructure;
-	typedef std::vector<DynamicDecisionTree*> FastTreeInnerStructure;
-	typedef std::vector<FastTreeInnerStructure> FastTreeStructure;
+	using SmallTreeInnerStructure = std::map<unsigned int, DynamicDecisionTree*>;
+	using SmallTreeInnerPair = std::pair<unsigned int, DynamicDecisionTree*>;
+	using SmallTreeStructure = std::vector<SmallTreeInnerStructure>;
+	using FastTreeInnerStructure = std::vector<DynamicDecisionTree*>;
+	using FastTreeStructure = std::vector<FastTreeInnerStructure>;
 
 	bool shouldNewTreeBeCalculatedFor(std::vector<unsigned int>& dataPositions);
 

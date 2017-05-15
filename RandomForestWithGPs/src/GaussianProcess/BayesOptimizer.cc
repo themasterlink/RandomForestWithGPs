@@ -16,7 +16,7 @@ BayesOptimizer::~BayesOptimizer() {
 }
 
 double BayesOptimizer::evaluateSample(const vectord& x) {
-	GaussianProcess::Status status(GaussianProcess::NANORINFERROR);
+	GaussianProcess::Status status(GaussianProcess::Status::NANORINFERROR);
 	double logZ = 0.0;
 	const double upperBound = 10000;
 	if(x[0] * x[1] < 50){ // avoid overfitting!
@@ -42,7 +42,7 @@ double BayesOptimizer::evaluateSample(const vectord& x) {
 		bestSigma = m_gp.getKernel().sigmaF();
 		//getchar();
 	}*/
-	return status == GaussianProcess::NANORINFERROR ? upperBound - m_worstValue : upperBound - logZ;
+	return status == GaussianProcess::Status::NANORINFERROR ? upperBound - m_worstValue : upperBound - logZ;
 };
 
 

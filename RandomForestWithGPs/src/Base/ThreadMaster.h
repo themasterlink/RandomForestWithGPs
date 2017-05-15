@@ -18,7 +18,7 @@ class ThreadMaster {
 	friend ScreenOutput;
 public:
 
-	typedef InformationPackage::InfoType InfoType;
+	using InfoType = InformationPackage::InfoType;
 
 	static void start();
 
@@ -40,7 +40,7 @@ private:
 	ThreadMaster();
 	virtual ~ThreadMaster();
 
-	typedef std::list<InformationPackage*> PackageList;
+	using PackageList = std::list<InformationPackage*>;
 
 	static PackageList m_waitingList;
 

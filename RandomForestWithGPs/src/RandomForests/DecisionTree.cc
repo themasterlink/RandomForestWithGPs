@@ -23,7 +23,7 @@ DecisionTree::DecisionTree(const int maxDepth,
 			m_maxInternalNodeNr(pow2(maxDepth) - 1),
 			m_amountOfClasses(amountOfClasses),
 			m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
-			m_splitDim(m_maxInternalNodeNr + 1, NODE_IS_NOT_USED),
+			m_splitDim(m_maxInternalNodeNr + 1, NodeType::NODE_IS_NOT_USED),
 			m_labelsOfWinningClassesInLeaves(pow2(maxDepth), UNDEF_CLASS_LABEL){
 }
 
@@ -77,11 +77,11 @@ void DecisionTree::train(const ClassData& data,
  			}while(doAgain);
 		}
 	}
-	m_splitDim[1] = NODE_CAN_BE_USED; // init the root value
+	m_splitDim[1] = NodeType::NODE_CAN_BE_USED; // init the root value
 	std::vector<int> leftHisto(m_amountOfClasses), rightHisto(m_amountOfClasses);
 	std::vector<std::vector<int> > dataPosition(m_maxNodeNr + 1, std::vector<int>());
 	for(int iActNode = 1; iActNode < m_maxInternalNodeNr + 1; ++iActNode){ // first element is not used!
-		if(m_splitDim[iActNode] == NODE_IS_NOT_USED){ // checks if node contains data or not
+		if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){ // checks if node contains data or not
 			continue; // if node is not used, go to next node, if node can be used process it
 		}
 		// calc actual nodes
@@ -141,17 +141,17 @@ void DecisionTree::train(const ClassData& data,
 			// split is not needed
 			dataPosition[leftPos].clear();
 			dataPosition[rightPos].clear();
-			m_splitDim[iActNode] = NODE_IS_NOT_USED; // do not split here
+			m_splitDim[iActNode] = NodeType::NODE_IS_NOT_USED; // do not split here
 			if(iActNode == 1){
-				m_splitDim[iActNode] = NODE_CAN_BE_USED; // there should be a split
+				m_splitDim[iActNode] = NodeType::NODE_CAN_BE_USED; // there should be a split
 				// todo maybe avoid endless loop
 			}
 		}else{
 			dataPosition[iActNode].clear();
 			// set the use flag for children:
 			if(rightPos < m_maxInternalNodeNr + 1){ // if right is leave, than left is too -> just control one
-				m_splitDim[leftPos] = foundDataLeft > 0 ? NODE_CAN_BE_USED : NODE_IS_NOT_USED;
-				m_splitDim[rightPos] = foundDataRight > 0 ? NODE_CAN_BE_USED : NODE_IS_NOT_USED;
+				m_splitDim[leftPos] = foundDataLeft > 0 ? NodeType::NODE_CAN_BE_USED : NodeType::NODE_IS_NOT_USED;
+				m_splitDim[rightPos] = foundDataRight > 0 ? NodeType::NODE_CAN_BE_USED : NodeType::NODE_IS_NOT_USED;
 			}
 		}
 	}
@@ -161,7 +161,7 @@ void DecisionTree::train(const ClassData& data,
 		std::vector<int> histo(m_amountOfClasses, 0);
 		int lastValue = i + offset;
 		int actNode = lastValue / 2;
-		while(m_splitDim[actNode] == NODE_IS_NOT_USED && actNode > 1){
+		while(m_splitDim[actNode] == NodeType::NODE_IS_NOT_USED && actNode > 1){
 			lastValue = actNode; // save correct child
 			actNode /= 2; // if node is not take parent and try again
 		}
@@ -179,7 +179,7 @@ void DecisionTree::train(const ClassData& data,
 		}
 		m_labelsOfWinningClassesInLeaves[i] = labelWithHighestOcc;
 	}
-	if(m_splitDim[1] == NODE_CAN_BE_USED){
+	if(m_splitDim[1] == NodeType::NODE_CAN_BE_USED){
 		// try again!
 		train(data, amountOfUsedDims,generator);
 	}
@@ -241,20 +241,20 @@ double DecisionTree::trySplitFor(const int usedNode, const int usedDim,
 
 int DecisionTree::predict(const DataPoint& point) const{
 	int iActNode = 1; // start in root
-	if(m_splitDim[1] != NODE_IS_NOT_USED && m_splitDim[1] != NODE_CAN_BE_USED){
+	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED && m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		while(iActNode <= m_maxInternalNodeNr){
 			const bool right = m_splitValues[iActNode] < point[m_splitDim[iActNode]];
 			iActNode *= 2; // get to next level
 			if(right){ // point is on right side of split
 				++iActNode; // go to right node
 			}
-			if(m_splitDim[iActNode] == NODE_IS_NOT_USED){
+			if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;
-			}else if(m_splitDim[iActNode] == NODE_CAN_BE_USED){
+			}else if(m_splitDim[iActNode] == NodeType::NODE_CAN_BE_USED){
 				// if there is a node which isn't used on the way down to the leave
 				while(iActNode <= m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
 					iActNode *= 2;

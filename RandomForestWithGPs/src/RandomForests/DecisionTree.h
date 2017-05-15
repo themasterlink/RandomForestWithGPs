@@ -14,7 +14,7 @@
 
 class DecisionTree{
 public:
-	enum NodeType{ // saved in m_splitDim
+	enum NodeType { // saved in m_splitDim, no class used, because the value should be interchangeable with -1 and -2
 		NODE_IS_NOT_USED = -1,
 		NODE_CAN_BE_USED = -2,
 	};

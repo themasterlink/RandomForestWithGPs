@@ -24,13 +24,13 @@ template<typename T>
 void OnlineStorage<T>::append(const T& data){
 	m_lastUpdateIndex = size();
 	m_internal.push_back(data);
-	notify(APPEND);
+	notify(static_cast<const unsigned int >(Event::APPEND));
 }
 
 template<typename T>
 void OnlineStorage<T>::remove(const Iterator& it){
 	m_internal.erase(it);
-	notify(ERASE);
+	notify(static_cast<const unsigned int >(Event::ERASE));
 }
 
 template<typename T>
@@ -43,7 +43,7 @@ void OnlineStorage<T>::append(const std::vector<T>& storage){
 	m_lastUpdateIndex = size();
 	m_internal.reserve(m_internal.size() + storage.size());
 	m_internal.insert(m_internal.end(), storage.begin(), storage.end());
-	notify(APPENDBLOCK);
+	notify(static_cast<const unsigned int >(Event::APPENDBLOCK));
 }
 
 template<typename T>

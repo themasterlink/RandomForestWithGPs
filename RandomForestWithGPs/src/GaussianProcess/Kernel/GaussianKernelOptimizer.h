@@ -13,15 +13,14 @@
 #include <boost/random/uniform_real.hpp>
 #include "../../Data/OnlineStorage.h"
 #include "../../Utility/Util.h"
-#include "../../Base/Observer.h"
 #include "GaussianKernel.h"
 #include <Eigen/Dense>
 
 class GaussianKernelOptimizer {
 public:
-	typedef boost::random::mt19937 base_generator_type; // generator type
-	typedef boost::random::uniform_int_distribution<int> uniform_distribution_int; // generator type
-	typedef boost::uniform_real<double> uniform_distribution_real; // generator type
+	using base_generator_type = boost::random::mt19937; // generator type
+	using uniform_distribution_int = boost::random::uniform_int_distribution<int>; // generator type
+	using uniform_distribution_real = boost::uniform_real<double>; // generator type
 
 	GaussianKernelOptimizer(const int maxTriesPerSolution, const int amountOfUsedClasses, const std::vector<Eigen::Vector2d >& minAndMaxValues, const int seed);
 	virtual ~GaussianKernelOptimizer();
@@ -61,8 +60,6 @@ public:
 
 private:
 
-
-
 	// returns a value between 0 ..< amountOfUsedClass - 1, param needed to specify correct generator (thread safe)
 	unsigned int getRandomNrForClass(const int iClassNr);
 
@@ -76,8 +73,8 @@ private:
 
 	std::vector<base_generator_type> m_generators; // each used class gets its own generator to ensure that each single thread per class gets its own random numbers
 
-	typedef std::list<GaussianKernelParams> ParamList;
-	typedef std::vector<ParamList> SolutionVector;
+	using ParamList = std::list<GaussianKernelParams>;
+	using SolutionVector = std::vector<ParamList>;
 
 	SolutionVector m_solutions;
 

@@ -22,7 +22,7 @@ public:
 	virtual ~Observer();
 };
 
-enum ClassTypeSubject {
+enum class ClassTypeSubject {
 	ONLINESTORAGE,
 	ONLINERANDOMFOREST,
 	UNDEFINED

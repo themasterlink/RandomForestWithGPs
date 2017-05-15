@@ -20,7 +20,7 @@ class InformationPackage {
 	friend ScreenOutput;
 	friend ThreadMaster;
 public:
-	enum InfoType { // low is more important
+	enum InfoType { // low is more important, class can not be used ordering and values are important
 		ORF_TRAIN = 0,
 		ORF_TRAIN_FIX = 1, // can not be aborted
 		IVM_TRAIN = 2,

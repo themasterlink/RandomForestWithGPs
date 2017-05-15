@@ -90,7 +90,7 @@ void OnlineRandomForest::train(){
 		m_generators[i] = new RandomNumberGeneratorForDT(m_storage.dim(), minMaxUsedSplits[0],
 				minMaxUsedSplits[1], m_storage.size(), (i + 1) * 827537, stepSizeOverData);
 		attach(m_generators[i]);
-		m_generators[i]->update(this, OnlineStorage<ClassPoint*>::APPENDBLOCK); // init training with just one element is not useful
+		m_generators[i]->update(this, OnlineStorage<ClassPoint*>::Event::APPENDBLOCK); // init training with just one element is not useful
 	}
 	const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
 	const double trainingsTime = m_ownSamplingTime > 0 ? m_ownSamplingTime : CommandSettings::get_samplingAndTraining();
@@ -138,7 +138,7 @@ void OnlineRandomForest::train(){
 	boost::mutex mutexForCounter;
 	boost::thread_group group;
 	for(unsigned int i = 0; i < packages.size(); ++i){
-		packages[i] = new InformationPackage(m_desiredAmountOfTrees == 0 ? InformationPackage::ORF_TRAIN : InformationPackage::ORF_TRAIN_FIX, 0, (m_trees.size() / (double) nrOfParallel));
+		packages[i] = new InformationPackage(m_desiredAmountOfTrees == 0 ? InformationPackage::InfoType::ORF_TRAIN : InformationPackage::InfoType::ORF_TRAIN_FIX, 0, (m_trees.size() / (double) nrOfParallel));
 		packages[i]->setStandartInformation("Train trees, thread nr: " + number2String(i));
 		packages[i]->setTrainingsTime(trainingsTime);
 		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i], m_desiredAmountOfTrees, counterForClasses, &mutexForCounter)));
@@ -398,8 +398,9 @@ void OnlineRandomForest::tryAmountForLayers(RandomNumberGeneratorForDT* generato
 				printOnScreen("New best layer amount: " << layerAmount << ", " << amountOfFastLayers << ", with " << *bestCorrectness << " trees");
 			}
 			mutex->unlock();
-			for(DecisionTreeIterator it = trees.begin(); it != trees.end(); ++it){
-				SAVE_DELETE(*it);
+			for(auto it : trees){
+//			for(DecisionTreeIterator it = trees.begin(); it != trees.end(); ++it){
+				SAVE_DELETE(it);
 			}
 		}else{
 			mutex->unlock();
@@ -413,7 +414,7 @@ void OnlineRandomForest::update(Subject* caller, unsigned int event){
 	updateMinMaxValues(event); // first update the min and max values
 	notify(event); // this should alert the generators two adjust to the new min and max values
 	switch(event){
-		case OnlineStorage<ClassPoint*>::APPEND:{
+		case OnlineStorage<ClassPoint*>::Event::APPEND:{
 			++m_counterForRetrain;
 			if(m_counterForRetrain >= m_amountOfPointsUntilRetrain){
 				update();
@@ -421,12 +422,12 @@ void OnlineRandomForest::update(Subject* caller, unsigned int event){
 			}
 			break;
 		}
-		case OnlineStorage<ClassPoint*>::APPENDBLOCK:{
+		case OnlineStorage<ClassPoint*>::Event::APPENDBLOCK:{
 			update();
 			m_counterForRetrain = 0;
 			break;
 		}
-		case OnlineStorage<ClassPoint*>::ERASE:{
+		case OnlineStorage<ClassPoint*>::Event::ERASE:{
 			printError("This update type is not supported here!");
 			break;
 		}
@@ -472,14 +473,15 @@ bool OnlineRandomForest::update(){
 		Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
 		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 		for(unsigned int i = 0; i < packages.size(); ++i){
-			packages[i] = new InformationPackage(maxAmountOfUsedMemory > 0 ? InformationPackage::ORF_TRAIN_FIX : InformationPackage::ORF_TRAIN, 0., amountOfElements);
+			packages[i] = new InformationPackage(maxAmountOfUsedMemory > 0 ? InformationPackage::InfoType::ORF_TRAIN_FIX : InformationPackage::InfoType::ORF_TRAIN, 0., amountOfElements);
 			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::updateInParallel, this, list, amountOfElements, mutex, i, packages[i], &counter)));
 		}
 		int stillOneRunning = 1;
 		while(counter < totalAmount && stillOneRunning != 0){
 			stillOneRunning = 0;
-			for(unsigned int i = 0; i < packages.size(); ++i){
-				if(!packages[i]->isTaskFinished()){
+			for(auto package : packages){
+//			for(unsigned int i = 0; i < packages.size(); ++i){
+				if(!package->isTaskFinished()){
 					stillOneRunning += 1;
 				}
 			}
@@ -487,9 +489,10 @@ bool OnlineRandomForest::update(){
 			usleep(0.1 * 1e6);
 		}
 		group.join_all();
-		for(unsigned int i = 0; i < packages.size(); ++i){
-			ThreadMaster::threadHasFinished(packages[i]);
-			SAVE_DELETE(packages[i]);
+		for(auto package : packages){
+//		for(unsigned int i = 0; i < packages.size(); ++i){
+			ThreadMaster::threadHasFinished(package);
+			SAVE_DELETE(package);
 		}
 		SAVE_DELETE(mutex);
 		m_trees.clear(); // the trees are not longer valid -> so removing the pointer is no problem
@@ -510,7 +513,7 @@ void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list)
 	std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 	copyOfTrees.insert(copyOfTrees.begin(), m_trees.begin(), m_trees.end());
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
-		packages[i] = new InformationPackage(InformationPackage::ORF_TRAIN, 0., m_trees.size() / 8);
+		packages[i] = new InformationPackage(InformationPackage::InfoType::ORF_TRAIN, 0., m_trees.size() / 8);
 		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::sortTreesAfterPerformanceInParallel, this, &list, &copyOfTrees, &read, &append, packages[i])));
 	}
 	group.join_all();

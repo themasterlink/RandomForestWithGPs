@@ -20,8 +20,8 @@
 template<typename KernelType, unsigned int nrOfParams = KernelType::paramsAmount>
 class KernelBase {
 public:
-	typedef typename KernelType::OwnKernelElement OwnKernelElement;
-	typedef typename KernelType::OwnKernelInitParams OwnKernelInitParams;
+	using OwnKernelElement = typename KernelType::OwnKernelElement;
+	using OwnKernelInitParams = typename KernelType::OwnKernelInitParams;
 
 	KernelBase(const OwnKernelInitParams& initParams, const bool sampleNewParams = true);
 	virtual ~KernelBase() = 0;

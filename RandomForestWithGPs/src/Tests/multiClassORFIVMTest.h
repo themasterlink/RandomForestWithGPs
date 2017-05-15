@@ -46,7 +46,7 @@ void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<ClassPoint*>& test){
 
 void executeForBinaryClassORFIVM(){
 	const int trainAmount = readAllData();
-	if(TotalStorage::getMode() == TotalStorage::SEPERATE){
+	if(TotalStorage::getMode() == TotalStorage::Mode::SEPERATE){
 		//	OnlineStorage<ClassPoint*> train;
 		OnlineStorage<ClassPoint*> test;
 		int height;

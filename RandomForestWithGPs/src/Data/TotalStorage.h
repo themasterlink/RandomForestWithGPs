@@ -16,14 +16,14 @@
 class TotalStorage {
 public:
 
-	enum Mode {
+	enum class Mode {
 		WHOLE = 0,
 		SEPERATE = 1
 	};
 
-	typedef DataSets InternalStorage;
-	typedef DataSetsIterator Iterator;
-	typedef DataSetsConstIterator ConstIterator;
+	using InternalStorage = DataSets;
+	using Iterator = DataSetsIterator;
+	using ConstIterator = DataSetsConstIterator;
 
 	static ClassPoint* getData(unsigned int classNr, unsigned int elementNr);
 

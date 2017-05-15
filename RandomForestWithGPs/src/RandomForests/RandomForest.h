@@ -18,7 +18,7 @@
 
 class RandomForest : public PredictorMultiClass {
 public:
-	typedef std::vector<DecisionTree> DecisionTreesContainer;
+	using DecisionTreesContainer = std::vector<DecisionTree>;
 
 	RandomForest(const int maxDepth, const int amountOfTrees, const int amountOfUsedClasses);
 	virtual ~RandomForest();

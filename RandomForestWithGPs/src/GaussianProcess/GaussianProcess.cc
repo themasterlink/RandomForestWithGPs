@@ -48,11 +48,11 @@ void GaussianProcess::train(){
 		return;
 	}
 	std::cout << "Start train with " << m_dataPoints << " points, with dim: " << m_dataMat.col(0).rows() << std::endl;
-	Status status = NANORINFERROR;
+	Status status = Status::NANORINFERROR;
 	int nanCounter = 0;
-	while(status == NANORINFERROR){
+	while(status == Status::NANORINFERROR){
 		status = train(m_dataPoints, m_dataMat, m_y);
-		if(status == NANORINFERROR){
+		if(status == Status::NANORINFERROR){
 			srand(nanCounter);
 			m_kernel.newRandHyperParams();
 			std::cout << "\rNan or inf case: " << nanCounter << std::endl;
@@ -74,8 +74,8 @@ GaussianProcess::Status GaussianProcess::trainBayOpt(double& logZ, const double 
 	m_kernel.calcCovariance(K);
 	//std::cout << "K: \n" << K << std::endl;
 	Status status = trainF(K);
-	if(status == NANORINFERROR){
-		return NANORINFERROR;
+	if(status == Status::NANORINFERROR){
+		return Status::NANORINFERROR;
 	}
 	const Eigen::VectorXd diag = m_choleskyLLT.matrixL().toDenseMatrix().diagonal(); // TOdo more efficient?
 	double sum = 0;
@@ -93,7 +93,7 @@ GaussianProcess::Status GaussianProcess::trainBayOpt(double& logZ, const double 
 	logZ = aDotF + logVal - sum;
 	std::cout << CYAN << "LogZ elements a * f: " << aDotF << ", log: " << logVal << ", sum: " << -sum << ", logZ: " << logZ << RESET << std::endl;
 	// -0.5 * (double) (m_a.dot(m_f)) - 0.5 *sumF
-	return ALLFINE;
+	return Status::ALLFINE;
 }
 
 GaussianProcess::Status GaussianProcess::trainLM(double& logZ, std::vector<double>& dLogZ){
@@ -102,8 +102,8 @@ GaussianProcess::Status GaussianProcess::trainLM(double& logZ, std::vector<doubl
 	m_kernel.calcCovariance(K);
 	//std::cout << "K: \n" << K << std::endl;
 	Status status = trainF(K);
-	if(status == NANORINFERROR){
-		return NANORINFERROR;
+	if(status == Status::NANORINFERROR){
+		return Status::NANORINFERROR;
 	}
 	const Eigen::VectorXd diag = m_choleskyLLT.matrixL().toDenseMatrix().diagonal(); // TOdo more efficient?
 	double sum = 0;
@@ -137,7 +137,7 @@ GaussianProcess::Status GaussianProcess::trainLM(double& logZ, std::vector<doubl
 	b = C * m_dLogPi;
 	s3 = b - (K * (R * b));
 	dLogZ[1] = s1 + s2.dot(s3);
-	return ALLFINE;
+	return Status::ALLFINE;
 }
 
 void GaussianProcess::trainWithoutKernelOptimize(){
@@ -164,7 +164,7 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 	m_kernel.setHyperParams(0.075994, 2.0588, 1.0);
 	Status status = trainLM(logZ2, dLogZ2);
 	std::cout << "LogZ: " << logZ2 << std::endl;
-	return ALLFINE;
+	return Status::ALLFINE;
 
 	//plot different weights
 	std::ofstream file;
@@ -173,7 +173,7 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize2){
 			m_kernel.setHyperParams(xVal, yVal, 0.95);
 			Status status = trainLM(logZ2, dLogZ2);
-			if(status == NANORINFERROR){
+			if(status == Status::NANORINFERROR){
 				logZ2 = 0.0;
 			}
 			file << xVal << " " << yVal << " " << logZ2 << "\n";
@@ -182,7 +182,7 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 		std::cout << "Done: " << xVal * 100.0 << "%" << std::endl;
 	}
 	file.close();
-	return ALLFINE;*/
+	return Status::ALLFINE;*/
 	std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(6);
 	std::vector<double> dLogZ;
 	dLogZ.reserve(3);
@@ -194,22 +194,22 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 		m_kernel.newRandHyperParams();
 		m_kernel.setSNoise(0.95);
 		Status status = trainLM(logZ, dLogZ);
-		std::cout << "logZ: " << logZ << ", status: " << status << ", bestlogZ: " << bestLogZ << ", " << (bestLogZ > fabs(logZ)) << ", with " << m_kernel.prettyString() << std::endl;
-		if(bestLogZ < logZ && status != NANORINFERROR && logZ < 1000){
+		std::cout << "logZ: " << logZ << ", status: " << static_cast<int>(status) << ", bestlogZ: " << bestLogZ << ", " << (bestLogZ > fabs(logZ)) << ", with " << m_kernel.prettyString() << std::endl;
+		if(bestLogZ < logZ && status != Status::NANORINFERROR && logZ < 1000){
 			bestLogZ = logZ;
 			m_kernel.getCopyOfParams(bestParams);
 			std::cout << "\rnew optimal " << m_kernel.prettyString() << "\tavg time; " << m_sw.elapsedAvgAsPrettyTime() << "          ";
 			flush(std::cout);
 			std::cout << std::endl;
-		}else if(status == NANORINFERROR && bestLogZ == -10000000000){
-			return NANORINFERROR;
+		}else if(status == Status::NANORINFERROR && bestLogZ == -10000000000){
+			return Status::NANORINFERROR;
 		}
 	}
 	std::cout << std::endl;
 	m_kernel.setHyperParamsWith(bestParams);
-	//return ALLFINE;
+	//return Status::ALLFINE;
 	if(bestLogZ == 0){
-		return NANORINFERROR;
+		return Status::NANORINFERROR;
 	}
 	std::cout << "\nstart guess: " << m_kernel.prettyString() << std::endl;
 	int counter = 0;
@@ -227,8 +227,8 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 	ESquared[0] = ESquared[1] = ESquared[2] = 0;
 	while(!converged){
 		Status status = trainLM(logZ, dLogZ);
-		if(status == NANORINFERROR){
-			return NANORINFERROR;
+		if(status == Status::NANORINFERROR){
+			return Status::NANORINFERROR;
 		}
 		const double dLogZSum = fabs(dLogZ[0]) + fabs(dLogZ[1]); // + fabs(dLogZ[2]);
 		std::cout << std::endl;
@@ -281,7 +281,7 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 		lastDLogZ = dLogZSum;
 		m_kernel.getCopyOfParams(bestParams);
 	}
-	return ALLFINE;
+	return Status::ALLFINE;
 }
 
 GaussianProcess::Status GaussianProcess::trainF(const Eigen::MatrixXd& K){
@@ -320,7 +320,7 @@ GaussianProcess::Status GaussianProcess::trainF(const Eigen::MatrixXd& K){
 		//std::cout << "\rError in " << j <<": " << fabs(lastObjective / objective - 1.0) << ", from: " << lastObjective << ", to: " << objective <<  ", log: " << log(offsetVal) << "                    " << std::endl;
 		if(isnan(objective)){
 			//std::cout << "Objective is nan!" << std::endl;
-			return NANORINFERROR;
+			return Status::NANORINFERROR;
 		}
 		if(objective > lastObjective && j != 0){
 			m_a = oldA;
@@ -368,7 +368,7 @@ GaussianProcess::Status GaussianProcess::trainF(const Eigen::MatrixXd& K){
 	//	lastF = m_f;
 	}
 	m_sw.recordActTime();
-	return ALLFINE;
+	return Status::ALLFINE;
 }
 
 double GaussianProcess::predict(const DataPoint& newPoint, const int sampleSize) const{

@@ -11,7 +11,7 @@
 #include "Data.h"
 #include "ClassData.h"
 
-enum BinaryType {
+enum class BinaryType {
 	WithoutClass = 0,
 	WithClass = 1
 };

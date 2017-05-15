@@ -14,8 +14,8 @@
 class RandomUniformNr {
 public:
 
-	typedef boost::random::mt19937 base_generator_type; // generator type
-	typedef boost::random::uniform_int_distribution<int> uniform_distribution_int; // generator type
+	using base_generator_type = boost::random::mt19937; // generator type
+	using uniform_distribution_int = boost::random::uniform_int_distribution<int> ; // generator type
 
 	RandomUniformNr(const int min, const int max, const int seed);
 	virtual ~RandomUniformNr();

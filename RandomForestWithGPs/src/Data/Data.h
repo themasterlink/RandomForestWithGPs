@@ -18,17 +18,17 @@
 
 #include "DataPoint.h"
 
-#define UNDEF_CLASS_LABEL 99999999u
+static const auto UNDEF_CLASS_LABEL = 99999999u;
 
-typedef typename std::vector<DataPoint*> Data;
+using Data = std::vector<DataPoint*>;
 
-typedef typename Data::iterator DataIterator;
+using DataIterator = Data::iterator;
 
-typedef typename Data::const_iterator DataConstIterator;
+using DataConstIterator = Data::const_iterator;
 
-typedef typename std::vector<unsigned int> Labels;
+using Labels = std::vector<unsigned int>;
 
-typedef typename Eigen::DiagonalWrapper<const Eigen::MatrixXd> DiagMatrixXd;
+using DiagMatrixXd = Eigen::DiagonalWrapper<const Eigen::MatrixXd> ;
 
 /*typedef Eigen::VectorXd DataElement;
 typedef std::vector<DataElement> Data;

@@ -7,12 +7,12 @@
 #include "ClassData.h"
 #include <map>
 
-typedef typename std::map< std::string, ClassData> DataSets;
+using DataSets = std::map< std::string, ClassData>;
 
-typedef typename DataSets::iterator DataSetsIterator;
+using DataSetsIterator = DataSets::iterator;
 
-typedef typename DataSets::const_iterator DataSetsConstIterator;
+using DataSetsConstIterator = DataSets::const_iterator;
 
-typedef typename std::pair<std::string, ClassData > DataSetPair;
+using DataSetPair = std::pair<std::string, ClassData >;
 
 #endif

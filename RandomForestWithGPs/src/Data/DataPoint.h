@@ -10,7 +10,7 @@
 
 #include <Eigen/Dense>
 
-typedef typename Eigen::VectorXd DataPoint;
+using DataPoint = Eigen::VectorXd;
 /*
 class DataPoint : public Eigen::VectorXd {
 public:

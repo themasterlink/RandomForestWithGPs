@@ -15,11 +15,11 @@
 class ClassKnowledge {
 public:
 
-	typedef typename std::pair<unsigned int, std::string> LabelNamePair;
+	using LabelNamePair = std::pair<unsigned int, std::string>;
 
-	typedef typename std::map<unsigned int, std::string > LabelNameMap;
+	using LabelNameMap = std::map<unsigned int, std::string > ;
 
-	typedef typename LabelNameMap::iterator LabelNameMapIterator;
+	using LabelNameMapIterator = LabelNameMap::iterator;
 
 	static void setNameFor(const std::string& name, unsigned int nr);
 

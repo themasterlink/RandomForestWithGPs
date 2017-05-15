@@ -14,16 +14,16 @@
 template<typename T>
 class OnlineStorage : public Subject {
 public:
-	enum Event : unsigned int {
+	enum Event : unsigned int { // no class, because is used in to many places as an unsigned int
 		APPEND = 0,
 		APPENDBLOCK = 1,
 		ERASE = 2,
 		UNDEFINED = 3
 	};
 
-	typedef typename std::vector<T> InternalStorage;
-	typedef typename InternalStorage::iterator Iterator;
-	typedef typename InternalStorage::const_iterator ConstIterator;
+	using InternalStorage = std::vector<T>;
+	using Iterator = typename InternalStorage::iterator;
+	using ConstIterator = typename InternalStorage::const_iterator;
 
 	OnlineStorage();
 
@@ -65,7 +65,7 @@ public:
 
 	unsigned int getLastUpdateIndex();
 
-	ClassTypeSubject classType() const;
+	ClassTypeSubject classType() const override;
 
 	virtual ~OnlineStorage();
 

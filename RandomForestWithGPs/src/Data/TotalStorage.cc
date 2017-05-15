@@ -25,7 +25,7 @@ ClassPoint TotalStorage::m_defaultEle;
 unsigned int TotalStorage::m_totalSize(0);
 DataPoint TotalStorage::m_center;
 DataPoint TotalStorage::m_var;
-TotalStorage::Mode TotalStorage::m_mode = TotalStorage::WHOLE;
+TotalStorage::Mode TotalStorage::m_mode = TotalStorage::Mode::WHOLE;
 
 TotalStorage::TotalStorage(){}
 
@@ -43,7 +43,7 @@ ClassPoint* TotalStorage::getData(unsigned int classNr, unsigned int elementNr){
 
 void TotalStorage::readData(const int amountOfData){
 	std::string folderLocation;
-	m_mode = WHOLE;
+	m_mode = Mode::WHOLE;
 	if(CommandSettings::get_useFakeData()){
 		Settings::getValue("TotalStorage.folderLocFake", folderLocation);
 	}else{
@@ -53,7 +53,7 @@ void TotalStorage::readData(const int amountOfData){
 	bool didNormalizeStep = false;
 	if(Settings::getDirectBoolValue("TotalStorage.readFromFolder")){
 		if(folderLocation == "../washington/"){
-			m_mode = SEPERATE; // seperate train und test set
+			m_mode = Mode::SEPERATE; // seperate train und test set
 			int testNr = 2;
 			Settings::getValue("TotalStorage.folderTestNr", testNr);
 			boost::filesystem::path targetDir(folderLocation);
@@ -107,7 +107,7 @@ void TotalStorage::readData(const int amountOfData){
 //				}
 //			}
 		}else if(folderLocation == "../mnistOrg/" || folderLocation == "../uspsOrg/"){
-			m_mode = SEPERATE; // seperate train und test set
+			m_mode = Mode::SEPERATE; // seperate train und test set
 			DataSets train, test;
 			DataReader::readFromFiles(train, folderLocation + "training/" , amountOfData, readTxt, didNormalizeStep);
 			unsigned int totalSize = 0;
@@ -152,7 +152,7 @@ void TotalStorage::readData(const int amountOfData){
 		}
 	}
 	if(Settings::getDirectBoolValue("TotalStorage.removeUselessDimensions")){
-		if(m_mode == WHOLE){
+		if(m_mode == Mode::WHOLE){
 			std::vector<bool> isUsed(ClassKnowledge::amountOfDims(), false);
 			for(unsigned int dim = 0; dim < ClassKnowledge::amountOfDims(); ++dim){
 				const double value = m_storage.begin()->second[0]->coeff(dim);
@@ -206,7 +206,7 @@ void TotalStorage::readData(const int amountOfData){
 //				printOnScreen("Is the same!");
 //			}
 			ClassKnowledge::setAmountOfDims(newAmountOfDims);
-		}else if(m_mode == SEPERATE){
+		}else if(m_mode == Mode::SEPERATE){
 			std::vector<bool> isUsed(ClassKnowledge::amountOfDims(), false);
 			printOnScreen("Amount of dims: " << ClassKnowledge::amountOfDims());
 			for(unsigned int dim = 0; dim < ClassKnowledge::amountOfDims(); ++dim){
@@ -261,7 +261,7 @@ void TotalStorage::readData(const int amountOfData){
 			ClassKnowledge::setAmountOfDims(newAmountOfDims);
 		}
 	}
-	if(m_mode == WHOLE){
+	if(m_mode == Mode::WHOLE){
 		std::string type = "";
 		Settings::getValue("main.type", type);
 		if(!type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView()){ // type starts with binary -> remove all classes
@@ -386,7 +386,7 @@ unsigned int TotalStorage::getTotalSize(){
 }
 
 unsigned int TotalStorage::getAmountOfClass(){
-	if(m_mode == WHOLE){
+	if(m_mode == Mode::WHOLE){
 		return m_storage.size();
 	}else{
 		return ClassKnowledge::amountOfClasses();
@@ -394,7 +394,7 @@ unsigned int TotalStorage::getAmountOfClass(){
 }
 
 void TotalStorage::getOnlineStorageCopy(OnlineStorage<ClassPoint*>& storage){
-	if(m_mode == WHOLE){
+	if(m_mode == Mode::WHOLE){
 		storage.resize(m_totalSize);
 		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			for(ClassDataConstIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
@@ -408,7 +408,7 @@ void TotalStorage::getOnlineStorageCopy(OnlineStorage<ClassPoint*>& storage){
 
 void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train,
 		OnlineStorage<ClassPoint*>& test, const int amountOfPointsForTraining){
-	if(m_mode == WHOLE){
+	if(m_mode == Mode::WHOLE){
 		int minValue = amountOfPointsForTraining / getAmountOfClass();
 		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			minValue = std::min((int)it->second.size(), minValue);
@@ -439,7 +439,7 @@ void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& trai
 
 void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train,
 		OnlineStorage<ClassPoint*>& test){
-	if(m_mode == WHOLE){
+	if(m_mode == Mode::WHOLE){
 		printError("Not implemented yet!");
 		Logger::forcedWrite();
 	}else{
@@ -449,7 +449,7 @@ void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*
 }
 
 void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<ClassPoint*> >& trains, OnlineStorage<ClassPoint*>& test){
-	if(m_mode != WHOLE){
+	if(m_mode != Mode::WHOLE){
 		if(trains.size() != 0){
 			const unsigned int amountOfSplits = trains.size();
 			std::vector<ClassData> forTrainings(amountOfSplits);
@@ -472,7 +472,7 @@ void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<
 }
 
 unsigned int TotalStorage::getSize(unsigned int classNr){
-	if(m_mode == WHOLE){
+	if(m_mode == Mode::WHOLE){
 		Iterator it = m_storage.find(ClassKnowledge::getNameFor(classNr));
 		if(it != m_storage.end()){
 			return it->second.size();
@@ -484,7 +484,7 @@ unsigned int TotalStorage::getSize(unsigned int classNr){
 }
 
 unsigned int TotalStorage::getSmallestClassSize(){
-	if(m_mode == WHOLE){
+	if(m_mode == Mode::WHOLE){
 		unsigned int min = INT_MAX;
 		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			min = std::min(min, (unsigned int) it->second.size());

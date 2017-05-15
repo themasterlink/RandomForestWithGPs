@@ -23,31 +23,31 @@ public:
 
 	void init();
 
-	void update(Subject* subject, unsigned int event);
+	void update(Subject* subject, unsigned int event) override;
 
-	double calcDiagElement(unsigned int row) const;
+	double calcDiagElement(unsigned int row) const override;
 
-	double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const;
+	double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const override;
 
-	void calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const;
+	void calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const override;
 
-	std::string prettyString() const;
+	std::string prettyString() const override;
 
-	double kernelFunc(const int row, const int col) const;
+	double kernelFunc(const int row, const int col) const override;
 
-	double kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const;
+	double kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const override;
 
-	double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const;
+	double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const override;
 
-	void setSeed(const int seed);
+	void setSeed(const int seed) override;
 
 	void setOnlineRandomForest(OnlineRandomForest* forest){ m_rf = forest; }
 
 private:
 
-	bool kernelCanHaveDifferenceMatrix() const{return false;};
+	bool kernelCanHaveDifferenceMatrix() const override {return false;};
 
-	enum KernelMode {
+	enum class KernelMode {
 		LABEL = 0,
 		PARTITION = 1
 	};

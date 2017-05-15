@@ -29,15 +29,15 @@ OnlineRandomForestIVMs::~OnlineRandomForestIVMs() {
 void OnlineRandomForestIVMs::update(Subject* caller, unsigned int event){
 	UNUSED(caller);
 	switch(event){
-	case OnlineStorage<ClassPoint*>::APPEND:{
+	case OnlineStorage<ClassPoint*>::Event::APPEND:{
 		printError("This is not implemented yet!");
 		break;
 	}
-	case OnlineStorage<ClassPoint*>::APPENDBLOCK:{
+	case OnlineStorage<ClassPoint*>::Event::APPENDBLOCK:{
 		update();
 		break;
 	}
-	case OnlineStorage<ClassPoint*>::ERASE:{
+	case OnlineStorage<ClassPoint*>::Event::ERASE:{
 		printError("This update type is not supported here!");
 		break;
 	}
@@ -51,7 +51,7 @@ void OnlineRandomForestIVMs::update(Subject* caller, unsigned int event){
 void OnlineRandomForestIVMs::update(){
 	if(!m_firstTrainedDone){
 		OnlineStorage<ClassPoint*>* copyForORFs = new OnlineStorage<ClassPoint*>(m_storage);
-		m_orf.update(copyForORFs, OnlineStorage<ClassPoint*>::APPENDBLOCK);
+		m_orf.update(copyForORFs, OnlineStorage<ClassPoint*>::Event::APPENDBLOCK);
 //		m_orf.update();
 		std::list<unsigned int> predictedLabels;
 		unsigned int amountOfCorrect = 0;

@@ -23,23 +23,23 @@ public:
 
 	void train();
 
-	unsigned int predict(const DataPoint& point) const;
+	unsigned int predict(const DataPoint& point) const override;
 
 	unsigned int predict(const ClassPoint& point) const;
 
 	void predict(const DataPoint& point, std::vector<double>& probabilities) const;
 
-	void predictData(const Data& points, Labels& labels) const;
+	void predictData(const Data& points, Labels& labels) const override;
 
 	void predictData(const ClassData& points, Labels& labels) const;
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const override;
 
 	void predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
 
-	unsigned int amountOfClasses() const;
+	unsigned int amountOfClasses() const override;
 
-	void update(Subject* caller, unsigned int event);
+	void update(Subject* caller, unsigned int event) override;
 
 private:
 

@@ -37,14 +37,14 @@ IVM::IVM(OnlineStorage<ClassPoint*>& storage, const bool isPartOfMultiIvm):
 	int kernelType = 0;
 	Settings::getValue("IVM.kernelType", kernelType);
 	if(kernelType == 0){
-		m_kernelType = GAUSS;
+		m_kernelType = KernelType::GAUSS;
 		bool hasLengthMoreThanParam;
 		Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
 		m_gaussKernel = new GaussianKernel();
 		m_gaussKernel->changeKernelConfig(hasLengthMoreThanParam);
 		m_gaussKernel->newRandHyperParams();
 	}else if(kernelType == 1){
-		m_kernelType = RF;
+		m_kernelType = KernelType::RF;
 		int samplingAmount, maxDepth;
 		Settings::getValue("RandomForestKernel.samplingAmount", samplingAmount);
 		Settings::getValue("RandomForestKernel.maxDepth", maxDepth);
@@ -107,7 +107,7 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 	m_doEPUpdate = doEPUpdate;
 	setNumberOfInducingPoints(numberOfInducingPoints);
 	//	StopWatch sw;
-	if(m_kernelType == GAUSS){
+	if(m_kernelType == KernelType::GAUSS){
 		if(calcDifferenceMatrixAlone){
 			const bool calcDifferenceMatrix = !m_gaussKernel->hasLengthMoreThanOneDim();
 			m_gaussKernel->init(m_storage.storage(), calcDifferenceMatrix, false);
@@ -115,7 +115,7 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 			// in this case just init the connectin between the kernel and the data, but no calculation is performed!
 			m_gaussKernel->init(m_storage.storage(), false, false);
 		}
-	}else if(m_kernelType == RF){
+	}else if(m_kernelType == KernelType::RF){
 		if(m_rfKernel != nullptr){
 			m_rfKernel->init();
 			// to train the tree!
@@ -137,7 +137,7 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 	Settings::getValue("IVM.useNeighbourComparison", m_useNeighbourComparison);
 
 	// sampling method:
-	if(Settings::getDirectBoolValue("IVM.useCmaes") && m_kernelType == GAUSS){
+	if(Settings::getDirectBoolValue("IVM.useCmaes") && m_kernelType == KernelType::GAUSS){
 
 		double lowerBounds[] = {0.2,5.1, 0.03};
 		lowerBounds[0] = Settings::getDirectDoubleValue("CMAES.lowerBoundLen");
@@ -205,7 +205,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 		m_package->finishedTask();
 		return false;
 	}
-	if(m_kernelType == GAUSS){
+	if(m_kernelType == KernelType::GAUSS){
 		const bool simpleLength = !Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 		GaussianKernelParams bestParams(simpleLength);
 		std::string folderLocation;
@@ -744,7 +744,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 			}
 			return ret;
 		}
-	}else if(m_kernelType == RF){
+	}else if(m_kernelType == KernelType::RF){
 		setDerivAndLogZFlag(false, false);
 		m_uniformNr.setMinAndMax(1, 1);
 		const bool ret = internalTrain(true, verboseLevel);
@@ -773,7 +773,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 }
 
 bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
-	if(m_kernelType == GAUSS){
+	if(m_kernelType == KernelType::GAUSS){
 		if(verboseLevel == 2 && m_gaussKernel->wasDifferenceCalced())
 			printInPackageOnScreen(m_package, "Diff: " << m_gaussKernel->getDifferences(0,0) << ", " << m_gaussKernel->getDifferences(1,0));
 	}
@@ -794,9 +794,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	Eigen::Vector2i amountOfPointsPerClass;
 	amountOfPointsPerClass[0] = amountOfPointsPerClass[1] = 0;
 	for(unsigned int i = 0; i < m_dataPoints; ++i){
-		if(m_kernelType == GAUSS){
+		if(m_kernelType == KernelType::GAUSS){
 			zeta.coeffRef(i) = m_gaussKernel->calcDiagElement(i);
-		}else if(m_kernelType == RF){
+		}else if(m_kernelType == KernelType::RF){
 			zeta.coeffRef(i) = m_rfKernel->calcDiagElement(i);
 		}else{
 			zeta.coeffRef(i) = 0;
@@ -820,7 +820,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 //	List<double> informationOfUsedValues;
 	for(unsigned int k = 0; k < m_numberOfInducingPoints; ++k){
 
-		if(m_kernelType == RF || !m_uniformNr.isUsed()){
+		if(m_kernelType == KernelType::RF || !m_uniformNr.isUsed()){
 			printInPackageOnScreen(m_package, "Calculation of inducing point nr: " << k);
 		}
 		int argmax = -1;
@@ -857,9 +857,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 						for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
 							if(labelOfJ == m_y.coeff(*itOfI)){ // only if they have the same class
 								double similiarty = 0;
-								if(m_kernelType == GAUSS){
+								if(m_kernelType == KernelType::GAUSS){
 									similiarty = m_gaussKernel->kernelFunc(*itOfI, *itOfJ);
-								}else if(m_kernelType == RF){
+								}else if(m_kernelType == KernelType::RF){
 									similiarty = m_rfKernel->kernelFunc(*itOfI, *itOfJ);
 								}
 								deltaForJ += similiarty * delta.coeff(informationCounter); // plus, because all values are negative, will decrease the information
@@ -997,9 +997,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 //		Vector a_nk;
 		if(k != 0){
 			for(unsigned int i = 0; i < m_dataPoints; ++i){
-				if(m_kernelType == GAUSS){
+				if(m_kernelType == KernelType::GAUSS){
 					k_nk.coeffRef(i) = m_gaussKernel->kernelFunc(i, argmax);
-				}else if(m_kernelType == RF){
+				}else if(m_kernelType == KernelType::RF){
 					k_nk.coeffRef(i) = m_rfKernel->kernelFunc(i, argmax);
 				}
 			}
@@ -1014,9 +1014,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			s_nk = k_nk - (colVec.transpose() * m_M).transpose();*/
 		}else{
 			for(unsigned int i = 0; i < m_dataPoints; ++i){
-				if(m_kernelType == GAUSS){
+				if(m_kernelType == KernelType::GAUSS){
 					s_nk.coeffRef(i) = m_gaussKernel->kernelFunc(i, argmax);
-				}else if(m_kernelType == RF){
+				}else if(m_kernelType == KernelType::RF){
 					s_nk.coeffRef(i) = m_rfKernel->kernelFunc(i, argmax);
 				}
 			}
@@ -1084,9 +1084,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		if(k==0){
 			if(m_doEPUpdate){
 				m_K = Matrix(m_numberOfInducingPoints, m_numberOfInducingPoints); // init at beginning to avoid realloc
-				if(m_kernelType == GAUSS){
+				if(m_kernelType == KernelType::GAUSS){
 					m_K.coeffRef(0,0) = m_gaussKernel->calcDiagElement(0);
-				}else if(m_kernelType == RF){
+				}else if(m_kernelType == KernelType::RF){
 					m_K.coeffRef(0,0) = m_rfKernel->calcDiagElement(0);
 				}
 			}
@@ -1103,9 +1103,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 					m_K.coeffRef(lastRowAndCol, t) = temp;
 					m_K.coeffRef(t, lastRowAndCol) = temp;
 				}
-				if(m_kernelType == GAUSS){
+				if(m_kernelType == KernelType::GAUSS){
 					m_K.coeffRef(lastRowAndCol, lastRowAndCol) = m_gaussKernel->calcDiagElement(lastRowAndCol);
-				}else if(m_kernelType == RF){
+				}else if(m_kernelType == KernelType::RF){
 					m_K.coeffRef(lastRowAndCol, lastRowAndCol) = m_rfKernel->calcDiagElement(lastRowAndCol);
 				}
 			}
@@ -1445,7 +1445,7 @@ void IVM::calcLogZ(){
 }
 
 void IVM::calcDerivatives(const Vector& muL1){
-	if(m_kernelType == GAUSS){
+	if(m_kernelType == KernelType::GAUSS){
 		m_derivLogZ.m_length.changeAmountOfDims(m_gaussKernel->hasLengthMoreThanOneDim());
 		m_derivLogZ.setAllValuesTo(0);
 		if(!m_gaussKernel->hasLengthMoreThanOneDim()){
@@ -1507,7 +1507,7 @@ void IVM::calcDerivatives(const Vector& muL1){
 				}
 			}
 		}
-	}else if(m_kernelType == RF){
+	}else if(m_kernelType == KernelType::RF){
 		printError("This type has no deriviative");
 	}
 }
@@ -1633,12 +1633,12 @@ double IVM::predict(const Vector& input) const{
 	Vector k_star(n);
 	unsigned int i = 0;
 	double diagEle = 0;
-	if(m_kernelType == GAUSS){
+	if(m_kernelType == KernelType::GAUSS){
 		for(List<unsigned int>::const_iterator itOfI = m_I.cbegin(); itOfI != m_I.cend(); ++itOfI, ++i){
 			k_star[i] = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_gaussKernel->calcDiagElement(0);
-	}else if(m_kernelType == RF){
+	}else if(m_kernelType == KernelType::RF){
 		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
@@ -1670,12 +1670,12 @@ double IVM::predictOnTraining(const unsigned int id){
 	Vector k_star(n);
 	double diagEle = 0;
 	unsigned int i = 0;
-	if(m_kernelType == GAUSS){
+	if(m_kernelType == KernelType::GAUSS){
 		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_gaussKernel->kernelFunc(id, *itOfI);
 		}
 		diagEle = m_gaussKernel->calcDiagElement(0);
-	}else if(m_kernelType == RF){
+	}else if(m_kernelType == KernelType::RF){
 		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_rfKernel->kernelFunc(id, *itOfI);
 		}
@@ -1705,11 +1705,11 @@ double IVM::predictMu(const Vector& input) const{
 	const unsigned int n = m_I.size();
 	Vector k_star(n);
 	unsigned int i = 0;
-	if(m_kernelType == GAUSS){
+	if(m_kernelType == KernelType::GAUSS){
 		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
-	}else if(m_kernelType == RF){
+	}else if(m_kernelType == KernelType::RF){
 		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
@@ -1726,12 +1726,12 @@ double IVM::predictSigma(const Vector& input) const{
 	Vector k_star(n);
 	unsigned int i = 0;
 	double diagEle = 0;
-	if(m_kernelType == GAUSS){
+	if(m_kernelType == KernelType::GAUSS){
 		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_gaussKernel->calcDiagElement(0);
-	}else if(m_kernelType == RF){
+	}else if(m_kernelType == KernelType::RF){
 		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
@@ -1753,9 +1753,9 @@ unsigned int IVM::getLabelForMinusOne() const{
 }
 
 void IVM::setKernelSeed(unsigned int seed){
-	if(m_kernelType == GAUSS){
+	if(m_kernelType == KernelType::GAUSS){
 		m_gaussKernel->setSeed(seed);
-	}else if(m_kernelType == RF){
+	}else if(m_kernelType == KernelType::RF){
 		m_rfKernel->setSeed(seed);
 	}
 }

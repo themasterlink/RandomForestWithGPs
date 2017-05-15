@@ -11,10 +11,10 @@
 #include "ClassPoint.h"
 #include <vector>
 
-typedef typename std::vector<ClassPoint*> ClassData;
+using ClassData = std::vector<ClassPoint*>;
 
-typedef typename ClassData::iterator ClassDataIterator;
+using ClassDataIterator = ClassData::iterator;
 
-typedef typename ClassData::const_iterator ClassDataConstIterator;
+using ClassDataConstIterator = ClassData::const_iterator;
 
 #endif /* DATA_CLASSDATA_H_ */
