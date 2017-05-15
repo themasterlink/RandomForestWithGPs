@@ -249,7 +249,7 @@ void executeForBinaryClass(const bool useRealData){
 		ConfusionMatrixPrinter::print(confusion);
 		if(datas.size() == 2){
 			DataWriterForVisu::writeSvg("out.svg", &gp, data);
-			system("open out.svg &");
+			openFileInViewer("out.svg");
 		}
 	}else{
 		const int firstPoints = 10000000; // all points
@@ -302,7 +302,7 @@ void executeForBinaryClass(const bool useRealData){
 			}
 			std::cout << "X: " << minX << ", y: " << minY << ", z: " << minZ << ", for: " << minVal << std::endl;
 			DataWriterForVisu::writeSvg("out2.svg", mat);
-			system("open out2.svg &");
+			openFileInViewer("out2.svg");
 			return;
 		}
 
@@ -363,7 +363,7 @@ void executeForBinaryClass(const bool useRealData){
 		std::cout << gp.getKernel().prettyString() << std::endl;
 		std::cout << RESET;
 		DataWriterForVisu::writeSvg("out.svg", &gp, data);
-		system("open out.svg &");
+		openFileInViewer("out.svg");
 	}
 	//DataReader::readFromFile(data, labels, path);
 

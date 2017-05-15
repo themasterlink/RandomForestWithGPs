@@ -571,8 +571,6 @@
 									<listOptionValue builtIn="false" value="/usr/include/ncurses/"/>
 									<listOptionValue builtIn="false" value="/home/f_soft/foreign_packages/Eigen/3.3.2/include/"/>
 									<listOptionValue builtIn="false" value="/home/f_soft/foreign_packages/boost/1.58.0/include/"/>
-									<listOptionValue builtIn="false" value="/usr/include/c++/5/"/>
-									<listOptionValue builtIn="false" value="/usr/include/"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.other.other.204953702" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.debugging.gprof.1450081122" name="Generate gprof information (-pg)" superClass="gnu.cpp.compiler.option.debugging.gprof" useByScannerDiscovery="false" value="false" valueType="boolean"/>

@@ -256,7 +256,7 @@ void executeForBinaryClassIVM(){
 				bool t = ivm.train(false, 0);
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0) && t){
 					DataWriterForVisu::writeSvg("before.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
-					system("open before.svg");
+					openFileInViewer("before.svg");
 				}
 				ivm.setDerivAndLogZFlag(true, true);
 				double fac = 0.0001;
@@ -266,7 +266,7 @@ void executeForBinaryClassIVM(){
 					printOnScreen("Act " << ivm.getGaussianKernel()->getHyperParams() << ", logZ: " << ivm.m_logZ << ", deriv: "
 							<< ivm.m_derivLogZ << ", fac: " << fac);
 					//DataWriterForVisu::writeSvg("logZValues.svg", bayOpt.m_logZValues, true);
-					//system("open logZValues.svg");
+					//openFileInViewer("logZValues.svg");
 					//ivm.getGaussianKernel()->setHyperParamsWith(bestParams);
 					StopWatch sw;
 					bool train = ivm.train(false, 1);
@@ -320,7 +320,7 @@ void executeForBinaryClassIVM(){
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 					if(amountOfTrainingSteps > 0){
 						DataWriterForVisu::writeSvg("after.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
-						system("open after.svg");
+						openFileInViewer("after.svg");
 					}
 				}
 				printOnScreen("On trainings data:");
@@ -333,11 +333,11 @@ void executeForBinaryClassIVM(){
 				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 					std::list<unsigned int> emptyList;
 					DataWriterForVisu::writeSvg("withTest.svg", ivm, emptyList, test.storage());
-					system("open withTest.svg");
+					openFileInViewer("withTest.svg");
 				}
 				if(amountOfTrainingSteps > 0){
 					DataWriterForVisu::writeSvg("result.svg", list, true);
-					system("open result.svg");
+					openFileInViewer("result.svg");
 				}
 
 			}else{
@@ -426,14 +426,14 @@ void executeForBinaryClassIVM(){
 //				ivm.setNumberOfInducingPoints(nr);
 //				printOnScreen("Best " << result[0] << ", " << result[1] << ", nr: " << nr);
 				//DataWriterForVisu::writeSvg("logZValues.svg", bayOpt.m_logZValues, true);
-				//system("open logZValues.svg");
+				//openFileInViewer("logZValues.svg");
 //				ivm.getGaussianKernel()->setHyperParams(result[0], result[1]);
 //				StopWatch sw;
 //				ivm.train(false, 0);
 //				printOnScreen("Time for training: " << sw.elapsedAsPrettyTime());
 //				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 //					DataWriterForVisu::writeSvg("new.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
-//					system("open new.svg");
+//					openFileInViewer("new.svg");
 //				}
 //				printOnScreen("On trainings data:");
 //				testIvm(ivm, train);

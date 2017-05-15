@@ -164,9 +164,9 @@ void executeForMutliClassIVM(){
 
 	if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 		DataWriterForVisu::writeSvg("ivms.svg", &ivms, train.storage());
-		system("open ivms.svg");
+		openFileInViewer("ivms.svg");
 //		DataWriterForVisu::writeImg("ivms.png", &ivms, train.storage());
-//		system("open ivms.png");
+//		openFileInViewer("ivms.png");
 	}
 }
 

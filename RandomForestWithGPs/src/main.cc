@@ -265,7 +265,7 @@ int main(int ac, char** av){
 		TotalStorage::getOnlineStorageCopyWithTest(train, test, TotalStorage::getTotalSize());
 		printOnScreen("TotalStorage::getTotalSize(): " << TotalStorage::getTotalSize());
 		DataWriterForVisu::writeSvg("justData.svg", train.storage());
-		system("open justData.svg");
+		openFileInViewer("justData.svg");
 		exit(0);
 	}else if(CommandSettings::get_convertFile().length() > 0){
 		printOnScreen("Convert file mode:");
