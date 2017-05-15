@@ -393,52 +393,52 @@ void executeForBinaryClassIVM(){
 		}
 
 		return;*/
-				IVM ivm(train);
-				ivm.init(number, usedClasses, doEpUpdate);
-				ivm.setDerivAndLogZFlag(true, false);
-				ivm.getGaussianKernel()->setHyperParams(0.5, 0.8, 0.1);
-				bayesopt::Parameters par = initialize_parameters_to_default();
-				printOnScreen("noise: " << par.noise);
-				//par.noise = 1-6;
-				par.init_method = 500;
-				par.n_iterations = 600;
-				par.noise = 1e-5;
-				par.epsilon = 0.2;
-				par.verbose_level = 6;
-				par.surr_name = "sGaussianProcessML";
+//				IVM ivm(train);
+//				ivm.init(number, usedClasses, doEpUpdate);
+//				ivm.setDerivAndLogZFlag(true, false);
+//				ivm.getGaussianKernel()->setHyperParams(0.5, 0.8, 0.1);
+//				bayesopt::Parameters par = initialize_parameters_to_default();
+//				printOnScreen("noise: " << par.noise);
+//				//par.noise = 1-6;
+//				par.init_method = 500;
+//				par.n_iterations = 600;
+//				par.noise = 1e-5;
+//				par.epsilon = 0.2;
+//				par.verbose_level = 6;
+//				par.surr_name = "sGaussianProcessML";
 
-				BayesOptimizerIVM bayOpt(ivm, par);
-				const int paramsAmount = 2;
-				vectord result(paramsAmount);
-				vectord lowerBound(paramsAmount);
-				vectord upperBound(paramsAmount);
-				lowerBound[0] = 0.0005; // max(0.1,gp.getLenMean() - 2 * gp.getGaussianKernel()->getLenVar());
-				lowerBound[1] = 0.001;
-				upperBound[0] = means[0] + sds[0];// + gp.getGaussianKernel()->getLenVar();
-				upperBound[1] = means[1] + sds[1];//max(0.5,gp.getGaussianKernel()->getLenVar() / gp.getLenMean() * 0.5);
-				bayOpt.setBoundingBox(lowerBound, upperBound);
-				try{
-					bayOpt.optimize(result);
-				}catch(std::runtime_error& e){
-					printError(e.what()); return;
-				}
-				const int nr = 50;
-				ivm.setNumberOfInducingPoints(nr);
-				printOnScreen("Best " << result[0] << ", " << result[1] << ", nr: " << nr);
+//				BayesOptimizerIVM bayOpt(ivm, par);
+//				const int paramsAmount = 2;
+//				vectord result(paramsAmount);
+//				vectord lowerBound(paramsAmount);
+//				vectord upperBound(paramsAmount);
+//				lowerBound[0] = 0.0005; // max(0.1,gp.getLenMean() - 2 * gp.getGaussianKernel()->getLenVar());
+//				lowerBound[1] = 0.001;
+//				upperBound[0] = means[0] + sds[0];// + gp.getGaussianKernel()->getLenVar();
+//				upperBound[1] = means[1] + sds[1];//max(0.5,gp.getGaussianKernel()->getLenVar() / gp.getLenMean() * 0.5);
+//				bayOpt.setBoundingBox(lowerBound, upperBound);
+//				try{
+//					bayOpt.optimize(result);
+//				}catch(std::runtime_error& e){
+//					printError(e.what()); return;
+//				}
+//				const int nr = 50;
+//				ivm.setNumberOfInducingPoints(nr);
+//				printOnScreen("Best " << result[0] << ", " << result[1] << ", nr: " << nr);
 				//DataWriterForVisu::writeSvg("logZValues.svg", bayOpt.m_logZValues, true);
 				//system("open logZValues.svg");
-				ivm.getGaussianKernel()->setHyperParams(result[0], result[1]);
-				StopWatch sw;
-				ivm.train(false, 0);
-				printOnScreen("Time for training: " << sw.elapsedAsPrettyTime());
-				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
-					DataWriterForVisu::writeSvg("new.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
-					system("open new.svg");
-				}
-				printOnScreen("On trainings data:");
-				testIvm(ivm, train);
-				printOnScreen("On real test data:");
-				testIvm(ivm, test);
+//				ivm.getGaussianKernel()->setHyperParams(result[0], result[1]);
+//				StopWatch sw;
+//				ivm.train(false, 0);
+//				printOnScreen("Time for training: " << sw.elapsedAsPrettyTime());
+//				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+//					DataWriterForVisu::writeSvg("new.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
+//					system("open new.svg");
+//				}
+//				printOnScreen("On trainings data:");
+//				testIvm(ivm, train);
+//				printOnScreen("On real test data:");
+//				testIvm(ivm, test);
 				return;
 			}
 		}else{

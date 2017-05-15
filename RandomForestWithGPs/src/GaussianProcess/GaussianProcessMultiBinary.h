@@ -15,7 +15,6 @@
 #include <boost/thread.hpp> // Boost threads
 #include <boost/bind.hpp> // Boost threads
 #include "BestHyperParams.h"
-#include "../GaussianProcess/BayesOptimizer.h"
 
 
 class GaussianProcessMultiBinary : public PredictorMultiClass {
@@ -56,8 +55,8 @@ private:
 	int m_amountOfDataPoints;
 	int m_amountOfDataPointsForUseAllTestsPoints;
 	int m_maxPointsUsedInGpSingleTraining;
-	vectord m_lowerBound;
-	vectord m_upperBound;
+//	vectord m_lowerBound;
+//	vectord m_upperBound;
 	ThreadSafeThreadCounter m_threadCounter;
 	ThreadSafeOutput m_output;
 	std::vector<GaussianProcess* > m_gps;

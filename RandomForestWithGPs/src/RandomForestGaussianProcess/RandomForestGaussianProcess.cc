@@ -289,33 +289,34 @@ for(int i = 0; i < yHyper.rows(); ++i){
 std::cout << "One: " << oneCounter << std::endl;
 		 */
 		// find good hyperparameters with bayesian optimization:
-		vectord result(2);
-		actGp->init(dataHyper, yHyper);
-		bayesopt::Parameters par = initialize_parameters_to_default();
-		par.noise = 1e-12;
-		par.epsilon = 0.2;
-		par.verbose_level = 6;
-		par.n_iterations = 200;
-		par.surr_name = "sGaussianProcessML";
-		vectord lowerBound(2); // for hyper params in bayesian optimization
-		lowerBound[0] = 0.1;
-		lowerBound[1] = 0.05;
-		vectord upperBound(2);
-		upperBound[0] = 100; //;actGp->getKernel().getLenVar() / 3;
-		upperBound[1] = 1.5;
-		BayesOptimizer bayOpt(*actGp, par);
-		bayOpt.setBoundingBox(lowerBound, upperBound);
-		bool hasError = false;
-		do{
-			try{
-				bayOpt.optimize(result);
-			}catch(std::runtime_error& e){
-				m_output.printSwitchingColor(e.what());
-				hasError = true;
-				getchar();
-			}
-		}while(hasError);
-		actGp->getKernel().setHyperParams(result[0], result[1]);
+		std::cout << "The bayesopt was removed here! If this is used again include the bayesopt again!" << std::endl;
+//		vectord result(2);
+//		actGp->init(dataHyper, yHyper);
+//		bayesopt::Parameters par = initialize_parameters_to_default();
+//		par.noise = 1e-12;
+//		par.epsilon = 0.2;
+//		par.verbose_level = 6;
+//		par.n_iterations = 200;
+//		par.surr_name = "sGaussianProcessML";
+//		vectord lowerBound(2); // for hyper params in bayesian optimization
+//		lowerBound[0] = 0.1;
+//		lowerBound[1] = 0.05;
+//		vectord upperBound(2);
+//		upperBound[0] = 100; //;actGp->getKernel().getLenVar() / 3;
+//		upperBound[1] = 1.5;
+//		BayesOptimizer bayOpt(*actGp, par);
+//		bayOpt.setBoundingBox(lowerBound, upperBound);
+//		bool hasError = false;
+//		do{
+//			try{
+//				bayOpt.optimize(result);
+//			}catch(std::runtime_error& e){
+//				m_output.printSwitchingColor(e.what());
+//				hasError = true;
+//				getchar();
+//			}
+//		}while(hasError);
+//		actGp->getKernel().setHyperParams(result[0], result[1]);
 
 		actGp->init(testDataMat,testYGpInit);
 		actGp->trainWithoutKernelOptimize();
@@ -332,9 +333,10 @@ std::cout << "One: " << oneCounter << std::endl;
 		}
 		if(right > bestRight){
 			bestRight = right;
-			len = result[0];
+			std::cout << "Change applied here too!" << std::endl;
+//			len = result[0];
 			noChange = 1;
-			sigmaF = result[1];
+//			sigmaF = result[1];
 		}else{
 			++noChange;
 		}

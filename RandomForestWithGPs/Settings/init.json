@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 5000,
 		"Trees": {
-			"height": 35
+			"height": 15
 		}
 	},
 	"IVM": {
@@ -39,7 +39,7 @@
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
 		"folderLocReal": "../mnistOrg/",
-		"folderLocFake": "../fakeDataBinary/",
+		"folderLocFake": "../fakeData/",
 		"folderTestNr": 4,
 		"excludeClass": 1000,
 		"normalizeData": "false",
@@ -55,7 +55,7 @@
 		"factorAmountOfUsedDims": 1.0,
 		"ownSamplingTime": 30,
 		"maxAmountOfUsedMemory": 16000000000,
-		"useBigDynmaicDecisionTrees": "true",
+		"useBigDynmaicDecisionTrees": "false",
 		"layerAmountOfBigDDT": 3,
 		"layerFastAmountOfBigDDT": 2,
 		"determineBestLayerAmount": "false",
@@ -132,6 +132,6 @@
 		"visuFinalIvm": "false"
 	},
 	"main": {
-		"type": "binaryIvm"
+		"type": "ORF"
 	}
 }

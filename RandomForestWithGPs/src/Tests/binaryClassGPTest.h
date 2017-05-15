@@ -75,23 +75,23 @@ void executeForBinaryClass(const bool useRealData){
 
 		gp.init(dataMat, y);
 
-		bayesopt::Parameters par = initialize_parameters_to_default();
-		par.noise = 1e-12;
-		par.epsilon = 0.2;
-		par.verbose_level = 3;
-		par.surr_name = "sGaussianProcessML";
-		BayesOptimizer bayOpt(gp, par);
-		vectord result(2);
-		vectord lowerBound(2);
-		lowerBound[0] = 30.0;
-		lowerBound[1] = 0.1;
-		vectord upperBound(2);
-		upperBound[0] = 150.0;
-		upperBound[1] = 1.3;
-		bayOpt.setBoundingBox(lowerBound, upperBound);
-		bayOpt.optimize(result);
-		std::cout << RED << "Result: " << result[0] << ", "<< result[1] << RESET << std::endl;
-		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
+//		bayesopt::Parameters par = initialize_parameters_to_default();
+//		par.noise = 1e-12;
+//		par.epsilon = 0.2;
+//		par.verbose_level = 3;
+//		par.surr_name = "sGaussianProcessML";
+//		BayesOptimizer bayOpt(gp, par);
+//		vectord result(2);
+//		vectord lowerBound(2);
+//		lowerBound[0] = 30.0;
+//		lowerBound[1] = 0.1;
+//		vectord upperBound(2);
+//		upperBound[0] = 150.0;
+//		upperBound[1] = 1.3;
+//		bayOpt.setBoundingBox(lowerBound, upperBound);
+//		bayOpt.optimize(result);
+//		std::cout << RED << "Result: " << result[0] << ", "<< result[1] << RESET << std::endl;
+//		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
 
 		Eigen::VectorXd y2;
 		Eigen::MatrixXd dataMat2;
@@ -307,30 +307,30 @@ void executeForBinaryClass(const bool useRealData){
 		}
 
 		if(false){
-		bayesopt::Parameters par = initialize_parameters_to_default();
-		std::cout << "noise: " << par.noise << std::endl;
- 		//par.noise = 1-6;
-		par.init_method = 300;
-		//par.n_iterations = 500;
-		par.noise = 1e-5;
-		par.epsilon = 0.2;
-		par.verbose_level = 6;
-		par.surr_name = "sGaussianProcessML";
-
-		BayesOptimizer bayOpt(gp, par);
-
-		vectord result(2);
-		vectord lowerBound(2);
-		lowerBound[0] = 0.0005; // max(0.1,gp.getLenMean() - 2 * gp.getKernel().getLenVar());
-		lowerBound[1] = 0.20;
-		vectord upperBound(2);
-		upperBound[0] = 1.75;// + gp.getKernel().getLenVar();
-		upperBound[1] = 1.6;//max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
-
-		bayOpt.setBoundingBox(lowerBound, upperBound);
-		bayOpt.optimize(result);
-		gp.getKernel().setHyperParams(result[0], result[1], EPSILON);
-		std::cout << gp.getKernel().prettyString() << std::endl;
+//			bayesopt::Parameters par = initialize_parameters_to_default();
+//			std::cout << "noise: " << par.noise << std::endl;
+//			//par.noise = 1-6;
+//			par.init_method = 300;
+//			//par.n_iterations = 500;
+//			par.noise = 1e-5;
+//			par.epsilon = 0.2;
+//			par.verbose_level = 6;
+//			par.surr_name = "sGaussianProcessML";
+//
+//			BayesOptimizer bayOpt(gp, par);
+//
+//			vectord result(2);
+//			vectord lowerBound(2);
+//			lowerBound[0] = 0.0005; // max(0.1,gp.getLenMean() - 2 * gp.getKernel().getLenVar());
+//			lowerBound[1] = 0.20;
+//			vectord upperBound(2);
+//			upperBound[0] = 1.75;// + gp.getKernel().getLenVar();
+//			upperBound[1] = 1.6;//max(0.5,gp.getKernel().getLenVar() / gp.getLenMean() * 0.5);
+//
+//			bayOpt.setBoundingBox(lowerBound, upperBound);
+//			bayOpt.optimize(result);
+//			gp.getKernel().setHyperParams(result[0], result[1], EPSILON);
+//			std::cout << gp.getKernel().prettyString() << std::endl;
 		}
 		gp.getKernel().setHyperParams(0.6,0.4, 0.1);
 		StopWatch sw;

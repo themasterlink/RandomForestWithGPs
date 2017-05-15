@@ -17,13 +17,13 @@ GaussianProcessMultiBinary::GaussianProcessMultiBinary(int amountOfUsedClasses):
 	m_amountOfDataPoints(0),
 	m_amountOfDataPointsForUseAllTestsPoints(300),
 	m_maxPointsUsedInGpSingleTraining(1000),
-	m_lowerBound(2),
-	m_upperBound(2),
+//	m_lowerBound(2),
+//	m_upperBound(2),
 	m_gps(amountOfUsedClasses, NULL){
-	Settings::getValue("MultiBinaryGP.lowerBoundLength", m_lowerBound[0]);
-	Settings::getValue("MultiBinaryGP.lowerBoundNoise",  m_lowerBound[1]);
-	Settings::getValue("MultiBinaryGP.upperBoundLength", m_upperBound[0]);
-	Settings::getValue("MultiBinaryGP.upperBoundNoise",  m_upperBound[1]);
+//	Settings::getValue("MultiBinaryGP.lowerBoundLength", m_lowerBound[0]);
+//	Settings::getValue("MultiBinaryGP.lowerBoundNoise",  m_lowerBound[1]);
+//	Settings::getValue("MultiBinaryGP.upperBoundLength", m_upperBound[0]);
+//	Settings::getValue("MultiBinaryGP.upperBoundNoise",  m_upperBound[1]);
 }
 
 void GaussianProcessMultiBinary::train(const ClassData& data, const Labels* guessedLabels){
@@ -203,26 +203,27 @@ std::cout << "One: " << oneCounter << std::endl;
 		// find good hyperparameters with bayesian optimization:
 		bestHyperParams->getFinishDuring(isFinished); // only if one result is above the testing mark
 		if(isFinished){ break; }
-		vectord result(2);
-		usedGp.init(dataHyper, yHyper); // TODO reinit of kernel matrix -> is not necessary
-		bayesopt::Parameters par = initialize_parameters_to_default();
-		par.noise = 1e-12;
-		par.epsilon = 0.2;
-		par.verbose_level = 6;
-		par.n_iterations = 200;
-		par.surr_name = "sGaussianProcessML";
-		BayesOptimizer bayOpt(usedGp, par);
-		bayOpt.setBoundingBox(m_lowerBound, m_upperBound);
-		try{
-			bestHyperParams->getFinishDuring(isFinished); // only if one result is above the testing mark
-			if(isFinished){ break; }
-			bayOpt.optimize(result);
-		}catch(std::runtime_error& e){
-			//upperBound[1] = 1.5; // reduce noice!
-			m_output.printSwitchingColor(e.what() + betweenNames);
-			continue;
-		}
-		usedGp.getKernel().setHyperParams(result[0], result[1]);
+		std::cout << "Bayesopt was removed here, if this code is used again, add lib bayesopt again!" << std::endl;
+//		vectord result(2);
+//		usedGp.init(dataHyper, yHyper); // TODO reinit of kernel matrix -> is not necessary
+//		bayesopt::Parameters par = initialize_parameters_to_default();
+//		par.noise = 1e-12;
+//		par.epsilon = 0.2;
+//		par.verbose_level = 6;
+//		par.n_iterations = 200;
+//		par.surr_name = "sGaussianProcessML";
+//		BayesOptimizer bayOpt(usedGp, par);
+//		bayOpt.setBoundingBox(m_lowerBound, m_upperBound);
+//		try{
+//			bestHyperParams->getFinishDuring(isFinished); // only if one result is above the testing mark
+//			if(isFinished){ break; }
+//			bayOpt.optimize(result);
+//		}catch(std::runtime_error& e){
+//			//upperBound[1] = 1.5; // reduce noice!
+//			m_output.printSwitchingColor(e.what() + betweenNames);
+//			continue;
+//		}
+//		usedGp.getKernel().setHyperParams(result[0], result[1]);
 		bestHyperParams->getFinishDuring(isFinished); // only if one result is above the testing mark
 		if(isFinished){ break; }
 		usedGp.init(testDataMat, testYGpInit);
@@ -265,16 +266,17 @@ std::cout << "One: " << oneCounter << std::endl;
 				}
 			}
 		}
-		bestHyperParams->trySet(right, rr, amountOfUsedValues, amountOfCorrectLabels, result[0], result[1]);
+		std::cout << "Change was made here too!" << std::endl;
+//		bestHyperParams->trySet(right, rr, amountOfUsedValues, amountOfCorrectLabels, result[0], result[1]);
 		bestHyperParams->getNoChangeCounter(noChange);
 		const int percentagePrecision = 2;
-		m_output.printSwitchingColor("Act is: " + number2String(result[0], percentagePrecision) + ", " + number2String(result[1], percentagePrecision)
-						+ " with: " + number2String(right / (double) amountOfUsedValues * 100.0, percentagePrecision) + " %, for " + number2String(amountOfUsedValues)
-						+ " test elements, just right: " + number2String(rr / (double) amountOfCorrectLabels * 100.0, percentagePrecision)
-						+ " %, best now: "
-						+ bestHyperParams->prettyStringOfBest(percentagePrecision) + ", use "
-						+ number2String(std::min(100, noChange * amountOfHyperPoints))
-						+ " HPs" + betweenNames + " time in trainF was: " + usedGp.getTrainFWatch().elapsedAvgAsPrettyTime());
+//		m_output.printSwitchingColor("Act is: " + number2String(result[0], percentagePrecision) + ", " + number2String(result[1], percentagePrecision)
+//						+ " with: " + number2String(right / (double) amountOfUsedValues * 100.0, percentagePrecision) + " %, for " + number2String(amountOfUsedValues)
+//						+ " test elements, just right: " + number2String(rr / (double) amountOfCorrectLabels * 100.0, percentagePrecision)
+//						+ " %, best now: "
+//						+ bestHyperParams->prettyStringOfBest(percentagePrecision) + ", use "
+//						+ number2String(std::min(100, noChange * amountOfHyperPoints))
+//						+ " HPs" + betweenNames + " time in trainF was: " + usedGp.getTrainFWatch().elapsedAvgAsPrettyTime());
 		if(bestHyperParams->checkGoal()){
 			break;
 		}

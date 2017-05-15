@@ -478,7 +478,8 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 				mean += *it;
 			}
 			bool found = false;
-			for(std::list<double>::const_iterator itSort = sortedValues.cbegin(); itSort != sortedValues.cend() && !found; ++itSort){
+			// can not be cbegin() and cend() is not fully supported in C++11
+			for(std::list<double>::iterator itSort = sortedValues.begin(); itSort != sortedValues.end() && !found; ++itSort){
 				if(*itSort > *it){
 					sortedValues.insert(itSort, *it);
 					found = true;

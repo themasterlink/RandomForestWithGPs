@@ -87,7 +87,7 @@ void ThreadMaster::run(){
 		}
 		sortWaitingList(minAmountOfPoints, maxAmountOfPoints);
 		while(m_counter < m_maxCounter && m_waitingList.size() > 0){
-			PackageList::const_iterator selectedValue = m_waitingList.begin();
+			PackageList::iterator selectedValue = m_waitingList.begin();
 			if(selectedValue != m_waitingList.end()){
 //				std::cout << "A thread was added to running!" << std::endl;
 				m_runningList.push_back(*selectedValue); // first add to the running list
@@ -101,8 +101,8 @@ void ThreadMaster::run(){
 				selectedValue = m_waitingList.end();
 			}
 		}
-		PackageList::const_iterator selectedValue = m_waitingList.begin();
-		for(PackageList::const_iterator it = m_runningList.begin(); it != m_runningList.end(); ++it){
+		PackageList::iterator selectedValue = m_waitingList.begin();
+		for(PackageList::iterator it = m_runningList.begin(); it != m_runningList.end(); ++it){
 			// for each running element check if execution is finished
 			const int maxTrainingsTime = (*it)->getMaxTrainingsTime() > 0 ? (*it)->getMaxTrainingsTime() : CommandSettings::get_samplingAndTraining();
 			if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime * 0.05 || (*it)->isTaskFinished()){ // each training have to take at least 5 seconds!
@@ -123,7 +123,7 @@ void ThreadMaster::run(){
 				if((*it)->isWaiting()){
 					// there is a running thread which waits -> put him back in the waiting list
 //					std::cout << "A thread was moved from waiting to paused!" << std::endl;
-					PackageList::const_iterator copyIt = it;
+					PackageList::iterator copyIt = it;
 					m_waitingList.push_back(*it); // append at the waiting list
 					--it; // go one back, in the end of the loop the next element will be taken
 					m_runningList.erase(copyIt); // erase the copied element
@@ -132,7 +132,7 @@ void ThreadMaster::run(){
 				}
 				if((*it)->isTaskFinished()){
 //					std::cout << "A thread is finished!" << std::endl;
-					PackageList::const_iterator copyIt = it; // perform copy
+					PackageList::iterator copyIt = it; // perform copy
 					--it; // go one back, in the end of the loop the next element will be taken
 					m_runningList.erase(copyIt); // erase the copied element
 					// decrease the counter
