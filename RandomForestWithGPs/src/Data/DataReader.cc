@@ -196,6 +196,8 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		type = 3;
 	}else if(targetDir.parent_path().filename() == "simon"){
 		type = 4;
+	}else if(targetDir.parent_path().filename() == "washingtonData"){ // new data from Max Durner
+		type = 5;
 	}else if(targetDir.parent_path().filename() == fakeDataLoc.parent_path().filename()){
 		type = 0;
 	}else{
@@ -206,7 +208,8 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 	if(targetDir.parent_path().filename() == "mnist" && type == 0){
 //		didNormalizeData = true; // did perform that before write out mnistOrg
 	}
-	if(type == 0){
+	switch(type){
+	case 0:{
 		for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 			if(boost::filesystem::is_directory(itr->path())){
 				const std::string name(itr->path().filename().c_str());
@@ -219,7 +222,9 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 				dataSets.insert(DataSetPair(name, data));
 			}
 		}
-	}else if(type == 1){
+		break;
+	}
+	case 1:{
 		ClassData data[10];
 		std::vector<unsigned char> labels;
 		const std::string inputPath(folderLocation);
@@ -402,7 +407,9 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 //			}
 //			DataBinaryWriter::toFile(data[i], mnistFolder + number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
 //		}
-	}else if(type == 2){
+		break;
+	}
+	case 2:{
 		ClassData data[10];
 		std::ifstream input(folderLocation + "data.txt");
 		if(input.is_open()){
@@ -473,8 +480,9 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 //			if(data[i].size() > 0)
 //				DataBinaryWriter::toFile(data[i], uspsFolder + number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
 //		}
-
-	}else if(type == 3 || type == 4){
+		break;
+	}
+	case 3: case 4: {
 		ClassData data;
 		for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 			if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".csv"){
@@ -500,6 +508,16 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			const unsigned int dimValue = data[0]->rows();
 			ClassKnowledge::setAmountOfDims(dimValue);
 		}
+		break;
+	}
+	case 5:{
+		break;
+	}
+	default:{
+		printError("This type was not defined before!");
+		Logger::forcedWrite();
+		exit(0);
+	}
 	}
 	unsigned int totalSize = 0;
 	for(DataSetsConstIterator it = dataSets.begin(); it != dataSets.end(); ++it){

@@ -85,8 +85,7 @@ void handleProgrammOptions(int ac, char* av[]){
 	cv::imwrite("../sift_result.jpg", output);
 */
 
-void quit()
-{
+void quit() {
   endwin();
 }
 
