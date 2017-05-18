@@ -29,13 +29,13 @@ void DataReader::readFromBinaryFile(ClassData& data, const std::string& inputNam
 	if(input.is_open()){
 		long size;
 		input.read((char*) &size, sizeof(long));
-		const unsigned int lastSize = data.size();
-		data.reserve(size + lastSize);
+		const unsigned long lastSize = data.size();
+		data.reserve((unsigned long) size + lastSize);
 		printOnScreen("Read " << size << " points from binary: " << inputName);
 		if(amountOfData > size && amountOfData != (unsigned int) INT_MAX){
 			printWarning("The amount of data provided is smaller than the desired amount!");
 		}
-		for(unsigned int i = lastSize; i < size + lastSize; ++i){
+		for(unsigned long i = lastSize; i < size + lastSize; ++i){
 			ClassPoint* p = new ClassPoint();
 			ReadWriterHelper::readPoint(input, *p);
 //			if(p->getLabel() == 20 || p->getLabel() == 31 || p->getLabel() == 35){
@@ -74,7 +74,8 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName, con
 			while(std::getline(ss, item, ',')){
 				elements.push_back(item);
 			}
-			ClassPoint* newEle = new ClassPoint(elements.size() - 1, std::stoi(elements.back()));
+			ClassPoint* newEle = new ClassPoint((const int) (elements.size() - 1),
+												(const unsigned int) std::stoi(elements.back()));
 			for(int i = 0; i < (int) elements.size() - 1; ++i){
 				(*newEle)[i] = std::stod(elements[i]);
 			};
@@ -84,7 +85,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName, con
 			}
 		}
 		if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
-			ClassKnowledge::setAmountOfDims(data[0]->rows());
+			ClassKnowledge::setAmountOfDims((unsigned int) data[0]->rows());
 		}
 		input.close();
 	}else{
@@ -93,7 +94,8 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName, con
 }
 
 void DataReader::readFromFile(ClassData& data, const std::string& inputName,
-		const unsigned int amountOfData, const unsigned int classNr, const bool readTxt){
+		const unsigned int amountOfData, const unsigned int classNr, const bool readTxt,
+							  const bool containsDegrees){
 	std::string inputPath(inputName);
 	if(boost::filesystem::exists(inputName + ".binary") && !readTxt){
 		// is a binary file -> faster loading!
@@ -102,7 +104,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		if(input.is_open()){
 			long size;
 			input.read((char*) &size, sizeof(long));
-			data.resize(std::min((long) amountOfData, size));
+			data.resize(std::min((unsigned long) amountOfData, (unsigned long) size));
 			for(long i = 0; i < std::min((long) amountOfData,size); ++i){
 				data[i] = new ClassPoint();
 				ReadWriterHelper::readPoint(input, *data[i]);
@@ -125,12 +127,12 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 				while(std::getline(ss, item, ' ')){
 					elements.push_back(item);
 				}
-				ClassPoint* newEle = new ClassPoint(elements.size(), classNr);
+				ClassPoint* newEle = new ClassPoint(int(elements.size()), classNr);
 				for(unsigned int i = 0; i < elements.size(); ++i){
 					newEle->coeffRef(i) = std::stod(elements[i]);
 				}
 				data.push_back(newEle);
-				if(data.size() == (unsigned int) amountOfData){
+				if(data.size() == amountOfData){
 					break;
 				}
 			}
@@ -145,6 +147,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 		std::ifstream input(inputPath);
 		if(input.is_open()){
 			std::string line;
+			std::set<unsigned int> classes;
 			while(std::getline(input, line)){
 				std::vector<std::string> elements;
 				std::stringstream ss(line);
@@ -153,17 +156,32 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 					elements.push_back(item);
 				}
 				if(elements.size() > 0){
-					const unsigned int label = std::stoi(elements.front());
-					ClassPoint* newEle = new ClassPoint(elements.size() - 1, label);
-					for(unsigned int i = 1; i < elements.size(); ++i){
-						newEle->coeffRef(i - 1) = std::stod(elements[i]);
+					auto label = (unsigned int) std::stoi(elements.front());
+					auto maxSize = (unsigned int) elements.size();
+					unsigned int start = 1;
+					if(containsDegrees){
+						maxSize -= 3;
+						// last element should be the label
+						label = (unsigned int) std::stof(elements[maxSize]);
+						start = 0;
+					}
+					// containsDegrees removes the last two degrees at the end of each line
+					// minus 1 because the first element is the label
+					ClassPoint* newEle = new ClassPoint((int)(maxSize) - start, label);
+					for(unsigned int i = start; i < maxSize; ++i){
+						newEle->coeffRef(i - start) = std::stod(elements[i]);
 					}
 					data.push_back(newEle);
-					if(data.size() == (unsigned int) amountOfData){
+					if(data.size() == amountOfData){
 						break;
 					}
 				}
 			}
+			std::stringstream ss;
+			for(auto c : classes){
+				ss << c << ", ";
+			}
+			printOnScreen(ss.str());
 			input.close();
 //			if(data.size() > 0){
 //				DataBinaryWriter::toFile(data, inputName + ".binary"); // create binary to avoid rereading .txt
@@ -179,7 +197,7 @@ void DataReader::readFromFile(ClassData& data, const std::string& inputName,
 	}
 }
 
-void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLocation, const int amountOfData, const bool readTxt, bool& didNormalizeData){
+void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLocation, const unsigned int amountOfData, const bool readTxt, bool& didNormalizeData){
 	boost::filesystem::path targetDir(folderLocation);
 	boost::filesystem::directory_iterator end_itr;
 	// cycle through the directory
@@ -196,12 +214,12 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		type = 3;
 	}else if(targetDir.parent_path().filename() == "simon"){
 		type = 4;
-	}else if(targetDir.parent_path().filename() == "washingtonData"){ // new data from Max Durner
+	}else if(targetDir.filename() == "washingtonData"){ // new data from Max Durner
 		type = 5;
 	}else if(targetDir.parent_path().filename() == fakeDataLoc.parent_path().filename()){
 		type = 0;
 	}else{
-		printError("This type is not supported here!");
+		printError("This type is not supported here: " << targetDir.parent_path().filename());
 		Logger::forcedWrite();
 		return;
 	}
@@ -252,7 +270,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 							return;
 						}
 						for(unsigned int i = 0; i < (unsigned int) size; ++i){
-							ClassPoint* newEle = new ClassPoint(rows * cols, labels[i]);
+							ClassPoint* newEle = new ClassPoint(int(rows * cols), labels[i]);
 							for(unsigned int r = 0; r < (unsigned int) rows; ++r){
 								for(unsigned int c = 0; c < (unsigned int) cols; ++c){
 									unsigned char ele;
@@ -266,7 +284,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 						int_fast32_t size;
 						input.read((char*) &size, 4);
 						size = highEndian2LowEndian(size);
-						labels.resize(size);
+						labels.resize((unsigned long) size);
 						for(unsigned int i = 0; i < (unsigned int) size; ++i){
 							input.read((char*) &labels[i], 1);
 						}
@@ -437,7 +455,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 						elements.push_back(item);
 					}
 					if(elements.size() == 257){
-						ClassPoint* newEle = new ClassPoint(256, std::stoi(elements[0]));
+						ClassPoint* newEle = new ClassPoint(256, (const unsigned int) std::stoi(elements[0]));
 						for(unsigned int i = 1; i < 257; ++i){
 							newEle->coeffRef(i-1) = std::stod(elements[i]);
 						}
@@ -465,7 +483,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			printError("Class 0 is not represented here!");
 			return;
 		}
-		const unsigned int dimValue = data[0][0]->rows();
+		auto dimValue = (const unsigned int) data[0][0]->rows();
 		ClassKnowledge::setAmountOfDims(dimValue);
 
 //		std::string uspsFolder = targetDir.parent_path().parent_path().c_str();
@@ -482,14 +500,16 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 //		}
 		break;
 	}
-	case 3: case 4: {
+	case 3: case 4: case 5: {
 		ClassData data;
 		for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 			if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".csv"){
 				const std::string inputPath(itr->path().c_str());
-				readFromFile(data, inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
+				readFromFile(data, inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true, type == 5);
+				break;
 			}
 		}
+		printOnScreen("first: " << data[0]->transpose());
 		if(data.size() > 0){
 			std::map<unsigned int, unsigned int> mapFromOldToNewLabels;
 			for(unsigned int i = 0; i < data.size(); ++i){
@@ -497,7 +517,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 				if(it != mapFromOldToNewLabels.end()){ // this class was registered before
 					dataSets.find(ClassKnowledge::getNameFor(it->second))->second.push_back(data[i]);
 				}else{
-					const int newNumber = ClassKnowledge::amountOfClasses();
+					const unsigned int newNumber = ClassKnowledge::amountOfClasses();
 					mapFromOldToNewLabels.insert(std::pair<unsigned int, unsigned int>(data[i]->getLabel(), newNumber));
 					ClassKnowledge::setNameFor(number2String(newNumber), newNumber);
 					ClassData newData;
@@ -505,12 +525,9 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 					dataSets.find(ClassKnowledge::getNameFor(newNumber))->second.push_back(data[i]);
 				}
 			}
-			const unsigned int dimValue = data[0]->rows();
+			auto dimValue = static_cast<const unsigned int>(data[0]->rows());
 			ClassKnowledge::setAmountOfDims(dimValue);
 		}
-		break;
-	}
-	case 5:{
 		break;
 	}
 	default:{

@@ -19,9 +19,9 @@ public:
 
 	static void readFromBinaryFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData);
 
-	static void readFromFiles(DataSets& dataSets, const std::string& folderLocation, const int amountOfData, const bool readTxt, bool& didNormalizeData);
+	static void readFromFiles(DataSets& dataSets, const std::string& folderLocation, const unsigned int amountOfData, const bool readTxt, bool& didNormalizeData);
 
-	static void readFromFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData, const unsigned int classNr, const bool readTxt = false);
+	static void readFromFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData, const unsigned int classNr, const bool readTxt = false, const bool containsDegrees = false);
 
 private:
 

@@ -8,7 +8,7 @@
 #include "RandomUniformNr.h"
 
 RandomUniformNr::RandomUniformNr(const int min, const int max, const int seed):
-	m_generator(seed),
+	m_generator((const uint32_t &) seed),
 	m_uniform(min, max),
 	m_isUsed(min != max){
 }
@@ -18,7 +18,7 @@ RandomUniformNr::~RandomUniformNr() {
 
 
 void RandomUniformNr::setSeed(const int seed){
-	m_generator.seed(seed);
+	m_generator.seed((const uint32_t &) seed);
 }
 
 void RandomUniformNr::setMinAndMax(const int min, const int max){

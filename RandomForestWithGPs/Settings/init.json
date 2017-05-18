@@ -15,7 +15,7 @@
 		"testingAmount": 200
 	},
 	"Forest": {
-		"amountOfTrees": 5000,
+		"amountOfTrees": 6000,
 		"Trees": {
 			"height": 15
 		}
@@ -38,7 +38,7 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
-		"folderLocReal": "../mnistOrg/",
+		"folderLocReal": "/home_local/denn_ma/washingtonData",
 		"folderLocFake": "../fakeData/",
 		"folderTestNr": 4,
 		"excludeClass": 1000,
@@ -53,7 +53,7 @@
 		"maxUsedDataFactor": 0.6,
 		"stepSizeOverData": 0,
 		"factorAmountOfUsedDims": 1.0,
-		"ownSamplingTime": 30,
+		"ownSamplingTime": 0,
 		"maxAmountOfUsedMemory": 16000000000,
 		"useBigDynmaicDecisionTrees": "false",
 		"layerAmountOfBigDDT": 3,

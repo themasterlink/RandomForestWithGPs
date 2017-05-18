@@ -37,7 +37,6 @@ public:
 
 	virtual ~DynamicDecisionTree();
 
-
 	void train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator){
 		train(amountOfUsedDims, generator, 0, false);
 	}

@@ -40,7 +40,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	m_minMaxUsedDataFactor[1] = val;
 	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	Settings::getValue("OnlineRandomForest.useBigDynmaicDecisionTrees", m_useBigDynamicDecisionTrees);
-//	setDesiredAmountOfTrees(5);
+	setDesiredAmountOfTrees(1000);
 }
 
 OnlineRandomForest::~OnlineRandomForest(){
@@ -48,6 +48,76 @@ OnlineRandomForest::~OnlineRandomForest(){
 		SAVE_DELETE(*it);
 	}
 }
+
+void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const unsigned int amountOfTrees,
+		std::vector<std::vector<unsigned int> >* counterForClasses, boost::mutex* mutexForCounter){
+	ThreadMaster::appendThreadToList(package);
+	package->wait();
+	MemoryType maxAmountOfUsedMemory;
+	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
+	int i = 0;
+	const bool printErrorGraph = counterForClasses != nullptr;
+	Labels* labels = nullptr;
+	if(printErrorGraph){
+		labels = new Labels(m_storage.size(), UNDEF_CLASS_LABEL);
+	}
+	while(true){ // the thread master will eventually kill this training
+		m_treesMutex.lock();
+		if(amountOfTrees > 0 && (unsigned int) m_trees.size() >= amountOfTrees){
+			printOnScreen("Abort because to many trees");
+			m_treesMutex.unlock();
+			break;
+		}
+//		const unsigned int treeAmount = m_trees.size();
+		m_treesMutex.unlock();
+		// check if the memory consumption is to high -> write trees to disk
+		mutexForCounter->lock();
+//		printInPackageOnScreen(package, "Mem: " << getPercentageForUsedMemory());
+		if(maxAmountOfUsedMemory > 0 && m_usedMemory > maxAmountOfUsedMemory && package->canBeAbortedInGeneral()){
+			package->abortTraing();
+			printOnScreen("Abort because of memory");
+//			printOnScreen("Save to file");
+//			m_savedAnyTreesToDisk = true;
+//			writeTreesToDisk(treeAmount);
+		}
+		mutexForCounter->unlock();
+		// performing this outside the lock makes the lock shorter (because the constructor calls contains a lot of memory allocation)
+		DynamicDecisionTreeInterface* treePointer = nullptr;
+		if(m_useBigDynamicDecisionTrees){
+			treePointer = new BigDynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfUsedLayer.first, m_amountOfUsedLayer.second);
+		}else{
+			treePointer = new DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses);
+		}
+		treePointer->train(m_amountOfUsedDims, *generator);
+		printInPackageOnScreen(package, "Number " << i++ << " was calculated, total memory usage: " << convertMemorySpace(m_usedMemory));
+		if(printErrorGraph){
+			for(unsigned int i = 0; i < m_storage.size(); ++i){
+				(*labels)[i] = treePointer->predict(*m_storage[i]);
+			}
+			//lock
+			mutexForCounter->lock();
+			for(unsigned int i = 0; i < m_storage.size(); ++i){
+				(*counterForClasses)[i][(*labels)[i]] += 1;
+			}
+			mutexForCounter->unlock();
+			//unlock
+		}
+
+		m_treesMutex.lock();
+		m_usedMemory += treePointer->getMemSize();
+		m_trees.push_back(treePointer); // add it to list
+		++m_amountOfTrainedTrees;
+		m_treesMutex.unlock();
+		if(package->shouldTrainingBePaused()){
+			package->wait();
+		}else if(package->shouldTrainingBeAborted()){ // if amountOfTrees != 0 -> ORF_TRAIN_FIX -> can not be aborted
+			break;
+		}
+	}
+	printOnScreen("Task finished!");
+	package->finishedTask();
+}
+
 
 void OnlineRandomForest::train(){
 	if(m_storage.size() < 2){
@@ -88,7 +158,7 @@ void OnlineRandomForest::train(){
 	Settings::getValue("OnlineRandomForest.stepSizeOverData", stepSizeOverData);
 	for(unsigned int i = 0; i < amountOfThreads; ++i){
 		m_generators[i] = new RandomNumberGeneratorForDT(m_storage.dim(), minMaxUsedSplits[0],
-				minMaxUsedSplits[1], m_storage.size(), (i + 1) * 827537, stepSizeOverData);
+														 minMaxUsedSplits[1], m_storage.size(), (i + 1) * 827537, stepSizeOverData);
 		attach(m_generators[i]);
 		m_generators[i]->update(this, OnlineStorage<ClassPoint*>::Event::APPENDBLOCK); // init training with just one element is not useful
 	}
@@ -216,76 +286,6 @@ void OnlineRandomForest::train(){
 	m_firstTrainingDone = true;
 }
 
-
-void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const unsigned int amountOfTrees,
-		std::vector<std::vector<unsigned int> >* counterForClasses, boost::mutex* mutexForCounter){
-	ThreadMaster::appendThreadToList(package);
-	package->wait();
-	MemoryType maxAmountOfUsedMemory;
-	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
-	int i = 0;
-	const bool printErrorGraph = counterForClasses != nullptr;
-	Labels* labels = nullptr;
-	if(printErrorGraph){
-		labels = new Labels(m_storage.size(), UNDEF_CLASS_LABEL);
-	}
-	while(true){ // the thread master will eventually kill this training
-		m_treesMutex.lock();
-		if(amountOfTrees > 0 && (unsigned int) m_trees.size() >= amountOfTrees){
-			printOnScreen("Abort because to many trees");
-			m_treesMutex.unlock();
-			break;
-		}
-//		const unsigned int treeAmount = m_trees.size();
-		m_treesMutex.unlock();
-		// check if the memory consumption is to high -> write trees to disk
-		mutexForCounter->lock();
-//		printInPackageOnScreen(package, "Mem: " << getPercentageForUsedMemory());
-		if(maxAmountOfUsedMemory > 0 && m_usedMemory > maxAmountOfUsedMemory && package->canBeAbortedInGeneral()){
-			package->abortTraing();
-			printOnScreen("Abort because of memory");
-//			printOnScreen("Save to file");
-//			m_savedAnyTreesToDisk = true;
-//			writeTreesToDisk(treeAmount);
-		}
-		mutexForCounter->unlock();
-		// performing this outside the lock makes the lock shorter (because the constructor calls contains a lot of memory allocation)
-		DynamicDecisionTreeInterface* treePointer = nullptr;
-		if(m_useBigDynamicDecisionTrees){
-			treePointer = new BigDynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfUsedLayer.first, m_amountOfUsedLayer.second);
-		}else{
-			treePointer = new DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses);
-		}
-		treePointer->train(m_amountOfUsedDims, *generator);
-		printInPackageOnScreen(package, "Number " << i++ << " was calculated, total memory usage: " << convertMemorySpace(m_usedMemory));
-		if(printErrorGraph){
-			for(unsigned int i = 0; i < m_storage.size(); ++i){
-				(*labels)[i] = treePointer->predict(*m_storage[i]);
-			}
-			//lock
-			mutexForCounter->lock();
-			for(unsigned int i = 0; i < m_storage.size(); ++i){
-				(*counterForClasses)[i][(*labels)[i]] += 1;
-			}
-			mutexForCounter->unlock();
-			//unlock
-		}
-
-		m_treesMutex.lock();
-		m_usedMemory += treePointer->getMemSize();
-		m_trees.push_back(treePointer); // add it to list
-		++m_amountOfTrainedTrees;
-		m_treesMutex.unlock();
-		if(package->shouldTrainingBePaused()){
-			package->wait();
-		}else if(package->shouldTrainingBeAborted()){ // if amountOfTrees != 0 -> ORF_TRAIN_FIX -> can not be aborted
-			break;
-		}
-	}
-	printOnScreen("Task finished!");
-	package->finishedTask();
-}
-
 void OnlineRandomForest::writeTreesToDisk(const unsigned int amountOfTrees) const{
 	if(amountOfTrees > 1){
 		m_treesMutex.lock();
@@ -343,12 +343,12 @@ void OnlineRandomForest::loadBatchOfTreesFromDisk(const unsigned int batchNr) co
 						if(m_useBigDynamicDecisionTrees){
 							BigDynamicDecisionTree* newTree = new BigDynamicDecisionTree(m_storage);
 							ReadWriterHelper::readBigDynamicTree(output, *newTree);
-							m_trees.push_back(newTree);
+							m_trees.push_back((DynamicDecisionTreeInterface*) newTree);
 							m_usedMemory += newTree->getMemSize();
 						}else{
 							DynamicDecisionTree* newTree = new DynamicDecisionTree(m_storage);
 							ReadWriterHelper::readDynamicTree(output, *newTree);
-							m_trees.push_back(newTree);
+							m_trees.push_back((DynamicDecisionTreeInterface*) newTree);
 							m_usedMemory += newTree->getMemSize();
 						}
 					}
@@ -376,7 +376,7 @@ void OnlineRandomForest::tryAmountForLayers(RandomNumberGeneratorForDT* generato
 			while(sw.elapsedSeconds() < secondsPerSplit){
 //				printOnScreen("Train new tree! " << trees.size());
 				trees.push_back(new BigDynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, layerAmount, amountOfFastLayers));
-				trees.back()->train(m_amountOfUsedDims, *generator);
+				trees.back()->train((unsigned int) m_amountOfUsedDims, *generator);
 			}
 //			unsigned int correctAmount = 0;
 //			for(unsigned int i = 0; i < m_storage.size(); ++i){
@@ -458,8 +458,8 @@ bool OnlineRandomForest::update(){
 //		}
 
 		boost::thread_group group;
-		sleep(2);
-		const unsigned int nrOfParallel = std::min((int) boost::thread::hardware_concurrency(), (int) m_trees.size());
+//		sleep(2);
+		auto nrOfParallel = (const unsigned int) std::min((int) boost::thread::hardware_concurrency(), (int) m_trees.size());
 		boost::mutex* mutex = new boost::mutex();
 		if(list->size() != m_trees.size()){
 			printError("The sorting process failed, list size is: " << list->size() << ", should be: " << m_trees.size());
@@ -506,7 +506,7 @@ bool OnlineRandomForest::update(){
 }
 
 void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list){
-	const unsigned int nrOfParallel = std::min((unsigned int) boost::thread::hardware_concurrency(), (unsigned int) m_trees.size());
+	const unsigned int nrOfParallel = std::min(boost::thread::hardware_concurrency(), (unsigned int) m_trees.size());
 	boost::mutex read, append;
 	boost::thread_group group;
 	DecisionTreesContainer copyOfTrees;
@@ -799,8 +799,8 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 		boost::thread_group group;
 		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
-			const int start = i / (double) nrOfParallel * points.size();
-			const int end = (i + 1) / (double) nrOfParallel * points.size();
+			auto start = (const int) (i / (double) nrOfParallel * points.size());
+			auto end = (const int) ((i + 1) / (double) nrOfParallel * points.size());
 			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictDataInParallel, this, points, &labels, start, end)));
 		}
 		group.join_all();
@@ -816,8 +816,8 @@ void OnlineRandomForest::predictData(const ClassData& points, Labels& labels) co
 		boost::thread_group group;
 		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
-			const int start = i / (double) nrOfParallel * points.size();
-			const int end = (i + 1) / (double) nrOfParallel * points.size();
+			auto start = (const int) (i / (double) nrOfParallel * points.size());
+			auto end = (const int) ((i + 1) / (double) nrOfParallel * points.size());
 			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictClassDataInParallel, this, points, &labels, start, end)));
 		}
 		group.join_all();
@@ -1087,8 +1087,8 @@ void OnlineRandomForest::getLeafNrFor(std::vector<int>& leafNrs){
 
 Eigen::Vector2i OnlineRandomForest::getMinMaxData(){
 	Eigen::Vector2i minMax;
-	minMax[0] = m_minMaxUsedDataFactor[0] * m_storage.size();
-	minMax[1] = m_minMaxUsedDataFactor[1] * m_storage.size();
+	minMax[0] = (int) (m_minMaxUsedDataFactor[0] * m_storage.size());
+	minMax[1] = (int) (m_minMaxUsedDataFactor[1] * m_storage.size());
 	return minMax;
 }
 
