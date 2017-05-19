@@ -67,7 +67,7 @@ public:
 private:
 
 	using SortedDecisionTreePair = std::pair<DynamicDecisionTreeInterface*, double>;
-	using SortedDecisionTreeList = std::list<SortedDecisionTreePair >;
+	using SortedDecisionTreeList = std::list<SortedDecisionTreePair>;
 
 	void predictDataInParallel(const Data& points, Labels* labels, const unsigned int start, const unsigned int end) const;
 

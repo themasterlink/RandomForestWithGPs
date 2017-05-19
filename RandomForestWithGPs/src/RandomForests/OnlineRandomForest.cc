@@ -40,7 +40,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	m_minMaxUsedDataFactor[1] = val;
 	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	Settings::getValue("OnlineRandomForest.useBigDynmaicDecisionTrees", m_useBigDynamicDecisionTrees);
-	setDesiredAmountOfTrees(1000);
+//	setDesiredAmountOfTrees(1000);
 }
 
 OnlineRandomForest::~OnlineRandomForest(){
@@ -177,7 +177,7 @@ void OnlineRandomForest::train(){
 			}
 		}
 //		layerValues.push_back(4);
-		const double secondsSpendPerSplit = 10;
+		const double secondsSpendPerSplit = 180;
 		boost::mutex layerMutex;
 		std::pair<int, int> bestLayerSplit(-1, -1);
 		double bestCorrectness = 0;

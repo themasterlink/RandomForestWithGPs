@@ -134,31 +134,41 @@ void overwriteConst(const T& ref, const T& newValue){
 	*iPointer = newValue;
 }
 
-inline bool endsWith(const std::string& first, const std::string& second){
-	if(first.size() > second.size()){
-		int t = first.size() - 1;
-		if(second.size() == 0){
+inline bool startsWith(const std::string& word, const std::string& cmp){
+	if(word.size() > cmp.size()){
+		if(cmp.size() == 0){
 			return false;
 		}
-		for(int i = second.size() - 1; i > -1; --i, --t){
-			if(second[i] != first[t]){
+		int t = 0;
+		for(int i = 0; i < cmp.size(); ++i, ++t){
+			if(cmp[i] != word[t]){
 				return false;
 			}
 		}
 		return true;
-	}else if(first.size() < second.size()){
-		int t = second.size() - 1;
-		if(first.size() == 0){
-			return false;
-		}
-		for(int i = first.size() - 1; i > -1; --i, --t){
-			if(second[t] != first[i]){
-				return false;
-			}
-		}
-		return true;
+	}else if(word.size() < cmp.size()){
+		return false;
 	}else{
-		return first == second;
+		return word == cmp;
+	}
+}
+
+inline bool endsWith(const std::string& word, const std::string& cmp){
+	if(word.size() > cmp.size()){
+		int t = word.size() - 1;
+		if(cmp.size() == 0){
+			return false;
+		}
+		for(int i = cmp.size() - 1; i > -1; --i, --t){
+			if(cmp[i] != word[t]){
+				return false;
+			}
+		}
+		return true;
+	}else if(word.size() < cmp.size()){
+		return false;
+	}else{
+		return word == cmp;
 	}
 }
 

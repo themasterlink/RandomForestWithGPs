@@ -109,7 +109,7 @@ void TotalStorage::readData(const int amountOfData){
 		}else if(folderLocation == "../mnistOrg/" || folderLocation == "../uspsOrg/"){
 			m_mode = Mode::SEPERATE; // seperate train und test set
 			DataSets train, test;
-			DataReader::readFromFiles(train, folderLocation + "training/" , amountOfData, readTxt, didNormalizeStep);
+			DataReader::readFromFiles(train, folderLocation + "training/", amountOfData, readTxt, didNormalizeStep);
 			unsigned int totalSize = 0;
 			for(DataSetsConstIterator it = train.begin(); it != train.end(); ++it){
 				totalSize += it->second.size();
@@ -120,7 +120,7 @@ void TotalStorage::readData(const int amountOfData){
 					m_trainSet.push_back(it->second[i]);
 				}
 			}
-			DataReader::readFromFiles(test, folderLocation + "test/" , amountOfData, readTxt, didNormalizeStep);
+			DataReader::readFromFiles(test, folderLocation + "test/", amountOfData, readTxt, didNormalizeStep);
 			unsigned int totalSizeTest = 0;
 			for(DataSetsConstIterator it = test.begin(); it != test.end(); ++it){
 				totalSizeTest += it->second.size();
@@ -131,6 +131,24 @@ void TotalStorage::readData(const int amountOfData){
 					m_testSet.push_back(it->second[i]);
 				}
 			}
+		}else if(endsWith(folderLocation, "/washingtonData") || endsWith(folderLocation, "/washingtonData/")){
+			m_mode = Mode::SEPERATE; // seperate train und test set
+			boost::filesystem::path targetDir(folderLocation);
+			boost::filesystem::directory_iterator end_itr;
+			ClassData wholeTrainingSet;
+			for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
+				if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".binary"){
+					const std::string inputPath(itr->path().c_str());
+					if(!endsWith(inputPath, "eval_flatten_complete.binary")){
+						printOnScreen("As training:");
+						DataReader::readFromBinaryFile(wholeTrainingSet, inputPath, INT_MAX);
+					}else{
+						printOnScreen("As test:");
+						DataReader::readFromBinaryFile(m_testSet, inputPath, INT_MAX);
+					}
+				}
+			}
+			m_trainSet = wholeTrainingSet;
 		}else{
 			DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt, didNormalizeStep);
 		}
@@ -353,13 +371,20 @@ void TotalStorage::readData(const int amountOfData){
 				}
 			}
 			RandomUniformNr uniformNr(1,amountOfSizeStep,100);
-			for(unsigned int i = uniformNr(); i < m_trainSet.size(); i+=uniformNr()){
-				if(useWholeClass){
-					if(m_trainSet[i]->getLabel() == 1){
+			int nextStopPoint = uniformNr();
+			for(unsigned int i = 0; i < m_trainSet.size(); ++i){
+				if(nextStopPoint == i){
+					if(useWholeClass){
+						if(m_trainSet[i]->getLabel() == 1){
+							trainList.push_back(m_trainSet[i]);
+						}
+					}else{
 						trainList.push_back(m_trainSet[i]);
 					}
+					nextStopPoint += uniformNr();
 				}else{
-					trainList.push_back(m_trainSet[i]);
+					// reduces the amount of memory used
+					SAVE_DELETE(m_trainSet[i]);
 				}
 			}
 			printOnScreen("Reduced training size from: " << m_trainSet.size() << " to: " << trainList.size());

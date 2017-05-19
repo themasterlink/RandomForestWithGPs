@@ -10,3 +10,6 @@
 /DebugLinux/
 /ReleaseLinux/
 /ReleaseDLR/
+/cmake-build-debug/
+/cmake-build-release/
+/fakeData/
