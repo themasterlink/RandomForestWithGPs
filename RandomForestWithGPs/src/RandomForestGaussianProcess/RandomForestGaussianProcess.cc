@@ -395,7 +395,7 @@ unsigned int RandomForestGaussianProcess::predict(const DataPoint& point, std::v
 		//std::cout << "fuck yu bitch!" << std::endl;
 		return m_pureClassLabelForRfClass[rfLabel];
 	}
-	return std::distance(prob.cbegin(), std::max_element(prob.cbegin(), prob.cend()));
+	return argMax(prob.cbegin(), prob.cend());
 }
 
 unsigned int RandomForestGaussianProcess::predict(const DataPoint& point) const{

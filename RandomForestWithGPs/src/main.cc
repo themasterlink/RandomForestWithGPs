@@ -364,12 +364,13 @@ int main(int ac, char** av){
 	}else{
 		printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
 	}
-
 	Logger::forcedWrite();
 	if(CommandSettings::get_settingsFile().length() == 0){
 		printOnScreen("Press any key to quit application");
 		getchar();
 	}
+	ThreadMaster::stopExecution();
+	ThreadMaster::blockUntilFinished();
 
 	return 0;
 }

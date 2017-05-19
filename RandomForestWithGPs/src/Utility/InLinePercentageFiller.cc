@@ -27,7 +27,7 @@ void InLinePercentageFiller::setActValueAndPrintLine(const long iAct){
 	if(iAct <= m_max && iAct >= 0){
 		setActPercentageAndPrintLine((double) iAct / (double) m_max * 100.0, iAct == m_max);
 	}else{
-		printError("Something went wrong: " << iAct);
+//		printError("Something went wrong: " << iAct);
 	}
 }
 
@@ -81,6 +81,6 @@ void InLinePercentageFiller::setActPercentageAndPrintLine(const double dAct, con
 		}
 		ScreenOutput::printInProgressLine(str.str());
 	}else{
-		printError("The value is not in percent: " << dAct);
+//		printError("The value is not in percent: " << dAct);
 	}
 }

@@ -317,7 +317,7 @@ unsigned int GaussianProcessMultiBinary::predict(const DataPoint& point, std::ve
 			return -1; // no result!
 		}
 	}
-	return std::distance(prob.cbegin(), std::max_element(prob.cbegin(), prob.cend()));
+	return argMax(prob.cbegin(), prob.cend());
 }
 
 unsigned int GaussianProcessMultiBinary::predict(const DataPoint& point) const{

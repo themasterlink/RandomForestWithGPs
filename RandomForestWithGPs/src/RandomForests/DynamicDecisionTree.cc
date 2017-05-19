@@ -146,24 +146,23 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){ // checks if node contains data or not
 			continue; // if node is not used, go to next node, if node can be used process it
 		}
-		// calc actual nodes
+		// calc actual nodesararg
 		// calc split value for each node
 		// choose dimension for split
 		int randDim, amountOfUsedData;
 		double minDimValue, maxDimValue;
 		// try different dimension and find one where the points have a difference
+		amountOfUsedData = generator.getRandAmountOfUsedData();
 		for(unsigned int i = 0; i < amountOfTriedDims; ++i){
 			randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
-			amountOfUsedData = generator.getRandAmountOfUsedData();
 			minDimValue = DBL_MAX;
 			maxDimValue = NEG_DBL_MAX;
-			for(std::vector<unsigned int>::const_iterator it = actDataPos.cbegin();
-					it != actDataPos.cend(); ++it){
-				if(m_storage[*it]->coeff(randDim) > maxDimValue){
-					maxDimValue = m_storage[*it]->coeff(randDim);
+			for(auto &&pos : actDataPos){
+				if(m_storage[pos]->coeff(randDim) > maxDimValue){
+					maxDimValue = m_storage[pos]->coeff(randDim);
 				}
-				if(m_storage[*it]->coeff(randDim) < minDimValue){
-					minDimValue = m_storage[*it]->coeff(randDim);
+				if(m_storage[pos]->coeff(randDim) < minDimValue){
+					minDimValue = m_storage[pos]->coeff(randDim);
 				}
 			}
 			if(minDimValue < maxDimValue){ // there is a difference in this dimension
@@ -237,29 +236,21 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			}
 		}
 	}
-	const int leafAmount = pow2(m_maxDepth);
-	const int offset = leafAmount; // pow2(maxDepth - 1)
+	const auto leafAmount = getNrOfLeaves();
+	const auto offset = leafAmount; // pow2(maxDepth - 1)
 	std::vector<unsigned int> histo(m_amountOfClasses, 0u);
-	for(int i = 0; i < leafAmount; ++i){
-		int lastValue = i + offset;
-		int actNode = lastValue / 2;
+	for(unsigned int i = 0; i < leafAmount; ++i){
+		auto lastValue = i + offset;
+		unsigned int actNode = lastValue / 2;
 		while(m_splitDim[actNode] == NodeType::NODE_IS_NOT_USED && actNode > 1){
 			lastValue = actNode; // save correct child
 			actNode /= 2; // if node is not take parent and try again
 		}
 
-		for(std::vector<unsigned int>::const_iterator it = dataPosition[lastValue].cbegin();
-				it != dataPosition[lastValue].cend(); ++it){
-			++histo[m_storage[*it]->getLabel()];
+		for(auto &&pos : dataPosition[lastValue]){
+			++histo[m_storage[pos]->getLabel()];
 		}
-		unsigned int maxEle = 0, labelWithHighestOcc = 0;
-		for(unsigned int k = 0; k < m_amountOfClasses; ++k){
-			if(histo[k] > maxEle){
-				maxEle = histo[k];
-				labelWithHighestOcc = k;
-			}
-		}
-		m_labelsOfWinningClassesInLeaves[i] = labelWithHighestOcc;
+		m_labelsOfWinningClassesInLeaves[i] = argMax(histo.cbegin(), histo.cend());
 		if(i + 1 != leafAmount){
 			std::fill(histo.begin(), histo.end(), 0u);
 		}
@@ -342,15 +333,10 @@ unsigned int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode)
 	iActNode = 1;
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED && m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		while(iActNode <= (int) m_maxInternalNodeNr){
-			if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){
+			if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED || m_splitDim[iActNode] == NodeType::NODE_CAN_BE_USED){
 				// if there is a node which isn't used on the way down to the leave
-				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
-					iActNode *= 2;
-				}
-				break;
-			}else if(m_splitDim[iActNode] == NodeType::NODE_CAN_BE_USED){
-				// if there is a node which isn't used on the way down to the leave
-				while(iActNode <= (int) m_maxInternalNodeNr){ // go down always on the left side (it doesn't really matter)
+				while(iActNode <= (int) m_maxInternalNodeNr){
+					// go down always on the left side (it doesn't really matter)
 					iActNode *= 2;
 				}
 				break;

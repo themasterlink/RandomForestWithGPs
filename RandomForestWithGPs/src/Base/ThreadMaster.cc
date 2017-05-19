@@ -15,9 +15,10 @@ unsigned int ThreadMaster::m_maxCounter = 0;
 double ThreadMaster::m_timeToSleep = 0.1;
 ThreadMaster::PackageList ThreadMaster::m_waitingList;
 ThreadMaster::PackageList ThreadMaster::m_runningList;
-boost::thread* ThreadMaster::m_mainThread = nullptr;
+boost::thread* ThreadMaster::m_mainThread(nullptr);
 boost::mutex ThreadMaster::m_mutex;
-
+std::atomic<bool> ThreadMaster::m_keepRunning(true);
+boost::mutex ThreadMaster::m_isFinished;
 
 ThreadMaster::ThreadMaster() {
 	// TODO Auto-generated constructor stub
@@ -68,7 +69,8 @@ void ThreadMaster::run(){
 	int nrOfInducingPoints;
 	Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 //	const int amountOfPointsNeededForIvms = nrOfInducingPoints * 1.2;
-	while(true){
+	m_isFinished.lock();
+	while(m_keepRunning){
 		m_mutex.lock();
 //		if(m_counter < m_maxCounter){
 		double bestAttractionLevel = 0;
@@ -147,6 +149,7 @@ void ThreadMaster::run(){
 		m_mutex.unlock();
 		usleep(m_timeToSleep * 1e6);
 	}
+	m_isFinished.unlock();
 }
 
 void ThreadMaster::sortWaitingList(const int minAmountOfPoints, const int maxAmountOfPoints){

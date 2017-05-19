@@ -103,6 +103,8 @@ private:
 	std::vector<unsigned int> m_labelsOfWinningClassesInLeaves;
 
 	// is used in the BigDynamicDecisionTree
+	// fill contain the data for each node ->
+	// 	in the end only the last pow2(m_maxDepth) will have values, the rest will be empty
 	std::vector<std::vector<unsigned int> >* m_dataPositions;
 
 	std::vector<unsigned int>* m_useOnlyThisDataPositions;

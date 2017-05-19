@@ -252,7 +252,7 @@ void OnlineRandomForest::train(){
 			int correct = 0;
 			mutexForCounter.lock();
 			for(unsigned int i = 0; i < m_storage.size(); ++i){
-				if(m_storage[i]->getLabel() == std::distance((*counterForClasses)[i].cbegin(), std::max_element((*counterForClasses)[i].cbegin(), (*counterForClasses)[i].cend()))){
+				if(m_storage[i]->getLabel() == argMax((*counterForClasses)[i].cbegin(), (*counterForClasses)[i].cend())){
 					++correct;
 				}
 			}
@@ -384,7 +384,7 @@ void OnlineRandomForest::tryAmountForLayers(RandomNumberGeneratorForDT* generato
 //				for(DecisionTreeConstIterator it = trees.begin(); it != trees.end(); ++it){
 //					++classes[(**it).predict(*m_storage[i])];
 //				}
-//				if(m_storage[i]->getLabel() == std::distance(classes.cbegin(), std::max_element(classes.cbegin(), classes.cend()))){
+//				if(m_storage[i]->getLabel() == argMax(classes.cbegin(), classes.cend()){
 //					++correctAmount;
 //				}
 //			}
@@ -734,7 +734,7 @@ unsigned int OnlineRandomForest::predict(const DataPoint& point) const {
 			++values[value];
 			++k;
 		}
-		return std::distance(values.cbegin(), std::max_element(values.cbegin(), values.cend()));
+		return argMax(values.cbegin(), values.cend());
 	}
 	return UNDEF_CLASS_LABEL;
 }

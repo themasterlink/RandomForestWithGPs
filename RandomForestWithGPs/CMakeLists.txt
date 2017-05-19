@@ -4,7 +4,10 @@ project(RandomForestWithGPs)
 set(CMAKE_CXX_STANDARD 14)
 
 # add this for terminal execution
-add_definitions(-DUSE_SCREEN_OUPUT)
+if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
+    add_definitions(-DUSE_SCREEN_OUPUT)
+endif (CMAKE_BUILD_TYPE EQUAL "RELEASE")
+
 
 # for pthreads
 find_package(Threads REQUIRED)

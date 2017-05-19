@@ -122,11 +122,20 @@ template<>
 constexpr inline double pow2(const double exponent) noexcept = delete;
 
 template<>
-constexpr inline char pow2(const char exponent) noexcept = delete; // prohibits the use with char
+constexpr inline char pow2(const char exponent) noexcept = delete; // prohibits the use with charbegin,
 
 template<>
 constexpr inline bool pow2(const bool exponent) noexcept = delete; // prohibits the use with char
 
+template<class T>
+inline auto argMax(const T& begin, const T& end){
+	return std::distance(begin, std::max_element(begin, end));
+}
+
+template<class T>
+inline auto argMin(const T& begin, const T& end){
+	return std::distance(begin, std::min_element(begin, end));
+}
 
 template<class T>
 void overwriteConst(const T& ref, const T& newValue){

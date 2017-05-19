@@ -13,6 +13,7 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include "../Utility/StopWatch.h"
 #include "InformationPackage.h"
+#include <atomic>
 
 class ThreadMaster {
 	friend ScreenOutput;
@@ -33,6 +34,10 @@ public:
 	static void abortAllThreads();
 
 	static const unsigned int getAmountOfThreads();
+
+	static void stopExecution(){m_keepRunning = false;}
+
+	static void blockUntilFinished(){m_isFinished.lock(); m_isFinished.unlock();};
 
 private:
 	static void run();
@@ -57,6 +62,10 @@ private:
 	static boost::mutex m_mutex;
 
 	static unsigned int m_maxCounter;
+
+	static std::atomic<bool> m_keepRunning;
+
+	static boost::mutex m_isFinished;
 
 };
 

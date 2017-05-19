@@ -98,7 +98,7 @@ unsigned int RandomForest::predict(const DataPoint& point) const{
 		++values[it->predict(point)];
 	}
 	//std::cout << "First: " << values[0] << ", second: " << values[1] << std::endl;
-	return std::distance(values.cbegin(), std::max_element(values.cbegin(), values.cend()));
+	return argMax(values.cbegin(), values.cend());
 }
 
 unsigned int RandomForest::predict(const ClassPoint& point) const{
@@ -107,7 +107,7 @@ unsigned int RandomForest::predict(const ClassPoint& point) const{
 		++values[it->predict(point)];
 	}
 	//std::cout << "First: " << values[0] << ", second: " << values[1] << std::endl;
-	return std::distance(values.cbegin(), std::max_element(values.cbegin(), values.cend()));
+	return argMax(values.cbegin(), values.cend());
 }
 
 void RandomForest::predictData(const Data& points, Labels& labels) const{
