@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 6000,
 		"Trees": {
-			"height": 30
+			"height": 20
 		}
 	},
 	"IVM": {
@@ -54,18 +54,18 @@
 		"stepSizeOverData": 0,
 		"factorAmountOfUsedDims": 1.0,
 		"ownSamplingTime": 0,
-		"maxAmountOfUsedMemory": 16000000000,
+		"maxAmountOfUsedMemory": 7000000000,
 		"useBigDynmaicDecisionTrees": "true",
-		"layerAmountOfBigDDT": 3,
-		"layerFastAmountOfBigDDT": 2,
-		"determineBestLayerAmount": "true",
+		"layerAmountOfBigDDT": 9,
+		"layerFastAmountOfBigDDT": 9,
+		"determineBestLayerAmount": "false",
 		"printErrorForTraining": "false"
 	},
 	"Kernel": {
 		"path": "../realTest/kernelData.kernel"
 	},
 	"ThreadMaster": {
-		"useMultiThread": "true"
+		"useMultiThread": "false"
 	},
 	"RandomForestKernel": {
 		"samplingAmount": 200,

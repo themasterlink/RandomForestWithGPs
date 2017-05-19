@@ -85,6 +85,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 		RandomNumberGeneratorForDT& generator){
 	m_usedMemory = 40 + (m_fastInnerTrees.size() + m_smallInnerTrees.size()) * 8; // 40 fix values, 8 for the first pointer of the layer
 	if(m_fastInnerTrees.size() > 0 && m_fastInnerTrees[0][0] != nullptr){ // in the case of a retraining that all trees are removed
+		printLine();
 		for(FastTreeStructure::iterator it = m_fastInnerTrees.begin(); it != m_fastInnerTrees.end(); ++it){
 			for(FastTreeInnerStructure::iterator itInner = it->begin(); itInner != it->end(); ++itInner){
 				SAVE_DELETE(*itInner); // nullptr can also be deleted
@@ -101,13 +102,15 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 	unsigned int amountOfRootsInTheFatherLayer = 1;
 	unsigned int depthInTheFatherLayer = m_depthPerLayer;
 	for(unsigned int iTreeLayer = 0; iTreeLayer < m_fastInnerTrees.size(); ++iTreeLayer){
-//		printOnScreen("layer: " << iTreeLayer);
 		bool saveDataPositions = true;  // only in the last layer the data positions don't need to be saved
 		unsigned int depthInThisLayer = m_depthPerLayer;
 		if(iTreeLayer + 1 == m_fastInnerTrees.size() && m_smallInnerTrees.size() == 0){ // is the last layer
-//			saveDataPositions = false;
+//			printOnScreen("last layer: " << iTreeLayer);
+			saveDataPositions = false;
 			depthInThisLayer = m_maxDepth - (m_fastInnerTrees.size() - 1) * m_depthPerLayer;
 		}
+
+//		printOnScreen("layer: " << iTreeLayer << ", has depth: " << depthInThisLayer << ", depth in father layer: " << depthInTheFatherLayer);
 		if(depthInThisLayer == 0){
 			printError("This should not happen!");
 		}

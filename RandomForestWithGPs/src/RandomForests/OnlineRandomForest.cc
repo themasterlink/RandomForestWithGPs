@@ -40,7 +40,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	m_minMaxUsedDataFactor[1] = val;
 	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	Settings::getValue("OnlineRandomForest.useBigDynmaicDecisionTrees", m_useBigDynamicDecisionTrees);
-//	setDesiredAmountOfTrees(1000);
+	setDesiredAmountOfTrees(1);
 }
 
 OnlineRandomForest::~OnlineRandomForest(){
@@ -152,7 +152,7 @@ void OnlineRandomForest::train(){
 		Settings::getValue("MinMaxUsedSplits.maxValueFractionDependsOnDataSize", maxVal);
 		minMaxUsedSplits << (int) (minVal * m_storage.size()),  (int) (maxVal * m_storage.size());
 	}
-	const unsigned int amountOfThreads = boost::thread::hardware_concurrency();
+	const unsigned int amountOfThreads = ThreadMaster::getAmountOfThreads();
 	m_generators.resize(amountOfThreads);
 	int stepSizeOverData = 0;
 	Settings::getValue("OnlineRandomForest.stepSizeOverData", stepSizeOverData);
@@ -162,7 +162,7 @@ void OnlineRandomForest::train(){
 		attach(m_generators[i]);
 		m_generators[i]->update(this, OnlineStorage<ClassPoint*>::Event::APPENDBLOCK); // init training with just one element is not useful
 	}
-	const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+	const unsigned int nrOfParallel = ThreadMaster::getAmountOfThreads();
 	const double trainingsTime = m_ownSamplingTime > 0 ? m_ownSamplingTime : CommandSettings::get_samplingAndTraining();
 	const unsigned int usedAmountOfPackages = std::min(nrOfParallel, trainingsTime > 0 ? nrOfParallel : m_desiredAmountOfTrees);
 	std::vector<InformationPackage*> packages(usedAmountOfPackages, nullptr);
@@ -459,7 +459,7 @@ bool OnlineRandomForest::update(){
 
 		boost::thread_group group;
 //		sleep(2);
-		auto nrOfParallel = (const unsigned int) std::min((int) boost::thread::hardware_concurrency(), (int) m_trees.size());
+		auto nrOfParallel = (const unsigned int) std::min((int) ThreadMaster::getAmountOfThreads(), (int) m_trees.size());
 		boost::mutex* mutex = new boost::mutex();
 		if(list->size() != m_trees.size()){
 			printError("The sorting process failed, list size is: " << list->size() << ", should be: " << m_trees.size());
@@ -506,7 +506,7 @@ bool OnlineRandomForest::update(){
 }
 
 void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list){
-	const unsigned int nrOfParallel = std::min(boost::thread::hardware_concurrency(), (unsigned int) m_trees.size());
+	const unsigned int nrOfParallel = std::min(ThreadMaster::getAmountOfThreads(), (unsigned int) m_trees.size());
 	boost::mutex read, append;
 	boost::thread_group group;
 	DecisionTreesContainer copyOfTrees;
@@ -797,7 +797,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 	}else{
 		labels.resize(points.size());
 		boost::thread_group group;
-		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			auto start = (const int) (i / (double) nrOfParallel * points.size());
 			auto end = (const int) ((i + 1) / (double) nrOfParallel * points.size());
@@ -814,7 +814,7 @@ void OnlineRandomForest::predictData(const ClassData& points, Labels& labels) co
 	}else{
 		labels.resize(points.size());
 		boost::thread_group group;
-		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		const unsigned int nrOfParallel = ThreadMaster::getAmountOfThreads();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			auto start = (const int) (i / (double) nrOfParallel * points.size());
 			auto end = (const int) ((i + 1) / (double) nrOfParallel * points.size());
@@ -829,7 +829,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::ve
 	probabilities.resize(points.size());
 	if(m_savedAnyTreesToDisk){
 		boost::thread_group group;
-		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		const unsigned int nrOfParallel = ThreadMaster::getAmountOfThreads();
 		std::vector<std::vector<std::vector<double> > >* probsForThreads = new std::vector<std::vector<std::vector<double> > >(nrOfParallel);
 		unsigned int batchNr = 0;
 		if(m_trees.size() == 0 && m_savedAnyTreesToDisk && batchNr < m_savedToDiskTreesFilePaths.size()){
@@ -868,7 +868,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::ve
 		SAVE_DELETE(probsForThreads);
 	}else{
 		boost::thread_group group;
-		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			const int start = i / (double) nrOfParallel * points.size();
 			const int end = (i + 1) / (double) nrOfParallel * points.size();
@@ -883,15 +883,15 @@ void OnlineRandomForest::predictData(const ClassData& points, Labels& labels, st
 	probabilities.resize(points.size());
 	if(m_savedAnyTreesToDisk){
 		boost::thread_group group;
-		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
-		std::vector<std::vector<std::vector<double> > >* probsForThreads = new std::vector<std::vector<std::vector<double> > >(nrOfParallel);
+		const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
+		auto probsForThreads = new std::vector<std::vector<std::vector<double> > >(nrOfParallel);
 		unsigned int batchNr = 0;
 		if(m_trees.size() == 0 && m_savedAnyTreesToDisk && batchNr < m_savedToDiskTreesFilePaths.size()){
 			loadBatchOfTreesFromDisk(batchNr);
 			++batchNr;
 		} // else means the save mode is not used
 		boost::mutex mutexForTrees;
-		DecisionTreeIterator it = m_trees.begin();
+		auto it = m_trees.begin();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			std::vector<std::vector<double> >* actProb = &((*probsForThreads)[i]);
 			actProb->resize(points.size());
@@ -922,7 +922,7 @@ void OnlineRandomForest::predictData(const ClassData& points, Labels& labels, st
 		SAVE_DELETE(probsForThreads);
 	}else{
 		boost::thread_group group;
-		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			const int start = i / (double) nrOfParallel * points.size();
 			const int end = (i + 1) / (double) nrOfParallel * points.size();

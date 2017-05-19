@@ -27,7 +27,7 @@ public:
 	int currentThreadCount(){ return m_counter; };
 
 private:
-	const int m_maxNr;
+	const unsigned int m_maxNr;
 	int m_counter;
 	boost::mutex m_mutex;
 };

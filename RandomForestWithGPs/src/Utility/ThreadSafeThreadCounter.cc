@@ -6,9 +6,10 @@
  */
 
 #include "ThreadSafeThreadCounter.h"
+#include "../Base/ThreadMaster.h"
 
 ThreadSafeThreadCounter::ThreadSafeThreadCounter():
-	m_maxNr(boost::thread::hardware_concurrency()),
+	m_maxNr(ThreadMaster::getAmountOfThreads()),
 	m_counter(0) {
 }
 

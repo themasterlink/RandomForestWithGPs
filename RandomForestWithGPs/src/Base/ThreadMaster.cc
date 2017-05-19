@@ -11,7 +11,7 @@
 #include "CommandSettings.h"
 
 int ThreadMaster::m_counter = 0;
-int ThreadMaster::m_maxCounter = 0;
+unsigned int ThreadMaster::m_maxCounter = 0;
 double ThreadMaster::m_timeToSleep = 0.1;
 ThreadMaster::PackageList ThreadMaster::m_waitingList;
 ThreadMaster::PackageList ThreadMaster::m_runningList;
@@ -228,4 +228,8 @@ void ThreadMaster::setMaxCounter(){
 	}else{
 		m_maxCounter = 1;
 	}
+}
+
+const unsigned int ThreadMaster::getAmountOfThreads(){
+	return m_maxCounter;
 }

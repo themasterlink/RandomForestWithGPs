@@ -46,17 +46,17 @@ void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
 	}
 
 	StopWatch sw;
-	const int nrOfParallel = boost::thread::hardware_concurrency();
+	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 	boost::thread_group group;
 	TreeCounter counter;
-	m_counterIncreaseValue = std::min(std::max(2, m_amountOfTrees / nrOfParallel / 100), 100);
+	m_counterIncreaseValue = std::min(std::max(2, static_cast<int>(m_amountOfTrees / nrOfParallel / 100)), 100);
 	std::vector<RandomNumberGeneratorForDT*> generators;
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int seed = i;
 		const int useWholeDataSet = 0; // means that the whole set is used
 		generators.push_back(new RandomNumberGeneratorForDT(data[0]->rows(), minMaxUsedData[0], minMaxUsedData[1], data.size(), seed, useWholeDataSet));
-		const int start = (i / (double) nrOfParallel) * m_amountOfTrees;
-		const int end = ((i + 1) / (double) nrOfParallel) * m_amountOfTrees;
+		const int start = static_cast<const int>(i / static_cast<double>(nrOfParallel) * m_amountOfTrees);
+		const int end =   static_cast<const int>((i + 1) / static_cast<double>(nrOfParallel) * m_amountOfTrees);
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::trainInParallel, this, data, amountOfUsedDims, generators[i], start, end, &counter)));
 	}
 	while(counter.getCounter() < m_amountOfTrees){
@@ -112,9 +112,9 @@ unsigned int RandomForest::predict(const ClassPoint& point) const{
 
 void RandomForest::predictData(const Data& points, Labels& labels) const{
 	labels.resize(points.size());
-	const int nrOfParallel = 1; //std::thread::hardware_concurrency();
+	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 	boost::thread_group group;
-	for(int i = 0; i < nrOfParallel; ++i){
+	for(auto i = (decltype(nrOfParallel))(0); i < nrOfParallel; ++i){
 		const int start = (i / (double) nrOfParallel) * points.size();
 		const int end = ((i + 1) / (double) nrOfParallel) * points.size();
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::predictDataInParallel,
@@ -125,9 +125,9 @@ void RandomForest::predictData(const Data& points, Labels& labels) const{
 
 void RandomForest::predictData(const ClassData& points, Labels& labels) const{
 	labels.resize(points.size());
-	const int nrOfParallel = 1; //std::thread::hardware_concurrency();
+	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 	boost::thread_group group;
-	for(int i = 0; i < nrOfParallel; ++i){
+	for(auto i = (decltype(nrOfParallel))(0); i < nrOfParallel; ++i){
 		const int start = (i / (double) nrOfParallel) * points.size();
 		const int end = ((i + 1) / (double) nrOfParallel) * points.size();
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::predictDataInParallelClass,

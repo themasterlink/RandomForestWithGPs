@@ -436,7 +436,7 @@ void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& trai
 	if(m_mode == Mode::WHOLE){
 		int minValue = amountOfPointsForTraining / getAmountOfClass();
 		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-			minValue = std::min((int)it->second.size(), minValue);
+			minValue = std::min(static_cast<int>(it->second.size()), minValue);
 		}
 		std::vector<ClassPoint*> forTraining;
 		std::vector<ClassPoint*> forTesting;
@@ -476,7 +476,7 @@ void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*
 void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<ClassPoint*> >& trains, OnlineStorage<ClassPoint*>& test){
 	if(m_mode != Mode::WHOLE){
 		if(trains.size() != 0){
-			const unsigned int amountOfSplits = trains.size();
+			auto amountOfSplits = static_cast<const unsigned int>(trains.size());
 			std::vector<ClassData> forTrainings(amountOfSplits);
 			for(unsigned int i = 0; i < m_trainSet.size(); ++i){
 				forTrainings[i % amountOfSplits].push_back(m_trainSet[i]);
@@ -500,7 +500,7 @@ unsigned int TotalStorage::getSize(unsigned int classNr){
 	if(m_mode == Mode::WHOLE){
 		Iterator it = m_storage.find(ClassKnowledge::getNameFor(classNr));
 		if(it != m_storage.end()){
-			return it->second.size();
+			return (unsigned int) it->second.size();
 		}
 	}else{
 		printError("Not implemented for this mode");
@@ -516,7 +516,7 @@ unsigned int TotalStorage::getSmallestClassSize(){
 		}
 		return m_storage.size() != 0 ? min : 0;
 	}else{
-		return m_trainSet.size() / getAmountOfClass();
+		return (unsigned int) (m_trainSet.size() / getAmountOfClass());
 	}
 	return 0;
 }

@@ -119,7 +119,7 @@ GaussianKernelParams sampleParams(OnlineStorage<ClassPoint*>& storage, int numbe
 		const std::vector<double>& means, const std::vector<double>& sds){
 	boost::thread_group group;
 	boost::mutex mutex;
-	const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 	double bestLogZ = NEG_DBL_MAX;
 	const double durationOfTraining = CommandSettings::get_samplingAndTraining();
 	std::vector<IVM*> ivms(nrOfParallel);

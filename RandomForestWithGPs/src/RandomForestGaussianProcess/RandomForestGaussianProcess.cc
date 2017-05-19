@@ -191,7 +191,7 @@ void RandomForestGaussianProcess::train(){
 				m_output.printSwitchingColor("In Class: " + m_classNames[iActRfRes] + ", has act class: " + m_classNames[iActClass] + " so many points: " + number2String(classCounts[iActClass]));
 				//m_isGpInUse[iActRfRes][iActClass] = true; // there is actually a gp for this config
 				m_gps[iActRfRes][iActClass] = new GaussianProcess();
-				const int nrOfParallel = boost::thread::hardware_concurrency();
+				const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 				while(m_nrOfRunningThreads >= nrOfParallel){
 					usleep(0.35 * 1e6);
 				}

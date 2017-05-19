@@ -94,7 +94,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 									m_doEpUpdate, calcDifferenceMatrixAlone);
 						}
 					}
-					const unsigned int nrOfParallel = (unsigned int) boost::thread::hardware_concurrency();
+					const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 					const unsigned int size = (m_storage.size() * m_storage.size() + m_storage.size()) / 2;
 					const unsigned int sizeOfPart =  size / nrOfParallel;
 					if(kernelType == 0 && amountOfUsedClasses > 0 && m_storage.size() <= 10000){ // GAUSS, calc the kernel matrix
@@ -192,7 +192,7 @@ void IVMMultiBinary::train(){
 		double durationOfTraining = CommandSettings::get_samplingAndTraining();
 		boost::thread_group group;
 		boost::thread_group groupForRetraining;
-		const unsigned int nrOfParallel = boost::thread::hardware_concurrency();
+		const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 		StopWatch sw;
 		std::vector<int> counterRes(amountOfClasses(), 0);
 		std::vector<bool> stillWorking(amountOfClasses(), true);

@@ -32,6 +32,8 @@ public:
 
 	static void abortAllThreads();
 
+	static const unsigned int getAmountOfThreads();
+
 private:
 	static void run();
 
@@ -54,7 +56,7 @@ private:
 
 	static boost::mutex m_mutex;
 
-	static int m_maxCounter;
+	static unsigned int m_maxCounter;
 
 };
 
