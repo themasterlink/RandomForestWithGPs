@@ -111,6 +111,7 @@ private:
 	std::vector<std::vector<unsigned int> >* m_dataPositions;
 
 	std::vector<unsigned int>* m_useOnlyThisDataPositions;
+
 };
 
 #endif /* RANDOMFORESTS_DYNAMICDECISIONTREE_H_ */

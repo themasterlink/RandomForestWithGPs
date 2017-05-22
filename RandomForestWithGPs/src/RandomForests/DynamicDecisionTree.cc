@@ -203,18 +203,16 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		m_splitValues[iActNode] = maxScoreElementValue;//(double) (*m_storage[maxScoreElement])[randDim];
 		m_splitDim[iActNode] = randDim;
 		// apply split to data
-		int foundDataLeft = 0, foundDataRight = 0;
 		const int leftPos = iActNode * 2, rightPos = iActNode * 2 + 1;
-		dataPosition[leftPos].reserve(actDataPos.size());
-		dataPosition[rightPos].reserve(actDataPos.size());
-		for(std::vector<unsigned int>::const_iterator it = actDataPos.cbegin();
-				it != actDataPos.cend(); ++it){
+		auto& leftDataPos = dataPosition[leftPos];
+		leftDataPos.reserve(actDataPos.size());
+		auto& rightDataPos = dataPosition[rightPos];
+		rightDataPos.reserve(actDataPos.size());
+		for(auto it = actDataPos.cbegin(); it != actDataPos.cend(); ++it){
 			if(m_storage[*it]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
-				dataPosition[rightPos].push_back(*it);
-				++foundDataRight;
+				rightDataPos.push_back(*it);
 			}else{
-				dataPosition[leftPos].push_back(*it);
-				++foundDataLeft;
+				leftDataPos.push_back(*it);
 			}
 		}
 
@@ -222,7 +220,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			 std::cout << "length: " << actDataPos.size() << std::endl;
 			 std::cout << "Found data left  " << foundDataLeft << std::endl;
 			 std::cout << "Found data right " << foundDataRight << std::endl;*/
-		if(foundDataLeft == 0 || foundDataRight == 0){
+		if(rightDataPos.empty() || leftDataPos.empty()){
 			// split is not needed
 			dataPosition[leftPos].clear();
 			dataPosition[rightPos].clear();
@@ -235,8 +233,8 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			actDataPos.clear();
 			// set the use flag for children:
 			if(rightPos < (int) m_maxInternalNodeNr + 1){ // if right is not a leave, than left is too -> just control one
-				m_splitDim[leftPos] = foundDataLeft > 0 ? NodeType::NODE_CAN_BE_USED : NodeType::NODE_IS_NOT_USED;
-				m_splitDim[rightPos] = foundDataRight > 0 ? NodeType::NODE_CAN_BE_USED : NodeType::NODE_IS_NOT_USED;
+				m_splitDim[leftPos] = leftDataPos.empty()   ? NodeType::NODE_IS_NOT_USED : NodeType::NODE_CAN_BE_USED;
+				m_splitDim[rightPos] = rightDataPos.empty() ? NodeType::NODE_IS_NOT_USED : NodeType::NODE_CAN_BE_USED;
 			}
 		}
 	}
@@ -353,7 +351,8 @@ unsigned int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode)
 				++iActNode; // go to right node
 			}
 		}
-		return m_labelsOfWinningClassesInLeaves[iActNode - pow2(m_maxDepth)];
+		iActNode -= pow2(m_maxDepth);
+		return m_labelsOfWinningClassesInLeaves[iActNode];
 	}else{
 		printError("A tree must be trained before it can predict anything!");
 		return UNDEF_CLASS_LABEL;

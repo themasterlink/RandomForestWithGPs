@@ -722,12 +722,9 @@ unsigned int OnlineRandomForest::predict(const DataPoint& point) const {
 		return 0;
 	}
 	if(m_firstTrainingDone){
-		std::vector<int> values(m_amountOfClasses, 0);
-		int k = 0;
-		for(DecisionTreeConstIterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
-			const unsigned int value = (*it)->predict(point);
-			++values[value];
-			++k;
+		std::vector<unsigned int> values(m_amountOfClasses, 0u);
+		for(auto &&tree : m_trees){
+			++values[tree->predict(point)];
 		}
 		return argMax(values.cbegin(), values.cend());
 	}
