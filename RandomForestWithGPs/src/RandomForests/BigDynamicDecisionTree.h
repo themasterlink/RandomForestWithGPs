@@ -17,11 +17,15 @@ class BigDynamicDecisionTree : public DynamicDecisionTreeInterface {
 friend ReadWriterHelper;
 
 public:
-	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth, const unsigned int amountOfClasses, const int layerAmount = -1, const int layerAmountForFast = -1);
+	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth,
+						   const unsigned int amountOfClasses, const int layerAmount = -1,
+						   const int layerAmountForFast = -1);
 
 	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage);
 
-	void prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses, const unsigned int amountOfLayers, const unsigned int amountForFast, const unsigned int amountForSmall);
+	void prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses,
+						   const unsigned int amountOfLayers, const unsigned int amountForFast,
+						   const unsigned int amountForSmall);
 
 	virtual ~BigDynamicDecisionTree();
 
@@ -29,7 +33,8 @@ public:
 
 	unsigned int predict(const DataPoint& point) const;
 
-	bool predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const{
+	bool predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2,
+												 const int usedHeight) const{
 		UNUSED(point1); UNUSED(point2); UNUSED(usedHeight);
 		printError("This function is not implemented!");
 		return false;
@@ -60,7 +65,8 @@ private:
 
 	bool shouldNewTreeBeCalculatedFor(std::vector<unsigned int>& dataPositions);
 
-	void trainChildrenForRoot(PtrDynamicDecisionTree root, SmallTreeInnerStructure::iterator& it, SmallTreeInnerStructure& actSmallInnerTreeStructure,
+	void trainChildrenForRoot(PtrDynamicDecisionTree root, SmallTreeInnerStructure::iterator& it,
+							  SmallTreeInnerStructure& actSmallInnerTreeStructure,
 			const unsigned int depthInThisLayer, const unsigned int iRootId,
 			const unsigned int leavesForTreesInTheFatherLayer, const int amountOfUsedDims,
 			RandomNumberGeneratorForDT& generator, const bool saveDataPositions, bool& foundAtLeastOneChild);

@@ -10,7 +10,8 @@
 #include "../Data/ClassKnowledge.h"
 #include <algorithm>
 
-DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth, const unsigned int amountOfClasses):
+DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage,
+										 const unsigned int maxDepth, const unsigned int amountOfClasses):
 		m_storage(storage),
 		m_maxDepth(maxDepth),
 		m_maxNodeNr(pow2(maxDepth + 1) - 1),
@@ -29,7 +30,8 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, co
 
 
 // construct empty tree
-DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage): DynamicDecisionTree(storage, 1, ClassKnowledge::amountOfClasses()){
+DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage):
+		DynamicDecisionTree(storage, 1, ClassKnowledge::amountOfClasses()){
 }
 
 // fill empty tree
@@ -64,7 +66,8 @@ DynamicDecisionTree::~DynamicDecisionTree(){
 	deleteDataPositions();
 }
 
-bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const unsigned int tryCounter, const bool saveDataPosition){
+bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator,
+								const unsigned int tryCounter, const bool saveDataPosition){
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED || m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		// reset training
 		std::fill(m_splitDim.begin(), m_splitDim.end(), NodeType::NODE_IS_NOT_USED);
@@ -120,10 +123,11 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			dataPosition[1].resize(m_storage.size());
 			std::iota(dataPosition[1].begin(), dataPosition[1].end(), 0);
 		}else{
-			const unsigned int amountOfPoints = m_storage.size() / (generator.getStepSize() * 0.375);
+			const auto amountOfPoints = (unsigned int) (m_storage.size() / (generator.getStepSize() * 0.375));
 			dataPosition[1].reserve(amountOfPoints);
 			// -1 that the first value in the storage is used too
-			for(unsigned int i = generator.getRandStepOverStorage() - 1; i < m_storage.size(); i += generator.getRandStepOverStorage()){
+			for(unsigned int i = generator.getRandStepOverStorage() - 1;
+				i < m_storage.size(); i += generator.getRandStepOverStorage()){
 				dataPosition[1].push_back(i);
 			}
 		}
@@ -131,7 +135,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 //	else{ // no need take ref to
 //		dataPosition[1].insert(dataPosition[1].end(), m_useOnlyThisDataPositions->begin(), m_useOnlyThisDataPositions->end());
 //	}
-	const unsigned int amountOfTriedDims = std::min(100, std::max((int) (usedDims.size() * 0.1), 2));
+	const auto amountOfTriedDims = (unsigned int) std::min(100, std::max((int) (usedDims.size() * 0.1), 2));
 	for(int iActNode = 1; iActNode < (int) m_maxInternalNodeNr + 1; ++iActNode){ // first element is not used!
 		std::vector<unsigned int>& actDataPos = m_useOnlyThisDataPositions != nullptr && iActNode == 1
 				? *m_useOnlyThisDataPositions : dataPosition[iActNode];
@@ -330,7 +334,8 @@ unsigned int DynamicDecisionTree::predict(const DataPoint& point) const{
 	return predict(point, iActNode);
 }
 
-unsigned int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode) const { // is named iActNode here, is easier, but represents in the end the winningLeafNode
+// is named iActNode here, is easier, but represents in the end the winningLeafNode
+unsigned int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode) const {
 	iActNode = 1;
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED && m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		while(iActNode <= (int) m_maxInternalNodeNr){
@@ -355,7 +360,9 @@ unsigned int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode)
 	}
 }
 
-bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const {
+bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1,
+																  const DataPoint& point2,
+																  const int usedHeight) const {
 	int iActNode = 1; // start in root
 	int actLevel = 1;
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED && m_splitDim[1] != NodeType::NODE_CAN_BE_USED){

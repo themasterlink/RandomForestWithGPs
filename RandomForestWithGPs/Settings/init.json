@@ -53,7 +53,7 @@
 		"factorAmountOfUsedDims": 1.0,
 		"ownSamplingTime": 0,
 		"maxAmountOfUsedMemory": 7000000000,
-		"useBigDynmaicDecisionTrees": "false",
+		"useBigDynmaicDecisionTrees": "true",
 		"layerAmountOfBigDDT": 6,
 		"layerFastAmountOfBigDDT": 6,
 		"determineBestLayerAmount": "false",
