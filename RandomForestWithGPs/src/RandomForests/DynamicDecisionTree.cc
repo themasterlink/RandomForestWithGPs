@@ -10,6 +10,8 @@
 #include "../Data/ClassKnowledge.h"
 #include <algorithm>
 
+bool DynamicDecisionTree::changeMe(false);
+
 DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage,
 										 const unsigned int maxDepth, const unsigned int amountOfClasses):
 		m_storage(storage),
@@ -241,6 +243,16 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 	const auto leafAmount = getNrOfLeaves();
 	const auto offset = leafAmount; // pow2(maxDepth - 1)
 	std::vector<unsigned int> histo(m_amountOfClasses, 0u);
+	if(DynamicDecisionTree::changeMe){
+		for(auto pos : dataPosition){
+			std::stringstream ss; ss << "l: ";
+			for(auto pose : pos){
+				ss << m_storage[pose]->transpose() << ", ";
+			}
+			printOnScreen(ss.str());
+		}
+		printOnScreen("size: " << dataPosition.size());
+	}
 	for(unsigned int i = 0; i < leafAmount; ++i){
 		auto lastValue = i + offset;
 		unsigned int actNode = lastValue / 2;

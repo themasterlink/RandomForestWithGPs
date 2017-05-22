@@ -112,6 +112,8 @@ private:
 
 	std::vector<unsigned int>* m_useOnlyThisDataPositions;
 
+public:
+	static bool changeMe;
 };
 
 #endif /* RANDOMFORESTS_DYNAMICDECISIONTREE_H_ */

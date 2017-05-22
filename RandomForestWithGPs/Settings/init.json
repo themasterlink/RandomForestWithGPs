@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 6000,
 		"Trees": {
-			"height": 20
+			"height": 40
 		}
 	},
 	"IVM": {
@@ -54,8 +54,8 @@
 		"ownSamplingTime": 0,
 		"maxAmountOfUsedMemory": 7000000000,
 		"useBigDynmaicDecisionTrees": "true",
-		"layerAmountOfBigDDT": 5,
-		"layerFastAmountOfBigDDT": 5,
+		"layerAmountOfBigDDT": 10,
+		"layerFastAmountOfBigDDT": 2,
 		"determineBestLayerAmount": "false",
 		"printErrorForTraining": "false"
 	},

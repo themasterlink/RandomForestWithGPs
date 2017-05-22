@@ -142,9 +142,13 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 							foundAtLeastOneChild = true;
 							const auto iChildIdInLayer = iChildId + leavesForTreesInTheFatherLayer * iRootOfFatherLayerId;
 							auto& currentTree = m_fastInnerTrees[iTreeLayer][iChildIdInLayer];
+							if(iTreeLayer == 2 && iChildIdInLayer == 65){
+								DynamicDecisionTree::changeMe = true;
+							}
 							currentTree = new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses);
 							currentTree->setUsedDataPositions(&dataForThisChild); // set the values of the storage which should be used in this tree
 							const bool trained = currentTree->train(amountOfUsedDims, generator, 0, saveDataPositions);
+							DynamicDecisionTree::changeMe = false;
 							currentTree->setUsedDataPositions(nullptr); // erase pointer to used dataPositions
 							if(!trained){
 								currentTree = nullptr;
@@ -209,22 +213,6 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 		amountOfRootsInTheFatherLayer = amountOfRootsInThisLayer; // amount of children nodes in this level
 		depthInTheFatherLayer = depthInThisLayer;
 	}
-//	int amountOfUsedTrees = 0;
-//	for(unsigned int iTreeLayer = 0; iTreeLayer < m_fastInnerTrees.size(); ++iTreeLayer){
-//		for(unsigned int iChild = 0; iChild < m_fastInnerTrees[iTreeLayer].size(); ++iChild){
-//			if(m_fastInnerTrees[iTreeLayer][iChild] != nullptr){
-//				++amountOfUsedTrees;
-//			}
-//		}
-//	}
-//	for(SmallTreeStructure::iterator it = m_smallInnerTrees.begin(); it != m_smallInnerTrees.end(); ++it){
-//		for(SmallTreeInnerStructure::iterator itInner = it->begin(); itInner != it->end(); ++itInner){
-//			if(itInner->second != nullptr){
-//				++amountOfUsedTrees;
-//			}
-//		}
-//	}
-//	printOnScreen(amountOfUsedTrees);
 	for(unsigned int iTreeLayer = 0; iTreeLayer < m_fastInnerTrees.size(); ++iTreeLayer){
 		for(unsigned int iChild = 0; iChild < m_fastInnerTrees[iTreeLayer].size(); ++iChild){
 			if(m_fastInnerTrees[iTreeLayer][iChild] != nullptr){
@@ -298,8 +286,10 @@ unsigned int BigDynamicDecisionTree::predict(const DataPoint& point) const{
 		unsigned int iChildInLayer(0);
 		auto result = m_fastInnerTrees[0][iChildInLayer]->predict(point, winningNode);
 		// convert tree node id into leave id
+		auto offsetForChildren = 0;
 		for(unsigned int iTreeLayer = 1; iTreeLayer < m_fastInnerTrees.size(); ++iTreeLayer){
-			iChildInLayer = winningNode + depthForFatherLayer * iChildInLayer;
+			iChildInLayer = winningNode + offsetForChildren;
+			offsetForChildren = iChildInLayer * pow2(depthForFatherLayer);
 			if(iChildInLayer < m_fastInnerTrees[iTreeLayer].size()){
 				if(m_fastInnerTrees[iTreeLayer][iChildInLayer] != nullptr){
 					result = m_fastInnerTrees[iTreeLayer][iChildInLayer]->predict(point, winningNode);
@@ -312,7 +302,8 @@ unsigned int BigDynamicDecisionTree::predict(const DataPoint& point) const{
 			}
 		}
 		for(unsigned int iTreeSmallLayer = 0; iTreeSmallLayer < m_smallInnerTrees.size(); ++iTreeSmallLayer){
-			iChildInLayer = winningNode + depthForFatherLayer * iChildInLayer;
+			iChildInLayer = winningNode + offsetForChildren;
+			offsetForChildren = iChildInLayer * pow2(depthForFatherLayer);
 			auto itChild = m_smallInnerTrees[iTreeSmallLayer].find(iChildInLayer);
 			if(itChild != m_smallInnerTrees[iTreeSmallLayer].end()){
 				result = itChild->second->predict(point, winningNode);

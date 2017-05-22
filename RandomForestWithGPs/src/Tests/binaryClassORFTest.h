@@ -210,6 +210,11 @@ void executeForBinaryClassORF(){
 //		performTest(orf, test);
 		printOnScreen("Third test after orf.update() finished");
 		printOnScreen("Amount of Classes: " << TotalStorage::getAmountOfClass());
+		DataPoint p;
+		p.resize(2);
+		p[0] = 3.0;
+		p[1] = 0.2;
+		const auto i = orf.predict(p);
 
 		if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 			StopWatch sw;
