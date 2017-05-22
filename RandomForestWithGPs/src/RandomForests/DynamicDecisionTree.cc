@@ -250,7 +250,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		for(auto &&pos : dataPosition[lastValue]){
 			++histo[m_storage[pos]->getLabel()];
 		}
-		m_labelsOfWinningClassesInLeaves[i] = argMax(histo.cbegin(), histo.cend());
+		m_labelsOfWinningClassesInLeaves[i] = (unsigned int) argMax(histo.cbegin(), histo.cend());
 		if(i + 1 != leafAmount){
 			std::fill(histo.begin(), histo.end(), 0u);
 		}
@@ -264,6 +264,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 	if(!saveDataPosition){ // if it is not saved this pointer is deleted
 		deleteDataPositions();
 	}
+//	printStream(std::cout);
 	return true;
 }
 
@@ -450,3 +451,33 @@ void DynamicDecisionTree::deleteDataPositions(){
 MemoryType DynamicDecisionTree::getMemSize() const{
 	return ((MemoryType) m_maxInternalNodeNr + 1) * 16 + 40; // 16 + 24 = 40, 16 general info, 40 pointers and ref
 }
+
+//void DynamicDecisionTree::printStream(std::ostream &output, const double precision){
+//	if(&output == &std::cout){
+//#ifdef USE_SCREEN_OUPUT
+//		printError("This print message is not supported if output is std::cout and the panels are used!");
+//		return;
+//#endif
+//		output << "---------------DynamicDecisonTree---------------" << "\n";
+//		const bool isEven = m_maxDepth % 2 == 0;
+//		for(unsigned int i = 0; i < m_maxDepth; ++i){
+//			const auto firstElementInLayer = (i > 0 ? pow2(i) : 1);
+//			const auto maxNumberInLayer = pow2(i+1);
+//			const auto forStart = m_maxDepth - i;
+//			for(unsigned int k = 0; k < forStart * 2; ++k){
+//				output << "\t\t";
+//			}
+////			output << firstElementInLayer << "; " << maxNumberInLayer << std::endl;
+//			auto tabs = std::string("\t");
+//			for(unsigned int k = 0; k < forStart; ++k){
+//				tabs += "\t";
+//			}
+//			for(auto iActNode = firstElementInLayer; iActNode < maxNumberInLayer; ++iActNode){
+//				output << "(" << m_splitDim[iActNode] << ", " << number2String(m_splitValues[iActNode], precision) << ")" << tabs;
+//			}
+//			output << "\n";
+//		}
+//		output << "------------------------------------------------" << std::endl;
+//	}
+//
+//}

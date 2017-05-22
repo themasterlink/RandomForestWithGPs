@@ -131,8 +131,6 @@ private:
 
 	DecisionTreeIterator findWorstPerformingTree(double& correctAmount);
 
-	Eigen::Vector2i getMinMaxData();
-
 	std::vector<RandomNumberGeneratorForDT*> m_generators;
 
 	mutable boost::mutex m_treesMutex;

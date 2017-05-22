@@ -76,6 +76,9 @@ public:
 	void setUsedDataPositions(std::vector<unsigned int>* usedDataPositions){ m_useOnlyThisDataPositions = usedDataPositions; };
 
 	MemoryType getMemSize() const;
+
+//	void printStream(std::ostream &output, const double precision = 3);
+
 private:
 	// this function is only called if the empty tree constructor was used!
 	void prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses);

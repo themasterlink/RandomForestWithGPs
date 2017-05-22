@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 6000,
 		"Trees": {
-			"height": 11
+			"height": 25
 		}
 	},
 	"IVM": {
@@ -49,15 +49,13 @@
 	},
 	"OnlineRandomForest": {
 		"amountOfPointsUntilRetrain": 200,
-		"minUsedDataFactor": 0.3,
-		"maxUsedDataFactor": 0.6,
 		"stepSizeOverData": 0,
 		"factorAmountOfUsedDims": 1.0,
 		"ownSamplingTime": 0,
 		"maxAmountOfUsedMemory": 7000000000,
-		"useBigDynmaicDecisionTrees": "true",
-		"layerAmountOfBigDDT": 2,
-		"layerFastAmountOfBigDDT": 2,
+		"useBigDynmaicDecisionTrees": "false",
+		"layerAmountOfBigDDT": 6,
+		"layerFastAmountOfBigDDT": 6,
 		"determineBestLayerAmount": "false",
 		"printErrorForTraining": "false"
 	},
@@ -123,8 +121,8 @@
 		"useFixedValuesForMinMaxUsedSplits": "true",
 		"minValue": 200,
 		"maxValue": 600,
-		"minValueFractionDependsOnDataSize": 0.2,
-		"maxValueFractionDependsOnDataSize": 0.6
+		"minValueFractionDependsOnDataSize": 0.7,
+		"maxValueFractionDependsOnDataSize": 0.9
 	},
 	"VisuParams": {
 		"visuHyperParamSampling2D": "false",

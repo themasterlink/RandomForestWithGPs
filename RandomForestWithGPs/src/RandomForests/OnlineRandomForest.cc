@@ -33,11 +33,6 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	storage.attach(this);
 	Settings::getValue("OnlineRandomForest.factorAmountOfUsedDims", m_factorForUsedDims);
 	Settings::getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
-	double val;
-	Settings::getValue("OnlineRandomForest.minUsedDataFactor", val);
-	m_minMaxUsedDataFactor[0] = val;
-	Settings::getValue("OnlineRandomForest.maxUsedDataFactor", val);
-	m_minMaxUsedDataFactor[1] = val;
 	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	Settings::getValue("OnlineRandomForest.useBigDynmaicDecisionTrees", m_useBigDynamicDecisionTrees);
 	setDesiredAmountOfTrees(1);
@@ -1083,13 +1078,6 @@ void OnlineRandomForest::getLeafNrFor(std::vector<int>& leafNrs){
 	for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 		leafNrs[predict(**it)] += 1;
 	}
-}
-
-Eigen::Vector2i OnlineRandomForest::getMinMaxData(){
-	Eigen::Vector2i minMax;
-	minMax[0] = (int) (m_minMaxUsedDataFactor[0] * m_storage.size());
-	minMax[1] = (int) (m_minMaxUsedDataFactor[1] * m_storage.size());
-	return minMax;
 }
 
 OnlineStorage<ClassPoint*>& OnlineRandomForest::getStorageRef(){
