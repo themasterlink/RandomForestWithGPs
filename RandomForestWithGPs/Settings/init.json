@@ -17,7 +17,7 @@
 	"Forest": {
 		"amountOfTrees": 6000,
 		"Trees": {
-			"height": 48
+			"height": 45
 		}
 	},
 	"IVM": {
@@ -56,14 +56,14 @@
 		"useBigDynmaicDecisionTrees": "true",
 		"layerAmountOfBigDDT": 14,
 		"layerFastAmountOfBigDDT": 2,
-		"determineBestLayerAmount": "false",
+		"determineBestLayerAmount": "true",
 		"printErrorForTraining": "false"
 	},
 	"Kernel": {
 		"path": "../realTest/kernelData.kernel"
 	},
 	"ThreadMaster": {
-		"useMultiThread": "false"
+		"useMultiThread": "true"
 	},
 	"RandomForestKernel": {
 		"samplingAmount": 200,

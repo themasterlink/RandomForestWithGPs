@@ -35,7 +35,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	Settings::getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
 	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	Settings::getValue("OnlineRandomForest.useBigDynmaicDecisionTrees", m_useBigDynamicDecisionTrees);
-	setDesiredAmountOfTrees(1);
+//	setDesiredAmountOfTrees(1);
 }
 
 OnlineRandomForest::~OnlineRandomForest(){

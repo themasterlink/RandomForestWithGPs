@@ -23,14 +23,14 @@ def doRFGP(data, time):
         json.dump(data, outfile)
     subprocess.check_call("./RandomForestWithGPs --settingsFile " + file + " --samplingAndTraining " + str(time), shell=True)
 
-os.chdir("../Release/")
-data["TotalStorage"]["folderLocReal"] = "../mnistOrg/"
+os.chdir("../cmake-build-release/")
+#data["TotalStorage"]["folderLocReal"] = "../mnistOrg/"
 
-for t in range(0,10):
+for t in [0, 5, 10]:
     #data["Forest"]["Trees"]["height"] = t
     #data["TotalStorage"]["folderTestNr"] = t
     data["TotalStorage"]["stepOverTrainingData"] = t
-    time = 1000
+    time = 60 * 60 * 14
     doRFGP(data, time)
     #for i in range(0,10):
     

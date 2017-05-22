@@ -96,29 +96,20 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 		bool saveDataPositions = true;  // only in the last layer the data positions don't need to be saved
 		unsigned int depthInThisLayer = m_depthPerLayer;
 		if(iTreeLayer + 1 == m_fastInnerTrees.size() && m_smallInnerTrees.size() == 0){ // is the last layer
-			printOnScreen("last layer: " << iTreeLayer);
 			saveDataPositions = false;
 			depthInThisLayer = m_maxDepth - ((unsigned int) m_fastInnerTrees.size() - 1) * m_depthPerLayer;
 		}
-		printOnScreen("layer: " << iTreeLayer << ", has depth: " << depthInThisLayer << ", depth in father layer: " << depthInTheFatherLayer);
 		if(depthInThisLayer == 0){
 			printError("This should not happen!");
 		}
 		if(iTreeLayer == 0){
 			// first tree
-//			printOnScreen("iTreeLayer: " << iTreeLayer << ", depthInThisLayer: " << depthInThisLayer);
 			m_fastInnerTrees[0][0] = new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses);
 			const bool ret = m_fastInnerTrees[0][0]->train(amountOfUsedDims, generator, 0, saveDataPositions);
 			if(!ret){
 				printError("The first split could not be performed!");
 				return;
 			}
-//			auto firstTree = m_fastInnerTrees[0][0];
-//			printOnScreen("Amount of leaves: " << firstTree->getNrOfLeaves() << ", height: " << depthInThisLayer);
-//			auto& leaveData = *firstTree->getDataPositions();
-//			for(unsigned int iVal = firstTree->getNrOfLeaves(); iVal < leaveData.size(); ++iVal){
-//				printOnScreen("Amount of data: " << leaveData[iVal].size() << ", in: " << iVal);
-//			}
 		}else{
 			bool foundAtLeastOneChild = false;
 			const unsigned int leavesForTreesInTheFatherLayer = pow2(depthInTheFatherLayer); // amount of leaves of one of the layer trees
@@ -128,8 +119,6 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 			std::fill(m_fastInnerTrees[iTreeLayer].begin(), m_fastInnerTrees[iTreeLayer].end(), nullptr); // set all values to null
 			unsigned int counter = 0;
 			// walk over all roots in the father layer (in the second there is just one)
-			printOnScreen("iTreeLayer: " << iTreeLayer);
-			printOnScreen("amountOfRootsInTheFatherLayer: " << amountOfRootsInTheFatherLayer);
 			for(unsigned int iRootOfFatherLayerId = 0; iRootOfFatherLayerId < amountOfRootsInTheFatherLayer; ++iRootOfFatherLayerId){
 				auto& currentFather = m_fastInnerTrees[iTreeLayer - 1][iRootOfFatherLayerId];
 				if(currentFather != nullptr){ // if the father is not a nullpointer
@@ -138,17 +127,12 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 					for(unsigned int iChildId = 0; iChildId < leavesForTreesInTheFatherLayer; ++iChildId){
 						auto& dataForThisChild = dataPositions[leavesForTreesInTheFatherLayer + iChildId];
 						if(shouldNewTreeBeCalculatedFor(dataForThisChild)){ // min amount is that half of the leaves are filled which at least one point!
-							printOnScreen("iChildId: " << iChildId << ", dataForThisChild: " << dataForThisChild.size());
 							foundAtLeastOneChild = true;
 							const auto iChildIdInLayer = iChildId + leavesForTreesInTheFatherLayer * iRootOfFatherLayerId;
 							auto& currentTree = m_fastInnerTrees[iTreeLayer][iChildIdInLayer];
-							if(iTreeLayer == 2 && iChildIdInLayer == 65){
-								DynamicDecisionTree::changeMe = true;
-							}
 							currentTree = new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses);
 							currentTree->setUsedDataPositions(&dataForThisChild); // set the values of the storage which should be used in this tree
 							const bool trained = currentTree->train(amountOfUsedDims, generator, 0, saveDataPositions);
-							DynamicDecisionTree::changeMe = false;
 							currentTree->setUsedDataPositions(nullptr); // erase pointer to used dataPositions
 							if(!trained){
 								currentTree = nullptr;
@@ -159,7 +143,6 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 					}
 				}
 			}
-//			printOnScreen("iTreeLayer: " << iTreeLayer << ", depthInThisLayer: " << depthInThisLayer << ", amountOfRootsInThisLayer: " << amountOfRootsInThisLayer << ", leavesForTreesInTheFatherLayer: " << leavesForTreesInTheFatherLayer << ", correct: " << counter / (double) amountOfRootsInTheFatherLayer);
 			if(!foundAtLeastOneChild){
 				break; // no need for inserting anything in the m_smallerInnerTrees
 			}
@@ -167,7 +150,6 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 			depthInTheFatherLayer = depthInThisLayer;
 		}
 	}
-	printOnScreen("amountOfRootsInTheFatherLayer: " << amountOfRootsInTheFatherLayer);
 	for(unsigned int iTreeSmallLayer = 0; iTreeSmallLayer < m_smallInnerTrees.size(); ++iTreeSmallLayer){
 		bool saveDataPositions = true;  // only in the last layer the data positions don't need to be saved
 		unsigned int depthInThisLayer = m_depthPerLayer;
@@ -184,9 +166,6 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 		const auto amountOfRootsInThisLayer = amountOfRootsInTheFatherLayer * leavesForTreesInTheFatherLayer;
 		auto& actSmallInnerTreeStructure = m_smallInnerTrees[iTreeSmallLayer];
 		auto it = actSmallInnerTreeStructure.end();
-//		printOnScreen(iTreeSmallLayer << ", leavesForTreesInTheFatherLayer: " << leavesForTreesInTheFatherLayer
-//				<< ", depthInThisLayer: " << depthInThisLayer << ", amountOfChildrenInThisLayer: " << amountOfRootsInThisLayer << ", rootsForTreesInThisLayer: " << amountOfRootsInTheFatherLayer
-//				<< ", m_depthPerLayer: " << m_depthPerLayer << ", fast: " << m_fastInnerTrees.size() << ", small: " << m_smallInnerTrees.size());
 		if(iTreeSmallLayer == 0){
 			// go over all of the last layer of the fast tree
 			for(unsigned int iRootId = 0; iRootId < amountOfRootsInTheFatherLayer; ++iRootId){
