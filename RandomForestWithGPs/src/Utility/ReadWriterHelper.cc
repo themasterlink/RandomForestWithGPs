@@ -185,7 +185,7 @@ void ReadWriterHelper::readBigDynamicTree(std::fstream& stream, BigDynamicDecisi
 				bool useThisTree;
 				stream.read((char*) (&useThisTree), sizeof(bool));
 				if(useThisTree){
-					tree.m_fastInnerTrees[i][j] = std::make_unique<DynamicDecisionTree>(tree.m_storage);
+					tree.m_fastInnerTrees[i][j] = new DynamicDecisionTree(tree.m_storage);
 					readDynamicTree(stream, *tree.m_fastInnerTrees[i][j]);
 				}else{
 					tree.m_fastInnerTrees[i][j] = nullptr;

@@ -9,7 +9,6 @@
 #define RANDOMFORESTS_BIGDYNAMICDECISIONTREE_H_
 
 #include "DynamicDecisionTree.h"
-#include <memory>
 
 class ReadWriterHelper;
 
@@ -52,7 +51,7 @@ public:
 
 private:
 
-	using PtrDynamicDecisionTree = std::unique_ptr<DynamicDecisionTree>;
+	using PtrDynamicDecisionTree = DynamicDecisionTree*;
 	using SmallTreeInnerStructure = std::map<unsigned int, PtrDynamicDecisionTree>;
 	using SmallTreeInnerPair = std::pair<unsigned int, PtrDynamicDecisionTree>;
 	using SmallTreeStructure = std::vector<SmallTreeInnerStructure>;
@@ -61,7 +60,7 @@ private:
 
 	bool shouldNewTreeBeCalculatedFor(std::vector<unsigned int>& dataPositions);
 
-	void trainChildrenForRoot(PtrDynamicDecisionTree& root, SmallTreeInnerStructure::iterator& it, SmallTreeInnerStructure& actSmallInnerTreeStructure,
+	void trainChildrenForRoot(PtrDynamicDecisionTree root, SmallTreeInnerStructure::iterator& it, SmallTreeInnerStructure& actSmallInnerTreeStructure,
 			const unsigned int depthInThisLayer, const unsigned int iRootId,
 			const unsigned int leavesForTreesInTheFatherLayer, const int amountOfUsedDims,
 			RandomNumberGeneratorForDT& generator, const bool saveDataPositions, bool& foundAtLeastOneChild);
