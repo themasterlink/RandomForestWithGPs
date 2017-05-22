@@ -167,23 +167,21 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 			depthInTheFatherLayer = depthInThisLayer;
 		}
 	}
-//	printOnScreen("AmountOfFathernodes: " << rootsForTreesInThisLayer);
+	printOnScreen("amountOfRootsInTheFatherLayer: " << amountOfRootsInTheFatherLayer);
 	for(unsigned int iTreeSmallLayer = 0; iTreeSmallLayer < m_smallInnerTrees.size(); ++iTreeSmallLayer){
 		bool saveDataPositions = true;  // only in the last layer the data positions don't need to be saved
 		unsigned int depthInThisLayer = m_depthPerLayer;
 		if(iTreeSmallLayer + 1 == m_smallInnerTrees.size()){ // is the last layer
-//			saveDataPositions = false;
+			saveDataPositions = false;
 			depthInThisLayer = m_maxDepth - (unsigned int) (m_fastInnerTrees.size() + m_smallInnerTrees.size() - 1) * m_depthPerLayer;
 		}
 		if(depthInThisLayer == 0){
-//			25, 2, 4, 5, 5, 3
 			printError("This should not happen: " << m_maxDepth << ", " << m_fastInnerTrees.size() << ", " << m_smallInnerTrees.size() << ", " << m_depthPerLayer
 					<< ", " << (m_fastInnerTrees.size() + m_smallInnerTrees.size() - 1) << ", " << iTreeSmallLayer);
 		}
-//		const unsigned int leavesForTreesInThisLayer = pow2(depthInThisLayer); // amount of leaves of one of the layertrees
 		bool foundAtLeastOneChild = false;
-		const unsigned int leavesForTreesInTheFatherLayer = pow2(depthInTheFatherLayer); // amount of leaves of one of the father layertrees
-		const unsigned int amountOfRootsInThisLayer = amountOfRootsInTheFatherLayer * leavesForTreesInTheFatherLayer;
+		const auto leavesForTreesInTheFatherLayer = pow2(depthInTheFatherLayer); // amount of leaves of one of the father layertrees
+		const auto amountOfRootsInThisLayer = amountOfRootsInTheFatherLayer * leavesForTreesInTheFatherLayer;
 		auto& actSmallInnerTreeStructure = m_smallInnerTrees[iTreeSmallLayer];
 		auto it = actSmallInnerTreeStructure.end();
 //		printOnScreen(iTreeSmallLayer << ", leavesForTreesInTheFatherLayer: " << leavesForTreesInTheFatherLayer
