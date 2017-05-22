@@ -26,11 +26,11 @@ def doRFGP(data, time):
 os.chdir("../cmake-build-release/")
 #data["TotalStorage"]["folderLocReal"] = "../mnistOrg/"
 
-for t in [0, 5, 10]:
+for t in [0, 3, 7, 10, 30, 100]:
     #data["Forest"]["Trees"]["height"] = t
     #data["TotalStorage"]["folderTestNr"] = t
     data["TotalStorage"]["stepOverTrainingData"] = t
-    time = 60 * 60 * 14
+    time = 60 * 60 * 2.5
     doRFGP(data, time)
     #for i in range(0,10):
     

@@ -56,7 +56,7 @@
 		"useBigDynmaicDecisionTrees": "true",
 		"layerAmountOfBigDDT": 14,
 		"layerFastAmountOfBigDDT": 2,
-		"determineBestLayerAmount": "true",
+		"determineBestLayerAmount": "false",
 		"printErrorForTraining": "false"
 	},
 	"Kernel": {

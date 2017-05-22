@@ -164,7 +164,7 @@ void OnlineRandomForest::train(){
 	if(m_maxDepth > 7 && m_useBigDynamicDecisionTrees && Settings::getDirectBoolValue("OnlineRandomForest.determineBestLayerAmount")){
 		boost::thread_group layerGroup;
 		std::list<std::pair<unsigned int, unsigned int> > layerValues; // from 2 to
-		const int start = std::max(2, (int)std::ceil(m_maxDepth / (double) 20)); // at least 2 layers, but one layer can not be bigger than 20
+		const int start = std::max(2, (int)std::ceil(m_maxDepth / (double) 12)); // at least 2 layers, but one layer can not be bigger than 20
 		for(unsigned int i = start; m_maxDepth / i > 3; ++i){
 			for(unsigned int j = 2; j < std::min(4u,i + 1); ++j){
 				layerValues.push_back(std::pair<unsigned int, unsigned int>(i,j));
@@ -357,8 +357,10 @@ void OnlineRandomForest::loadBatchOfTreesFromDisk(const unsigned int batchNr) co
 	}
 }
 
-void OnlineRandomForest::tryAmountForLayers(RandomNumberGeneratorForDT* generator, const double secondsPerSplit, std::list<std::pair<unsigned int, unsigned int> >* layerValues,
-		boost::mutex* mutex, std::pair<int, int>* bestLayerSplit, double* bestCorrectness){
+void OnlineRandomForest::tryAmountForLayers(RandomNumberGeneratorForDT* generator, const double secondsPerSplit,
+											std::list<std::pair<unsigned int, unsigned int> >* layerValues,
+											boost::mutex* mutex, std::pair<int, int>* bestLayerSplit,
+											double* bestCorrectness){
 	while(true){
 		mutex->lock();
 		if(layerValues->size() > 0){
@@ -367,23 +369,15 @@ void OnlineRandomForest::tryAmountForLayers(RandomNumberGeneratorForDT* generato
 			layerValues->pop_front();
 			mutex->unlock();
 			StopWatch sw;
-			DecisionTreesContainer trees;
+			auto counter = 0u;
 			while(sw.elapsedSeconds() < secondsPerSplit){
 //				printOnScreen("Train new tree! " << trees.size());
-				trees.push_back(new BigDynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, layerAmount, amountOfFastLayers));
-				trees.back()->train((unsigned int) m_amountOfUsedDims, *generator);
+				BigDynamicDecisionTree* tree = new BigDynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, layerAmount, amountOfFastLayers);
+				tree->train((unsigned int) m_amountOfUsedDims, *generator);
+				SAVE_DELETE(tree); // remove the whole tree again -> enables
+				++counter;
 			}
-//			unsigned int correctAmount = 0;
-//			for(unsigned int i = 0; i < m_storage.size(); ++i){
-//				std::vector<unsigned int> classes(amountOfClasses(), 0);
-//				for(DecisionTreeConstIterator it = trees.begin(); it != trees.end(); ++it){
-//					++classes[(**it).predict(*m_storage[i])];
-//				}
-//				if(m_storage[i]->getLabel() == argMax(classes.cbegin(), classes.cend()){
-//					++correctAmount;
-//				}
-//			}
-			const double corr = trees.size(); //correctAmount / (double) m_storage.size() * 100. ;
+			const double corr = counter; //correctAmount / (double) m_storage.size() * 100. ;
 			mutex->lock();
 			printOnScreen("Test: " << layerAmount << ", " << amountOfFastLayers << ", with " << corr << " trees");
 			if(corr > *bestCorrectness || (corr >= *bestCorrectness && layerAmount > bestLayerSplit->first)){
@@ -393,10 +387,6 @@ void OnlineRandomForest::tryAmountForLayers(RandomNumberGeneratorForDT* generato
 				printOnScreen("New best layer amount: " << layerAmount << ", " << amountOfFastLayers << ", with " << *bestCorrectness << " trees");
 			}
 			mutex->unlock();
-			for(auto it : trees){
-//			for(DecisionTreeIterator it = trees.begin(); it != trees.end(); ++it){
-				SAVE_DELETE(it);
-			}
 		}else{
 			mutex->unlock();
 			break;
