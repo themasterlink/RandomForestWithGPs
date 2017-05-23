@@ -186,18 +186,20 @@ std::string make_daytime_string(){
 //	}
 //}
 
+
 int main(int ac, char** av){
 //	system("cd \"Debug OpenCV2\"");
 //	system("pwd");
 #ifdef DEBUG
-	printOnScreen("Debug does not use inputParams!");
-	std::vector<std::string> input = {"RandomForest", "--samplingAndTraining", "2"}; //, "--useFakeData"
+//	printOnScreen("Debug does not use inputParams!");
+	std::vector<std::string> input = {"RandomForest", "--samplingAndTraining", "180", "--useFakeData"}; //
 	ac = input.size();
 	av = new char*[ac];
 	for(int i = 0; i < ac; ++i){
 		av[i] = const_cast<char*>(input[i].c_str());
 	}
 #endif
+
 	printOnScreen("Start");
 //	getchar();
 	handleProgrammOptions(ac,av);

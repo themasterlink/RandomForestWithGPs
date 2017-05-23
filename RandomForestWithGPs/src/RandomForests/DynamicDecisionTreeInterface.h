@@ -13,7 +13,7 @@
 
 class DynamicDecisionTreeInterface : public PredictorMultiClass {
 public:
-	virtual ~DynamicDecisionTreeInterface(){};
+	virtual ~DynamicDecisionTreeInterface() = default;
 
 	virtual void train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator) = 0;
 

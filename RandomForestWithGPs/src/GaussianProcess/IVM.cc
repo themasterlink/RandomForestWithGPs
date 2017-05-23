@@ -1452,13 +1452,12 @@ void IVM::calcDerivatives(const Vector& muL1){
 			std::vector<Matrix> CMatrix(m_gaussKernel->getHyperParams().paramsAmount);
 			Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(m_eye) * 0.5;
 			int i = 0;
-			for(std::vector<unsigned int>::const_iterator it = m_gaussKernel->getHyperParams().usedParamTypes.begin();
-					it != m_gaussKernel->getHyperParams().usedParamTypes.end(); ++it, ++i){
-				const GaussianKernelElement* type = (const GaussianKernelElement*) KernelTypeGenerator::getKernelFor(*it);
+			for(const auto& typeNr : m_gaussKernel->getHyperParams().usedParamTypes){
+				const auto&& type = KernelTypeGenerator::createKernelFor(typeNr);
 				if(!type->isDerivativeOnlyDiag()){
-					m_gaussKernel->calcCovarianceDerivativeForInducingPoints(CMatrix[i], m_I, type);
+					m_gaussKernel->calcCovarianceDerivativeForInducingPoints(CMatrix[i], m_I, (const GaussianKernelElement*) type.get());
 				}
-				SAVE_DELETE(type);
+				++i;
 			}
 			for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
 				for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){

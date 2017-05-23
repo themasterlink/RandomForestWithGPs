@@ -8,18 +8,22 @@
 #include "DynamicDecisionTree.h"
 #include "../Data/ClassKnowledge.h"
 
-DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage,
-										 const unsigned int maxDepth, const unsigned int amountOfClasses):
+DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint *> &storage, const unsigned int maxDepth,
+										 const unsigned int amountOfClasses, const unsigned int amountOfPointsPerSplit):
 		m_storage(storage),
 		m_maxDepth(maxDepth),
 		m_maxNodeNr(pow2(maxDepth + 1) - 1),
 		m_maxInternalNodeNr(pow2(maxDepth) - 1),
 		m_amountOfClasses(amountOfClasses),
+		m_amountOfPointsCheckedPerSplit((decltype(m_amountOfPointsCheckedPerSplit)) amountOfPointsPerSplit),
 		m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
 		m_splitDim(m_maxInternalNodeNr + 1, NodeType::NODE_IS_NOT_USED),
 		m_labelsOfWinningClassesInLeaves(pow2(maxDepth), UNDEF_CLASS_LABEL),
 		m_dataPositions(nullptr),
 		m_useOnlyThisDataPositions(nullptr){
+	if(m_amountOfPointsCheckedPerSplit == 0){
+		printError("This tree can not be trained!");
+	}
 	if(m_maxDepth <= 0 || m_maxDepth >= 28){
 		printError("This height is not supported here: " << m_maxDepth);
 	}
@@ -29,7 +33,7 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage,
 
 // construct empty tree
 DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage):
-		DynamicDecisionTree(storage, 1, ClassKnowledge::amountOfClasses()){
+		DynamicDecisionTree(storage, 1, ClassKnowledge::amountOfClasses(), 100){
 }
 
 // fill empty tree
@@ -52,6 +56,7 @@ DynamicDecisionTree::DynamicDecisionTree(const DynamicDecisionTree& tree):
 		m_maxNodeNr(tree.m_maxNodeNr),
 		m_maxInternalNodeNr(tree.m_maxInternalNodeNr),
 		m_amountOfClasses(tree.m_amountOfClasses),
+		m_amountOfPointsCheckedPerSplit(tree.m_amountOfPointsCheckedPerSplit),
 		m_splitValues(tree.m_splitValues),
 		m_splitDim(tree.m_splitDim),
 		m_labelsOfWinningClassesInLeaves(tree.m_labelsOfWinningClassesInLeaves),
@@ -183,9 +188,12 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 
 		double maxScoreElementValue = 0;
 		double actScore = NEG_DBL_MAX; // TODO check magic number
+		std::sort(actDataPos.begin(), actDataPos.end(),
+				  [this, &randDim](const auto& a, const auto& b) -> bool
+				  { return m_storage[a]->coeff(randDim) < m_storage[b]->coeff(randDim); });
 		for(int j = 0; j < amountOfUsedData; ++j){ // amount of checks for a specified split
-			//const int randElementId = generator.getRandNextDataEle();
-			//const double usedValue = (*m_storage[usedNode])[usedDim];
+//			const int randElementId = generator.getRandNextDataEle();
+//			const double usedValue = (*m_storage[usedNode])[usedDim];
 			const double usedValue = generator.getRandSplitValueInDim(randDim);
 			const double score = trySplitFor(usedValue, randDim,
 					actDataPos, leftHisto, rightHisto, generator);
@@ -271,22 +279,21 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 double DynamicDecisionTree::trySplitFor(const double usedSplitValue, const unsigned int usedDim,
 		const std::vector<unsigned int>& dataInNode, std::vector<unsigned int>& leftHisto,
 		std::vector<unsigned int>& rightHisto, RandomNumberGeneratorForDT& generator){
-	double leftAmount = 0, rightAmount = 0;
-	if(dataInNode.size() < 100){ // under 100 take each value
-		for(std::vector<unsigned int>::const_iterator it = dataInNode.cbegin(); it != dataInNode.cend();
-				++it){
-			if(usedSplitValue < m_storage[*it]->coeff(usedDim)){ // TODO check < or <=
+	int leftAmount = 0, rightAmount = 0;
+	if(dataInNode.size() < m_amountOfPointsCheckedPerSplit){ // under 100 take each value
+		for(const auto& pos : dataInNode){
+			if(usedSplitValue < m_storage[pos]->coeff(usedDim)){ // TODO check < or <=
 				++leftAmount;
-				++leftHisto[m_storage[*it]->getLabel()];
+				++leftHisto[m_storage[pos]->getLabel()];
 			}else{
 				++rightAmount;
-				++rightHisto[m_storage[*it]->getLabel()];
+				++rightHisto[m_storage[pos]->getLabel()];
 			}
 		}
 	}else{
-		const int stepSize = dataInNode.size() / 100;
-		generator.setRandFromRange(1, stepSize);
-		const int dataSize = dataInNode.size();
+		const auto stepSize = dataInNode.size() / m_amountOfPointsCheckedPerSplit;
+		generator.setRandFromRange(1, (int) stepSize);
+		const auto dataSize = (int) dataInNode.size();
 		for(int i = generator.getRandFromRange(); i < dataSize; i += generator.getRandFromRange()){
 			if(i < dataSize){
 				const int val = dataInNode[i];

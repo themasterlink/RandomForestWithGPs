@@ -19,7 +19,7 @@ friend ReadWriterHelper;
 public:
 	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth,
 						   const unsigned int amountOfClasses, const int layerAmount = -1,
-						   const int layerAmountForFast = -1);
+						   const int layerAmountForFast = -1, const unsigned int amountOfPointsCheckedPerSplit = 100);
 
 	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage);
 
@@ -76,6 +76,8 @@ private:
 	const unsigned int m_maxDepth;
 
 	const unsigned int m_amountOfClasses;
+
+	const unsigned int m_amountOfPointsCheckedPerSplit;
 
 	unsigned int m_depthPerLayer;
 

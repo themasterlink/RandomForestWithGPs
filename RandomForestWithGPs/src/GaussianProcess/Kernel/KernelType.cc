@@ -102,17 +102,18 @@ void KernelElement::addToFirstValue(const double value){
 }
 
 
-KernelElement* KernelTypeGenerator::getKernelFor(unsigned int kernelNr){
-	KernelElement* ret = nullptr;
+std::unique_ptr<KernelElement> KernelTypeGenerator::createKernelFor(unsigned int kernelNr){
+	std::unique_ptr<KernelElement> ret;
+	ret.reset(nullptr);
 	switch(kernelNr){
 	case LengthParam:
-		ret = new GaussianKernelElementLength(true); // just to get the type
+		ret = std::make_unique<GaussianKernelElementLength>(true); // just to get the type
 		break;
 	case FNoiseParam:
-		ret = new GaussianKernelElementFNoise();
+		ret = std::make_unique<GaussianKernelElementFNoise>();
 		break;
 	case SNoiseParam:
-		ret = new GaussianKernelElementSNoise();
+		ret = std::make_unique<GaussianKernelElementSNoise>();
 		break;
 	default:
 		printError("This type is not defined here!");

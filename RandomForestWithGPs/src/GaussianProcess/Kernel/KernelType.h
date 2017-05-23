@@ -148,7 +148,7 @@ public:
 
 class KernelTypeGenerator {
 public:
-	static KernelElement* getKernelFor(unsigned int kernelNr);
+	static std::unique_ptr<KernelElement> createKernelFor(unsigned int kernelNr);
 
 private:
 	KernelTypeGenerator(){};

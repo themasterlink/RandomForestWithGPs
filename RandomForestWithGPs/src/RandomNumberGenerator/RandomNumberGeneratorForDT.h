@@ -19,7 +19,7 @@
 class RandomNumberGeneratorForDT : public Observer {
 public:
 
-	using base_generator_type = boost::random::mt19937; // generator type
+	using base_generator_type = GeneratorType; // generator type
 	using uniform_distribution_int = boost::random::uniform_int_distribution<int>; // generator type
 	using uniform_distribution_real = boost::uniform_real<double>; // generator type
 	using variante_generator = boost::variate_generator<base_generator_type, uniform_distribution_int>;

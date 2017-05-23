@@ -23,10 +23,3 @@ ClassPoint::ClassPoint(const int size, const double& element, const unsigned int
 ClassPoint::~ClassPoint() {
 }
 
-void ClassPoint::setLabel(const unsigned int label){
-	m_label = label;
-}
-
-unsigned int ClassPoint::getLabel() const{
-	return m_label;
-}

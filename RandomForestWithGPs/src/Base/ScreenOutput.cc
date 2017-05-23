@@ -66,7 +66,7 @@ void ScreenOutput::run(){
 	StopWatch sw;
 	const int startOfMainContent = 4;
 #ifdef USE_SCREEN_OUPUT
-	while(true){
+	while(ThreadMaster::m_keepRunning){
 #else
 	while(false){
 #endif

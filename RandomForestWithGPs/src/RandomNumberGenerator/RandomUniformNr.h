@@ -8,13 +8,13 @@
 #ifndef RANDOMNUMBERGENERATOR_RANDOMUNIFORMNR_H_
 #define RANDOMNUMBERGENERATOR_RANDOMUNIFORMNR_H_
 
-#include <boost/random.hpp>
+#include "../Utility/Util.h"
 #include <boost/random/uniform_int.hpp>
 
 class RandomUniformNr {
 public:
 
-	using base_generator_type = boost::random::mt19937; // generator type
+	using base_generator_type = GeneratorType; // generator type
 	using uniform_distribution_int = boost::random::uniform_int_distribution<int> ; // generator type
 
 	RandomUniformNr(const int min, const int max, const int seed);

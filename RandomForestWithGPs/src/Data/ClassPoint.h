@@ -10,22 +10,32 @@
 
 #include "DataPoint.h"
 
-class ClassPoint : public DataPoint {
+class ClassPoint : public DataPoint{
 public:
 	ClassPoint();
 
 	ClassPoint(const int size, const unsigned int label);
 
-	ClassPoint(const int size, const double& element, const unsigned int label);
+	ClassPoint(const int size, const double &element, const unsigned int label);
 
 	virtual ~ClassPoint();
 
 	void setLabel(const unsigned int label);
 
-	unsigned int getLabel() const;
+	unsigned int getLabel() const noexcept;
 
 private:
 	unsigned int m_label;
 };
+
+inline
+void ClassPoint::setLabel(const unsigned int label){
+	m_label = label;
+}
+
+inline
+unsigned int ClassPoint::getLabel() const noexcept{
+	return m_label;
+}
 
 #endif /* DATA_CLASSPOINT_H_ */

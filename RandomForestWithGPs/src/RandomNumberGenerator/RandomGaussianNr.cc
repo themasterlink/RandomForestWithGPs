@@ -14,13 +14,10 @@ RandomGaussianNr::RandomGaussianNr(const double mean, const double sd, const int
 	m_normalGenerator(nullptr),
 	m_mean(mean),
 	m_sd(sd){
-	m_normalGenerator = new variante_generator(m_generator, normal_distribution(mean, sd));
+	m_normalGenerator = std::make_unique<variante_generator>(m_generator, normal_distribution(m_mean, m_sd));
 }
 
-RandomGaussianNr::~RandomGaussianNr(){
-	SAVE_DELETE(m_normalGenerator);
-}
-
+RandomGaussianNr::~RandomGaussianNr() = default;
 
 void RandomGaussianNr::reset(const double mean, const double sd){
 	m_normalGenerator->distribution().param(normal_distribution::param_type(mean,sd));
@@ -30,6 +27,5 @@ void RandomGaussianNr::reset(const double mean, const double sd){
 
 void RandomGaussianNr::setSeed(const int seed){
 	m_generator.seed(seed);
-	SAVE_DELETE(m_normalGenerator);
-	m_normalGenerator = new variante_generator(m_generator, normal_distribution(m_mean, m_sd));
+	m_normalGenerator = std::make_unique<variante_generator>(m_generator, normal_distribution(m_mean, m_sd));
 };

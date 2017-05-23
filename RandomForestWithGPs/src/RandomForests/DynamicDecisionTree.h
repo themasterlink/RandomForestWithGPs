@@ -27,7 +27,8 @@ public:
 		NODE_CAN_BE_USED = -2,
 	};
 
-	DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth, const unsigned int amountOfClasses);
+	DynamicDecisionTree(OnlineStorage<ClassPoint *> &storage, const unsigned int maxDepth,
+							const unsigned int amountOfClasses, const unsigned int amountOfPointsPerSplit);
 
 	// construct empty tree
 	DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage);
@@ -92,6 +93,8 @@ private:
 	const unsigned int m_maxInternalNodeNr; // = pow2(m_maxDepth) - 1
 
 	const unsigned int m_amountOfClasses;
+
+	const std::vector<unsigned int>::size_type m_amountOfPointsCheckedPerSplit;
 	// contains the split values for the nodes:
 	// the order of the nodes is like that:
 	// !!!! first element is not used !!!!

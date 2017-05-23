@@ -23,7 +23,7 @@ public:
 	using DecisionTreeIterator = DecisionTreesContainer::iterator;
 	using DecisionTreeConstIterator = DecisionTreesContainer::const_iterator;
 
-	OnlineRandomForest(OnlineStorage<ClassPoint *> &storage, 
+	OnlineRandomForest(OnlineStorage<ClassPoint *> &storage,
 					   const unsigned int maxDepth, const int amountOfUsedClasses);
 
 	virtual ~OnlineRandomForest();
@@ -168,6 +168,8 @@ private:
 	unsigned int m_amountOfTrainedTrees;
 
 	mutable MemoryType m_usedMemory;
+
+	unsigned int m_amountOfPointsCheckedPerSplit;
 };
 
 

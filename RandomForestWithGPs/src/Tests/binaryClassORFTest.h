@@ -223,7 +223,8 @@ void executeForBinaryClassORF(){
 			openFileInViewer("orf.png");
 		}
 	}
-
+	printOnScreen("Reached end of binary ORF");
+	sleep(2);
 }
 
 #endif /* TESTS_BINARYCLASSORFTEST_H_ */

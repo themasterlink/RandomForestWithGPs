@@ -20,7 +20,8 @@
 #include "InLinePercentageFiller.h"
 #include "../Base/ScreenOutput.h"
 #include "../Base/Logger.h"
-#include "boost/filesystem.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/random.hpp>
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -41,6 +42,8 @@
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
 using MemoryType = unsigned long;
+
+using GeneratorType = boost::random::taus88;
 
 #define EPSILON 1e-15
 
@@ -221,5 +224,16 @@ inline int_fast32_t highEndian2LowEndian(int_fast32_t i) {
 
     return ((int_fast32_t)c1 << 24) + ((int_fast32_t)c2 << 16) + ((int_fast32_t)c3 << 8) + c4;
 }
+
+//template<typename _Tp>
+//struct __MakeUniq
+//{ typedef unique_ptr<_Tp> __single_object; };
+//
+//
+//template<typename _Tp, typename... _Args>
+//inline typename
+//__MakeUniq<_Tp>::__single_object makeUnique(_Args&&... __args)
+//{ return std::unique_ptr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
+
 
 #endif /* UTILITY_UTIL_H_ */

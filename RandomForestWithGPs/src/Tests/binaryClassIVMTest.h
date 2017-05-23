@@ -160,7 +160,6 @@ void executeForBinaryClassIVM(){
 	TotalStorage::readData(firstPoints);
 	DataSets datas;
 	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << " with " << TotalStorage::getAmountOfClass() << " classes");
-	sleep(2);
 	const int trainAmount = share * (std::min((int) TotalStorage::getSmallestClassSize(), firstPoints) * (double) TotalStorage::getAmountOfClass());
 	OnlineStorage<ClassPoint*> train;
 	OnlineStorage<ClassPoint*> test;

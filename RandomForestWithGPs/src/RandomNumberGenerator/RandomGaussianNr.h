@@ -8,7 +8,7 @@
 #ifndef RANDOMNUMBERGENERATOR_RANDOMGAUSSIANNR_H_
 #define RANDOMNUMBERGENERATOR_RANDOMGAUSSIANNR_H_
 
-#include <boost/random.hpp>
+#include "../Utility/Util.h"
 #include <boost/random/normal_distribution.hpp>
 
 class GaussianProcessWriter;
@@ -17,7 +17,7 @@ class RandomGaussianNr{
 	friend GaussianProcessWriter;
 public:
 
-	using base_generator_type = boost::random::mt19937; // generator type
+	using base_generator_type = GeneratorType; // generator type
 	using normal_distribution = boost::random::normal_distribution<>;
 	using variante_generator = boost::random::variate_generator<base_generator_type&, normal_distribution >;
 
@@ -35,7 +35,7 @@ private:
 	static int counter;
 
 	base_generator_type m_generator;
-	variante_generator* m_normalGenerator;
+	std::unique_ptr<variante_generator> m_normalGenerator;
 	double m_mean;
 	double m_sd;
 };
