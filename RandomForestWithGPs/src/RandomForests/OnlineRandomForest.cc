@@ -6,14 +6,13 @@
  */
 
 #include "OnlineRandomForest.h"
-#include "../Utility/Util.h"
 #include "../Base/Settings.h"
 #include "../Base/CommandSettings.h"
 #include "../Data/DataWriterForVisu.h"
 
-OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
-		const int maxDepth,
-		const int amountOfUsedClasses):
+OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint *> &storage,
+									   const unsigned int maxDepth,
+									   const int amountOfUsedClasses):
 		m_maxDepth(maxDepth),
 		m_amountOfClasses(amountOfUsedClasses),
 		m_amountOfPointsUntilRetrain(0),
@@ -34,7 +33,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<ClassPoint*>& storage,
 	Settings::getValue("OnlineRandomForest.factorAmountOfUsedDims", m_factorForUsedDims);
 	Settings::getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
 	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
-	Settings::getValue("OnlineRandomForest.useBigDynmaicDecisionTrees", m_useBigDynamicDecisionTrees);
+	Settings::getValue("OnlineRandomForest.useBigDynamicDecisionTrees", m_useBigDynamicDecisionTrees);
 //	setDesiredAmountOfTrees(1);
 }
 
@@ -464,7 +463,7 @@ bool OnlineRandomForest::update(){
 		int stillOneRunning = 1;
 		while(counter < totalAmount && stillOneRunning != 0){
 			stillOneRunning = 0;
-			for(auto package : packages){
+			for(auto& package : packages){
 //			for(unsigned int i = 0; i < packages.size(); ++i){
 				if(!package->isTaskFinished()){
 					stillOneRunning += 1;
@@ -474,7 +473,7 @@ bool OnlineRandomForest::update(){
 			usleep(0.1 * 1e6);
 		}
 		group.join_all();
-		for(auto package : packages){
+		for(auto& package : packages){
 //		for(unsigned int i = 0; i < packages.size(); ++i){
 			ThreadMaster::threadHasFinished(package);
 			SAVE_DELETE(package);
@@ -498,7 +497,7 @@ void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list)
 	std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 	copyOfTrees.insert(copyOfTrees.begin(), m_trees.begin(), m_trees.end());
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
-		packages[i] = new InformationPackage(InformationPackage::InfoType::ORF_TRAIN, 0., m_trees.size() / 8);
+		packages[i] = new InformationPackage(InformationPackage::InfoType::ORF_TRAIN, 0., (int) (m_trees.size() / 8));
 		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::sortTreesAfterPerformanceInParallel, this, &list, &copyOfTrees, &read, &append, packages[i])));
 	}
 	group.join_all();
@@ -512,10 +511,9 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 		boost::mutex* readMutex, boost::mutex* appendMutex, InformationPackage* package){
 	package->setStandartInformation("Sort trees after performance");
 	if(m_trees.size() == 1){
-		int correct = 0;
-		for(OnlineStorage<ClassPoint*>::ConstIterator itPoint = m_storage.begin(); itPoint != m_storage.end(); ++itPoint){
-			ClassPoint& point = **itPoint;
-			if(point.getLabel() == (*m_trees.begin())->predict(point)){
+		auto correct = 0u;
+		for(auto& point : m_storage){
+			if(point->getLabel() == (*m_trees.begin())->predict(*point)){
 				++correct;
 			}
 		}
@@ -525,7 +523,7 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
 	SortedDecisionTreeList ownList;
-	unsigned int usedTrees = trees->size() / 16;
+	auto usedTrees = (unsigned int) (trees->size() / 16);
 	while(trees->size() > 0){
 		ownList.clear();
 		readMutex->lock();
@@ -535,10 +533,10 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 				trees->pop_back();
 			}
 		}
-		const unsigned int treeAmount = trees->size();
+		const auto treeAmount = (unsigned int) trees->size();
 		readMutex->unlock();
 		printInPackageOnScreen(package, "Predict new tree, rest amount is: " << treeAmount);
-		for(SortedDecisionTreeList::iterator it = ownList.begin(); it != ownList.end(); ++it){
+		for(auto it = ownList.begin(); it != ownList.end(); ++it){
 			int correct = 0;
 			DynamicDecisionTreeInterface* tree = it->first;
 //			for(unsigned int k = m_storage.getLastUpdateIndex(); k < m_storage.size(); ++k){
@@ -552,12 +550,12 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 			it->second = correct / (double) (m_storage.size()) * 100.;
 		}
 		SortedDecisionTreeList sortedList;
-		for(SortedDecisionTreeList::iterator it = ownList.begin(); it != ownList.end(); ++it){
+		for(auto it = ownList.begin(); it != ownList.end(); ++it){
 			if(sortedList.size() == 0){
 				sortedList.push_back(*it);
 			}else{
 				bool append = false;
-				for(SortedDecisionTreeList::iterator itSort = sortedList.begin(); itSort != sortedList.end(); ++itSort){
+				for(auto itSort = sortedList.begin(); itSort != sortedList.end(); ++itSort){
 					if(itSort->second > it->second){
 						sortedList.insert(itSort, *it);
 						append = true;
@@ -602,9 +600,8 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 		switcher->train(m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
 		int correct = 0;
 //		for(unsigned int k = m_storage.getLastUpdateIndex(); k < m_storage.size(); ++k){
-		for(OnlineStorage<ClassPoint*>::ConstIterator itPoint = m_storage.begin(); itPoint != m_storage.end(); ++itPoint){
-			ClassPoint& point = **itPoint;
-			if(point.getLabel() == switcher->predict(point)){
+		for(auto& point : m_storage){
+			if(point->getLabel() == switcher->predict(*point)){
 				++correct;
 			}
 		}
@@ -649,7 +646,7 @@ void OnlineRandomForest::internalAppendToSortedList(SortedDecisionTreeList* list
 		list->push_back(SortedDecisionTreePair(pTree, correctVal));
 	}else{
 		bool added = false;
-		for(SortedDecisionTreeList::iterator it = list->begin(); it != list->end(); ++it){
+		for(auto it = list->begin(); it != list->end(); ++it){
 			if(it->second > correctVal){
 				list->insert(it, SortedDecisionTreePair(pTree, correctVal));
 				added = true;
@@ -663,8 +660,8 @@ void OnlineRandomForest::internalAppendToSortedList(SortedDecisionTreeList* list
 }
 
 void OnlineRandomForest::mergeSortedLists(SortedDecisionTreeList* aimList, SortedDecisionTreeList* other){
-	SortedDecisionTreeList::iterator itOther = other->begin();
-	SortedDecisionTreeList::iterator it = aimList->begin();
+	auto itOther = other->begin();
+	auto it = aimList->begin();
 	while(it != aimList->end() && itOther != other->end()){
 		if(itOther->second < it->second){
 			it = aimList->insert(it, *itOther);
@@ -685,7 +682,7 @@ OnlineRandomForest::DecisionTreeIterator OnlineRandomForest::findWorstPerforming
 		return m_trees.end();
 	}
 	int minCorrect = m_storage.size();
-	DecisionTreeIterator itWorst = m_trees.end();
+	auto itWorst = m_trees.end();
 	for(DecisionTreeIterator itTree = m_trees.begin(); itTree != m_trees.end(); ++itTree){
 		int correct = 0;
 		DynamicDecisionTreeInterface* tree = *itTree;
@@ -713,10 +710,10 @@ unsigned int OnlineRandomForest::predict(const DataPoint& point) const {
 	}
 	if(m_firstTrainingDone){
 		std::vector<unsigned int> values(m_amountOfClasses, 0u);
-		for(auto &&tree : m_trees){
+		for(auto& tree : m_trees){
 			++values[tree->predict(point)];
 		}
-		return argMax(values.cbegin(), values.cend());
+		return (unsigned int) argMax(values.cbegin(), values.cend());
 	}
 	return UNDEF_CLASS_LABEL;
 }
@@ -758,9 +755,9 @@ double OnlineRandomForest::predictPartitionEquality(const DataPoint& point1, con
 			return -1;
 		}
 		int sameLeaveCounter = 0;
-		unsigned int counter = 0;
+		auto counter = 0u;
 		for(DecisionTreesContainer::const_iterator it = m_trees.begin(); it != m_trees.end() && counter < amountOfSamples; ++it){
-			const unsigned int height = uniformNr();
+			const auto height = (unsigned int) uniformNr();
 			if((*it)->predictIfPointsShareSameLeaveWithHeight(point1, point2, height)){
 				++sameLeaveCounter;
 			}

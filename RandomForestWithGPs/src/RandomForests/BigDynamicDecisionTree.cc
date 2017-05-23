@@ -260,10 +260,10 @@ unsigned int BigDynamicDecisionTree::predict(const DataPoint& point) const{
 		// the father layer always has the same height, because only the last layer can change the height
 		const auto depthForFatherLayer = m_depthPerLayer;
 		int winningNode = 1;
-		unsigned int iChildInLayer(0);
+		unsigned int iChildInLayer(0u);
 		auto result = m_fastInnerTrees[0][iChildInLayer]->predict(point, winningNode);
 		// convert tree node id into leave id
-		auto offsetForChildren = 0;
+		auto offsetForChildren = 0u;
 		for(unsigned int iTreeLayer = 1; iTreeLayer < m_fastInnerTrees.size(); ++iTreeLayer){
 			iChildInLayer = winningNode + offsetForChildren;
 			offsetForChildren = iChildInLayer * pow2(depthForFatherLayer);

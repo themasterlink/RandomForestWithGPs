@@ -45,15 +45,15 @@
 		"normalizeData": "false",
 		"removeUselessDimensions": "true",
 		"readFromFolder": "true",
-		"stepOverTrainingData": 0
+		"stepOverTrainingData": 50
 	},
 	"OnlineRandomForest": {
 		"amountOfPointsUntilRetrain": 200,
 		"stepSizeOverData": 0,
 		"factorAmountOfUsedDims": 1.0,
 		"ownSamplingTime": 0,
-		"maxAmountOfUsedMemory": 7000000000,
-		"useBigDynmaicDecisionTrees": "true",
+		"maxAmountOfUsedMemory": 2000000000,
+		"useBigDynamicDecisionTrees": "true",
 		"layerAmountOfBigDDT": 14,
 		"layerFastAmountOfBigDDT": 2,
 		"determineBestLayerAmount": "false",

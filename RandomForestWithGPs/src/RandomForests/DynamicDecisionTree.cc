@@ -6,9 +6,7 @@
  */
 
 #include "DynamicDecisionTree.h"
-#include "../Utility/Util.h"
 #include "../Data/ClassKnowledge.h"
-#include <algorithm>
 
 DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage,
 										 const unsigned int maxDepth, const unsigned int amountOfClasses):
@@ -161,7 +159,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
 			minDimValue = DBL_MAX;
 			maxDimValue = NEG_DBL_MAX;
-			for(auto &&pos : actDataPos){
+			for(auto& pos : actDataPos){
 				if(m_storage[pos]->coeff(randDim) > maxDimValue){
 					maxDimValue = m_storage[pos]->coeff(randDim);
 				}
@@ -249,7 +247,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			actNode /= 2; // if node is not take parent and try again
 		}
 
-		for(auto &&pos : dataPosition[lastValue]){
+		for(auto& pos : dataPosition[lastValue]){
 			++histo[m_storage[pos]->getLabel()];
 		}
 		m_labelsOfWinningClassesInLeaves[i] = (unsigned int) argMax(histo.cbegin(), histo.cend());
@@ -312,7 +310,7 @@ double DynamicDecisionTree::trySplitFor(const double usedSplitValue, const unsig
 				leftCost -= leftClassProb * log(leftClassProb);
 			}
 			if(leftClassProb < 1.0){
-				rightCost -= (1. - leftClassProb) * log((1. - leftClassProb));
+				rightCost -= (1. - leftClassProb) * log(1. - leftClassProb);
 			}
 //			if(leftClassProb > 0){
 //				leftCost += leftClassProb * (1- leftClassProb);

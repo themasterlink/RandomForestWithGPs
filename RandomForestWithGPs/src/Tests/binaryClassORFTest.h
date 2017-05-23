@@ -61,10 +61,10 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 	}
 	printOnScreen("Test size: " << test.size());
 	printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %");
-	printOnScreen("Overconf:  " << (double) oc.mean() * 100.0 << "%%");
-	printOnScreen("Underconf: " << (double) uc.mean() * 100.0 << "%%");
-	printOnScreen("Overconf BVS:  " << (double) ocBVS.mean() * 100.0 << "%%");
-	printOnScreen("Underconf BVS: " << (double) ucBVS.mean() * 100.0 << "%%");
+	printOnScreen("Overconf:  " << oc.mean() * 100.0 << "%%");
+	printOnScreen("Underconf: " << uc.mean() * 100.0 << "%%");
+	printOnScreen("Overconf BVS:  " << ocBVS.mean() * 100.0 << "%%");
+	printOnScreen("Underconf BVS: " << ucBVS.mean() * 100.0 << "%%");
 
 	ConfusionMatrixPrinter::print(conv);
 
@@ -94,7 +94,7 @@ void executeForBinaryClassORF(){
 			Settings::getValue("Forest.Trees.height", height);
 			const unsigned int amountOfSplits = 10;
 			std::vector<OnlineStorage<ClassPoint*> > trains(amountOfSplits);
-			newOrf = new OnlineRandomForest(trains[0], height, TotalStorage::getAmountOfClass());
+			newOrf = new OnlineRandomForest(trains[0], (unsigned int) height, TotalStorage::getAmountOfClass());
 			OnlineRandomForest& orf = *newOrf;
 			// starts the training by its own
 			//	TotalStorage::getOnlineStorageCopySplitsWithTest(trains, test);
@@ -171,7 +171,7 @@ void executeForBinaryClassORF(){
 			int height;
 			Settings::getValue("Forest.Trees.height", height);
 			OnlineStorage<ClassPoint*> train;
-			newOrf = new OnlineRandomForest(train, height, TotalStorage::getAmountOfClass());
+			newOrf = new OnlineRandomForest(train, (unsigned int) height, TotalStorage::getAmountOfClass());
 			OnlineRandomForest& orf = *newOrf;
 
 			TotalStorage::getOnlineStorageCopyWithTest(train, test, 10000000);
@@ -210,11 +210,11 @@ void executeForBinaryClassORF(){
 //		performTest(orf, test);
 		printOnScreen("Third test after orf.update() finished");
 		printOnScreen("Amount of Classes: " << TotalStorage::getAmountOfClass());
-		DataPoint p;
-		p.resize(2);
-		p[0] = 3.0;
-		p[1] = 0.2;
-		const auto i = orf.predict(p);
+//		DataPoint p;
+//		p.resize(2);
+//		p[0] = 3.0;
+//		p[1] = 0.2;
+//		const auto i = orf.predict(p);
 
 		if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 			StopWatch sw;

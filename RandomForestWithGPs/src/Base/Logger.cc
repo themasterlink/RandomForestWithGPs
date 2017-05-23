@@ -46,7 +46,7 @@ void Logger::start(){
 		}else{
 			clockTime << td.hours() << ":" << td.minutes() << ":" << td.seconds() << "." << 0;
 		}
-		for(auto folder : {number2String(dayte.year()),
+		for(auto&& folder : {number2String(dayte.year()),
 			number2String(dayte.month().as_number()),
 			number2String(dayte.day()),
 			clockTime.str()} ){
@@ -88,7 +88,7 @@ void Logger::write(){
 			file.write(it->second.c_str(), it->second.length());
 		}
 	}
-	for(auto name : {"Warning", "Error"}){
+	for(auto&& name : {"Warning", "Error"}){
 		std::map<std::string, std::string>::iterator itOther = m_specialLines.find(name);
 		if(itOther != m_specialLines.end()){
 			file << itOther->first << "\n";
