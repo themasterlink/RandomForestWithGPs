@@ -52,7 +52,7 @@
 		"stepSizeOverData": 0,
 		"factorAmountOfUsedDims": 1.0,
 		"ownSamplingTime": 0,
-		"maxAmountOfUsedMemory": 2000000000,
+		"maxAmountOfUsedMemory": 1100000000,
 		"useBigDynamicDecisionTrees": "true",
 		"layerAmountOfBigDDT": 14,
 		"layerFastAmountOfBigDDT": 2,

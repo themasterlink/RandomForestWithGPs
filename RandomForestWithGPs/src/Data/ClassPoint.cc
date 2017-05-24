@@ -20,6 +20,5 @@ ClassPoint::ClassPoint(const int size, const double& element, const unsigned int
 	DataPoint(DataPoint::Constant(size, element)), m_label(label) {
 }
 
-ClassPoint::~ClassPoint() {
-}
+ClassPoint::~ClassPoint() = default;
 

@@ -444,25 +444,29 @@ bool OnlineRandomForest::update(){
 //		}
 
 		boost::thread_group group;
-		auto nrOfParallel = (const unsigned int) std::min((int) ThreadMaster::getAmountOfThreads(), (int) m_trees.size());
+		const auto nrOfParallel = (unsigned int) std::min((int) ThreadMaster::getAmountOfThreads(), (int) m_trees.size());
 		auto mutex = std::make_unique<boost::mutex>();
 		if(list->size() != m_trees.size()){
 			printError("The sorting process failed, list size is: " << list->size() << ", should be: " << m_trees.size());
 			return false;
 		}
 		auto counter = 0u;
-		const auto totalAmount = std::max((unsigned int) m_trees.size(), (unsigned int) m_trees.size() / nrOfParallel * nrOfParallel);
-		const auto amountOfElements = std::max((unsigned int) m_trees.size(), totalAmount / nrOfParallel);
-		InLinePercentageFiller::setActMax(totalAmount + 1);
+		const auto amountOfElements = (unsigned int) m_trees.size() / nrOfParallel;
+		const auto actMax = (unsigned int) m_trees.size() + 1;
+		InLinePercentageFiller::setActMax(actMax);
 		MemoryType maxAmountOfUsedMemory;
 		Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
 		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 		for(unsigned int i = 0; i < packages.size(); ++i){
-			packages[i] = new InformationPackage(maxAmountOfUsedMemory > 0 ? InformationPackage::InfoType::ORF_TRAIN_FIX : InformationPackage::InfoType::ORF_TRAIN, 0., amountOfElements);
-			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::updateInParallel, this, list.get(), amountOfElements, mutex.get(), i, packages[i], &counter)));
+			packages[i] = new InformationPackage(maxAmountOfUsedMemory > 0 ?
+												 InformationPackage::InfoType::ORF_TRAIN_FIX :
+												 InformationPackage::InfoType::ORF_TRAIN, 0., amountOfElements);
+			group.add_thread(new boost::thread(
+					boost::bind(&OnlineRandomForest::updateInParallel, this, list.get(),
+								amountOfElements, mutex.get(), i, packages[i], &counter)));
 		}
 		int stillOneRunning = 1;
-		while(counter < totalAmount && stillOneRunning != 0){
+		while(counter < actMax && stillOneRunning != 0){
 			stillOneRunning = 0;
 			for(auto& package : packages){
 				if(!package->isTaskFinished()){
@@ -592,37 +596,42 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 		switcher = new BigDynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfUsedLayer.first, m_amountOfUsedLayer.second, m_amountOfPointsCheckedPerSplit);
 	}else{
 		switcher = new DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
-	}	
-	for(unsigned int i = 0; i < amountOfSteps; ++i){
+	}
+	double correctValOfSwitcher = pair.second;
+	for(unsigned int i = 0; i < amountOfSteps - 1; ++i){
 		switcher->train(m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
 		int correct = 0;
-//		for(unsigned int k = m_storage.getLastUpdateIndex(); k < m_storage.size(); ++k){
-		for(auto& point : m_storage){
+		for(const auto& point : m_storage){
 			if(point->getLabel() == switcher->predict(*point)){
 				++correct;
 			}
 		}
-		const double correctVal = correct / (double) m_storage.size() * 100.;
+		const auto correctVal = correct / (double) m_storage.size() * 100.;
 		mutex->lock();
-		pair = *list->begin(); // get new element
+		pair = std::move(*list->begin()); // get new element
 		list->pop_front(); // remove it
 		mutex->unlock();
 		DynamicDecisionTreeInterface* addToList = nullptr;
+		double usedCorrectVal;
 		if(correctVal > pair.second){
 			// if the switcher performs better than the original tree, change both so
 			// that the switcher (with the better result is placed in the list), and the original element gets the new switcher
 			addToList = switcher;
 			switcher = pair.first;
+			usedCorrectVal = correctVal;
+			correctValOfSwitcher = pair.second; // value of the switcher
 			// add to list again!
 			printInPackageOnScreen(package, "Performed new step with better correctness of: " << number2String(correctVal, 2) << " %%, worst had: " << pair.second);
 		}else{
 			addToList = pair.first;
+			usedCorrectVal = pair.second;
+			correctValOfSwitcher = correctVal;
 			// no switch -> the switcher is trys to improve itself
 			printInPackageOnScreen(package, "Performed new step with worse correctness of " << number2String(correctVal, 2) << " %% not used, worst had: " << pair.second);
 		}
 		mutex->lock();
 		*counter += 1; // is already protected in mutex lock
-		internalAppendToSortedList(list, addToList, correctVal); // insert decision tree again in the list
+		internalAppendToSortedList(list, addToList, usedCorrectVal); // insert decision tree again in the list
 		mutex->unlock();
 		if(package->shouldTrainingBePaused()){
 			package->wait();
@@ -630,7 +639,10 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 			break;
 		}
 	}
-	SAVE_DELETE(switcher);
+	mutex->lock();
+	*counter += 1; // is already protected in mutex lock
+	internalAppendToSortedList(list, switcher, correctValOfSwitcher); // insert decision tree again in the list
+	mutex->unlock();
 	package->finishedTask();
 }
 
@@ -640,18 +652,18 @@ void OnlineRandomForest::internalAppendToSortedList(SortedDecisionTreeList* list
 		return;
 	}
 	if(list->size() == 0){
-		list->push_back(SortedDecisionTreePair(pTree, correctVal));
+		list->emplace_back(pTree, correctVal);
 	}else{
 		bool added = false;
 		for(auto it = list->begin(); it != list->end(); ++it){
 			if(it->second > correctVal){
-				list->insert(it, SortedDecisionTreePair(pTree, correctVal));
+				list->emplace(it, pTree, correctVal);
 				added = true;
 				break;
 			}
 		}
 		if(!added){
-			list->push_back(SortedDecisionTreePair(pTree, correctVal));
+			list->emplace_back(pTree, correctVal);
 		}
 	}
 }

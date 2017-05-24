@@ -65,9 +65,9 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 	printOnScreen("Underconf: " << uc.mean() * 100.0 << "%%");
 	printOnScreen("Overconf BVS:  " << ocBVS.mean() * 100.0 << "%%");
 	printOnScreen("Underconf BVS: " << ucBVS.mean() * 100.0 << "%%");
-
-	ConfusionMatrixPrinter::print(conv);
-
+	if(conv.rows() < 40){ // otherwise not useful
+		ConfusionMatrixPrinter::print(conv);
+	}
 //	for(unsigned int i = 0; i < orf.amountOfClasses(); ++i){
 //		double avg = 0;
 //		for(std::list<double>::const_iterator it = lists[i].begin(); it != lists[i].end(); ++it){
@@ -86,16 +86,15 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 void executeForBinaryClassORF(){
 	const int trainAmount = readAllData();
 	if(TotalStorage::getMode() == TotalStorage::Mode::SEPERATE){
-		OnlineRandomForest* newOrf = nullptr;
-		if(false){
+		std::unique_ptr<OnlineRandomForest> newOrf;
+		if(true){
 			//	OnlineStorage<ClassPoint*> train;
 			OnlineStorage<ClassPoint*> test;
 			int height;
 			Settings::getValue("Forest.Trees.height", height);
 			const unsigned int amountOfSplits = 10;
 			std::vector<OnlineStorage<ClassPoint*> > trains(amountOfSplits);
-			newOrf = new OnlineRandomForest(trains[0], (unsigned int) height, TotalStorage::getAmountOfClass());
-			OnlineRandomForest& orf = *newOrf;
+			newOrf = std::make_unique<OnlineRandomForest>(trains[0], (unsigned int) height, TotalStorage::getAmountOfClass());
 			// starts the training by its own
 			//	TotalStorage::getOnlineStorageCopySplitsWithTest(trains, test);
 			//	const unsigned int dim =  trains[0].dim();
@@ -127,6 +126,7 @@ void executeForBinaryClassORF(){
 			TotalStorage::getOnlineStorageCopySplitsWithTest(trains, test);
 			//	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 			printOnScreen("Training finished");
+			auto& orf = *newOrf.get();
 			performTest(orf, trains[0]);
 			printOnScreen("First test finished");
 			for(unsigned int i = 1; i < amountOfSplits; ++i){
@@ -171,8 +171,8 @@ void executeForBinaryClassORF(){
 			int height;
 			Settings::getValue("Forest.Trees.height", height);
 			OnlineStorage<ClassPoint*> train;
-			newOrf = new OnlineRandomForest(train, (unsigned int) height, TotalStorage::getAmountOfClass());
-			OnlineRandomForest& orf = *newOrf;
+			newOrf = std::make_unique<OnlineRandomForest>(train, (unsigned int) height, TotalStorage::getAmountOfClass());
+			auto& orf = *newOrf;
 
 			TotalStorage::getOnlineStorageCopyWithTest(train, test, 10000000);
 			printOnScreen("Training finished");
