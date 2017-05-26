@@ -1,5 +1,5 @@
 /*
- * UsefulStuff.h
+ * Util.h
  *
  *  Created on: 31.05.2016
  *      Author: Max
@@ -39,10 +39,6 @@
 #define BOLDMAGENTA "\033[1m\033[35m"      /* Bold Magenta */
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
-
-static const auto UNDEF_CLASS_LABEL = 99999999u;
-
-static const auto EPSILON = Real(1e-15);
 
 #define SAVE_DELETE(pointer) \
 	delete(pointer); \
@@ -112,7 +108,7 @@ inline void openFileInViewer(const std::string& filename){
 // template ensures that it can be used with any kind of int, unsigned or not
 template<typename T>
 constexpr inline T pow2(const T exponent) noexcept {
-	return ((unsigned int) T(1)) << exponent;
+	return (T(1)) << exponent;
 }
 
 // for this case the pow(2.0, exponent) should be used and not this constexpr function
@@ -120,7 +116,7 @@ template<>
 constexpr inline Real pow2(const Real exponent) noexcept = delete;
 
 template<>
-constexpr inline char pow2(const char exponent) noexcept = delete; // prohibits the use with charbegin,
+constexpr inline char pow2(const char exponent) noexcept = delete; // prohibits the use with char
 
 template<>
 constexpr inline bool pow2(const bool exponent) noexcept = delete; // prohibits the use with char
@@ -194,6 +190,7 @@ inline void quitApplication(const bool wait = true){
 	}
 	ThreadMaster::stopExecution();
 	ThreadMaster::blockUntilFinished();
+	sleepFor(0.5);
 	ScreenOutput::quitForScreenMode();
 	exit(0);
 }
@@ -248,6 +245,11 @@ inline int_fast32_t highEndian2LowEndian(int_fast32_t i) {
 //inline typename
 //__MakeUniq<_Tp>::__single_object makeUnique(_Args&&... __args)
 //{ return std::unique_ptr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
+
+
+static const auto UNDEF_CLASS_LABEL = pow2(16) - 3;
+
+static const auto EPSILON = Real(1e-15);
 
 
 #endif /* UTILITY_UTIL_H_ */

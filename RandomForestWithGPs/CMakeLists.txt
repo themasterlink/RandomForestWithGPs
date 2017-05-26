@@ -106,7 +106,7 @@ set(SOURCE_FILES
         src/RandomForests/DecisionTree.cc
         src/RandomForests/DecisionTree.h
         src/RandomForests/DecisionTreeData.h
-        src/RandomForests/DynamicDecisionTree.cc
+        src/RandomForests/DynamicDecisionTree_i.h
         src/RandomForests/DynamicDecisionTree.h
         src/RandomForests/DynamicDecisionTreeInterface.h
         src/RandomForests/OnlineRandomForest.cc

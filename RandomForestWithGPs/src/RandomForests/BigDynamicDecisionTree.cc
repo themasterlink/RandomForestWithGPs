@@ -105,7 +105,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 		}
 		if(iTreeLayer == 0){
 			// first tree
-			m_fastInnerTrees[0][0] = new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
+			m_fastInnerTrees[0][0] = new DynamicDecisionTree<dimTypeForDDT>(m_storage, depthInThisLayer, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 			const bool ret = m_fastInnerTrees[0][0]->train(amountOfUsedDims, generator, 0, saveDataPositions);
 			if(!ret){
 				printError("The first split could not be performed!");
@@ -131,7 +131,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 							foundAtLeastOneChild = true;
 							const auto iChildIdInLayer = iChildId + leavesForTreesInTheFatherLayer * iRootOfFatherLayerId;
 							auto& currentTree = m_fastInnerTrees[iTreeLayer][iChildIdInLayer];
-							currentTree = new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
+							currentTree = new DynamicDecisionTree<dimTypeForDDT>(m_storage, depthInThisLayer, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 							currentTree->setUsedDataPositions(&dataForThisChild); // set the values of the storage which should be used in this tree
 							const bool trained = currentTree->train(amountOfUsedDims, generator, 0, saveDataPositions);
 							currentTree->setUsedDataPositions(nullptr); // erase pointer to used dataPositions
@@ -218,11 +218,11 @@ void BigDynamicDecisionTree::trainChildrenForRoot(PtrDynamicDecisionTree root, S
 //				if(it != actSmallInnerTreeStructure.end() && false){	// it is given here to hint the position were it should be added
 //					it = actSmallInnerTreeStructure.insert(it, SmallTreeInnerPair(iChildIdInLayer, new DynamicDecisionTree(m_storage, depthInThisLayer, m_amountOfClasses)));
 //				}else{
-					actSmallInnerTreeStructure.insert(SmallTreeInnerPair(iChildIdInLayer,
-																		 new DynamicDecisionTree(m_storage,
+					actSmallInnerTreeStructure.emplace(iChildIdInLayer,
+																		 new DynamicDecisionTree<dimTypeForDDT>(m_storage,
 																								 depthInThisLayer,
 																								 m_amountOfClasses,
-																								 m_amountOfPointsCheckedPerSplit)));
+																								 m_amountOfPointsCheckedPerSplit));
 					it = actSmallInnerTreeStructure.find(iChildIdInLayer);
 //				}
 				if(it != actSmallInnerTreeStructure.end()){

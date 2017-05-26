@@ -5,22 +5,35 @@
  *      Author: Max
  */
 
-#include "DynamicDecisionTree.h"
+//#include "DynamicDecisionTree.h"
+//#include "../Data/ClassKnowledge.h"
+
 #include "../Data/ClassKnowledge.h"
 
-DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<LabeledVectorX *> &storage, const unsigned int maxDepth,
+#ifndef __INCLUDE_DYNAMICDECISIONTREE
+#error "Don't include DynamicDecisionTree_i.h directly. Include DynamicDecisionTree.h instead."
+#endif
+
+template<typename dimType>
+DynamicDecisionTree<dimType>::DynamicDecisionTree(OnlineStorage<LabeledVectorX *> &storage, const unsigned int maxDepth,
 										 const unsigned int amountOfClasses, const unsigned int amountOfPointsPerSplit):
 		m_storage(storage),
-		m_maxDepth(maxDepth),
-		m_maxNodeNr(pow2(maxDepth + 1) - 1),
-		m_maxInternalNodeNr(pow2(maxDepth) - 1),
-		m_amountOfClasses(amountOfClasses),
+		m_maxDepth((dimType) maxDepth),
+		m_maxNodeNr((dimType) pow2(maxDepth + 1) - 1),
+		m_maxInternalNodeNr((dimType) pow2(maxDepth) - 1),
+		m_amountOfClasses((dimType) amountOfClasses),
 		m_amountOfPointsCheckedPerSplit((decltype(m_amountOfPointsCheckedPerSplit)) amountOfPointsPerSplit),
 		m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
-		m_splitDim(m_maxInternalNodeNr + 1, NodeType::NODE_IS_NOT_USED),
-		m_labelsOfWinningClassesInLeaves(pow2(maxDepth), UNDEF_CLASS_LABEL),
+		m_splitDim(m_maxInternalNodeNr + 1, (dimType) NodeType::NODE_IS_NOT_USED),
+		m_labelsOfWinningClassesInLeaves(pow2(maxDepth), (dimType) UNDEF_CLASS_LABEL),
 		m_dataPositions(nullptr),
 		m_useOnlyThisDataPositions(nullptr){
+	static_assert(m_maxAmountOfElements > UNDEF_CLASS_LABEL, "The undef class label is higher than the highest value allowed in the DDT!");
+	if(maxDepth >= sizeof(dimType) * 8 || amountOfClasses >= m_maxAmountOfElements){
+		printError("For this training set the amount of classes or dimension is higher than "
+						   << m_maxAmountOfElements << ", which is not supported here!");
+		quitApplication();
+	}
 	if(m_amountOfPointsCheckedPerSplit == 0){
 		printError("This tree can not be trained!");
 	}
@@ -32,24 +45,32 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<LabeledVectorX *> &storag
 
 
 // construct empty tree
-DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage):
+template<typename dimType>
+DynamicDecisionTree<dimType>::DynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage):
 		DynamicDecisionTree(storage, 1, ClassKnowledge::amountOfClasses(), 100){
 }
 
 // fill empty tree
-void DynamicDecisionTree::prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses){
+template<typename dimType>
+void DynamicDecisionTree<dimType>::prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses){
+	if(maxDepth >= sizeof(dimType) * 8 || amountOfClasses >= m_maxAmountOfElements){
+		printError("For this training set the amount of classes or dimension is higher than "
+						   << m_maxAmountOfElements << ", which is not supported here!");
+		quitApplication();
+	}
 	if(m_maxDepth == 1 && maxDepth > 0 && maxDepth < 28){
-		overwriteConst(m_maxDepth, maxDepth);
-		overwriteConst(m_amountOfClasses, amountOfClasses);
-		overwriteConst(m_maxNodeNr, pow2(maxDepth + 1) - 1);
-		overwriteConst(m_maxInternalNodeNr, pow2(maxDepth) - 1);
+		overwriteConst(m_maxDepth, (dimType) maxDepth);
+		overwriteConst(m_amountOfClasses, (dimType) amountOfClasses);
+		overwriteConst(m_maxNodeNr, (dimType) (pow2(maxDepth + 1) - 1));
+		overwriteConst(m_maxInternalNodeNr, (dimType) (pow2(maxDepth) - 1));
 	}else{
 		printError("The empty tree constructor was not called before!");
 	}
 }
 
 // copy construct
-DynamicDecisionTree::DynamicDecisionTree(const DynamicDecisionTree& tree):
+template<typename dimType>
+DynamicDecisionTree<dimType>::DynamicDecisionTree(const DynamicDecisionTree& tree):
 		DynamicDecisionTreeInterface(tree),
 		m_storage(tree.m_storage),
 		m_maxDepth(tree.m_maxDepth),
@@ -64,26 +85,28 @@ DynamicDecisionTree::DynamicDecisionTree(const DynamicDecisionTree& tree):
 		m_useOnlyThisDataPositions(nullptr){
 }
 
-DynamicDecisionTree::~DynamicDecisionTree(){
+template<typename dimType>
+DynamicDecisionTree<dimType>::~DynamicDecisionTree(){
 	m_useOnlyThisDataPositions = nullptr; // never delete this pointer! (does not belong to this object)
 	deleteDataPositions();
 }
 
-bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator,
-								const unsigned int tryCounter, const bool saveDataPosition){
+template<typename dimType>
+bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberGeneratorForDT &generator,
+										 const dimType tryCounter, const bool saveDataPosition){
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED || m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		// reset training
 		std::fill(m_splitDim.begin(), m_splitDim.end(), NodeType::NODE_IS_NOT_USED);
 		std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), UNDEF_CLASS_LABEL);
 	}
-	std::vector<int> usedDims(amountOfUsedDims,-1);
+	std::vector<dimType> usedDims(amountOfUsedDims,-1);
 	if(amountOfUsedDims == ClassKnowledge::amountOfDims()){
-		for(unsigned int i = 0; i < amountOfUsedDims; ++i){
+		for(dimType i = 0; i < amountOfUsedDims; ++i){
 			usedDims[i] = i;
 		}
 	}else{
 		generator.setRandForDim(0, ClassKnowledge::amountOfDims() - 1);
-		for(unsigned int i = 0; i < amountOfUsedDims; ++i){
+		for(dimType i = 0; i < amountOfUsedDims; ++i){
 			bool doAgain = false;
 			int counter = 0;
 			do{
@@ -207,7 +230,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		}
 		// save actual split
 		m_splitValues[iActNode] = maxScoreElementValue;//(Real) (*m_storage[maxScoreElement])[randDim];
-		m_splitDim[iActNode] = randDim;
+		m_splitDim[iActNode] = (dimType) randDim;
 		// apply split to data
 		const int leftPos = iActNode * 2, rightPos = iActNode * 2 + 1;
 		auto& leftDataPos = dataPosition[leftPos];
@@ -276,7 +299,8 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 	return true;
 }
 
-Real DynamicDecisionTree::trySplitFor(const Real usedSplitValue, const unsigned int usedDim,
+template<typename dimType>
+Real DynamicDecisionTree<dimType>::trySplitFor(const Real usedSplitValue, const unsigned int usedDim,
 		const std::vector<unsigned int>& dataInNode, std::vector<unsigned int>& leftHisto,
 		std::vector<unsigned int>& rightHisto, RandomNumberGeneratorForDT& generator){
 	int leftAmount = 0, rightAmount = 0;
@@ -309,7 +333,7 @@ Real DynamicDecisionTree::trySplitFor(const Real usedSplitValue, const unsigned 
 	}
 	// Entropy -> TODO maybe Gini
 	Real leftCost = 0, rightCost = 0;
-	for(unsigned int i = 0; i < m_amountOfClasses; ++i){
+	for(dimType i = 0; i < m_amountOfClasses; ++i){
 		const Real normalizer = leftHisto[i] + rightHisto[i];
 		if(normalizer > 0){
 			const Real leftClassProb = leftHisto[i] / normalizer;
@@ -332,13 +356,15 @@ Real DynamicDecisionTree::trySplitFor(const Real usedSplitValue, const unsigned 
 	return rightAmount * rightCost + leftAmount * leftCost;
 }
 
-unsigned int DynamicDecisionTree::predict(const VectorX& point) const{
+template<typename dimType>
+unsigned int DynamicDecisionTree<dimType>::predict(const VectorX& point) const{
 	int iActNode = 1; // start in root
 	return predict(point, iActNode);
 }
 
 // is named iActNode here, is easier, but represents in the end the winningLeafNode
-unsigned int DynamicDecisionTree::predict(const VectorX& point, int& iActNode) const {
+template<typename dimType>
+unsigned int DynamicDecisionTree<dimType>::predict(const VectorX& point, int& iActNode) const {
 	iActNode = 1;
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED && m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		while(iActNode <= (int) m_maxInternalNodeNr){
@@ -364,7 +390,8 @@ unsigned int DynamicDecisionTree::predict(const VectorX& point, int& iActNode) c
 	}
 }
 
-bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const VectorX& point1,
+template<typename dimType>
+bool DynamicDecisionTree<dimType>::predictIfPointsShareSameLeaveWithHeight(const VectorX& point1,
 																  const VectorX& point2,
 																  const int usedHeight) const {
 	int iActNode = 1; // start in root
@@ -405,7 +432,8 @@ bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const VectorX&
 	}
 }
 
-void DynamicDecisionTree::adjustToNewData(){
+template<typename dimType>
+void DynamicDecisionTree<dimType>::adjustToNewData(){
 	std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), 0);
 	const unsigned int leafAmount = pow2(m_maxDepth);
 	std::vector< std::vector<int> > histo(leafAmount, std::vector<int>(m_amountOfClasses, 0));
@@ -447,25 +475,29 @@ void DynamicDecisionTree::adjustToNewData(){
 	}
 }
 
-unsigned int DynamicDecisionTree::getNrOfLeaves(){
+template<typename dimType>
+unsigned int DynamicDecisionTree<dimType>::getNrOfLeaves(){
 	return pow2(m_maxDepth);
 }
 
-unsigned int DynamicDecisionTree::amountOfClasses() const{
+template<typename dimType>
+unsigned int DynamicDecisionTree<dimType>::amountOfClasses() const{
 	return m_amountOfClasses;
 }
 
-void DynamicDecisionTree::deleteDataPositions(){
+template<typename dimType>
+void DynamicDecisionTree<dimType>::deleteDataPositions(){
 	SAVE_DELETE(m_dataPositions);
 }
 
-MemoryType DynamicDecisionTree::getMemSize() const {
-	const auto splits = ((MemoryType) m_maxInternalNodeNr + 1) * (sizeof(Real) + sizeof(unsigned int) + sizeof(int));
+template<typename dimType>
+MemoryType DynamicDecisionTree<dimType>::getMemSize() const {
+	const auto splits = ((MemoryType) m_maxInternalNodeNr + 1) * (sizeof(Real) + sizeof(dimType) * 2);
 	const auto refs = (MemoryType) sizeof(int*) * 6; // size of pointers and refs
 	return refs + splits; // 16 + 24 = 40, 16 general info, 40 pointers and ref
 }
 
-//void DynamicDecisionTree::printStream(std::ostream &output, const Real precision){
+//void DynamicDecisionTree<dimType>::printStream(std::ostream &output, const Real precision){
 //	if(&output == &std::cout){
 //#ifdef USE_SCREEN_OUPUT
 //		printError("This print message is not supported if output is std::cout and the panels are used!");

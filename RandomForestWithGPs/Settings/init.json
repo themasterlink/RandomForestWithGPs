@@ -45,7 +45,7 @@
 		"normalizeData": "false",
 		"removeUselessDimensions": "true",
 		"readFromFolder": "true",
-		"stepOverTrainingData": 0
+		"stepOverTrainingData": 20
 	},
 	"OnlineRandomForest": {
 		"amountOfPointsUntilRetrain": 200,

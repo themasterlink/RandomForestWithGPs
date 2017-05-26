@@ -37,9 +37,11 @@ public:
 	template<class T>
 	static void readVector(std::fstream& stream, std::vector<T>& vector);
 
-	static void writeDynamicTree(std::fstream& stream, const DynamicDecisionTree& tree);
+	template<class T>
+	static void writeDynamicTree(std::fstream& stream, const DynamicDecisionTree<T>& tree);
 
-	static void readDynamicTree(std::fstream& stream, DynamicDecisionTree& tree);
+	template<class T>
+	static void readDynamicTree(std::fstream& stream, DynamicDecisionTree<T>& tree);
 
 	static void writeBigDynamicTree(std::fstream& stream, const BigDynamicDecisionTree& tree);
 
@@ -84,5 +86,44 @@ void ReadWriterHelper::readVector(std::fstream& stream, std::vector<T>& vector){
 	vector.resize(size);
 	stream.read((char*) &vector[0], sizeof(T) * size);
 }
+
+
+template<class T>
+void ReadWriterHelper::writeDynamicTree(std::fstream& stream, const DynamicDecisionTree<T>& tree){
+	// write standart information
+	const unsigned int amountOfDims = ClassKnowledge::amountOfDims();
+	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	stream.write((char*) (&amountOfDims), sizeof(unsigned int));
+	stream.write((char*) (&amountOfClasses), sizeof(unsigned int));
+	stream.write((char*) (&tree.m_amountOfClasses), sizeof(T));
+	stream.write((char*) (&tree.m_maxDepth), sizeof(T));
+	writeVector(stream, tree.m_splitValues);
+	writeVector(stream, tree.m_splitDim);
+	writeVector(stream, tree.m_labelsOfWinningClassesInLeaves);
+}
+
+template<class T>
+void ReadWriterHelper::readDynamicTree(std::fstream& stream, DynamicDecisionTree<T>& tree){
+	// read standart information
+	const unsigned int amountOfDims = ClassKnowledge::amountOfDims();
+	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	unsigned int readDims = 0;
+	unsigned int readClasses = 0;
+	stream.read((char*) (&readDims), sizeof(unsigned int));
+	stream.read((char*) (&readClasses), sizeof(unsigned int));
+	if(readDims == amountOfDims && readClasses == amountOfClasses){ // check standart information
+		T amountOfUsedClasses = 0;
+		T depth = 0;
+		stream.read((char*) (&amountOfUsedClasses), sizeof(T));
+		stream.read((char*) (&depth), sizeof(T));
+		tree.prepareForSetting(depth, amountOfUsedClasses);
+		readVector(stream, tree.m_splitValues);
+		readVector(stream, tree.m_splitDim);
+		readVector(stream, tree.m_labelsOfWinningClassesInLeaves);
+	}else{
+		printError("The reading process failed the saved tree was not trained on this data set! Had dims: " << readDims << " and classes: " << readClasses);
+	}
+}
+
 
 #endif /* UTILITY_READWRITERHELPER_H_ */

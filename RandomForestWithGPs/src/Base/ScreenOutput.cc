@@ -21,7 +21,7 @@ std::string ScreenOutput::m_progressLine;
 
 void ScreenOutput::quitForScreenMode(){
 #ifdef USE_SCREEN_OUPUT
-	clear();
+//	clear();
 	endwin();
 #endif
 }

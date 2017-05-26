@@ -59,7 +59,7 @@ public:
 
 private:
 
-	using PtrDynamicDecisionTree = DynamicDecisionTree*;
+	using PtrDynamicDecisionTree = DynamicDecisionTree<dimTypeForDDT>*;
 	using SmallTreeInnerStructure = std::map<unsigned int, PtrDynamicDecisionTree>;
 	using SmallTreeInnerStructureIterator = SmallTreeInnerStructure::iterator;
 	using SmallTreeInnerPair = std::pair<unsigned int, PtrDynamicDecisionTree>;

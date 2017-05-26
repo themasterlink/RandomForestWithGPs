@@ -50,9 +50,9 @@ void KernelBase<KernelType, nrOfParams>::init(const Matrix& dataMat, const bool 
 		if(boost::filesystem::exists(path) && m_differences == nullptr){
 			std::fstream input(path, std::ios::binary| std::ios::in);
 			m_differences = new Eigen::MatrixXf();
-			ReadWriterHelper::readMatrix<Matrix>(input, *m_differences);
+			ReadWriterHelper::readMatrix<Eigen::MatrixXf>(input, *m_differences);
 			input.close();
-			m_dataPoints = m_differences->cols();
+			m_dataPoints = (unsigned int) m_differences->cols();
 			read = m_differences->cols() == dataMat.cols(); // else this means the kernel data does not fit the actual load data
 			m_calcedDifferenceMatrix = true;
 		}
@@ -61,7 +61,7 @@ void KernelBase<KernelType, nrOfParams>::init(const Matrix& dataMat, const bool 
 			m_differences = new Eigen::MatrixXf(m_dataPoints, m_dataPoints);
 			calcDifferenceMatrix(0, amountOfElementsInTriangluarMatrix, m_differences);
 			std::fstream output(path, std::ios::binary | std::ios::out);
-			ReadWriterHelper::writeMatrix<Matrix>(output, *m_differences);
+			ReadWriterHelper::writeMatrix<Eigen::MatrixXf>(output, *m_differences);
 			output.close();
 			m_calcedDifferenceMatrix = true;
 		}
@@ -96,7 +96,7 @@ void KernelBase<KernelType, nrOfParams>::init(const LabeledData& data, const boo
 			calcDifferenceMatrix(0, amountOfElementsInTriangluarMatrix, m_differences);
 			m_calcedDifferenceMatrix = true;
 			std::fstream output(path, std::ios::binary | std::ios::out);
-			ReadWriterHelper::writeMatrix<Matrix>(output, *m_differences);
+			ReadWriterHelper::writeMatrix<Eigen::MatrixXf>(output, *m_differences);
 			output.close();
 		}
 	}

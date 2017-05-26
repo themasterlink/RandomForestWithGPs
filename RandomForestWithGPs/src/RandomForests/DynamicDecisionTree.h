@@ -17,18 +17,23 @@
 
 class ReadWriterHelper;
 
+template<typename dimType = unsigned short>
 class DynamicDecisionTree : public DynamicDecisionTreeInterface {
 
-friend ReadWriterHelper;
+	// sizeof only return bytes -1, because it starts at zero
+	static const dimType m_maxAmountOfElements = (dimType)(pow2((unsigned long) sizeof(dimType) * 8) - 1);
+
+	friend ReadWriterHelper;
 
 public:
-	enum NodeType : int { // saved in m_splitDim
-		NODE_IS_NOT_USED = -1,
-		NODE_CAN_BE_USED = -2,
+
+	enum NodeType : dimType { // saved in m_splitDim
+		NODE_IS_NOT_USED = m_maxAmountOfElements,
+		NODE_CAN_BE_USED = m_maxAmountOfElements - 1
 	};
 
 	DynamicDecisionTree(OnlineStorage<LabeledVectorX *> &storage, const unsigned int maxDepth,
-							const unsigned int amountOfClasses, const unsigned int amountOfPointsPerSplit);
+						const unsigned int amountOfClasses, const unsigned int amountOfPointsPerSplit);
 
 	// construct empty tree
 	DynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage);
@@ -42,7 +47,8 @@ public:
 		train(amountOfUsedDims, generator, 0, false);
 	}
 
-	bool train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const unsigned int tryCounter, const bool saveDataPosition);
+	bool train(dimType amountOfUsedDims, RandomNumberGeneratorForDT &generator, const dimType tryCounter,
+			   const bool saveDataPosition);
 
 	Real trySplitFor(const Real usedSplitValue, const unsigned int usedDim,
 			const std::vector<unsigned int>& dataInNode, std::vector<unsigned int>& leftHisto,
@@ -88,13 +94,13 @@ private:
 
 	OnlineStorage<LabeledVectorX*>& m_storage;
 	// max depth allowed in this tree
-	const unsigned int m_maxDepth;
+	const dimType m_maxDepth;
 	// max number of nodes possible in this tree
-	const unsigned int m_maxNodeNr; // = pow2(m_maxDepth +1) - 1
+	const dimType m_maxNodeNr; // = pow2(m_maxDepth +1) - 1
 	// max number of nodes, which have children
-	const unsigned int m_maxInternalNodeNr; // = pow2(m_maxDepth) - 1
+	const dimType m_maxInternalNodeNr; // = pow2(m_maxDepth) - 1
 
-	const unsigned int m_amountOfClasses;
+	const dimType m_amountOfClasses;
 
 	const std::vector<unsigned int>::size_type m_amountOfPointsCheckedPerSplit;
 	// contains the split values for the nodes:
@@ -106,9 +112,9 @@ private:
 	// 8 9 	10 11 12 13  14 15
 	std::vector<Real> m_splitValues;
 	// order is like with split values
-	std::vector<int> m_splitDim;
+	std::vector<dimType> m_splitDim;
 
-	std::vector<unsigned int> m_labelsOfWinningClassesInLeaves;
+	std::vector<dimType> m_labelsOfWinningClassesInLeaves;
 
 	// is used in the BigDynamicDecisionTree
 	// fill contain the data for each node ->
@@ -118,5 +124,11 @@ private:
 	std::vector<unsigned int>* m_useOnlyThisDataPositions;
 
 };
+
+
+
+#define __INCLUDE_DYNAMICDECISIONTREE
+#include "DynamicDecisionTree_i.h"
+#undef __INCLUDE_DYNAMICDECISIONTREE
 
 #endif /* RANDOMFORESTS_DYNAMICDECISIONTREE_H_ */

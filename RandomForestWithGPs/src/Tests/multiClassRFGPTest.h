@@ -40,10 +40,10 @@ void executeForRFGPMultiClass(const std::string& path){
 	DataSets testSets;
 	const Real facForTraining = 0.8;
 	for(DataSetsConstIterator it = dataSets.begin(); it != dataSets.end(); ++it){
-		trainSets.insert(DataSetPair(it->first, LabeledData()));
+		trainSets.emplace(it->first, LabeledData());
 		DataSetsIterator itTrain = trainSets.find(it->first);
 		itTrain->second.reserve(facForTraining * it->second.size());
-		testSets.insert(DataSetPair(it->first, LabeledData()));
+		testSets.emplace(it->first, LabeledData());
 		DataSetsIterator itTest = testSets.find(it->first);
 		itTest->second.reserve((1-facForTraining) * it->second.size());
 		for(int i = 0; i < (int) it->second.size(); ++i){

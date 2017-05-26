@@ -46,7 +46,7 @@ void GaussianProcessWriter::readFromStream(std::fstream& file, GaussianProcess& 
 	ReadWriterHelper::readVector(file, gp.m_sqrtDDLogPi);
 	ReadWriterHelper::readMatrix<Matrix>(file, gp.m_innerOfLLT);
 	gp.m_choleskyLLT.compute(gp.m_innerOfLLT);
-	ReadWriterHelper::readMatrix<Matrix>(file, *gp.m_kernel.m_differences);
+	ReadWriterHelper::readMatrix<Eigen::MatrixXf>(file, *gp.m_kernel.m_differences);
 	bool hasMoreThanOneDim;
 	file.read((char*) &hasMoreThanOneDim, sizeof(bool));
 	if(hasMoreThanOneDim){
@@ -87,7 +87,7 @@ void GaussianProcessWriter::writeToStream(std::fstream& file, GaussianProcess& g
 	ReadWriterHelper::writeVector(file, gp.m_sqrtDDLogPi);
 	ReadWriterHelper::writeVector(file, gp.m_sqrtDDLogPi);
 	ReadWriterHelper::writeMatrix<Matrix>(file, gp.m_innerOfLLT);
-	ReadWriterHelper::writeMatrix<Matrix>(file, *gp.m_kernel.m_differences);
+	ReadWriterHelper::writeMatrix<Eigen::MatrixXf>(file, *gp.m_kernel.m_differences);
 	bool hasMoreThanOneLength = gp.m_kernel.hasLengthMoreThanOneDim();
 	file.write((char*) &hasMoreThanOneLength, sizeof(bool)); // order is len, sigmaF, sigmaN
 	if(hasMoreThanOneLength){

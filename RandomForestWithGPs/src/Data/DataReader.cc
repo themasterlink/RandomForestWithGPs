@@ -230,7 +230,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 				readFromFile(data, filePath, amountOfData, amountOfClasses, readTxt);
 				ClassKnowledge::setNameFor(name, amountOfClasses);
 				++amountOfClasses;
-				dataSets.insert(DataSetPair(name, data));
+				dataSets.emplace(name, data);
 			}
 		}
 		break;
@@ -301,7 +301,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			if(createNewClasses){
 				ClassKnowledge::setNameFor(number2String(i), i);
 			}
-			dataSets.insert( DataSetPair(number2String(i), data[i]));
+			dataSets.emplace(number2String(i), data[i]);
 		}
 //		const unsigned int amountOfDim = data[0][0]->rows();
 //		std::vector<Vector2> minMaxValues(amountOfDim);
@@ -470,7 +470,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			if(firstTime){
 				ClassKnowledge::setNameFor(number2String(i), i);
 			}
-			dataSets.insert( DataSetPair(number2String(i), data[i]));
+			dataSets.emplace(number2String(i), data[i]);
 		}
 		if(data[0].size() == 0){
 			printError("Class 0 is not represented here!");
@@ -511,10 +511,10 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 					dataSets.find(ClassKnowledge::getNameFor(it->second))->second.push_back(data[i]);
 				}else{
 					const unsigned int newNumber = ClassKnowledge::amountOfClasses();
-					mapFromOldToNewLabels.insert(std::pair<unsigned int, unsigned int>(data[i]->getLabel(), newNumber));
+					mapFromOldToNewLabels.emplace(data[i]->getLabel(), newNumber);
 					ClassKnowledge::setNameFor(number2String(newNumber), newNumber);
 					LabeledData newData;
-					dataSets.insert(DataSetPair(ClassKnowledge::getNameFor(newNumber), newData));
+					dataSets.emplace(ClassKnowledge::getNameFor(newNumber), newData);
 					dataSets.find(ClassKnowledge::getNameFor(newNumber))->second.push_back(data[i]);
 				}
 			}

@@ -160,7 +160,7 @@ void TotalStorage::readData(const int amountOfData){
 				it->second.push_back(data[i]);
 			}else{
 				LabeledData newData;
-				m_storage.insert(DataSetPair(ClassKnowledge::getNameFor(data[i]->getLabel()), newData));
+				m_storage.emplace(ClassKnowledge::getNameFor(data[i]->getLabel()), newData);
 				DataSetsIterator newIt = m_storage.find(ClassKnowledge::getNameFor(data[i]->getLabel()));
 				if(newIt != m_storage.end()){
 					newIt->second.push_back(data[i]);

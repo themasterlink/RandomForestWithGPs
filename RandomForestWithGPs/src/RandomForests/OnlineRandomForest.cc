@@ -81,7 +81,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 		if(m_useBigDynamicDecisionTrees){
 			treePointer = new BigDynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfUsedLayer.first, m_amountOfUsedLayer.second, m_amountOfPointsCheckedPerSplit);
 		}else{
-			treePointer = new DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
+			treePointer = new DynamicDecisionTree<unsigned int>(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 		}
 		treePointer->train(m_amountOfUsedDims, *generator);
 		printInPackageOnScreen(package, "Number " << i++ << " was calculated, total memory usage: " << convertMemorySpace(m_usedMemory));
@@ -301,12 +301,12 @@ void OnlineRandomForest::writeTreesToDisk(const unsigned int amountOfTrees) cons
 					DynamicDecisionTreeInterface* tree = m_trees.front();
 					m_trees.pop_front();
 					if(m_useBigDynamicDecisionTrees){
-						BigDynamicDecisionTree* dtTree = dynamic_cast<BigDynamicDecisionTree*>(tree);
+						auto* dtTree = dynamic_cast<BigDynamicDecisionTree*>(tree);
 						ReadWriterHelper::writeBigDynamicTree(output, *dtTree);
 						SAVE_DELETE(dtTree);
 					}else{
-						DynamicDecisionTree* dtTree = dynamic_cast<DynamicDecisionTree*>(tree);
-						ReadWriterHelper::writeDynamicTree(output, *dtTree);
+						auto* dtTree = dynamic_cast<DynamicDecisionTree<unsigned int>*>(tree);
+						ReadWriterHelper::writeDynamicTree<unsigned int>(output, *dtTree);
 						SAVE_DELETE(dtTree);
 					}
 				}
@@ -336,12 +336,12 @@ void OnlineRandomForest::loadBatchOfTreesFromDisk(const unsigned int batchNr) co
 					output.read((char*) (&amountOfTrees), sizeof(unsigned int));
 					for(unsigned int i = 0; i < amountOfTrees; ++i){
 						if(m_useBigDynamicDecisionTrees){
-							BigDynamicDecisionTree* newTree = new BigDynamicDecisionTree(m_storage);
+							auto* newTree = new BigDynamicDecisionTree(m_storage);
 							ReadWriterHelper::readBigDynamicTree(output, *newTree);
 							m_trees.push_back((DynamicDecisionTreeInterface*) newTree);
 							m_usedMemory += newTree->getMemSize();
 						}else{
-							DynamicDecisionTree* newTree = new DynamicDecisionTree(m_storage);
+							auto* newTree = new DynamicDecisionTree<unsigned int>(m_storage);
 							ReadWriterHelper::readDynamicTree(output, *newTree);
 							m_trees.push_back((DynamicDecisionTreeInterface*) newTree);
 							m_usedMemory += newTree->getMemSize();
@@ -595,7 +595,7 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 	if(m_useBigDynamicDecisionTrees){
 		switcher = new BigDynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfUsedLayer.first, m_amountOfUsedLayer.second, m_amountOfPointsCheckedPerSplit);
 	}else{
-		switcher = new DynamicDecisionTree(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
+		switcher = new DynamicDecisionTree<unsigned int>(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 	}
 	Real correctValOfSwitcher = pair.second;
 	for(unsigned int i = 0; i < amountOfSteps - 1; ++i){
