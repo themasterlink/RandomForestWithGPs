@@ -7,7 +7,7 @@
 
 #include "TimeFrame.h"
 
-const TimeFrame operator*(const TimeFrame& frame, const double fac){
+const TimeFrame operator*(const TimeFrame& frame, const Real fac){
 	TimeFrame newFrame(frame);
 	newFrame *= fac;
 	return newFrame;
@@ -25,11 +25,11 @@ const TimeFrame operator+(const TimeFrame& lhs, const TimeFrame& rhs){
 	return newFrame;
 }
 
-TimeFrame::TimeFrame(const double seconds){
+TimeFrame::TimeFrame(const Real seconds){
 	setWithSeconds(seconds);
 }
 
-void TimeFrame::setWithSeconds(const double seconds){
+void TimeFrame::setWithSeconds(const Real seconds){
 	if(seconds > 3600){
 		this->m_hours = (int) seconds / 3600;
 		this->m_minutes = (int) (seconds - this->m_hours * 3600) / 60;
@@ -64,7 +64,7 @@ std::ostream& operator<<(std::ostream& stream, const TimeFrame& time){
 	}
 }
 
-TimeFrame& TimeFrame::operator*=(const double fac){
+TimeFrame& TimeFrame::operator*=(const Real fac){
 	setWithSeconds(getSeconds() * fac);
 	return *this;
 }

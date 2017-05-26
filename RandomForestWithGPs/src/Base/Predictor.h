@@ -14,7 +14,7 @@ class PredictorBinaryClass {
 public:
 	virtual ~PredictorBinaryClass(){};
 
-	virtual real predict(const VectorX& point) const = 0;
+	virtual Real predict(const VectorX& point) const = 0;
 };
 
 class PredictorMultiClass {
@@ -25,7 +25,7 @@ public:
 
 	virtual void predictData(const Data& points, Labels& labels) const = 0;
 
-	virtual void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const = 0;
+	virtual void predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const = 0;
 
 	virtual unsigned int amountOfClasses() const = 0;
 };

@@ -21,7 +21,7 @@ struct DecisionTreeData{
 	int nrOfInternalNodes; // size of dim and split values
 	int nrOfLeaves; // is equal to number of (internal nodes in tree + 1)
 	int amountOfClasses;
-	std::vector<real> splitValues; // array of the splitValues
+	std::vector<Real> splitValues; // array of the splitValues
 	std::vector<int> dimValues; // array of the dimension used for the split, if value is -1 -> not used!
 	std::vector<int> labelsOfWinningClassInLeaves;
 };

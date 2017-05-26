@@ -27,15 +27,15 @@ public:
 
 	unsigned int predict(const LabeledVectorX& point) const;
 
-	void predict(const VectorX& point, std::vector<real>& probabilities) const;
+	void predict(const VectorX& point, std::vector<Real>& probabilities) const;
 
 	void predictData(const Data& points, Labels& labels) const override;
 
 	void predictData(const LabeledData& points, Labels& labels) const;
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const override;
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const override;
 
-	void predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const;
+	void predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const;
 
 	unsigned int amountOfClasses() const override;
 
@@ -48,16 +48,16 @@ private:
 	void trainInParallel(IVM* ivm, const int usedIvm, InformationPackage* package);
 
 	void predictDataInParallel(IVM* ivm, const Data& points, const int usedIvm,
-			std::vector< std::vector<real> >* probabilities, InformationPackage* package) const;
+			std::vector< std::vector<Real> >* probabilities, InformationPackage* package) const;
 
 	void predictClassDataInParallel(IVM* ivm, const LabeledData& points, const int usedIvm,
-			std::vector< std::vector<real> >* probabilities, InformationPackage* package) const;
+			std::vector< std::vector<Real> >* probabilities, InformationPackage* package) const;
 
 	void initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXf* differenceMatrix, InformationPackage* package);
 
 	void retrainIvmIfNeeded(IVM* ivm, InformationPackage* package, const int iClassNr);
 
-	unsigned int getLabelFrom(const std::vector<real>& probs) const;
+	unsigned int getLabelFrom(const std::vector<Real>& probs) const;
 
 	OnlineStorage<LabeledVectorX*>& m_storage;
 
@@ -77,7 +77,7 @@ private:
 
 	bool m_firstTraining;
 
-	double m_correctAmountForTrainingData;
+	Real m_correctAmountForTrainingData;
 
 	OnlineRandomForest* m_orfForKernel;
 
@@ -85,7 +85,7 @@ private:
 
 	std::list<InformationPackage*> m_packages;
 
-	std::vector<real> m_correctAmountForTrainingDataForClasses;
+	std::vector<Real> m_correctAmountForTrainingDataForClasses;
 
 	const int m_orfClassLabel;
 

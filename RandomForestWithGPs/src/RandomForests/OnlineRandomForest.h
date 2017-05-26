@@ -35,19 +35,19 @@ public:
 
 	unsigned int predict(const VectorX& point) const override;
 
-	double predict(const VectorX& point1, const VectorX& point2, const unsigned int sampleAmount) const;
+	Real predict(const VectorX& point1, const VectorX& point2, const unsigned int sampleAmount) const;
 
-	double predictPartitionEquality(const VectorX& point1, const VectorX& point2,
+	Real predictPartitionEquality(const VectorX& point1, const VectorX& point2,
 									RandomUniformNr& uniformNr, unsigned int amountOfSamples) const;
 
 	void predictData(const Data& points, Labels& labels) const override;
 
 	void predictData(const Data& points, Labels& labels,
-					 std::vector< std::vector<real> >& probabilities) const override;
+					 std::vector< std::vector<Real> >& probabilities) const override;
 
 	void predictData(const LabeledData& points, Labels& labels) const;
 
-	void predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const;
+	void predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const;
 
 	void getLeafNrFor(std::vector<int>& leafNrs);
 
@@ -69,7 +69,7 @@ public:
 
 private:
 
-	using SortedDecisionTreePair = std::pair<DynamicDecisionTreeInterface*, double>;
+	using SortedDecisionTreePair = std::pair<DynamicDecisionTreeInterface*, Real>;
 	using SortedDecisionTreeList = std::list<SortedDecisionTreePair>;
 
 	void predictDataInParallel(const Data& points, Labels* labels,
@@ -79,17 +79,17 @@ private:
 									const unsigned int start, const unsigned int end) const;
 
 	void predictDataProbInParallelStartEnd(const Data& points, Labels* labels,
-										   std::vector< std::vector<real> >* probabilities, const unsigned int start,
+										   std::vector< std::vector<Real> >* probabilities, const unsigned int start,
 										   const unsigned int end) const;
 
 	void predictClassDataProbInParallelStartEnd(const LabeledData& points, Labels* labels,
-												std::vector< std::vector<real> >* probabilities,
+												std::vector< std::vector<Real> >* probabilities,
 												const unsigned int start, const unsigned int end) const;
 
-	void predictDataProbInParallel(const Data& points, std::vector< std::vector<real> >* probabilities,
+	void predictDataProbInParallel(const Data& points, std::vector< std::vector<Real> >* probabilities,
 			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
 
-	void predictClassDataProbInParallel(const LabeledData& points, std::vector< std::vector<real> >* probabilities,
+	void predictClassDataProbInParallel(const LabeledData& points, std::vector< std::vector<Real> >* probabilities,
 			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
 
 	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package,
@@ -99,7 +99,7 @@ private:
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
 	void internalAppendToSortedList(SortedDecisionTreeList* list,
-									DynamicDecisionTreeInterface* pTree, double correctVal);
+									DynamicDecisionTreeInterface* pTree, Real correctVal);
 
 	void mergeSortedLists(SortedDecisionTreeList* aimList, SortedDecisionTreeList* other);
 
@@ -112,9 +112,9 @@ private:
 
 	void updateMinMaxValues(unsigned int event);
 
-	void tryAmountForLayers(RandomNumberGeneratorForDT* generator, const double secondsPerSplit,
+	void tryAmountForLayers(RandomNumberGeneratorForDT* generator, const Real secondsPerSplit,
 							std::list<std::pair<unsigned int, unsigned int> >* layerValues,
-							boost::mutex* mutex, std::pair<int, int>* bestLayerSplit, double* bestCorrectness);
+							boost::mutex* mutex, std::pair<int, int>* bestLayerSplit, Real* bestCorrectness);
 
 	void writeTreesToDisk(const unsigned int amountOfTrees) const;
 
@@ -130,7 +130,7 @@ private:
 
 	int m_amountOfUsedDims;
 
-	double m_factorForUsedDims;
+	Real m_factorForUsedDims;
 
 	Vector2 m_minMaxUsedDataFactor;
 
@@ -143,7 +143,7 @@ private:
 
 	mutable std::vector<std::pair<std::string, std::string> > m_savedToDiskTreesFilePaths;
 
-	DecisionTreeIterator findWorstPerformingTree(double& correctAmount);
+	DecisionTreeIterator findWorstPerformingTree(Real& correctAmount);
 
 	std::vector<RandomNumberGeneratorForDT*> m_generators;
 
@@ -151,7 +151,7 @@ private:
 
 	bool m_firstTrainingDone;
 
-	double m_ownSamplingTime;
+	Real m_ownSamplingTime;
 
 	unsigned int m_desiredAmountOfTrees;
 

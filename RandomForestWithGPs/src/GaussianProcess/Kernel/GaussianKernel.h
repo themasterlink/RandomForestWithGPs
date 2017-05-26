@@ -27,9 +27,9 @@ public:
 
 	void changeKernelConfig(const bool useAllDimForLen);
 
-	double calcDiagElement(unsigned int row) const override;
+	Real calcDiagElement(unsigned int row) const override;
 
-	double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const override;
+	Real calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const override;
 
 	void calcKernelVector(const VectorX& vector, const Matrix& dataMat, VectorX& res) const override;
 
@@ -41,27 +41,27 @@ public:
 
 	std::string prettyString() const override;
 
-	void setHyperParams(double len, double noiseF);
+	void setHyperParams(Real len, Real noiseF);
 
-	void setHyperParams(double len, double noiseF, double noiseS);
+	void setHyperParams(Real len, Real noiseF, Real noiseS);
 
-	void setHyperParams(const std::vector<real>& len, double noiseF, double noiseS);
+	void setHyperParams(const std::vector<Real>& len, Real noiseF, Real noiseS);
 
-	void addHyperParams(double len, double noiseF, double noiseS = 0.);
+	void addHyperParams(Real len, Real noiseF, Real noiseS = 0.);
 
-	void setSNoise(double val){ m_kernelParams.m_sNoise.setAllValuesTo(val); };
+	void setSNoise(Real val){ m_kernelParams.m_sNoise.setAllValuesTo(val); };
 
-	void setFNoise(double val){ m_kernelParams.m_fNoise.setAllValuesTo(val); };
+	void setFNoise(Real val){ m_kernelParams.m_fNoise.setAllValuesTo(val); };
 
-	void setLength(double val){ m_kernelParams.m_length.setAllValuesTo(val); };
+	void setLength(Real val){ m_kernelParams.m_length.setAllValuesTo(val); };
 
 	void getCopyOfParams(GaussianKernelParams& params);
 
-	double kernelFunc(const int row, const int col) const override;
+	Real kernelFunc(const int row, const int col) const override;
 
-	double kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const override;
+	Real kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const override;
 
-	double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const override;
+	Real kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const override;
 
 private:
 
@@ -70,7 +70,7 @@ private:
 };
 
 inline
-double GaussianKernel::calcDiagElement(unsigned int row) const{ // row is not used in this kernel!
+Real GaussianKernel::calcDiagElement(unsigned int row) const{ // row is not used in this kernel!
 	UNUSED(row);
 	return m_kernelParams.m_fNoise.getSquaredValue() + m_kernelParams.m_sNoise.getSquaredValue();
 }

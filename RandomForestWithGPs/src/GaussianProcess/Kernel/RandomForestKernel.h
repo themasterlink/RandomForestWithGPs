@@ -25,19 +25,19 @@ public:
 
 	void update(Subject* subject, unsigned int event) override;
 
-	double calcDiagElement(unsigned int row) const override;
+	Real calcDiagElement(unsigned int row) const override;
 
-	double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const override;
+	Real calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const override;
 
 	void calcKernelVector(const VectorX& vector, const Matrix& dataMat, VectorX& res) const override;
 
 	std::string prettyString() const override;
 
-	double kernelFunc(const int row, const int col) const override;
+	Real kernelFunc(const int row, const int col) const override;
 
-	double kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const override;
+	Real kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const override;
 
-	double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const override;
+	Real kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const override;
 
 	void setSeed(const int seed) override;
 

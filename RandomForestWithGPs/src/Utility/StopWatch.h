@@ -19,8 +19,8 @@ public:
 
 	void startTime();
 	void stopTime();
-	double elapsedSeconds() const;
-	double elapsedMiliSeconds() const;
+	Real elapsedSeconds() const;
+	Real elapsedMiliSeconds() const;
 
 	TimeFrame elapsedAsTimeFrame() const;
 
@@ -32,7 +32,7 @@ public:
 
 	const std::string elapsedAvgAsPrettyTime() const;
 
-	static double getActTime();
+	static Real getActTime();
 
 	// returns the counter from the avg time measurment
 	unsigned int getAvgCounter() const { return (unsigned int) avgTime.counter(); };
@@ -57,12 +57,12 @@ void StopWatch::stopTime(){
 }
 
 inline
-double StopWatch::elapsedSeconds() const{
+Real StopWatch::elapsedSeconds() const{
 	return (boost::posix_time::microsec_clock::local_time() - m_start).total_milliseconds() / 1000.0;
 }
 
 inline
-double StopWatch::elapsedMiliSeconds() const{
+Real StopWatch::elapsedMiliSeconds() const{
 	return (boost::posix_time::microsec_clock::local_time() - m_start).total_milliseconds();
 }
 
@@ -84,7 +84,7 @@ TimeFrame StopWatch::elapsedAvgAsTimeFrame() const{
 }
 
 inline
-double StopWatch::getActTime(){
+Real StopWatch::getActTime(){
 	static Time startOfTime(boost::gregorian::date(1970,1,1));
 	return (boost::posix_time::microsec_clock::local_time() - startOfTime).total_milliseconds() / 1000.0;
 }

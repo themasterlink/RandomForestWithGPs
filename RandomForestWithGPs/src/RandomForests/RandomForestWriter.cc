@@ -53,7 +53,7 @@ void RandomForestWriter::writeToStream(std::fstream& file, const RandomForest& f
 	const RandomForest::DecisionTreesContainer& trees = forest.getTrees();
 	const int treeSize = trees.size();
 	file.write((char*) &treeSize, sizeof(int));
-	for(RandomForest::DecisionTreesContainer::const_iterator it = trees.cbegin(); it != trees.cend(); ++it){
+	for(auto it = trees.cbegin(); it != trees.cend(); ++it){
 		DecisionTreeData data;
 		it->writeToData(data);
 		file.write((char*) &data.height, sizeof(int));

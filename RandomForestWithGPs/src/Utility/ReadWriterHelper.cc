@@ -114,9 +114,9 @@ void ReadWriterHelper::writeBigDynamicTree(std::fstream& stream, const BigDynami
 		}
 	}
 	for(unsigned int i = 0; i < smallLayers; ++i){
-		for(BigDynamicDecisionTree::SmallTreeInnerStructure::const_iterator it = tree.m_smallInnerTrees[i].begin(); it != tree.m_smallInnerTrees[i].end(); ++it){
-			stream.write((char*) (&it->first), sizeof(unsigned int));
-			writeDynamicTree(stream, *it->second);
+		for(const auto& innerTree : tree.m_smallInnerTrees[i]){
+			stream.write((char*) (&innerTree.first), sizeof(unsigned int));
+			writeDynamicTree(stream, *innerTree.second);
 		}
 	}
 }

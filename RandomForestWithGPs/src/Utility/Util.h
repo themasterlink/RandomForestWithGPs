@@ -41,7 +41,7 @@
 
 static const auto UNDEF_CLASS_LABEL = 99999999u;
 
-static const auto EPSILON = real(1e-15);
+static const auto EPSILON = Real(1e-15);
 
 #define SAVE_DELETE(pointer) \
 	delete(pointer); \
@@ -51,7 +51,7 @@ static const auto EPSILON = real(1e-15);
 #define UNUSED(expr) \
  	 (void)(expr) \
 
-inline std::string number2String(const double& in, const int precision = -1){
+inline std::string number2String(const Real& in, const int precision = -1){
 	if(precision != -1){
 		if(in < 10000.){
 			char buffer[10 + precision];
@@ -116,7 +116,7 @@ constexpr inline T pow2(const T exponent) noexcept {
 
 // for this case the pow(2.0, exponent) should be used and not this constexpr function
 template<>
-constexpr inline double pow2(const double exponent) noexcept = delete;
+constexpr inline Real pow2(const Real exponent) noexcept = delete;
 
 template<>
 constexpr inline char pow2(const char exponent) noexcept = delete; // prohibits the use with charbegin,

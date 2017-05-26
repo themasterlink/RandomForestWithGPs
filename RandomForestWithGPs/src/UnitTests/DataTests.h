@@ -13,7 +13,7 @@
 class Tests {
 public:
 //	static void testForUniformRandDataConverter(){
-//		std::vector<real> dataTest;
+//		std::vector<Real> dataTest;
 //		Labels labelTest;
 //		std::vector<int> countClass(4,0);
 //		Eigen::VectorXd p(2);

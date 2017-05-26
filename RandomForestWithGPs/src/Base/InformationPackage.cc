@@ -12,7 +12,7 @@
 #include "CommandSettings.h"
 
 InformationPackage::InformationPackage(InfoType type,
-		double correctlyClassified,
+		Real correctlyClassified,
 		int amountOfPoints): m_type(type),
 		m_performTask(false),
 		m_abortTraining(false),
@@ -26,11 +26,11 @@ InformationPackage::InformationPackage(InfoType type,
 };
 
 
-double InformationPackage::calcAttractionLevel(const int minAmountOfPoints, const int maxAmountOfPoints){
-	double partAmount = 100.; // if all have the same size, just ignore this value and go after the correct classified amount
+Real InformationPackage::calcAttractionLevel(const int minAmountOfPoints, const int maxAmountOfPoints){
+	Real partAmount = 100.; // if all have the same size, just ignore this value and go after the correct classified amount
 	if(maxAmountOfPoints != minAmountOfPoints){
-		partAmount = (((double) m_amountOfAffectedPoints - minAmountOfPoints)
-				/ (double)(maxAmountOfPoints - minAmountOfPoints)) * 100.;
+		partAmount = (((Real) m_amountOfAffectedPoints - minAmountOfPoints)
+				/ (Real)(maxAmountOfPoints - minAmountOfPoints)) * 100.;
 	}
 	return partAmount + (100 - m_correctlyClassified);
 }
@@ -51,7 +51,7 @@ void InformationPackage::notify(){
 	m_isWaiting = false;
 };
 
-double InformationPackage::getWorkedAmountOfSeconds(){
+Real InformationPackage::getWorkedAmountOfSeconds(){
 	if(!m_isWaiting){
 		return m_sw.elapsedSeconds() + m_workedTime;
 	}

@@ -19,7 +19,7 @@ void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<LabeledVectorX*>& te
 		Labels labels;
 		printOnScreen("Predict Data");
 		std::cout << std::flush;
-		std::vector<std::vector<real> > probs;
+		std::vector<std::vector<Real> > probs;
 		orf.predictData(test.storage(), labels, probs);
 		printOnScreen("Predicted Data");
 		Matrix conv = Matrix::Zero(orf.amountOfClasses(), orf.amountOfClasses());
@@ -38,7 +38,7 @@ void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<LabeledVectorX*>& te
 			}
 		}
 		printOnScreen("Test size: " << test.size());
-		printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %%");
+		printOnScreen("Result:    " << amountOfCorrect / (Real) test.size() * 100. << " %%");
 		printOnScreen("Overconfidence for correct: " << pos.mean() << ", for wrong: " << neg.mean());
 		ConfusionMatrixPrinter::print(conv);
 	}

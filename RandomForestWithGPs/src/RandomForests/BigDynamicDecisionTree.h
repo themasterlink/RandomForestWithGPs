@@ -45,7 +45,7 @@ public:
 		printError("This function is not implemented!");
 	}
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const override {
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const override {
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
@@ -58,6 +58,7 @@ private:
 
 	using PtrDynamicDecisionTree = DynamicDecisionTree*;
 	using SmallTreeInnerStructure = std::map<unsigned int, PtrDynamicDecisionTree>;
+	using SmallTreeInnerStructureIterator = SmallTreeInnerStructure::iterator;
 	using SmallTreeInnerPair = std::pair<unsigned int, PtrDynamicDecisionTree>;
 	using SmallTreeStructure = std::vector<SmallTreeInnerStructure>;
 	using FastTreeInnerStructure = std::vector<PtrDynamicDecisionTree>;
@@ -65,7 +66,7 @@ private:
 
 	bool shouldNewTreeBeCalculatedFor(std::vector<unsigned int>& dataPositions);
 
-	void trainChildrenForRoot(PtrDynamicDecisionTree root, SmallTreeInnerStructure::iterator& it,
+	void trainChildrenForRoot(PtrDynamicDecisionTree root, SmallTreeInnerStructureIterator& it,
 							  SmallTreeInnerStructure& actSmallInnerTreeStructure,
 			const unsigned int depthInThisLayer, const unsigned int iRootId,
 			const unsigned int leavesForTreesInTheFatherLayer, const int amountOfUsedDims,

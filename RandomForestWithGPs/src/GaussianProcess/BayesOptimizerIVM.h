@@ -21,7 +21,7 @@
 //
 //	virtual ~BayesOptimizerIVM();
 //
-//	double evaluateSample(const vectord& x);
+//	Real evaluateSample(const vectord& x);
 //
 //	bool checkReachability(const vectord& query);
 //

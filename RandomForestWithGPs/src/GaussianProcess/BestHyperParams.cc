@@ -24,13 +24,13 @@ BestHyperParams::BestHyperParams(const int amountOfMaxNoChange):
 BestHyperParams::~BestHyperParams(){
 }
 
-void BestHyperParams::trySet(int newRight, int newRightPositive, int newAmountOfValues, int newAmountOfCorLabels, double len, double sigmaF){
+void BestHyperParams::trySet(int newRight, int newRightPositive, int newAmountOfValues, int newAmountOfCorLabels, Real len, Real sigmaF){
 	m_mutex.lock();
-	if (newRight / (double) newAmountOfValues
-			+ newRightPositive / (double) newAmountOfCorLabels
-			> m_amountOfBestRight / (double) m_amountOfBestValues
+	if (newRight / (Real) newAmountOfValues
+			+ newRightPositive / (Real) newAmountOfCorLabels
+			> m_amountOfBestRight / (Real) m_amountOfBestValues
 					+ m_amountOfBestRightPositive
-							/ (double) m_amountOfCorrectBestValues) {
+							/ (Real) m_amountOfCorrectBestValues) {
 		m_amountOfBestRight = newRight;
 		m_amountOfBestRightPositive = newRightPositive;
 		m_amountOfBestValues = newAmountOfValues;
@@ -47,7 +47,7 @@ void BestHyperParams::trySet(int newRight, int newRightPositive, int newAmountOf
 }
 
 
-void BestHyperParams::getBestParams(int& bestRight, int& bestRightPositive, int& bestAmountOfValues, int& bestAmountOfCorLabels, double& bestLen, double& bestSigmaF){
+void BestHyperParams::getBestParams(int& bestRight, int& bestRightPositive, int& bestAmountOfValues, int& bestAmountOfCorLabels, Real& bestLen, Real& bestSigmaF){
 	m_mutex.lock();
 	bestRight = m_amountOfBestRight;
 	bestRightPositive = m_amountOfBestRightPositive;
@@ -59,7 +59,7 @@ void BestHyperParams::getBestParams(int& bestRight, int& bestRightPositive, int&
 }
 
 
-void BestHyperParams::getBestHypParams(double& bestLen, double& bestSigmaF){
+void BestHyperParams::getBestHypParams(Real& bestLen, Real& bestSigmaF){
 	m_mutex.lock();
 	bestLen = m_len;
 	bestSigmaF = m_sigmaF;
@@ -86,8 +86,8 @@ void BestHyperParams::getFinishDuring(bool& isFinish){
 
 bool BestHyperParams::checkGoal(){
 	m_mutex.lock();
-	if(m_amountOfBestRight / (double) m_amountOfBestValues * 100.0 > 95.0
-			&& m_amountOfBestRightPositive / (double) m_amountOfCorrectBestValues * 100.0 > 85.0){
+	if(m_amountOfBestRight / (Real) m_amountOfBestValues * 100.0 > 95.0
+			&& m_amountOfBestRightPositive / (Real) m_amountOfCorrectBestValues * 100.0 > 85.0){
 		m_isFinish = true;
 		m_mutex.unlock();
 		return true;
@@ -101,16 +101,16 @@ const std::string BestHyperParams::prettyStringOfBest(const int precision){
 		std::stringstream str;
 		m_mutex.lock();
 		str << number2String(m_len, precision) << ", " << number2String(m_sigmaF, precision) << ", with: "
-				<< number2String(m_amountOfBestRight / (double) m_amountOfBestValues * 100.0, precision)
+				<< number2String(m_amountOfBestRight / (Real) m_amountOfBestValues * 100.0, precision)
 				<< " %, just right: "
-				<< number2String(m_amountOfBestRightPositive / (double) m_amountOfCorrectBestValues * 100.0, precision) << " %";
+				<< number2String(m_amountOfBestRightPositive / (Real) m_amountOfCorrectBestValues * 100.0, precision) << " %";
 		m_mutex.unlock();
 		return str.str();
 	}else{
 		std::stringstream str;
 		m_mutex.lock();
-		str << m_len << ", " << m_sigmaF << ", with: " << m_amountOfBestRight / (double) m_amountOfBestValues * 100.0
-				<< " %, just right: " << m_amountOfBestRightPositive / (double) m_amountOfCorrectBestValues * 100.0 << " %";
+		str << m_len << ", " << m_sigmaF << ", with: " << m_amountOfBestRight / (Real) m_amountOfBestValues * 100.0
+				<< " %, just right: " << m_amountOfBestRightPositive / (Real) m_amountOfCorrectBestValues * 100.0 << " %";
 		m_mutex.unlock();
 		return str.str();
 	}

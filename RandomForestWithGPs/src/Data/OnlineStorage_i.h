@@ -85,12 +85,22 @@ typename OnlineStorage<T>::Iterator OnlineStorage<T>::end(){
 
 template<typename T>
 typename OnlineStorage<T>::ConstIterator OnlineStorage<T>::begin() const{
-	return m_internal.begin();
+	return m_internal.cbegin();
 }
 
 template<typename T>
 typename OnlineStorage<T>::ConstIterator OnlineStorage<T>::end() const{
-	return m_internal.end();
+	return m_internal.cend();
+}
+
+template<typename T>
+typename OnlineStorage<T>::ConstIterator OnlineStorage<T>::cbegin() const{
+	return m_internal.cbegin();
+}
+
+template<typename T>
+typename OnlineStorage<T>::ConstIterator OnlineStorage<T>::cend() const{
+	return m_internal.cend();
 }
 
 template<typename T>

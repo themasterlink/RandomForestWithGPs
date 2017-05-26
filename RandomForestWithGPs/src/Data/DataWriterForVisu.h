@@ -19,10 +19,10 @@ public:
 	static void writeData(const std::string& fileName, const LabeledData& data, const int x = 0, const int y = 1);
 
 	static void generateGrid(const std::string& fileName,  const PredictorBinaryClass* predictor,
-			const real amountOfPointsOnOneAxis, const LabeledData& dataForMinMax, const int x = 0, const int y = 1);
+			const Real amountOfPointsOnOneAxis, const LabeledData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void generateGrid(const std::string& fileName, const PredictorMultiClass* predictor,
-			const real amountOfPointsOnOneAxis, const LabeledData& dataForMinMax, const int x = 0, const int y = 1);
+			const Real amountOfPointsOnOneAxis, const LabeledData& dataForMinMax, const int x = 0, const int y = 1);
 
 	static void writeSvg(const std::string& fileName, const PredictorBinaryClass* predictor,
 			const LabeledData& dataForMinMax, const int x = 0, const int y = 1);
@@ -48,15 +48,15 @@ public:
 
 	static void writeSvg(const std::string& fileName, const VectorX& vec, const bool drawLine = false);
 
-	static void writeSvg(const std::string& fileName, const std::list<real>& vec, const bool drawLine = false);
+	static void writeSvg(const std::string& fileName, const std::list<Real>& vec, const bool drawLine = false);
 
 	static void writeSvg(const std::string& fileName, const std::list<VectorX>& vec, const bool drawLine = false);
 
-	static void writeSvg(const std::string& fileName, const std::list<real>& vec, const std::list<std::string>& colors);
+	static void writeSvg(const std::string& fileName, const std::list<Real>& vec, const std::list<std::string>& colors);
 
-	static void writePointsIn2D(const std::string& fileName, const std::list<Vector2>& points, const std::list<real>& values);
+	static void writePointsIn2D(const std::string& fileName, const std::list<Vector2>& points, const std::list<Real>& values);
 
-	static void writeHisto(const std::string&fileName, const std::list<real>& list, const unsigned int nrOfBins = 40, const real minValue = -1, const real maxValue = -1);
+	static void writeHisto(const std::string&fileName, const std::list<Real>& list, const unsigned int nrOfBins = 40, const Real minValue = -1, const Real maxValue = -1);
 
 private:
 
@@ -66,35 +66,35 @@ private:
 			const int amountOfClasses = 2, const IVM* ivm = nullptr);
 
 	static void drawSvgLine(std::ofstream& file, const VectorX vec,
-			const real startX, const real startY, const real min,
-			const real max, const real width, const real heigth,
+			const Real startX, const Real startY, const Real min,
+			const Real max, const Real width, const Real heigth,
 			const std::string& color = std::string("black"));
 
 	static void drawSvgDots(std::ofstream& file, const VectorX vec,
-			const real startX, const real startY, const real min,
-			const real max, const real width, const real heigth, const std::string& color);
+			const Real startX, const Real startY, const Real min,
+			const Real max, const Real width, const Real heigth, const std::string& color);
 
 	static void drawSvgDots(std::ofstream& file, const VectorX vec,
-			const real startX, const real startY, const real min,
-			const real max, const real width, const real heigth, const std::list<std::string>& color);
+			const Real startX, const Real startY, const Real min,
+			const Real max, const Real width, const Real heigth, const std::list<std::string>& color);
 
-	static bool openSvgFile(const std::string& fileName, const real width,
-			const real problemWidth, const real problemHeight, std::ofstream& file);
+	static bool openSvgFile(const std::string& fileName, const Real width,
+			const Real problemWidth, const Real problemHeight, std::ofstream& file);
 
 	static void closeSvgFile(std::ofstream& file);
 
-	static void drawSvgRect(std::ofstream& file, const real xPos, const real yPos,
-			const real width, const real height,
+	static void drawSvgRect(std::ofstream& file, const Real xPos, const Real yPos,
+			const Real width, const Real height,
 			const int r, const int g, const int b);
 
 	static void drawSvgCoords(std::ofstream& file,
-			const real startX, const real startY, const real startXForData, const real startYForData, const real xSize,
-			const real ySize, const real min, const real max, const real width, const real heigth, const bool useAllXSegments = false,
-			const real minX = 0, const real maxX = 0);
+			const Real startX, const Real startY, const Real startXForData, const Real startYForData, const Real xSize,
+			const Real ySize, const Real min, const Real max, const Real width, const Real heigth, const bool useAllXSegments = false,
+			const Real minX = 0, const Real maxX = 0);
 
 	static void drawSvgCoords2D(std::ofstream& file,
-			const real startX, const real startY, const real startXForData, const real startYForData, const Vector2& min,
-			const Vector2& max, const unsigned int amountOfSegm, const real width, const real heigth);
+			const Real startX, const Real startY, const Real startXForData, const Real startYForData, const Vector2& min,
+			const Vector2& max, const unsigned int amountOfSegm, const Real width, const Real heigth);
 
 
 	DataWriterForVisu();

@@ -29,7 +29,7 @@ void DataConverter::centerAndNormalizeData(DataSets& datas, VectorX& center, Vec
 				for(LabeledDataIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
 					LabeledVectorX& ele = **itData;
 					for(unsigned int i = 0; i < dim; ++i){
-						const real fac = 1. / counter.coeff(i);
+						const Real fac = 1. / counter.coeff(i);
 						center.coeffRef(i) = fac * ele.coeff(i) + (1. - fac) * center.coeff(i);
 						++counter.coeffRef(i);
 					}
@@ -41,15 +41,15 @@ void DataConverter::centerAndNormalizeData(DataSets& datas, VectorX& center, Vec
 				for(LabeledDataIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
 					LabeledVectorX& ele = **itData;
 					for(unsigned int i = 0; i < dim; ++i){
-						const real fac = 1. / counter.coeff(i);
-						const real newVal = ele.coeff(i) - center.coeff(i);
+						const Real fac = 1. / counter.coeff(i);
+						const Real newVal = ele.coeff(i) - center.coeff(i);
 						var.coeffRef(i) = fac * (newVal * newVal) + (1. - fac) * var.coeff(i);
 						++counter.coeffRef(i);
 					}
 				}
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
-				var.coeffRef(i) = sqrt((real) var.coeff(i));
+				var.coeffRef(i) = sqrt((Real) var.coeff(i));
 				if(var.coeff(i) <= EPSILON){
 					var.coeffRef(i) = 1.; // no change
 				}
@@ -74,7 +74,7 @@ void DataConverter::centerAndNormalizeData(Data& data, VectorX& center, VectorX&
 			for(DataIterator it = data.begin(); it != data.end(); ++it){
 				VectorX& ele = *(*it);
 				for(unsigned int i = 0; i < ele.rows(); ++i){
-					const real fac = 1. / counter.coeff(i);
+					const Real fac = 1. / counter.coeff(i);
 					center.coeffRef(i) = fac * ele.coeff(i) + (1. - fac) * center.coeff(i);
 					++counter.coeffRef(i);
 				}
@@ -84,14 +84,14 @@ void DataConverter::centerAndNormalizeData(Data& data, VectorX& center, VectorX&
 			for(DataIterator it = data.begin(); it != data.end(); ++it){
 				VectorX& ele = *(*it);
 				for(unsigned int i = 0; i < ele.rows(); ++i){
-					const real fac = 1. / counter.coeff(i);
-					const real newVal = ele.coeff(i) - center.coeff(i);
+					const Real fac = 1. / counter.coeff(i);
+					const Real newVal = ele.coeff(i) - center.coeff(i);
 					var.coeffRef(i) = fac * (newVal * newVal) + (1. - fac) * var.coeff(i);
 					++counter.coeffRef(i);
 				}
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
-				var.coeffRef(i) = sqrt((real) var.coeff(i));
+				var.coeffRef(i) = sqrt((Real) var.coeff(i));
 				if(var.coeff(i) <= EPSILON){
 					var.coeffRef(i) = 1.; // no change
 				}
@@ -114,7 +114,7 @@ void DataConverter::centerAndNormalizeData(LabeledData& data, VectorX& center, V
 			for(LabeledDataIterator it = data.begin(); it != data.end(); ++it){
 				LabeledVectorX& ele = *(*it);
 				for(unsigned int i = 0; i < ele.rows(); ++i){
-					const real fac = 1. / counter.coeff(i);
+					const Real fac = 1. / counter.coeff(i);
 					center.coeffRef(i) = fac * ele.coeff(i) + (1. - fac) * center.coeff(i);
 					++counter.coeffRef(i);
 				}
@@ -124,14 +124,14 @@ void DataConverter::centerAndNormalizeData(LabeledData& data, VectorX& center, V
 			for(LabeledDataIterator it = data.begin(); it != data.end(); ++it){
 				LabeledVectorX& ele = *(*it);
 				for(unsigned int i = 0; i < ele.rows(); ++i){
-					const real fac = 1. / counter.coeff(i);
-					const real newVal = ele.coeff(i) - center.coeff(i);
+					const Real fac = 1. / counter.coeff(i);
+					const Real newVal = ele.coeff(i) - center.coeff(i);
 					var.coeffRef(i) = fac * (newVal * newVal) + (1. - fac) * var.coeff(i);
 					++counter.coeffRef(i);
 				}
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
-				var.coeffRef(i) = sqrt((real) var.coeff(i));
+				var.coeffRef(i) = sqrt((Real) var.coeff(i));
 				if(var.coeff(i) <= EPSILON){
 					var.coeffRef(i) = 1.; // no change
 				}
@@ -235,8 +235,8 @@ void DataConverter::toRandDataMatrix(const LabeledData& data, Matrix& result, Ve
 		int randEle = 0;
 		do{
 			usedBefore = false;
-			randEle = ((real) rand() / (RAND_MAX)) * data.size();
-			for(std::list<int>::const_iterator it = alreadyUsed.begin(); it != alreadyUsed.end(); ++it){
+			randEle = ((Real) rand() / (RAND_MAX)) * data.size();
+			for(auto it = alreadyUsed.begin(); it != alreadyUsed.end(); ++it){
 				if(*it == randEle){
 					usedBefore = true;
 					break;
@@ -260,7 +260,7 @@ void DataConverter::toRandUniformDataMatrix(const LabeledData& data, const std::
 	y.conservativeResize(ele);
 	std::vector<bool> useWholeClass(amountOfClasses, false);
 	for(unsigned int i = 0; i < amountOfClasses; ++i){
-		if(classCounts[i] < (int)(ele / (real) amountOfClasses )){
+		if(classCounts[i] < (int)(ele / (Real) amountOfClasses )){
 			useWholeClass[i] = true;
 		}
 	}
@@ -279,7 +279,7 @@ void DataConverter::toRandUniformDataMatrix(const LabeledData& data, const std::
 			}
 		}else{
 			// make it full
-			const int offset = (int)( ele / (real) amountOfClasses) + iResCounter;
+			const int offset = (int)( ele / (Real) amountOfClasses) + iResCounter;
 			if(offset - iResCounter > classCounts[iActClass]){
 				printError("Something went wrong! Class count: " << classCounts[iActClass] << ", use:" << offset - iResCounter);
 			}
@@ -288,7 +288,7 @@ void DataConverter::toRandUniformDataMatrix(const LabeledData& data, const std::
 				bool usedBefore;
 				do{
 					usedBefore = false;
-					randEle = ((real) rand() / (RAND_MAX)) * data.size();
+					randEle = ((Real) rand() / (RAND_MAX)) * data.size();
 					if(!usedBeforeEle[randEle] && data[randEle]->getLabel() == iActClass){
 						usedBeforeEle[randEle] = true;
 						usedBefore = true;
@@ -305,7 +305,7 @@ void DataConverter::toRandUniformDataMatrix(const LabeledData& data, const std::
 		bool usedBefore;
 		do{
 			usedBefore = false;
-			randEle = ((real) rand() / (RAND_MAX)) * data.size();
+			randEle = ((Real) rand() / (RAND_MAX)) * data.size();
 			if(!usedBeforeEle[randEle]){
 				usedBeforeEle[randEle] = true;
 				usedBefore = true;
@@ -331,7 +331,7 @@ void DataConverter::toRandClassAndHalfUniformDataMatrix(const LabeledData& data,
 	const int amountForRestClass = ele - amountForActClass;
 	useWholeClass[actClass] = classCounts[actClass] <= ele / 2;
 	for(unsigned int i = 0; i < amountOfClasses; ++i){
-		if(i != actClass && classCounts[i] < (int)(amountForRestClass / (real) amountOfClasses )){
+		if(i != actClass && classCounts[i] < (int)(amountForRestClass / (Real) amountOfClasses )){
 			useWholeClass[i] = true;
 		}
 	}
@@ -359,7 +359,7 @@ void DataConverter::toRandClassAndHalfUniformDataMatrix(const LabeledData& data,
 			}
 		}else{
 			// make it full
-			int offset = (int)( amountForRestClass / (real) amountOfRestClasses) + iResCounter;
+			int offset = (int)( amountForRestClass / (Real) amountOfRestClasses) + iResCounter;
 			if(iActClass == actClass){
 				offset = amountForActClass + iResCounter;
 			}
@@ -371,7 +371,7 @@ void DataConverter::toRandClassAndHalfUniformDataMatrix(const LabeledData& data,
 				bool usedBefore;
 				do{
 					usedBefore = false;
-					randEle = ((real) rand() / (RAND_MAX)) * data.size();
+					randEle = ((Real) rand() / (RAND_MAX)) * data.size();
 					if(!usedElements[randEle] && data[randEle]->getLabel() == iActClass && !blockElements[randEle]){
 						usedElements[randEle] = true;
 						usedBefore = true;
@@ -388,7 +388,7 @@ void DataConverter::toRandClassAndHalfUniformDataMatrix(const LabeledData& data,
 		bool usedBefore;
 		do{
 			usedBefore = false;
-			randEle = ((real) rand() / (RAND_MAX)) * data.size();
+			randEle = ((Real) rand() / (RAND_MAX)) * data.size();
 			if(!usedElements[randEle] && !blockElements[randEle]){
 				usedElements[randEle] = true;
 				usedBefore = true;
@@ -399,13 +399,13 @@ void DataConverter::toRandClassAndHalfUniformDataMatrix(const LabeledData& data,
 	}
 }
 
-void DataConverter::getMinMax(const Data& data, real& min, real& max, const bool ignoreREAL_MAX_NEG){
+void DataConverter::getMinMax(const Data& data, Real& min, Real& max, const bool ignoreREAL_MAX_NEG){
 	min = REAL_MAX; max = NEG_REAL_MAX;
 	if(ignoreREAL_MAX_NEG){
 		for(DataConstIterator it = data.begin(); it != data.end(); ++it){
 			VectorX& ele = **it;
 			for(unsigned int i = 0; i < ele.rows(); ++i){
-				const real val = ele[i];
+				const Real val = ele[i];
 				if(val < min && val > NEG_REAL_MAX){
 					min = val;
 				}
@@ -418,7 +418,7 @@ void DataConverter::getMinMax(const Data& data, real& min, real& max, const bool
 		for(DataConstIterator it = data.begin(); it != data.end(); ++it){
 			VectorX& ele = **it;
 			for(unsigned int i = 0; i < ele.rows(); ++i){
-				const real val = ele[i];
+				const Real val = ele[i];
 				if(val < min){
 					min = val;
 				}
@@ -430,12 +430,12 @@ void DataConverter::getMinMax(const Data& data, real& min, real& max, const bool
 	}
 }
 
-void DataConverter::getMinMax(const Matrix& mat, real& min, real& max, const bool ignoreREAL_MAX_NEG){
+void DataConverter::getMinMax(const Matrix& mat, Real& min, Real& max, const bool ignoreREAL_MAX_NEG){
 	min = REAL_MAX; max = NEG_REAL_MAX;
 	if(ignoreREAL_MAX_NEG){
 		for(unsigned int i = 0; i < mat.rows(); ++i){
 			for(unsigned int j = 0; j < mat.cols(); ++j){
-				const real ele = mat(i,j);
+				const Real ele = mat(i,j);
 				if(ele < min && ele > NEG_REAL_MAX){
 					min = ele;
 				}
@@ -447,7 +447,7 @@ void DataConverter::getMinMax(const Matrix& mat, real& min, real& max, const boo
 	}else{
 		for(unsigned int i = 0; i < mat.rows(); ++i){
 			for(unsigned int j = 0; j < mat.cols(); ++j){
-				const real ele = mat(i,j);
+				const Real ele = mat(i,j);
 				if(ele < min){
 					min = ele;
 				}
@@ -459,11 +459,11 @@ void DataConverter::getMinMax(const Matrix& mat, real& min, real& max, const boo
 	}
 }
 
-void DataConverter::getMinMax(const VectorX& vec, real& min, real& max, const bool ignoreREAL_MAX_NEG){
+void DataConverter::getMinMax(const VectorX& vec, Real& min, Real& max, const bool ignoreREAL_MAX_NEG){
 	min = REAL_MAX; max = NEG_REAL_MAX;
 	if(ignoreREAL_MAX_NEG){
 		for(unsigned int i = 0; i < vec.rows(); ++i){
-			const real ele = vec[i];
+			const Real ele = vec[i];
 			if(ele < min && ele > NEG_REAL_MAX){
 				min = ele;
 			}
@@ -473,7 +473,7 @@ void DataConverter::getMinMax(const VectorX& vec, real& min, real& max, const bo
 		}
 	}else{
 		for(unsigned int i = 0; i < vec.rows(); ++i){
-			const real ele = vec[i];
+			const Real ele = vec[i];
 			if(ele < min){
 				min = ele;
 			}
@@ -484,11 +484,10 @@ void DataConverter::getMinMax(const VectorX& vec, real& min, real& max, const bo
 	}
 }
 
-void DataConverter::getMinMax(const std::list<real>& list, real& min, real& max, const bool ignoreREAL_MAX_NEG){
+void DataConverter::getMinMax(const std::list<Real>& list, Real& min, Real& max, const bool ignoreREAL_MAX_NEG){
 	min = REAL_MAX; max = NEG_REAL_MAX;
 	if(ignoreREAL_MAX_NEG){
-		for(std::list<real>::const_iterator it = list.begin(); it != list.end(); ++it){
-			const real ele = *it;
+		for(const auto& ele : list){
 			if(ele < min && ele > NEG_REAL_MAX){
 				min = ele;
 			}
@@ -497,8 +496,7 @@ void DataConverter::getMinMax(const std::list<real>& list, real& min, real& max,
 			}
 		}
 	}else{
-		for(std::list<real>::const_iterator it = list.begin(); it != list.end(); ++it){
-			const real ele = *it;
+		for(const auto& ele : list){
 			if(ele < min){
 				min = ele;
 			}
@@ -536,8 +534,8 @@ void DataConverter::getMinMaxIn2D(const LabeledData& data, Vector2& min, Vector2
 	if(data.size() > 0){
 		if(dim[0] < data[0]->rows() && dim[1] < data[0]->rows()){
 			for(LabeledDataConstIterator it = data.begin(); it != data.end(); ++it){
-				const real first = (**it)[dim[0]];
-				const real second = (**it)[dim[1]];
+				const Real first = (**it)[dim[0]];
+				const Real second = (**it)[dim[1]];
 				if(first < min[0]){
 					min[0] = first;
 				}
@@ -561,8 +559,8 @@ void DataConverter::getMinMaxIn2D(const Data& data, Vector2& min, Vector2& max, 
 	if(data.size() > 0){
 		if(dim[0] < data[0]->rows() && dim[1] < data[0]->rows()){
 			for(DataConstIterator it = data.begin(); it != data.end(); ++it){
-				const real first = (**it)[dim[0]];
-				const real second = (**it)[dim[1]];
+				const Real first = (**it)[dim[0]];
+				const Real second = (**it)[dim[1]];
 				if(first < min[0]){
 					min[0] = first;
 				}

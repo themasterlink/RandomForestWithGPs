@@ -8,11 +8,10 @@
 #ifndef GAUSSIANPROCESS_GAUSSIANPROCESS_H_
 #define GAUSSIANPROCESS_GAUSSIANPROCESS_H_
 
+#include <Eigen/Cholesky>
 #include "../Utility/Util.h"
 #include "../Data/LabeledVectorX.h"
 #include <cmath>
-#include <Eigen/Cholesky>
-#include <Eigen/Dense>
 #include "Kernel/GaussianKernel.h"
 #include "../Base/Predictor.h"
 
@@ -38,13 +37,13 @@ public:
 
 	void trainWithoutKernelOptimize();
 
-	real predict(const VectorX& newPoint, const int sampleSize) const;
+	Real predict(const VectorX& newPoint, const int sampleSize) const;
 
-	real predict(const VectorX& point) const;
+	Real predict(const VectorX& point) const;
 
-	void setKernelParams(const real len, const real fNoise, const real sNoise);
+	void setKernelParams(const Real len, const Real fNoise, const Real sNoise);
 
-	void setKernelParams(const std::vector<real>& lens, const real fNoise, const real sNoise);
+	void setKernelParams(const std::vector<Real>& lens, const Real fNoise, const Real sNoise);
 
 	GaussianKernel& getKernel(){ return m_kernel; };
 
@@ -52,10 +51,10 @@ public:
 
 	void resetFastPredict(){ m_fastPredict = false; };
 
-	GaussianProcess::Status trainBayOpt(real& logZ, const real lambda); // TODO should be private again
+	GaussianProcess::Status trainBayOpt(Real& logZ, const Real lambda); // TODO should be private again
 private:
 
-	Status trainLM(real& logZ, std::vector<real>& dLogZ);
+	Status trainLM(Real& logZ, std::vector<Real>& dLogZ);
 
 	Status trainF(const Matrix& K);
 
@@ -63,7 +62,7 @@ private:
 
 	void updatePis();
 
-	real m_repetitionStepFactor;
+	Real m_repetitionStepFactor;
 
 	Matrix m_dataMat;
 	VectorX m_a;
@@ -82,7 +81,7 @@ private:
 	bool m_init;
 	bool m_trained;
 	mutable bool m_fastPredict;
-	mutable real m_fastPredictVFStar;
+	mutable Real m_fastPredictVFStar;
 	GaussianKernel m_kernel;
 
 

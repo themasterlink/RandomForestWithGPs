@@ -13,14 +13,13 @@
 #include <boost/random/uniform_real.hpp>
 #include "../Utility/Util.h"
 #include "../Base/Observer.h"
-#include <Eigen/Dense>
 
 class RandomNumberGeneratorForDT : public Observer {
 public:
 
 	using base_generator_type = GeneratorType; // generator type
 	using uniform_distribution_int = boost::random::uniform_int_distribution<int>; // generator type
-	using uniform_distribution_real = boost::uniform_real<real>; // generator type
+	using uniform_distribution_real = boost::uniform_real<Real>; // generator type
 	using variante_generator = boost::variate_generator<base_generator_type, uniform_distribution_int>;
 
 	RandomNumberGeneratorForDT(const int dim, const int minUsedData, const int maxUsedData,
@@ -40,9 +39,9 @@ public:
 
 	int getRandFromRange();
 
-	void setMinAndMaxForSplitInDim(const unsigned int dim, const real min, const real max);
+	void setMinAndMaxForSplitInDim(const unsigned int dim, const Real min, const Real max);
 
-	real getRandSplitValueInDim(const unsigned int dim);
+	Real getRandSplitValueInDim(const unsigned int dim);
 
 	void update(Subject* caller, unsigned int event) override;
 
@@ -108,10 +107,10 @@ inline int RandomNumberGeneratorForDT::getRandFromRange(){
 	return m_uniformDistRange(m_generator);
 }
 
-inline real RandomNumberGeneratorForDT::getRandSplitValueInDim(const unsigned int dim){
+inline Real RandomNumberGeneratorForDT::getRandSplitValueInDim(const unsigned int dim){
 	if(m_uniformSplitValues.size() > dim && m_useDim[dim]){
 //		m_mutex.lock();
-		const real val =  m_uniformSplitValues[dim](m_generator);
+		const Real val =  m_uniformSplitValues[dim](m_generator);
 //		m_mutex.unlock();
 		return val;
 	}else{

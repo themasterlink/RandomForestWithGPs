@@ -8,7 +8,6 @@
 #ifndef TESTS_MULTICLASSGPTEST_H_
 #define TESTS_MULTICLASSGPTEST_H_
 
-#include <Eigen/Dense>
 #include "../Data/DataReader.h"
 #include "../GaussianProcess/GaussianProcessMultiClass.h"
 

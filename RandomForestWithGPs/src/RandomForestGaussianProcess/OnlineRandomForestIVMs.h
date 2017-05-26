@@ -27,9 +27,9 @@ public:
 
 	void predictData(const LabeledData& points, Labels& labels) const;
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const override;
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const override;
 
-	void predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const;
+	void predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const;
 
 	unsigned int amountOfClasses() const override;
 

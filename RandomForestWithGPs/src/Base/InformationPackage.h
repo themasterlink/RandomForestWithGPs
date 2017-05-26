@@ -30,13 +30,13 @@ public:
 		IVM_INIT_DIFFERENCE_MATRIX = 6
 	};
 
-	InformationPackage(InfoType type, double correctlyClassified, int amountOfPoints);
+	InformationPackage(InfoType type, Real correctlyClassified, int amountOfPoints);
 
-	double correctlyClassified() const { return m_correctlyClassified; };
+	Real correctlyClassified() const { return m_correctlyClassified; };
 
 	int amountOfAffectedPoints() const { return m_amountOfAffectedPoints; };
 
-	void changeCorrectlyClassified(const double newValue){ m_correctlyClassified = newValue; };
+	void changeCorrectlyClassified(const Real newValue){ m_correctlyClassified = newValue; };
 
 	void changeAmountOfAffectedPoints(const int newAmount){ m_amountOfAffectedPoints = newAmount; };
 
@@ -56,7 +56,7 @@ public:
 
 	bool shouldTrainingBePaused(){ return m_shouldTrainingBeHold; }
 
-	double calcAttractionLevel(const int minAmountOfPoints, const int maxAmountOfPoints);
+	Real calcAttractionLevel(const int minAmountOfPoints, const int maxAmountOfPoints);
 
 	bool isWaiting(){ return m_isWaiting; };
 
@@ -66,7 +66,7 @@ public:
 
 	InfoType getType(){ return m_type; };
 
-	double getWorkedAmountOfSeconds();
+	Real getWorkedAmountOfSeconds();
 
 	void printLineToScreenForThisThread(const std::string& line);
 
@@ -80,13 +80,13 @@ public:
 
 	void setAdditionalInfo(const std::string& line);
 
-	void setTrainingsTime(const double maxTrainingsTime){ m_maxTrainingsTime = maxTrainingsTime; }
+	void setTrainingsTime(const Real maxTrainingsTime){ m_maxTrainingsTime = maxTrainingsTime; }
 
-	double getMaxTrainingsTime(){ return m_maxTrainingsTime;}
+	Real getMaxTrainingsTime(){ return m_maxTrainingsTime;}
 
 	int getPriority();
 
-	double runningTimeSinceLastWait(){ return m_sw.elapsedSeconds(); };
+	Real runningTimeSinceLastWait(){ return m_sw.elapsedSeconds(); };
 
 	bool canBeAbortedInGeneral();
 
@@ -106,13 +106,13 @@ private:
 
 	bool m_shouldTrainingBeHold;
 
-	double m_correctlyClassified;
+	Real m_correctlyClassified;
 
 	int m_amountOfAffectedPoints;
 
 	int m_amountOfTrainingsSteps;
 
-	double m_workedTime;
+	Real m_workedTime;
 
 	std::list<std::string> m_lines;
 
@@ -124,7 +124,7 @@ private:
 
 	StopWatch m_sw;
 
-	double m_maxTrainingsTime;
+	Real m_maxTrainingsTime;
 };
 
 #endif /* BASE_INFORMATIONPACKAGE_H_ */

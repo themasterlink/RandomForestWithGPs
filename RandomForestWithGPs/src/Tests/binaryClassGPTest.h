@@ -8,7 +8,6 @@
 #ifndef TESTS_BINARYCLASSGPTEST_H_
 #define TESTS_BINARYCLASSGPTEST_H_
 
-#include <Eigen/Dense>
 #include "../Data/DataReader.h"
 #include "../Data/LabeledVectorX.h"
 #include "../Data/DataConverter.h"
@@ -134,7 +133,7 @@ void executeForBinaryClass(const bool useRealData){
 		InLinePercentageFiller::setActMax(dataRef.size());
 		for(int j = 0; j < dataRef.size(); ++j){
 			LabeledVectorX& ele = *dataRef[j];
-			double prob = gp.predict(ele);
+			Real prob = gp.predict(ele);
 			if(prob > 0.5 && ele.getLabel() == 0){
 				++right;
 			}else if(prob < 0.5 && ele.getLabel() == 1){
@@ -150,9 +149,9 @@ void executeForBinaryClass(const bool useRealData){
 			InLinePercentageFiller::setActValueAndPrintLine(j);
 		}
 		std::cout << RED;
-		std::cout << "Amount of right: " << (double) right / dataRef.size() * 100.0 << "%" << std::endl;
-		std::cout << "Amount of above: " << (double) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
-		std::cout << "Amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of right: " << (Real) right / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of above: " << (Real) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of below: " << (Real) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << gp.getKernel().prettyString() << std::endl;
 		std::cout << RESET;
 		/*
@@ -160,7 +159,7 @@ void executeForBinaryClass(const bool useRealData){
 		amountOfAbove = 0;
 		amountOfBelow = 0;
 		for(int j = dataRef.size() - 1; j >= 0 ; --j){
-			double prob = testGp.predict(dataRef[j]);
+			Real prob = testGp.predict(dataRef[j]);
 			if(prob > 0.5 && labelsRef[j] == 1){
 				++right;
 			}else if(prob < 0.5 && labelsRef[j] == 0){
@@ -175,9 +174,9 @@ void executeForBinaryClass(const bool useRealData){
 			}
 		}
 		std::cout << RED;
-		std::cout << "For loaded Gp amount of right: " << (double) right / dataRef.size() * 100.0 << "%" << std::endl;
-		std::cout << "For loaded Gp amount of above: " << (double) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
-		std::cout << "For loaded Gp amount of below: " << (double) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "For loaded Gp amount of right: " << (Real) right / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "For loaded Gp amount of above: " << (Real) amountOfAbove / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "For loaded Gp amount of below: " << (Real) amountOfBelow / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << "For loaded Gp len: " << gp.getKernel().len() << ", sigmaF: " << gp.getKernel().sigmaF() <<std::endl;
 		std::cout << RESET; */
 	}else if(useRealData){
@@ -185,7 +184,7 @@ void executeForBinaryClass(const bool useRealData){
 		GaussianProcessMultiBinary gp(datas.size());
 		LabeledData data;
 		int labelCounter = 0;
-		//const double fac = 0.80;
+		//const Real fac = 0.80;
 		int trainAmount = 400;
 		Settings::getValue("MultiBinaryGP.trainingAmount", trainAmount);
 		int testAmount = 100;
@@ -225,7 +224,7 @@ void executeForBinaryClass(const bool useRealData){
 		std::cout << "Start predicting for " << dataRef.size() << " points!" << std::endl;
 		int right = 0;
 		std::cout << "Test" << std::endl;
-		std::vector<real> prob;
+		std::vector<Real> prob;
 		Matrix confusion = Matrix::Zero(datas.size(), datas.size());
 		int unknownCounter = 0;
 		InLinePercentageFiller::setActMax(dataRef.size());
@@ -243,8 +242,8 @@ void executeForBinaryClass(const bool useRealData){
 			InLinePercentageFiller::setActValueAndPrintLine(j);
 		}
 		std::cout << RED;
-		std::cout << "Amount of right:  " << (double) right / dataRef.size() * 100.0 << "%" << std::endl;
-		std::cout << "Amount of unknown: " << (double) unknownCounter / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of right:  " << (Real) right / dataRef.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of unknown: " << (Real) unknownCounter / dataRef.size() * 100.0 << "%" << std::endl;
 		std::cout << RESET;
 		ConfusionMatrixPrinter::print(confusion);
 		if(datas.size() == 2){
@@ -259,26 +258,26 @@ void executeForBinaryClass(const bool useRealData){
 		GaussianProcess gp;
 		gp.init(dataMat, y);
 		if(false){
-			double up1 = 1.8;
-			double up2 = 1.8;
-			double step = 0.025;
+			Real up1 = 1.8;
+			Real up2 = 1.8;
+			Real step = 0.025;
 			int size1 = (up1 - 0.005) / step + 1;
 			int size2 = (up2 - 0.) / step + 1;
 			Matrix mat = Matrix::Zero(size1, size2);
 			int i = 0,j,k = 0;
-			double minX, minY, minZ;
-			double minVal = NEG_REAL_MAX;
+			Real minX, minY, minZ;
+			Real minVal = NEG_REAL_MAX;
 			InLinePercentageFiller::setActMax(size1 * size2);
-			//for(double z = -1.; z < 1.0; z += 0.01){
-			{	double z = 0.1;
+			//for(Real z = -1.; z < 1.0; z += 0.01){
+			{	Real z = 0.1;
 				i = 0;
-				for(double x = 0.005; x < up1; x += step){
-				//{ double x = 0.455;
+				for(Real x = 0.005; x < up1; x += step){
+				//{ Real x = 0.455;
 					j = 0;
-					for(double y = 0.; y < up2; y += step){
+					for(Real y = 0.; y < up2; y += step){
 					//{
 						gp.getKernel().setHyperParams(x, y, z);
-						real val;
+						Real val;
 						gp.trainBayOpt(val,1);
 						if(val < 10){
 							if(minVal < val){
@@ -343,7 +342,7 @@ void executeForBinaryClass(const bool useRealData){
 		for(int j = 0; j < (int) data.size(); ++j){
 			gp.resetFastPredict();
 			LabeledVectorX& ele = *data[j];
-			double prob = gp.predict(ele, 100000);
+			Real prob = gp.predict(ele, 100000);
 			std::cout << "Prob: " << prob << ", label is: " << ele.getLabel() << std::endl;
 			if(prob > 0.5 && ele.getLabel() == 0){
 				++right;
@@ -357,9 +356,9 @@ void executeForBinaryClass(const bool useRealData){
 			}
 		}
 		std::cout << RED;
-		std::cout << "Amount of right: " << (double) right / data.size() * 100.0 << "%" << std::endl;
-		std::cout << "Amount of above: " << (double) amountOfAbove / data.size() * 100.0 << "%" << std::endl;
-		std::cout << "Amount of below: " << (double) amountOfBelow / data.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of right: " << (Real) right / data.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of above: " << (Real) amountOfAbove / data.size() * 100.0 << "%" << std::endl;
+		std::cout << "Amount of below: " << (Real) amountOfBelow / data.size() * 100.0 << "%" << std::endl;
 		std::cout << gp.getKernel().prettyString() << std::endl;
 		std::cout << RESET;
 		DataWriterForVisu::writeSvg("out.svg", &gp, data);
@@ -375,7 +374,7 @@ void executeForBinaryClass(const bool useRealData){
 	std::cout << "x: " << x << std::endl;
 
 	OptimizeFunctor functor(&gp);
-	Eigen::LevenbergMarquardt<OptimizeFunctor, double> lm(functor);
+	Eigen::LevenbergMarquardt<OptimizeFunctor, Real> lm(functor);
 	printLine();
 	lm.parameters.ftol = EPSILON;
 	lm.parameters.xtol = EPSILON;
@@ -388,8 +387,8 @@ void executeForBinaryClass(const bool useRealData){
 	const int dim = data[0].rows();
 	Vector2d dimVec;
 	dimVec << 0,1;
-	double min = 1000000;
-	double max = -1000000;
+	Real min = 1000000;
+	Real max = -1000000;
 	for(LabeledDataConstIterator it = data.cbegin(); it != data.cend(); ++it){
 		for(int i = 0; i < 2; ++i){
 			int j = dimVec[i];
@@ -401,13 +400,13 @@ void executeForBinaryClass(const bool useRealData){
 			}
 		}
 	}
-	const double diff = max - min;
+	const Real diff = max - min;
 	min -= diff * 0.2;
 	max += diff * 0.2;
 	std::cout << "min: " << min << std::endl;
 	std::cout << "max: " << max << std::endl;
 	const int amountOfPointsOnOneAxis = 50;
-	const double stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	const Real stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	std::ofstream file;
 	file.open("visu.txt");
 	Data points;
@@ -415,14 +414,14 @@ void executeForBinaryClass(const bool useRealData){
 	int amount = 0;
 	DoubleLabels dlabels;
 	int k = 0;
-	for(double xVal = max; xVal >= min; xVal -= stepSize){
-		std::cout << "\rDone: " << k++ / (double) amountOfPointsOnOneAxis * 100.0 << "%           ";
+	for(Real xVal = max; xVal >= min; xVal -= stepSize){
+		std::cout << "\rDone: " << k++ / (Real) amountOfPointsOnOneAxis * 100.0 << "%           ";
 		flush(std::cout);
-		for(double yVal = min; yVal <= max; yVal+= stepSize){
+		for(Real yVal = min; yVal <= max; yVal+= stepSize){
 			DataElement ele(dim);
 			ele << xVal, yVal;
 			points.push_back(ele);
-			const double label = gp.predict(ele);
+			const Real label = gp.predict(ele);
 			dlabels.push_back(label);
 			++amount;
 		}

@@ -29,7 +29,7 @@ public:
 	void train(const LabeledData& data, const int amountOfUsedDims,
 			RandomNumberGeneratorForDT& generator);
 
-	double trySplitFor(const int usedNode, const int usedDim, const LabeledData& data,
+	Real trySplitFor(const int usedNode, const int usedDim, const LabeledData& data,
 			const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
 			std::vector<int>& rightHisto, RandomNumberGeneratorForDT& generator);
 
@@ -59,7 +59,7 @@ private:
 	// 		2		3
 	//  4	   5  6 	7
 	// 8 9 	10 11 12 13  14 15
-	std::vector<real> m_splitValues;
+	std::vector<Real> m_splitValues;
 	// order is like with split values
 	std::vector<int> m_splitDim;
 

@@ -55,7 +55,7 @@ void handleProgrammOptions(int ac, char* av[]){
 					("visuRes", boost::program_options::value<int>()->default_value(0), "visualize something, if possible")
 					("visuResSimple", boost::program_options::value<int>()->default_value(0), "visualize something, if possible")
 					("onlyDataView", "only visualize the data, no training performed")
-					("samplingAndTraining", boost::program_options::value<real>()->default_value(0), "sample and train the hyper params, else just use be configured params")
+					("samplingAndTraining", boost::program_options::value<Real>()->default_value(0), "sample and train the hyper params, else just use be configured params")
 					("plotHistos", "should some histogramms be plotted")
 					("settingsFile", boost::program_options::value<std::string>()->default_value("../Settings/init.json"), "Give the filepath of the settingsfile")
 					("convertFile", boost::program_options::value<std::string>()->default_value(""), "Give the filepath of the desired file which should be converted into binary")
@@ -224,7 +224,7 @@ int main(int ac, char** av){
 //	m_hyperParamsValues = cmaes::cmaes_NewDouble(dimension); /* calloc another vector */
 //	const int sampleLambda = cmaes::cmaes_Get(&evo, "lambda");
 //	std::list<Vector2> points;
-//	std::list<real> values;
+//	std::list<Real> values;
 //	for(unsigned int k = 0; k < 50; ++k){
 //		/* generate lambda new search points, sample population */
 //
@@ -297,7 +297,7 @@ int main(int ac, char** av){
 	}
 //	VectorX testVec = VectorX::Random(1000);
 //	VectorX testVec2 = VectorX::Random(1000);
-//	double res = 0;
+//	Real res = 0;
 //	for(unsigned int k = 0; k < 100000; ++k){
 //		for(unsigned int i = 0; i < 1000; ++i){
 //
@@ -315,24 +315,24 @@ int main(int ac, char** av){
     	}
     }
     Sigma = controlSigma;
-    const double deltaTau = 1.0;
+    const Real deltaTau = 1.0;
     StopWatch sigmaUp, sigmaUpNew;
     for(int t = 0; t < 1000; ++t){
     	int i = t % nr;
     	sigmaUp.startTime();
     	VectorX si = Sigma.col(i);
-    	double denom = 1.0 + deltaTau * si[i];
+    	Real denom = 1.0 + deltaTau * si[i];
     	//if(fabs(denom) > EPSILON)
     	Sigma -= (deltaTau / denom) * (si * si.transpose());
     	sigmaUp.recordActTime();
     	sigmaUpNew.startTime();
     	denom = 1.0 + deltaTau * controlSigma(i,i); // <=> 1.0 + deltaTau[i] * si[i] for si = Sigma.col(i)
-    	const double fac = deltaTau / denom;
+    	const Real fac = deltaTau / denom;
     	const VectorX oldSigmaRow = controlSigma.col(i);
     	for(int p = 0; p < nr; ++p){
     		controlSigma(p,p) -= fac * oldSigmaRow[p] * oldSigmaRow[p];
     		for(int q = p + 1; q < nr; ++q){
-    			const double sub = fac * oldSigmaRow[p] * oldSigmaRow[q];
+    			const Real sub = fac * oldSigmaRow[p] * oldSigmaRow[q];
     			controlSigma(p,q) -= sub;
     			controlSigma(q,p) -= sub;
     		}
@@ -348,9 +348,9 @@ int main(int ac, char** av){
     	}
     }
     std::cout << "sigma up time: " << sigmaUp.elapsedAvgAsPrettyTime() << std::endl;
-    std::cout << "total sigma up time: " << sigmaUp.elapsedAvgAsTimeFrame() * ((double) 10)<< std::endl;
+    std::cout << "total sigma up time: " << sigmaUp.elapsedAvgAsTimeFrame() * ((Real) 10)<< std::endl;
     std::cout << "new sigma up time: " << sigmaUpNew.elapsedAvgAsPrettyTime() << std::endl;
-    std::cout << "total new sigma up time: " << sigmaUpNew.elapsedAvgAsTimeFrame() * ((double) 10)<< std::endl;
+    std::cout << "total new sigma up time: " << sigmaUpNew.elapsedAvgAsTimeFrame() * ((Real) 10)<< std::endl;
 */
 	std::string type;
 	Settings::getValue("main.type", type);

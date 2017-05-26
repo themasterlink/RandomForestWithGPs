@@ -39,7 +39,7 @@ private:
 
 	static void drawWindow(WINDOW** window, PANEL** panel, int givenHeight, int givenWidth, int x, int y, const bool hasHeadLine, const int color = 1);
 
-	static void updateRunningPackage(ThreadMaster::PackageList::const_iterator& it, const int rowCounter, const int row, const bool isLeft, const int colWidth,
+	static void updateRunningPackage(ThreadMaster::PackageListConstIterator& it, const int rowCounter, const int row, const bool isLeft, const int colWidth,
 			const int amountOfLinesPerThread, int& actLine, int startOfRight, std::vector<WINDOW*>& windows, std::vector<PANEL*>& panels);
 
 	static boost::mutex m_lineMutex;
@@ -54,7 +54,7 @@ private:
 
 	static boost::thread* m_mainThread;
 
-	static double m_timeToSleep;
+	static Real m_timeToSleep;
 
 	static std::string m_progressLine;
 

@@ -48,12 +48,12 @@ void RandomForestKernel::update(Subject* subject, unsigned int event){
 	}
 }
 
-double RandomForestKernel::calcDiagElement(unsigned int row) const{
+Real RandomForestKernel::calcDiagElement(unsigned int row) const{
 	UNUSED(row);
 	return 1; // because decision trees are deterministic
 }
 
-double RandomForestKernel::calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const{
+Real RandomForestKernel::calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const{
 	UNUSED(row); UNUSED(type);
 	return 0;
 }
@@ -61,7 +61,7 @@ double RandomForestKernel::calcDerivativeDiagElement(unsigned int row, const Own
 void RandomForestKernel::calcKernelVector(const VectorX& vector, const Matrix& dataMat, VectorX& res) const{
 	res = VectorX(m_dataPoints);
 	for(unsigned int i = 0; i < m_dataPoints; ++i){
-		res.coeffRef(i) = (double) kernelFuncVec(vector, dataMat.col(i));
+		res.coeffRef(i) = (Real) kernelFuncVec(vector, dataMat.col(i));
 	}
 }
 
@@ -71,7 +71,7 @@ std::string RandomForestKernel::prettyString() const{
 	return str.str();
 }
 
-double RandomForestKernel::kernelFunc(const int row, const int col) const{
+Real RandomForestKernel::kernelFunc(const int row, const int col) const{
 //	if(!m_calcedDifferenceMatrix){
 		if(m_init){
 			return kernelFuncVec(*m_rf->getStorageRef()[row], *m_rf->getStorageRef()[col]);
@@ -84,7 +84,7 @@ double RandomForestKernel::kernelFunc(const int row, const int col) const{
 	return 0;
 }
 
-double RandomForestKernel::kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const{
+Real RandomForestKernel::kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const{
 	if(m_init){
 		if(m_mode == KernelMode::LABEL){
 			return m_rf->predict(lhs, rhs, (int) m_kernelParams.m_samplingAmount.getValue());
@@ -103,7 +103,7 @@ void RandomForestKernel::setSeed(const int seed){
 	m_heightSampler.setSeed((seed + 1) * 5233667);
 }
 
-double RandomForestKernel::kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element) const{
+Real RandomForestKernel::kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element) const{
 	UNUSED(row); UNUSED(col); UNUSED(type); UNUSED(element);
 	return 0.;
 }

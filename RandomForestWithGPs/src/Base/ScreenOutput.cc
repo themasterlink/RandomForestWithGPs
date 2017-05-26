@@ -13,7 +13,7 @@
 std::list<std::string> ScreenOutput::m_lines;
 ThreadMaster::PackageList* ScreenOutput::m_runningThreads(nullptr);
 boost::thread* ScreenOutput::m_mainThread(nullptr);
-double ScreenOutput::m_timeToSleep(0.06);
+Real ScreenOutput::m_timeToSleep(0.06);
 boost::mutex ScreenOutput::m_lineMutex;
 std::list<std::string> ScreenOutput::m_errorLines;
 std::list<int> ScreenOutput::m_errorCounters;
@@ -118,7 +118,7 @@ void ScreenOutput::run(){
 		const int amountOfLinesPerThread =  m_runningThreads->size() > 1 ?  heightOfThreadInfo / ceil(m_runningThreads->size() / 2.0) : heightOfThreadInfo;
 		if(modeNr < 8){
 			if(modeNr == -1){
-				for(ThreadMaster::PackageList::const_iterator it = m_runningThreads->begin(); it != m_runningThreads->end(); ++it, ++rowCounter){
+				for(auto it = m_runningThreads->cbegin(); it != m_runningThreads->cend(); ++it, ++rowCounter){
 					const bool isLeft = rowCounter % 2 == 0;
 					const int row = rowCounter / 2; // for 0 and 1 the first and so on
 					updateRunningPackage(it, rowCounter, row, isLeft, m_runningThreads->size() > 1 ? col / 2 : col, amountOfLinesPerThread, actLine, startOfRight, windows, panels);
@@ -129,7 +129,7 @@ void ScreenOutput::run(){
 					}
 				}
 			}else{
-				for(ThreadMaster::PackageList::const_iterator it = m_runningThreads->begin(); it != m_runningThreads->end(); ++it, ++rowCounter){
+				for(auto it = m_runningThreads->cbegin(); it != m_runningThreads->cend(); ++it, ++rowCounter){
 					if(modeNr == rowCounter){
 						updateRunningPackage(it, rowCounter, 0, true, col, heightOfThreadInfo, actLine, startOfRight, windows, panels);
 					}
@@ -147,7 +147,7 @@ void ScreenOutput::run(){
 				}
 			}
 		}
-		for(ThreadMaster::PackageList::const_iterator it = m_runningThreads->begin(); it != m_runningThreads->end(); ++it, ++rowCounter){
+		for(auto it = m_runningThreads->cbegin(); it != m_runningThreads->cend(); ++it, ++rowCounter){
 			(*it)->m_lineMutex.lock();
 			const int diff = (*it)->m_lines.size() - MAX_HEIGHT;
 			for(int i = 0; i < diff; ++i){
@@ -205,12 +205,12 @@ void ScreenOutput::run(){
 			const int color = 2; // red
 			if(heightOfError > 2){
 				std::list<std::string> combinedErrorLines;
-				std::list<int>::const_iterator itNr = m_errorCounters.begin();
-				for(std::list<std::string>::const_iterator it = m_errorLines.begin(); it != m_errorLines.end(); ++it){
+				auto itNr = m_errorCounters.begin();
+				for(const auto& line : m_errorLines){
 					if(*itNr > 1){
-						combinedErrorLines.push_back(*it + " x"+ number2String(*itNr));
+						combinedErrorLines.push_back(line + " x"+ number2String(*itNr));
 					}else{
-						combinedErrorLines.push_back(*it);
+						combinedErrorLines.push_back(line);
 					}
 					++itNr;
 				}
@@ -279,7 +279,7 @@ void ScreenOutput::run(){
 				}
 			}
 		}
-		const double elapsedTime = sw.elapsedSeconds();
+		const Real elapsedTime = sw.elapsedSeconds();
 		if(elapsedTime < m_timeToSleep){
 			sleepFor(m_timeToSleep - elapsedTime);
 		}
@@ -287,7 +287,7 @@ void ScreenOutput::run(){
 	}
 }
 
-void ScreenOutput::updateRunningPackage(ThreadMaster::PackageList::const_iterator& it, const int rowCounter, const int row, const bool isLeft, const int colWidth,
+void ScreenOutput::updateRunningPackage(ThreadMaster::PackageListConstIterator& it, const int rowCounter, const int row, const bool isLeft, const int colWidth,
 		const int amountOfLinesPerThread, int& actLine, int startOfRight, std::vector<WINDOW*>& windows, std::vector<PANEL*>& panels){
 	(*it)->m_lineMutex.lock();
 	const bool hasHeadLine = true;
@@ -327,7 +327,7 @@ void ScreenOutput::updateRunningPackage(ThreadMaster::PackageList::const_iterato
 //				int amountOfNeededLines = 0;
 //				for(std::list<std::string>::const_iterator itLine = (*it)->m_lines.begin(); itLine != (*it)->m_lines.end(); ++itLine){
 //					if(itLine->length() > colWidth){
-//						amountOfNeededLines += ceil((itLine->length() - colWidth) / (double) (colWidth - 2)) + 1;
+//						amountOfNeededLines += ceil((itLine->length() - colWidth) / (Real) (colWidth - 2)) + 1;
 //					}else{
 //						++amountOfNeededLines;
 //					}
@@ -361,7 +361,7 @@ void ScreenOutput::updateRunningPackage(ThreadMaster::PackageList::const_iterato
 //							}
 //						}else{
 //							std::string line = *itLine;
-//							counter += ceil((itLine->length() - colWidth) / (double) (colWidth - 2));
+//							counter += ceil((itLine->length() - colWidth) / (Real) (colWidth - 2));
 //							int diff = 0;
 //							while(line.length() > colWidth){
 //								if(counter < amountOfLinesPerThread){ // -1 for the start line
@@ -374,7 +374,7 @@ void ScreenOutput::updateRunningPackage(ThreadMaster::PackageList::const_iterato
 //							if(counter < amountOfLinesPerThread){ // -1 for the start line
 //								mvprintw((row + 1) * amountOfLinesPerThread - counter + actLine, isLeft ? 4  + diff : startOfRight + 1  + diff, line.substr(0, colWidth - diff).c_str());
 //							}
-//							counter += ceil((itLine->length() - colWidth) / (double) (colWidth - 2));
+//							counter += ceil((itLine->length() - colWidth) / (Real) (colWidth - 2));
 //						}
 //					}
 //				}
@@ -445,7 +445,7 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 	int amountOfNeededLines = 0;
 	for(std::list<std::string>::const_iterator itLine = lines.begin(); itLine != lines.end(); ++itLine){
 		if((int) itLine->length() > width){
-			amountOfNeededLines += ceil((itLine->length() - width) / (double) width) + 1;
+			amountOfNeededLines += ceil((itLine->length() - width) / (Real) width) + 1;
 		}else{
 			++amountOfNeededLines;
 		}
@@ -480,7 +480,7 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 				}
 			}else{
 				std::string line = *itLine;
-				const int neededLen = ceil(itLine->length() / (double) width) - 1; // the last line will be printed normally
+				const int neededLen = ceil(itLine->length() / (Real) width) - 1; // the last line will be printed normally
 				counter += neededLen;
 				int diff = 0;
 				while((int) line.length() > width){

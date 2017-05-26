@@ -64,7 +64,7 @@ void OnlineRandomForestIVMs::update(){
 		}
 		printOnScreen("Just ORFs:");
 		ConfusionMatrixPrinter::print(conv);
-		printOnScreen("Just ORFs correct: " << number2String(amountOfCorrect / (double) m_storage.size() * 100.0, 2));
+		printOnScreen("Just ORFs correct: " << number2String(amountOfCorrect / (Real) m_storage.size() * 100.0, 2));
 		Logger::forcedWrite();
 		boost::thread_group* group = new boost::thread_group();
 		std::vector<LabeledData*> datasForPredictedClasses(amountOfClasses(), nullptr);
@@ -73,7 +73,7 @@ void OnlineRandomForestIVMs::update(){
 		for(unsigned int iClassNr = 0; iClassNr < amountOfClasses(); ++iClassNr){
 			// for each class find all predicted values which should be considered in this class
 			datasForPredictedClasses[iClassNr] = new LabeledData();
-			std::list<unsigned int>::const_iterator itPredictedLabel = predictedLabels.begin();
+			auto itPredictedLabel = predictedLabels.cbegin();
 			std::vector<unsigned int> classCounter(amountOfClasses(), 0);
 			for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it, ++itPredictedLabel){
 				if(*itPredictedLabel == iClassNr){
@@ -146,7 +146,7 @@ void OnlineRandomForestIVMs::predictData(const LabeledData& points, Labels& labe
 	}
 }
 
-void OnlineRandomForestIVMs::predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
+void OnlineRandomForestIVMs::predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const{
 	m_orf.predictData(points, labels, probabilities);
 	int i = 0;
 	for(DataConstIterator it = points.begin(); it != points.end(); ++it, ++i){
@@ -160,7 +160,7 @@ void OnlineRandomForestIVMs::predictData(const Data& points, Labels& labels, std
 	}
 }
 
-void OnlineRandomForestIVMs::predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
+void OnlineRandomForestIVMs::predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const{
 	m_orf.predictData(points, labels, probabilities);
 	int i = 0;
 	for(LabeledDataConstIterator it = points.begin(); it != points.end(); ++it, ++i){

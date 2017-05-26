@@ -47,8 +47,8 @@ void BigDynamicDecisionTree::prepareForSetting(const unsigned int maxDepth, cons
 			m_depthPerLayer = m_maxDepth / amountOfLayers;
 		}else{
 			// we can adjust the height of the last layer
-			const auto higherHeight = (unsigned int) std::ceil(m_maxDepth/ (double) amountOfLayers); // use bigger depth for all layers
-			const auto lowerHeight = (unsigned int) (m_maxDepth / (double) amountOfLayers); // truncs by its own
+			const auto higherHeight = (unsigned int) std::ceil(m_maxDepth/ (Real) amountOfLayers); // use bigger depth for all layers
+			const auto lowerHeight = (unsigned int) (m_maxDepth / (Real) amountOfLayers); // truncs by its own
 			// now take the values which minimizes the height of the last layer:
 			if(m_maxDepth - (higherHeight * (amountOfLayers - 1)) == 0){
 				m_depthPerLayer = lowerHeight;
@@ -83,10 +83,10 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 		RandomNumberGeneratorForDT& generator){
 	m_usedMemory = 40 + (m_fastInnerTrees.size() + m_smallInnerTrees.size()) * 8; // 40 fix values, 8 for the first pointer of the layer
 	if(m_fastInnerTrees.size() > 0 && m_fastInnerTrees[0][0] != nullptr){ // in the case of a retraining that all trees are removed
-		for(FastTreeStructure::iterator it = m_fastInnerTrees.begin(); it != m_fastInnerTrees.end(); ++it){
+		for(auto it = m_fastInnerTrees.begin(); it != m_fastInnerTrees.end(); ++it){
 			it->clear(); // clear map
 		}
-		for(SmallTreeStructure::iterator it = m_smallInnerTrees.begin(); it != m_smallInnerTrees.end(); ++it){
+		for(auto it = m_smallInnerTrees.begin(); it != m_smallInnerTrees.end(); ++it){
 			it->clear(); // clear map
 		}
 	}
@@ -200,7 +200,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 	}
 }
 
-void BigDynamicDecisionTree::trainChildrenForRoot(PtrDynamicDecisionTree root, SmallTreeInnerStructure::iterator& it,
+void BigDynamicDecisionTree::trainChildrenForRoot(PtrDynamicDecisionTree root, SmallTreeInnerStructureIterator& it,
 												  SmallTreeInnerStructure& actSmallInnerTreeStructure,
 												  const unsigned int depthInThisLayer, const unsigned int iRootId,
 												  const unsigned int leavesForTreesInTheFatherLayer,

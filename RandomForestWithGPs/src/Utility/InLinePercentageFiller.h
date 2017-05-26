@@ -15,13 +15,13 @@ public:
 
 	static void setActMax(const long iMax);
 
-	static void setActMaxTime(const double dMax);
+	static void setActMaxTime(const Real dMax);
 
 	static void setActValueAndPrintLine(const long iAct);
 
 	static void printLineWithRestTimeBasedOnMaxTime(const unsigned long amountOfCalcedElements, const bool lastElement = false);
 
-	static void setActPercentageAndPrintLine(const double dAct, const bool lastElement = false);
+	static void setActPercentageAndPrintLine(const Real dAct, const bool lastElement = false);
 
 private:
 	InLinePercentageFiller();
@@ -29,7 +29,7 @@ private:
 
 	static long m_max;
 
-	static double m_dMax;
+	static Real m_dMax;
 
 	static StopWatch m_sw;
 };
@@ -41,7 +41,7 @@ void InLinePercentageFiller::setActMax(const long iMax){
 }
 
 inline
-void InLinePercentageFiller::setActMaxTime(const double dMax){
+void InLinePercentageFiller::setActMaxTime(const Real dMax){
 	m_dMax = dMax;
 	m_sw.startTime();
 }

@@ -8,8 +8,8 @@
 #ifndef GAUSSIANPROCESS_GAUSSIANPROCESSMULTICLASS_H_
 #define GAUSSIANPROCESS_GAUSSIANPROCESSMULTICLASS_H_
 
-#include "../Utility/Util.h"
 #include <Eigen/Cholesky>
+#include "../Utility/Util.h"
 
 
 class GaussianProcessMultiClass{

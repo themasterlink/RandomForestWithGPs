@@ -9,7 +9,7 @@
 #include "../Utility/Util.h"
 int RandomGaussianNr::counter = 0;
 
-RandomGaussianNr::RandomGaussianNr(const double mean, const double sd, const int seed):
+RandomGaussianNr::RandomGaussianNr(const Real mean, const Real sd, const int seed):
 	m_generator((seed == -1 ? (counter++ * 137937): seed)),
 	m_normalGenerator(nullptr),
 	m_mean(mean),
@@ -19,7 +19,7 @@ RandomGaussianNr::RandomGaussianNr(const double mean, const double sd, const int
 
 RandomGaussianNr::~RandomGaussianNr() = default;
 
-void RandomGaussianNr::reset(const double mean, const double sd){
+void RandomGaussianNr::reset(const Real mean, const Real sd){
 	m_normalGenerator->distribution().param(normal_distribution::param_type(mean,sd));
 	m_mean = mean;
 	m_sd = sd;

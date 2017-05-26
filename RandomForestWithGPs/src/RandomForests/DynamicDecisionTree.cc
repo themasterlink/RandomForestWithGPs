@@ -27,7 +27,7 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<LabeledVectorX *> &storag
 	if(m_maxDepth <= 0 || m_maxDepth >= 28){
 		printError("This height is not supported here: " << m_maxDepth);
 	}
-//	printOnScreen("Size is: " << (m_splitDim.size() * sizeof(int) + m_splitValues.size() * sizeof(real) + m_labelsOfWinningClassesInLeaves.size() * sizeof(int)));
+//	printOnScreen("Size is: " << (m_splitDim.size() * sizeof(int) + m_splitValues.size() * sizeof(Real) + m_labelsOfWinningClassesInLeaves.size() * sizeof(int)));
 }
 
 
@@ -157,7 +157,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		// calc split value for each node
 		// choose dimension for split
 		int randDim, amountOfUsedData;
-		real minDimValue, maxDimValue;
+		Real minDimValue, maxDimValue;
 		// try different dimension and find one where the points have a difference
 		amountOfUsedData = generator.getRandAmountOfUsedData();
 		for(unsigned int i = 0; i < amountOfTriedDims; ++i){
@@ -186,16 +186,16 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		}
 		generator.setMinAndMaxForSplitInDim((unsigned int) randDim, minDimValue, maxDimValue);
 
-		real maxScoreElementValue = 0;
-		real actScore = NEG_REAL_MAX; // TODO check magic number
+		Real maxScoreElementValue = 0;
+		Real actScore = NEG_REAL_MAX; // TODO check magic number
 		std::sort(actDataPos.begin(), actDataPos.end(),
 				  [this, &randDim](const auto& a, const auto& b) -> bool
 				  { return m_storage[a]->coeff(randDim) < m_storage[b]->coeff(randDim); });
 		for(int j = 0; j < amountOfUsedData; ++j){ // amount of checks for a specified split
 //			const int randElementId = generator.getRandNextDataEle();
-//			const real usedValue = (*m_storage[usedNode])[usedDim];
-			const real usedValue = generator.getRandSplitValueInDim(randDim);
-			const real score = trySplitFor(usedValue, randDim,
+//			const Real usedValue = (*m_storage[usedNode])[usedDim];
+			const Real usedValue = generator.getRandSplitValueInDim(randDim);
+			const Real score = trySplitFor(usedValue, randDim,
 					actDataPos, leftHisto, rightHisto, generator);
 //			if(iActNode == 1 && randDim == 0){
 //				printOnScreen(usedValue <<"," << score);
@@ -206,7 +206,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			}
 		}
 		// save actual split
-		m_splitValues[iActNode] = maxScoreElementValue;//(real) (*m_storage[maxScoreElement])[randDim];
+		m_splitValues[iActNode] = maxScoreElementValue;//(Real) (*m_storage[maxScoreElement])[randDim];
 		m_splitDim[iActNode] = randDim;
 		// apply split to data
 		const int leftPos = iActNode * 2, rightPos = iActNode * 2 + 1;
@@ -276,7 +276,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 	return true;
 }
 
-real DynamicDecisionTree::trySplitFor(const real usedSplitValue, const unsigned int usedDim,
+Real DynamicDecisionTree::trySplitFor(const Real usedSplitValue, const unsigned int usedDim,
 		const std::vector<unsigned int>& dataInNode, std::vector<unsigned int>& leftHisto,
 		std::vector<unsigned int>& rightHisto, RandomNumberGeneratorForDT& generator){
 	int leftAmount = 0, rightAmount = 0;
@@ -308,11 +308,11 @@ real DynamicDecisionTree::trySplitFor(const real usedSplitValue, const unsigned 
 		}
 	}
 	// Entropy -> TODO maybe Gini
-	real leftCost = 0, rightCost = 0;
+	Real leftCost = 0, rightCost = 0;
 	for(unsigned int i = 0; i < m_amountOfClasses; ++i){
-		const real normalizer = leftHisto[i] + rightHisto[i];
+		const Real normalizer = leftHisto[i] + rightHisto[i];
 		if(normalizer > 0){
-			const real leftClassProb = leftHisto[i] / normalizer;
+			const Real leftClassProb = leftHisto[i] / normalizer;
 			if(leftClassProb > 0){
 				leftCost -= leftClassProb * log(leftClassProb);
 			}
@@ -460,12 +460,12 @@ void DynamicDecisionTree::deleteDataPositions(){
 }
 
 MemoryType DynamicDecisionTree::getMemSize() const {
-	const auto splits = ((MemoryType) m_maxInternalNodeNr + 1) * (sizeof(real) + sizeof(unsigned int) + sizeof(int));
+	const auto splits = ((MemoryType) m_maxInternalNodeNr + 1) * (sizeof(Real) + sizeof(unsigned int) + sizeof(int));
 	const auto refs = (MemoryType) sizeof(int*) * 6; // size of pointers and refs
 	return refs + splits; // 16 + 24 = 40, 16 general info, 40 pointers and ref
 }
 
-//void DynamicDecisionTree::printStream(std::ostream &output, const real precision){
+//void DynamicDecisionTree::printStream(std::ostream &output, const Real precision){
 //	if(&output == &std::cout){
 //#ifdef USE_SCREEN_OUPUT
 //		printError("This print message is not supported if output is std::cout and the panels are used!");

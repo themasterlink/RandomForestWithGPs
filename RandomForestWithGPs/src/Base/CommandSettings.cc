@@ -14,7 +14,7 @@ DEFINE_PARAM(bool, useFakeData);
 DEFINE_PARAM(int, visuRes);
 DEFINE_PARAM(int, visuResSimple);
 DEFINE_PARAM(bool, onlyDataView);
-DEFINE_PARAM(real, samplingAndTraining);
+DEFINE_PARAM(Real, samplingAndTraining);
 DEFINE_PARAM(bool, plotHistos);
 DEFINE_PARAM(std::string, settingsFile);
 DEFINE_PARAM(std::string, convertFile);
@@ -30,7 +30,7 @@ void CommandSettings::init(){
 	INIT_PARAM(int, visuRes);
 	INIT_PARAM(int, visuResSimple);
 	INIT_PARAM(bool, onlyDataView);
-	INIT_PARAM(real, samplingAndTraining);
+	INIT_PARAM(Real, samplingAndTraining);
 	INIT_PARAM(bool, plotHistos);
 	INIT_PARAM(std::string, settingsFile);
 	INIT_PARAM(std::string, convertFile);
@@ -48,8 +48,8 @@ void CommandSettings::setValues(boost::program_options::variables_map& vm){
 					*(bool*)itParam->ref = !*(bool*)(itParam->ref); // it is there -> flip default
 				}else if(type == "int"){
 					*(int*)itParam->ref = (int) vm[itParam->name].as<int>();
-				}else if(type == "real"){
-					*((real*)itParam->ref) = vm[itParam->name].as<real>();
+				}else if(type == "Real"){
+					*((Real*)itParam->ref) = vm[itParam->name].as<Real>();
 				}else if(type == "string" || type == "std::string"){
 					*(std::string*)itParam->ref = (std::string) vm[itParam->name].as<std::string>();
 				}
@@ -74,8 +74,8 @@ void CommandSettings::printAllSettingsToLog(){
 			}
 		}else if(type == "int"){
 			line << itParam->name << " " << *(int*)itParam->ref;
-		}else if(type == "real"){
-			line << itParam->name << " " << *(real*)itParam->ref;
+		}else if(type == "Real"){
+			line << itParam->name << " " << *(Real*)itParam->ref;
 		}else if(type == "string" || type == "std::string"){
 			line << itParam->name << " " << *(std::string*)itParam->ref;
 		}else{

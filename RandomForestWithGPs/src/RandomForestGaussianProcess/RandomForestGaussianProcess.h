@@ -28,7 +28,7 @@ public:
 
 	virtual ~RandomForestGaussianProcess();
 
-	unsigned int predict(const VectorX& data, std::vector<real>& prob) const;
+	unsigned int predict(const VectorX& data, std::vector<Real>& prob) const;
 
 	unsigned int predict(const VectorX& point) const;
 
@@ -37,7 +37,7 @@ public:
 		printError("This function is not implemented!");
 	}
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const{
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}

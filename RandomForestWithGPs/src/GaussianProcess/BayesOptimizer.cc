@@ -15,10 +15,10 @@
 //	// TODO Auto-generated destructor stub
 //}
 //
-//double BayesOptimizer::evaluateSample(const vectord& x) {
+//Real BayesOptimizer::evaluateSample(const vectord& x) {
 //	GaussianProcess::Status status(GaussianProcess::Status::NANORINFERROR);
-//	double logZ = 0.0;
-//	const double upperBound = 10000;
+//	Real logZ = 0.0;
+//	const Real upperBound = 10000;
 //	if(x[0] * x[1] < 50){ // avoid overfitting!
 //		m_gp.getKernel().setHyperParams(x[0], x[1]);
 //		status = m_gp.trainBayOpt(logZ,1);

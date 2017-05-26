@@ -19,7 +19,7 @@
 //public:
 //	BayesOptimizer(GaussianProcess& gp, bayesopt::Parameters param);
 //
-//	double evaluateSample(const vectord& x);
+//	Real evaluateSample(const vectord& x);
 //
 //	bool checkReachability(const vectord& query);
 //
@@ -27,11 +27,11 @@
 //
 //private:
 //	GaussianProcess& m_gp;
-//	double m_lowestValue;
-//	double m_worstValue;
-//	/*double bestVal;
-//	double bestLen;
-//	double bestSigma;*/
+//	Real m_lowestValue;
+//	Real m_worstValue;
+//	/*Real bestVal;
+//	Real bestLen;
+//	Real bestSigma;*/
 //};
 
 #endif /* GAUSSIANPROCESS_BAYESOPTIMIZER_H_ */

@@ -131,7 +131,7 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 					+ betweenNames, MAGENTA);
 	sw.startTime();
 	// set hyper params
-	double len, sigmaF;
+	Real len, sigmaF;
 	bestHyperParams.getBestHypParams(len,sigmaF);
 	actGp->getKernel().setHyperParams(len, sigmaF);
 	// train on whole data set
@@ -196,7 +196,7 @@ if(yHyper.rows() < hyperPoints * 0.75){
 	continue;
 }
 for(int i = 0; i < yHyper.rows(); ++i){
-	std::cout << (double) yHyper[i] << std::endl;
+	std::cout << (Real) yHyper[i] << std::endl;
 }
 std::cout << "One: " << oneCounter << std::endl;
 		 */
@@ -238,10 +238,10 @@ std::cout << "One: " << oneCounter << std::endl;
 		int amountOfUsedValues = 0;
 		if(!useAllTestValues){
 			for(int i = 0; i < size; ++i){
-				const int nextEle = rand() / (double) RAND_MAX * m_amountOfDataPoints;
+				const int nextEle = rand() / (Real) RAND_MAX * m_amountOfDataPoints;
 				if(!elementsUsedForValidation[nextEle]){ // is not part of the validation trainings part
 					LabeledVectorX& ele = *data[nextEle];
-					double prob = usedGp.predict(ele, 500);
+					Real prob = usedGp.predict(ele, 500);
 					if(prob > 0.5 && ele.getLabel() == iActClass){
 						++right;
 					}else if(prob < 0.5 && ele.getLabel() != iActClass){
@@ -254,7 +254,7 @@ std::cout << "One: " << oneCounter << std::endl;
 				if(!elementsUsedForValidation[i]){ // is not part of the validation trainings part
 					++amountOfUsedValues;
 					LabeledVectorX& ele = *data[i];
-					double prob = usedGp.predict(ele, 500);
+					Real prob = usedGp.predict(ele, 500);
 					if(ele.getLabel() == iActClass)
 						++amountOfCorrectLabels;
 					if(prob > 0.75 && ele.getLabel() == iActClass){
@@ -271,8 +271,8 @@ std::cout << "One: " << oneCounter << std::endl;
 		bestHyperParams->getNoChangeCounter(noChange);
 		const int percentagePrecision = 2;
 //		m_output.printSwitchingColor("Act is: " + number2String(result[0], percentagePrecision) + ", " + number2String(result[1], percentagePrecision)
-//						+ " with: " + number2String(right / (double) amountOfUsedValues * 100.0, percentagePrecision) + " %, for " + number2String(amountOfUsedValues)
-//						+ " test elements, just right: " + number2String(rr / (double) amountOfCorrectLabels * 100.0, percentagePrecision)
+//						+ " with: " + number2String(right / (Real) amountOfUsedValues * 100.0, percentagePrecision) + " %, for " + number2String(amountOfUsedValues)
+//						+ " test elements, just right: " + number2String(rr / (Real) amountOfCorrectLabels * 100.0, percentagePrecision)
 //						+ " %, best now: "
 //						+ bestHyperParams->prettyStringOfBest(percentagePrecision) + ", use "
 //						+ number2String(std::min(100, noChange * amountOfHyperPoints))
@@ -285,9 +285,9 @@ std::cout << "One: " << oneCounter << std::endl;
 	m_threadCounter.removeThread();
 }
 
-unsigned int GaussianProcessMultiBinary::predict(const VectorX& point, std::vector<real>& prob) const {
+unsigned int GaussianProcessMultiBinary::predict(const VectorX& point, std::vector<Real>& prob) const {
 	prob.resize(m_amountOfUsedClasses);
-	double p = 0;
+	Real p = 0;
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
 		if(m_gps[i] != NULL){
 			prob[i] = m_gps[i]->predict(point, 500);
@@ -321,7 +321,7 @@ unsigned int GaussianProcessMultiBinary::predict(const VectorX& point, std::vect
 }
 
 unsigned int GaussianProcessMultiBinary::predict(const VectorX& point) const{
-	std::vector<real> prob;
+	std::vector<Real> prob;
 	return predict(point, prob);
 }
 

@@ -11,7 +11,7 @@
 #include "../Base/ScreenOutput.h"
 
 long InLinePercentageFiller::m_max = 0;
-double InLinePercentageFiller::m_dMax = 0;
+Real InLinePercentageFiller::m_dMax = 0;
 StopWatch InLinePercentageFiller::m_sw;
 
 InLinePercentageFiller::InLinePercentageFiller(){
@@ -25,7 +25,7 @@ InLinePercentageFiller::~InLinePercentageFiller(){
 
 void InLinePercentageFiller::setActValueAndPrintLine(const long iAct){
 	if(iAct <= m_max && iAct >= 0){
-		setActPercentageAndPrintLine((double) iAct / (double) m_max * 100.0, iAct == m_max);
+		setActPercentageAndPrintLine((Real) iAct / (Real) m_max * (Real) 100.0, iAct == m_max);
 	}else{
 //		printError("Something went wrong: " << iAct);
 	}
@@ -33,11 +33,11 @@ void InLinePercentageFiller::setActValueAndPrintLine(const long iAct){
 
 void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned long amountOfCalcedElements, const bool lastElement){
 	std::stringstream str;
-	const double seconds = m_sw.elapsedSeconds();
-	const double dAct = !lastElement ? std::min(seconds / m_dMax * 100., 100.) : 100.;
+	const Real seconds = m_sw.elapsedSeconds();
+	const Real dAct = !lastElement ? std::min(seconds / m_dMax * (Real) 100., (Real) 100.) : (Real) 100.;
 	const long amountOfElements = std::max(COLS / 2, 100);
 	for(long i = 0; i < amountOfElements; ++i){
-		const double t = i / (double) amountOfElements * 100.;
+		const Real t = (Real) (i / (Real) amountOfElements * 100.);
 		if(t <= dAct){
 			str << "#";
 		}else{
@@ -58,12 +58,12 @@ void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned 
 	ScreenOutput::printInProgressLine(str.str());
 }
 
-void InLinePercentageFiller::setActPercentageAndPrintLine(const double dAct, const bool lastElement){
+void InLinePercentageFiller::setActPercentageAndPrintLine(const Real dAct, const bool lastElement){
 	if(dAct >= 0 && dAct <= 100.0){
 		std::stringstream str;
 		const long amountOfElements = std::max(COLS / 2, 100);
 		for(long i = 0; i < amountOfElements; ++i){
-			const double t = i / (double) amountOfElements * 100.;
+			const Real t = i / (Real) amountOfElements * 100.;
 			if(t <= dAct){
 				str << "#";
 			}else{

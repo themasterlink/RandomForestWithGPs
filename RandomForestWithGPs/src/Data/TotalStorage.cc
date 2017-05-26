@@ -173,7 +173,7 @@ void TotalStorage::readData(const int amountOfData){
 		if(m_mode == Mode::WHOLE){
 			std::vector<bool> isUsed(ClassKnowledge::amountOfDims(), false);
 			for(unsigned int dim = 0; dim < ClassKnowledge::amountOfDims(); ++dim){
-				const real value = m_storage.begin()->second[0]->coeff(dim);
+				const Real value = m_storage.begin()->second[0]->coeff(dim);
 				for(Iterator it = m_storage.begin(); it != m_storage.end() && !isUsed[dim]; ++it){
 					const unsigned int start = m_storage.begin() == it ? 1 : 0;
 					for(unsigned int i = start; i < it->second.size(); ++i){
@@ -228,7 +228,7 @@ void TotalStorage::readData(const int amountOfData){
 			std::vector<bool> isUsed(ClassKnowledge::amountOfDims(), false);
 			printOnScreen("Amount of dims: " << ClassKnowledge::amountOfDims());
 			for(unsigned int dim = 0; dim < ClassKnowledge::amountOfDims(); ++dim){
-				const real value = m_trainSet[0]->coeff(dim);
+				const Real value = m_trainSet[0]->coeff(dim);
 				for(unsigned int i = 1; i < m_trainSet.size(); ++i){
 					if(fabs(value - m_trainSet[i]->coeff(dim)) >= 1e-7){
 						isUsed[dim] = true;
@@ -336,8 +336,8 @@ void TotalStorage::readData(const int amountOfData){
 			}
 			m_trainSet.clear();
 			m_trainSet.reserve(trainList.size());
-			for(std::list<LabeledVectorX*>::const_iterator it = trainList.begin(); it != trainList.end(); ++it){
-				m_trainSet.push_back(*it);
+			for(auto& trainVecs : trainList){
+				m_trainSet.push_back(trainVecs);
 			}
 			std::list<LabeledVectorX*> testList;
 			m_removeFromTestSet.reserve(m_testSet.size() / ClassKnowledge::amountOfClasses() * 2);
@@ -350,7 +350,7 @@ void TotalStorage::readData(const int amountOfData){
 			}
 			m_testSet.clear();
 			m_testSet.reserve(testList.size());
-			for(std::list<LabeledVectorX*>::const_iterator it = testList.begin(); it != testList.end(); ++it){
+			for(auto it = testList.begin(); it != testList.end(); ++it){
 				m_testSet.push_back(*it);
 			}
 			printOnScreen("Removed class: " << removeClass << " from train: " << m_removeFromTrainSet.size() << ", from test: " << m_removeFromTestSet.size());
@@ -390,7 +390,7 @@ void TotalStorage::readData(const int amountOfData){
 			printOnScreen("Reduced training size from: " << m_trainSet.size() << " to: " << trainList.size());
 			m_trainSet.clear();
 			m_trainSet.reserve(trainList.size());
-			for(std::list<LabeledVectorX*>::const_iterator it = trainList.begin(); it != trainList.end(); ++it){
+			for(auto it = trainList.begin(); it != trainList.end(); ++it){
 				m_trainSet.push_back(*it);
 			}
 		}

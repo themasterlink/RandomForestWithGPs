@@ -50,26 +50,26 @@ void GaussianProcessWriter::readFromStream(std::fstream& file, GaussianProcess& 
 	bool hasMoreThanOneDim;
 	file.read((char*) &hasMoreThanOneDim, sizeof(bool));
 	if(hasMoreThanOneDim){
-		double noiseF, noiseS;
-		std::vector<real> length;
+		Real noiseF, noiseS;
+		std::vector<Real> length;
 		ReadWriterHelper::readVector(file, length);
-		file.read((char*) &noiseF, sizeof(double));
-		file.read((char*) &noiseS, sizeof(double));
+		file.read((char*) &noiseF, sizeof(Real));
+		file.read((char*) &noiseS, sizeof(Real));
 		gp.m_kernel.setHyperParams(length, noiseF , noiseS);
 	}else{
-		double len, noiseF, noiseS;
-		file.read((char*) &len, sizeof(double)); // order is len, sigmaF, sigmaN
-		file.read((char*) &noiseF, sizeof(double));
-		file.read((char*) &noiseS, sizeof(double));
+		Real len, noiseF, noiseS;
+		file.read((char*) &len, sizeof(Real)); // order is len, sigmaF, sigmaN
+		file.read((char*) &noiseF, sizeof(Real));
+		file.read((char*) &noiseS, sizeof(Real));
 		gp.m_kernel.setHyperParams(len, noiseF, noiseS);
 	}
 	gp.m_kernel.init(gp.m_dataMat, false, false);
-	/*double mean, sd;
-	file.read((char*) &mean, sizeof(double));
-	file.read((char*) &sd, sizeof(double));
+	/*Real mean, sd;
+	file.read((char*) &mean, sizeof(Real));
+	file.read((char*) &sd, sizeof(Real));
 	gp.m_kernel.m_randLen.reset(mean, sd);
-	file.read((char*) &mean, sizeof(double));
-	file.read((char*) &sd, sizeof(double));
+	file.read((char*) &mean, sizeof(Real));
+	file.read((char*) &sd, sizeof(Real));
 	gp.m_kernel.m_randSigmaF.reset(mean, sd);*/
 	gp.m_trained = true;
 	gp.m_init = true;
@@ -91,19 +91,19 @@ void GaussianProcessWriter::writeToStream(std::fstream& file, GaussianProcess& g
 	bool hasMoreThanOneLength = gp.m_kernel.hasLengthMoreThanOneDim();
 	file.write((char*) &hasMoreThanOneLength, sizeof(bool)); // order is len, sigmaF, sigmaN
 	if(hasMoreThanOneLength){
-		std::vector<real> length(ClassKnowledge::amountOfDims());
+		std::vector<Real> length(ClassKnowledge::amountOfDims());
 		for(unsigned int i = 0; i < length.size(); ++i){
 			length[i] = gp.m_kernel.getHyperParams().m_length.getValues()[i];
 		}
 		ReadWriterHelper::writeVector(file, length);
 	}else{
-		double len = gp.m_kernel.getHyperParams().m_length.getValue();
-		file.write((char*) &len, sizeof(double));
+		Real len = gp.m_kernel.getHyperParams().m_length.getValue();
+		file.write((char*) &len, sizeof(Real));
 	}
-	double noiseF = gp.m_kernel.getHyperParams().m_fNoise.getValue();
-	double noiseS = gp.m_kernel.getHyperParams().m_sNoise.getValue();
-	file.write((char*) &noiseF, sizeof(double));
-	file.write((char*) &noiseS, sizeof(double));
+	Real noiseF = gp.m_kernel.getHyperParams().m_fNoise.getValue();
+	Real noiseS = gp.m_kernel.getHyperParams().m_sNoise.getValue();
+	file.write((char*) &noiseF, sizeof(Real));
+	file.write((char*) &noiseS, sizeof(Real));
 }
 
 void GaussianProcessWriter::writeToFile(const std::string& filePath, GaussianProcess& gp){

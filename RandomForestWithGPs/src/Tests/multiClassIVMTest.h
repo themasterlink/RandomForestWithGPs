@@ -8,7 +8,6 @@
 #ifndef TESTS_MULTICLASSIVMTEST_H_
 #define TESTS_MULTICLASSIVMTEST_H_
 
-#include <Eigen/Dense>
 #include "../Data/TotalStorage.h"
 #include "../Data/DataConverter.h"
 #include "../Data/DataWriterForVisu.h"
@@ -28,32 +27,32 @@ void testIvm(IVMMultiBinary& ivms, const LabeledData& data){
 //	rightPerClass[0] = rightPerClass[1] = 0;
 //	int amountOfBelow = 0;
 //	int amountOfAbove = 0;
-//	std::list<real> probs;
+//	std::list<Real> probs;
 //	Vector2i amountPerClass;
 //	amountPerClass[0] = amountPerClass[1] = 0;
 	Matrix conv = Matrix::Zero(ivms.amountOfClasses(), ivms.amountOfClasses());
 	Labels labels;
-	std::vector< std::vector<real> > probs;
+	std::vector< std::vector<Real> > probs;
 	ivms.predictData(data, labels, probs);
 	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
-	const double logBase = log(amountOfClasses);
+	const Real logBase = log(amountOfClasses);
 	AvgNumber oc, uc;
 	AvgNumber ocBVS, ucBVS;
 	for(int i = 0; i < amountOfTestPoints; ++i){
-		double entropy = 0;
+		Real entropy = 0;
 		for(unsigned int j = 0; j < amountOfClasses; ++j){
 			if(probs[i][j] > 0){
 				entropy -= probs[i][j] * log(probs[i][j]) / logBase;
 			}
 		}
-		double max1 = 0, max2 = 0;
+		Real max1 = 0, max2 = 0;
 		for(unsigned int j = 0; j < amountOfClasses; ++j){
 			if(probs[i][j] > max1){
 				max2 = max1;
 				max1 = probs[i][j];
 			}
 		}
-		double entropyBVS = max2 / max1;
+		Real entropyBVS = max2 / max1;
 		const unsigned int label = labels[i];
 		if(label == data[i]->getLabel()){
 			uc.addNew(entropy);
@@ -88,18 +87,18 @@ void testIvm(IVMMultiBinary& ivms, const LabeledData& data){
 //		openFileInViewer("histo.svg");
 //	}
 	ConfusionMatrixPrinter::print(conv);
-	printOnScreen("Overconf:  " << (double) oc.mean() * 100.0 << "%%");
-	printOnScreen("Underconf: " << (double) uc.mean() * 100.0 << "%%");
-	printOnScreen("Overconf BVS:  " << (double) ocBVS.mean() * 100.0 << "%%");
-	printOnScreen("Underconf BVS: " << (double) ucBVS.mean() * 100.0 << "%%");
-	printOnScreen("Amount of right: " << (double) right / amountOfTestPoints * 100.0 << "%%");
-//	std::cout << "Amount of above: " << (double) amountOfAbove / amountOfTestPoints * 100.0 << "%" << std::endl;
-//	std::cout << "Amount of below: " << (double) amountOfBelow / amountOfTestPoints * 100.0 << "%" << std::endl;
-//	std::cout << "Recall for  1: " << (double) rightPerClass[0] / (double) amountPerClass[0] * 100.0 << "%" << std::endl;
-//	std::cout << "Recall for -1: " << (double) rightPerClass[1] / (double) amountPerClass[1] * 100.0 << "%" << std::endl;
-//	std::cout << "Precision for  1: " << (double) rightPerClass[0] / right * 100.0 << "%" << std::endl;
-//	std::cout << "Precision for -1: " << (double) rightPerClass[1] / right * 100.0 << "%" << std::endl;
-//	std::cout << "Amount of 1 in total: " << (double) amountPerClass[0] / amountOfTestPoints * 100.0 << "%" << std::endl;
+	printOnScreen("Overconf:  " << (Real) oc.mean() * 100.0 << "%%");
+	printOnScreen("Underconf: " << (Real) uc.mean() * 100.0 << "%%");
+	printOnScreen("Overconf BVS:  " << (Real) ocBVS.mean() * 100.0 << "%%");
+	printOnScreen("Underconf BVS: " << (Real) ucBVS.mean() * 100.0 << "%%");
+	printOnScreen("Amount of right: " << (Real) right / amountOfTestPoints * 100.0 << "%%");
+//	std::cout << "Amount of above: " << (Real) amountOfAbove / amountOfTestPoints * 100.0 << "%" << std::endl;
+//	std::cout << "Amount of below: " << (Real) amountOfBelow / amountOfTestPoints * 100.0 << "%" << std::endl;
+//	std::cout << "Recall for  1: " << (Real) rightPerClass[0] / (Real) amountPerClass[0] * 100.0 << "%" << std::endl;
+//	std::cout << "Recall for -1: " << (Real) rightPerClass[1] / (Real) amountPerClass[1] * 100.0 << "%" << std::endl;
+//	std::cout << "Precision for  1: " << (Real) rightPerClass[0] / right * 100.0 << "%" << std::endl;
+//	std::cout << "Precision for -1: " << (Real) rightPerClass[1] / right * 100.0 << "%" << std::endl;
+//	std::cout << "Amount of 1 in total: " << (Real) amountPerClass[0] / amountOfTestPoints * 100.0 << "%" << std::endl;
 //	std::cout << ivm.getKernel().prettyString() << std::endl;
 //	std::cout << RESET;
 	std::fstream output;

@@ -26,7 +26,7 @@ RandomNumberGeneratorForDT::RandomNumberGeneratorForDT(const int dim, const int 
 RandomNumberGeneratorForDT::~RandomNumberGeneratorForDT(){
 }
 
-void RandomNumberGeneratorForDT::setMinAndMaxForSplitInDim(const unsigned int dim, const real min, const real max){
+void RandomNumberGeneratorForDT::setMinAndMaxForSplitInDim(const unsigned int dim, const Real min, const Real max){
 	m_useDim[dim] = min < max;
 	if(m_useDim[dim]){
 		m_uniformSplitValues[dim].param(uniform_distribution_real::param_type(min, max));

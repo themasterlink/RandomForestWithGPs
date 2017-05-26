@@ -17,12 +17,12 @@ KernelElement::KernelElement(const KernelElement& ele):
 		m_kernelNr(ele.m_kernelNr), m_values(nullptr), m_hasMoreThanOneDim(ele.m_hasMoreThanOneDim){
 	if(ele.m_hasMoreThanOneDim){
 		const unsigned int dim = ClassKnowledge::amountOfDims();
-		m_values = new double[dim];
+		m_values = new Real[dim];
 		for(unsigned int i = 0; i < dim; ++i){
 			m_values[i] = ele.m_values[i];
 		}
 	}else{
-		m_values = new double[1]; // [1] to make the delete easier
+		m_values = new Real[1]; // [1] to make the delete easier
 		m_values[0] = ele.m_values[0];
 	}
 }
@@ -38,9 +38,9 @@ void KernelElement::changeAmountOfDims(const bool newHasMoreThanOneDim){
 		m_values = nullptr;
 		m_hasMoreThanOneDim = newHasMoreThanOneDim;
 		if(hasMoreThanOneDim()){
-			m_values = new double[ClassKnowledge::amountOfDims()];
+			m_values = new Real[ClassKnowledge::amountOfDims()];
 		}else{
-			m_values = new double[1]; // [1] to make the delete easier
+			m_values = new Real[1]; // [1] to make the delete easier
 		}
 	}
 }
@@ -48,18 +48,18 @@ void KernelElement::changeAmountOfDims(const bool newHasMoreThanOneDim){
 GaussianKernelElementLength::GaussianKernelElementLength(bool hasMoreThanOneDim): GaussianKernelElement(LengthParam){
 	m_hasMoreThanOneDim = hasMoreThanOneDim;
 	if(m_hasMoreThanOneDim){
-		m_values = new double[ClassKnowledge::amountOfDims()];
+		m_values = new Real[ClassKnowledge::amountOfDims()];
 	}else{
-		m_values = new double[1];
+		m_values = new Real[1];
 	}
 }
 
 GaussianKernelElementFNoise::GaussianKernelElementFNoise(): GaussianKernelElement(FNoiseParam){
-	m_values = new double[1];
+	m_values = new Real[1];
 }
 
 GaussianKernelElementSNoise::GaussianKernelElementSNoise(): GaussianKernelElement(SNoiseParam){
-	m_values = new double[1];
+	m_values = new Real[1];
 }
 
 GaussianKernelParams::GaussianKernelParams(const bool simpleLength):
@@ -77,13 +77,13 @@ GaussianKernelParams::GaussianKernelParams(const OwnKernelInitParams& initParams
 	setAllValuesTo(0);
 }
 
-void GaussianKernelParams::setAllValuesTo(const double value){
+void GaussianKernelParams::setAllValuesTo(const Real value){
 	for(unsigned int i = 0; i < paramsAmount; ++i){
 		m_params[i]->setAllValuesTo(value);
 	}
 }
 
-void KernelElement::setAllValuesTo(const double value){
+void KernelElement::setAllValuesTo(const Real value){
 	if(hasMoreThanOneDim()){
 		for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
 			m_values[i] = value;
@@ -93,7 +93,7 @@ void KernelElement::setAllValuesTo(const double value){
 	}
 }
 
-void KernelElement::addToFirstValue(const double value){
+void KernelElement::addToFirstValue(const Real value){
 	if(!hasMoreThanOneDim()){
 		m_values[0] += value;
 	}else{
@@ -157,15 +157,15 @@ void GaussianKernelParams::writeToFile(const std::string& filePath){
 	if(hasMoreThanOneDim){
 		long size = ClassKnowledge::amountOfDims();
 		file.write((char*) (&size), sizeof(long));
-		file.write((char*) m_length.getValues(), size * sizeof(double));
+		file.write((char*) m_length.getValues(), size * sizeof(Real));
 	}else{
-		double len = m_length.getValue();
-		file.write((char*) (&len), sizeof(double));
+		Real len = m_length.getValue();
+		file.write((char*) (&len), sizeof(Real));
 	}
-	double fNoise = m_fNoise.getValue();
-	file.write((char*) (&fNoise), sizeof(double));
-	double sNoise = m_sNoise.getValue();
-	file.write((char*) (&sNoise), sizeof(double));
+	Real fNoise = m_fNoise.getValue();
+	file.write((char*) (&fNoise), sizeof(Real));
+	Real sNoise = m_sNoise.getValue();
+	file.write((char*) (&sNoise), sizeof(Real));
 	file.close();
 }
 
@@ -180,17 +180,17 @@ void GaussianKernelParams::readFromFile(const std::string& filePath){
 	if(hasMoreThanOneDim){
 		long size = 0;
 		file.read((char*) (&size), sizeof(long));
-		file.read((char*) m_length.getValues(), size * sizeof(double));
+		file.read((char*) m_length.getValues(), size * sizeof(Real));
 	}else{
-		double len = 0;
-		file.read((char*) (&len), sizeof(double));
+		Real len = 0;
+		file.read((char*) (&len), sizeof(Real));
 		m_length.setAllValuesTo(len);
 	}
-	double fNoise;
-	file.read((char*) (&fNoise), sizeof(double));
+	Real fNoise;
+	file.read((char*) (&fNoise), sizeof(Real));
 	m_fNoise.setAllValuesTo(fNoise);
-	double sNoise;
-	file.read((char*) (&sNoise), sizeof(double));
+	Real sNoise;
+	file.read((char*) (&sNoise), sizeof(Real));
 	m_sNoise.setAllValuesTo(sNoise);
 	file.close();
 }
@@ -233,7 +233,7 @@ RandomForestKernelParams& RandomForestKernelParams::operator=(const RandomForest
 	return *this;
 }
 
-void RandomForestKernelParams::setAllValuesTo(const double value){
+void RandomForestKernelParams::setAllValuesTo(const Real value){
 	for(unsigned int i = 0; i < paramsAmount; ++i){
 		m_params[i]->setAllValuesTo(value);
 	}

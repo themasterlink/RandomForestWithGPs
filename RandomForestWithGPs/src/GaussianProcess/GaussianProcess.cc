@@ -34,10 +34,10 @@ void GaussianProcess::init(const Matrix& dataMat, const VectorX& y){
 
 void GaussianProcess::updatePis(){
 	for(int i = 0; i < m_dataPoints; ++i){
-		m_pi[i] = 1.0 / (1.0 + exp((real) - m_y[i] * (real) m_f[i]));
+		m_pi[i] = 1.0 / (1.0 + exp((Real) - m_y[i] * (Real) m_f[i]));
 		m_dLogPi[i] = m_t[i] - m_pi[i];
 		m_ddLogPi[i] = -(-m_pi[i] * (1 - m_pi[i])); // first minus to get -ddlog(p_i|f_i)
-		m_sqrtDDLogPi[i] = sqrt((real) m_ddLogPi[i]);
+		m_sqrtDDLogPi[i] = sqrt((Real) m_ddLogPi[i]);
 	}
 }
 
@@ -66,7 +66,7 @@ void GaussianProcess::train(){
 	m_trained = true;
 }
 
-GaussianProcess::Status GaussianProcess::trainBayOpt(real& logZ, const real lambda){
+GaussianProcess::Status GaussianProcess::trainBayOpt(Real& logZ, const Real lambda){
 	UNUSED(lambda);
 	Matrix K;
 	//const VectorX ones = VectorX::Ones(m_dataPoints);
@@ -77,13 +77,13 @@ GaussianProcess::Status GaussianProcess::trainBayOpt(real& logZ, const real lamb
 		return Status::NANORINFERROR;
 	}
 	const VectorX diag = m_choleskyLLT.matrixL().toDenseMatrix().diagonal(); // TOdo more efficient?
-	real sum = 0;
+	Real sum = 0;
 	for(int i = 0; i < diag.rows(); ++i){
-		sum += log((real)diag[i]);
+		sum += log((Real)diag[i]);
 	}
-	const real prob = (1.0 + exp(-(real) (m_y.dot(m_f)))); // should be very small!
-	const real logVal = prob < 1e100 ? -log(prob) : -100;
-	const real aDotF = -0.5 * (real) (m_a.dot(m_f));
+	const Real prob = (1.0 + exp(-(Real) (m_y.dot(m_f)))); // should be very small!
+	const Real logVal = prob < 1e100 ? -log(prob) : -100;
+	const Real aDotF = -0.5 * (Real) (m_a.dot(m_f));
 	//std::cout << "Prob: " << prob << std::endl;
 	//std::cout << "Mean: " << m_f.mean() << std::endl;
 	//std::cout << "a: " << m_a.transpose() << std::endl;
@@ -91,11 +91,11 @@ GaussianProcess::Status GaussianProcess::trainBayOpt(real& logZ, const real lamb
 	//sumF /= m_f.rows();
 	logZ = aDotF + logVal - sum;
 	std::cout << CYAN << "LogZ elements a * f: " << aDotF << ", log: " << logVal << ", sum: " << -sum << ", logZ: " << logZ << RESET << std::endl;
-	// -0.5 * (real) (m_a.dot(m_f)) - 0.5 *sumF
+	// -0.5 * (Real) (m_a.dot(m_f)) - 0.5 *sumF
 	return Status::ALLFINE;
 }
 
-GaussianProcess::Status GaussianProcess::trainLM(real& logZ, std::vector<real>& dLogZ){
+GaussianProcess::Status GaussianProcess::trainLM(Real& logZ, std::vector<Real>& dLogZ){
 	Matrix K;
 	const VectorX ones = VectorX::Ones(m_dataPoints);
 	m_kernel.calcCovariance(K);
@@ -105,34 +105,34 @@ GaussianProcess::Status GaussianProcess::trainLM(real& logZ, std::vector<real>& 
 		return Status::NANORINFERROR;
 	}
 	const VectorX diag = m_choleskyLLT.matrixL().toDenseMatrix().diagonal(); // TOdo more efficient?
-	real sum = 0;
+	Real sum = 0;
 	if(diag.rows() != m_f.rows()){
 		printError("calc of cholesky failed!");
 	}
 	for(int i = 0; i < diag.rows(); ++i){
-		sum += log((real)diag[i]);
+		sum += log((Real)diag[i]);
 	}
-	const real prob = (1.0 + exp(-(real) (m_y.dot(m_f)))); // should be very small!
-	const real logVal = prob < 1e100 ? -log(prob) : -100;
+	const Real prob = (1.0 + exp(-(Real) (m_y.dot(m_f)))); // should be very small!
+	const Real logVal = prob < 1e100 ? -log(prob) : -100;
 	//std::cout << "Prob: " << prob << std::endl;
 	//std::cout << "Mean: " << m_f.mean() << std::endl;
 	//std::cout << "a: " << m_a.transpose() << std::endl;
 	//std::cout << "f: " << m_f.transpose() << std::endl;
-	//std::cout << CYAN << "LogZ elements a * f: " << -0.5 * (real) (m_a.dot(m_f)) << ", log: " << logVal << ", sum: " << sum << RESET << std::endl;
-	logZ = -0.5 * (real) (m_a.dot(m_f)) + logVal - sum;
+	//std::cout << CYAN << "LogZ elements a * f: " << -0.5 * (Real) (m_a.dot(m_f)) << ", log: " << logVal << ", sum: " << sum << RESET << std::endl;
+	logZ = -0.5 * (Real) (m_a.dot(m_f)) + logVal - sum;
 	const DiagMatrixXd WSqrt(m_sqrtDDLogPi);
 	const Matrix R = WSqrt * m_choleskyLLT.solve( m_choleskyLLT.solve(WSqrt.toDenseMatrix()));
 	Matrix C = m_choleskyLLT.solve(WSqrt * K);
 	const VectorX s2 = -0.5 * (K.diagonal() - (C.transpose() * C).diagonal()) + (2.0 * m_pi - ones); // (2.0 * m_pi - ones) == dddLogPi
 	GaussianKernelElementLength len(m_kernel.hasLengthMoreThanOneDim());
 	m_kernel.calcCovarianceDerivative(C, &len);
-	real s1 = 0.5 * ((real) m_a.dot(C * m_a)) - (real) (R * C).trace();
+	Real s1 = 0.5 * ((Real) m_a.dot(C * m_a)) - (Real) (R * C).trace();
 	VectorX b = C * m_dLogPi;
 	VectorX s3 = b - (K * (R * b));
 	dLogZ[0] = s1 + s2.dot(s3);
 	GaussianKernelElementFNoise fNoise;
 	m_kernel.calcCovarianceDerivative(C, &fNoise);
-	s1 = 0.5 * ((real) m_a.dot(C * m_a)) - (real) (R * C).trace();
+	s1 = 0.5 * ((Real) m_a.dot(C * m_a)) - (Real) (R * C).trace();
 	b = C * m_dLogPi;
 	s3 = b - (K * (R * b));
 	dLogZ[1] = s1 + s2.dot(s3);
@@ -156,9 +156,9 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 	Vector2 min,max;
 	min << 0,0;
 	max << 2.0,2.0;
-	real stepSize2 = 0.1;
-	real logZ2;
-	std::vector<real> dLogZ2;
+	Real stepSize2 = 0.1;
+	Real logZ2;
+	std::vector<Real> dLogZ2;
 	dLogZ2.reserve(3);
 	m_kernel.setHyperParams(0.075994, 2.0588, 1.0);
 	Status status = trainLM(logZ2, dLogZ2);
@@ -168,8 +168,8 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 	//plot different weights
 	std::ofstream file;
 	file.open("out.txt");
-	for(real xVal = max[0]; xVal >= min[0]; xVal -= stepSize2){
-		for(real yVal = min[1]; yVal < max[1]; yVal+= stepSize2){
+	for(Real xVal = max[0]; xVal >= min[0]; xVal -= stepSize2){
+		for(Real yVal = min[1]; yVal < max[1]; yVal+= stepSize2){
 			m_kernel.setHyperParams(xVal, yVal, 0.95);
 			Status status = trainLM(logZ2, dLogZ2);
 			if(status == Status::NANORINFERROR){
@@ -183,12 +183,12 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 	file.close();
 	return Status::ALLFINE;*/
 	std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(6);
-	std::vector<real> dLogZ;
+	std::vector<Real> dLogZ;
 	dLogZ.reserve(3);
-	real logZ;
+	Real logZ;
 	const int amountOfFirstSamples = 30;
 	GaussianKernelParams bestParams(true);
-	real bestLogZ = -10000000000;
+	Real bestLogZ = -10000000000;
 	for(int i = 0; i < amountOfFirstSamples; ++i){
 		m_kernel.newRandHyperParams();
 		m_kernel.setSNoise(0.95);
@@ -213,15 +213,15 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 	std::cout << "\nstart guess: " << m_kernel.prettyString() << std::endl;
 	int counter = 0;
 	bool converged = false;
-	//real stepSize = 0.0001 / (m_dataPoints * m_dataPoints) * m_repetitionStepFactor;
-	std::vector<real> stepSize;
+	//Real stepSize = 0.0001 / (m_dataPoints * m_dataPoints) * m_repetitionStepFactor;
+	std::vector<Real> stepSize;
 	stepSize.reserve(3);
-	real lastDLogZ = 0.0;
+	Real lastDLogZ = 0.0;
 
-	std::vector<real> gradient;
+	std::vector<Real> gradient;
 	gradient.reserve(3);
 	gradient[0] = gradient[1] = gradient[2] = 0.0;
-	std::vector<real> ESquared;
+	std::vector<Real> ESquared;
 	ESquared.reserve(3);
 	ESquared[0] = ESquared[1] = ESquared[2] = 0;
 	while(!converged){
@@ -229,14 +229,14 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 		if(status == Status::NANORINFERROR){
 			return Status::NANORINFERROR;
 		}
-		const real dLogZSum = fabs(dLogZ[0]) + fabs(dLogZ[1]); // + fabs(dLogZ[2]);
+		const Real dLogZSum = fabs(dLogZ[0]) + fabs(dLogZ[1]); // + fabs(dLogZ[2]);
 		std::cout << std::endl;
 		//flush(std::cout);
 		for(int j = 0; j < 3; ++j){
-			const real lastLearningRate = sqrt(EPSILON + ESquared[j]); // 0,001
+			const Real lastLearningRate = sqrt(EPSILON + ESquared[j]); // 0,001
 			ESquared[j] = 0.9 * ESquared[j] + 0.1 * dLogZ[j] * dLogZ[j]; // 0,0000000099856
-			const real actLearningRate = sqrt(EPSILON + ESquared[j]);  // 0,0001413704354
-			const real fac = std::max(0.0,(real) (-counter + 100.0) / 100.0);
+			const Real actLearningRate = sqrt(EPSILON + ESquared[j]);  // 0,0001413704354
+			const Real fac = std::max(0.0,(Real) (-counter + 100.0) / 100.0);
 			if(j == 1){
 				stepSize[j] = 0.00001; // 0,001222106928
 			}else{
@@ -291,8 +291,8 @@ GaussianProcess::Status GaussianProcess::trainF(const Matrix& K){
 	m_f.fill(0);														// f <-- init with zeros
 	bool converged = false;
 	int j = 0;
-	real lastObjective = 100000000000;
-	real stepSize = 0.5;
+	Real lastObjective = 100000000000;
+	Real stepSize = 0.5;
 	VectorX oldA = m_a;
 	VectorX oldF = m_f;
 	while(!converged){
@@ -311,11 +311,11 @@ GaussianProcess::Status GaussianProcess::trainF(const Matrix& K){
 		m_choleskyLLT.compute(m_innerOfLLT);
 		const VectorX b = m_ddLogPi.cwiseProduct(m_f) + m_dLogPi;
 		m_a = b - m_ddLogPi.cwiseProduct(m_choleskyLLT.solve( m_choleskyLLT.solve(m_ddLogPi.cwiseProduct(K * b)))); // WSqrt * == m_ddLogPi.cwiseProduct(...)
-		const real firstPart = -0.5 * (real) (m_a.dot(m_f));
-		const real prob = 1.0 / (1.0 + exp(-(real) (m_y.dot(m_f))));
-		const real tol = 1e-7;
-		const real offsetVal = prob > tol && prob < 1 - tol ? prob : (prob < tol ? tol : 1 - tol );
-		const real objective = firstPart + log(offsetVal);
+		const Real firstPart = -0.5 * (Real) (m_a.dot(m_f));
+		const Real prob = 1.0 / (1.0 + exp(-(Real) (m_y.dot(m_f))));
+		const Real tol = 1e-7;
+		const Real offsetVal = prob > tol && prob < 1 - tol ? prob : (prob < tol ? tol : 1 - tol );
+		const Real objective = firstPart + log(offsetVal);
 		//std::cout << "\rError in " << j <<": " << fabs(lastObjective / objective - 1.0) << ", from: " << lastObjective << ", to: " << objective <<  ", log: " << log(offsetVal) << "                    " << std::endl;
 		if(isnan(objective)){
 			//std::cout << "Objective is nan!" << std::endl;
@@ -370,20 +370,20 @@ GaussianProcess::Status GaussianProcess::trainF(const Matrix& K){
 	return Status::ALLFINE;
 }
 
-real GaussianProcess::predict(const VectorX& newPoint, const int sampleSize) const{
+Real GaussianProcess::predict(const VectorX& newPoint, const int sampleSize) const{
 	if(!m_init || !m_trained){
 		printError("GP was not init: " << m_init << ", or trained: " << m_trained);
 		return -1.0;
 	}
-	real fStar = 0, vFStar = 0;
+	Real fStar = 0, vFStar = 0;
 	VectorX kXStar;
 	m_kernel.calcKernelVector(newPoint, m_dataMat, kXStar);
-	fStar = (real) (kXStar.dot(m_dLogPi));
+	fStar = (Real) (kXStar.dot(m_dLogPi));
 	if(m_fastPredict){
 		vFStar = m_fastPredictVFStar;
 	}else{
-		const real vNorm = m_choleskyLLT.solve(m_sqrtDDLogPi.cwiseProduct(kXStar)).squaredNorm();
-		const real leftTermVFStar = fabs(m_kernel.getHyperParams().m_sNoise.getSquaredValue() + 1);
+		const Real vNorm = m_choleskyLLT.solve(m_sqrtDDLogPi.cwiseProduct(kXStar)).squaredNorm();
+		const Real leftTermVFStar = fabs(m_kernel.getHyperParams().m_sNoise.getSquaredValue() + 1);
 		vFStar = leftTermVFStar - vNorm;
 		if(fabs(vNorm / leftTermVFStar) < 0.01){ // is vNorm smaller than 1 % of the whole term, than just forget it -> speeds it up!
 			m_fastPredict = true;
@@ -395,15 +395,15 @@ real GaussianProcess::predict(const VectorX& newPoint, const int sampleSize) con
 		std::cout << "Kernel: " << m_kernel.prettyString() << std::endl;
 	}*/
 	const int amountOfSamples = sampleSize;
-	const real start = fStar - vFStar * 3;
-	const real end = fStar + vFStar * 3;
-	const real stepSize = (end- start) / amountOfSamples;
-	real prob = 0;
-	for(real p = start; p < end; p+=stepSize){
-		const real x = rand()/static_cast<real>(RAND_MAX);
-		const real y = rand()/static_cast<real>(RAND_MAX);
-		const real result = cos(2.0 * M_PI * x)*sqrt(-2*log(y)); // random gaussian after box mueller
-		const real height = 1.0 / (1.0 + exp(-p)) * (result * vFStar + fStar);
+	const Real start = fStar - vFStar * 3;
+	const Real end = fStar + vFStar * 3;
+	const Real stepSize = (end- start) / amountOfSamples;
+	Real prob = 0;
+	for(Real p = start; p < end; p+=stepSize){
+		const Real x = rand()/static_cast<Real>(RAND_MAX);
+		const Real y = rand()/static_cast<Real>(RAND_MAX);
+		const Real result = cos(2.0 * M_PI * x)*sqrt(-2*log(y)); // random gaussian after box mueller
+		const Real height = 1.0 / (1.0 + exp(-p)) * (result * vFStar + fStar);
 		prob += height * stepSize; // gives the integral
 	}
 	/*if(isnan(prob)){
@@ -418,15 +418,15 @@ real GaussianProcess::predict(const VectorX& newPoint, const int sampleSize) con
 	return prob;
 }
 
-real GaussianProcess::predict(const VectorX& point) const{
+Real GaussianProcess::predict(const VectorX& point) const{
 	return predict(point, 5000);
 }
 
-void GaussianProcess::setKernelParams(const real len, const real fNoise, const real sNoise){
+void GaussianProcess::setKernelParams(const Real len, const Real fNoise, const Real sNoise){
 	m_kernel.setHyperParams(len, fNoise, sNoise);
 }
 
-void GaussianProcess::setKernelParams(const std::vector<real>& lens, const real fNoise, const real sNoise){
+void GaussianProcess::setKernelParams(const std::vector<Real>& lens, const Real fNoise, const Real sNoise){
 	m_kernel.setHyperParams(lens, fNoise, sNoise);
 }
 

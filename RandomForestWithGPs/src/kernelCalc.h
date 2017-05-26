@@ -37,10 +37,10 @@ namespace Kernel2 {
 
 //analytical solution not sure if needed here ...
 void getSeKernelFor(const Matrix& xA, const Matrix& xB, Matrix& result,
-		const double sigma = 1.0, const double l = 0.1){
+		const Real sigma = 1.0, const Real l = 0.1){
 	result = Matrix(xA.rows(), xB.rows());
-	const double sigmaSquared = sigma * sigma;
-	const double expFac = -1. / (2.0 * l * l);
+	const Real sigmaSquared = sigma * sigma;
+	const Real expFac = -1. / (2.0 * l * l);
 	for(int i = 0; i < xA.rows(); ++i){
 		const VectorX xARow = xA.row(i);
 		for(int j = 0; j < xB.rows(); ++j){
@@ -65,7 +65,7 @@ struct MuSigma{
 // f = resulting value
 // xStar = new points
 MuSigma predict(const Matrix& X, const Matrix& f, const Matrix& XStar,
-		const double noiseSigma = 0){
+		const Real noiseSigma = 0){
 	Matrix K, Kinv, Kstar, Kstarstar, KstarTransposed;
 	getSeKernelFor(X, X, K, 5, 0.1);
 	K = noiseSigma * K;

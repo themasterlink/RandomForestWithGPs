@@ -23,7 +23,7 @@ public:
 
 	static void start();
 
-	static void setFrequence(const double frequence);
+	static void setFrequence(const Real frequence);
 
 	static bool appendThreadToList(InformationPackage* package);
 
@@ -48,6 +48,8 @@ private:
 	virtual ~ThreadMaster();
 
 	using PackageList = std::list<InformationPackage*>;
+	using PackageListIterator = PackageList::iterator;
+	using PackageListConstIterator = PackageList::const_iterator;
 
 	static PackageList m_waitingList;
 
@@ -55,7 +57,7 @@ private:
 
 	static int m_counter;
 
-	static double m_timeToSleep;
+	static Real m_timeToSleep;
 
 	static boost::thread* m_mainThread;
 

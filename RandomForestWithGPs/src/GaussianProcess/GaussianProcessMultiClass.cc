@@ -25,14 +25,14 @@ void GaussianProcessMultiClass::calcPhiBasedOnF(const VectorX& f, VectorX& pi, c
 	}
 	pi = VectorX::Zero(amountOfEle);
 	for(int i = 0; i < amountOfClasses; ++i){
-		double normalizer = 0.;
+		Real normalizer = 0.;
 		for(int j = 0; j < amountOfClasses; ++j){
-			normalizer += exp((double) f[i * amountOfClasses + j]);
+			normalizer += exp((Real) f[i * amountOfClasses + j]);
 		}
 		normalizer = 1.0 / normalizer;
 		for(int j = 0; j < dataPoints; ++j){
 			const int iActEle = i * dataPoints + j;
-			pi[iActEle] = normalizer * exp((double) f[iActEle]);
+			pi[iActEle] = normalizer * exp((Real) f[iActEle]);
 		}
 	}
 }
@@ -57,7 +57,7 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 		// pi was checked! -> should be right
 		VectorX sqrtPi(pi);													// sqrtPi
 		for(int i = 0; i < amountOfEle; ++i){
-			sqrtPi[i] = sqrt((double) sqrtPi[i]);
+			sqrtPi[i] = sqrt((Real) sqrtPi[i]);
 		}
 		// sqrtPi was checked! -> should be right
 		const Matrix D(pi.asDiagonal().toDenseMatrix());					// D
@@ -69,7 +69,7 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 		/*Matrix F(amountOfClasses, dataPoints); 							// F just to calc covariances
 		for(int i = 0; i < dataPoints; ++i){ // todo find better way
 			for(int j = 0; j < amountOfClasses; ++j){
-				F(j,i) = (double) f(i*amountOfClasses + j);
+				F(j,i) = (Real) f(i*amountOfClasses + j);
 			}
 		}
 
@@ -88,7 +88,7 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 
 		Matrix E_sum;
 		VectorX z(amountOfClasses);
-		//std::vector<DiagMatrixXd*>::iterator it = DSqrt_c.begin();
+		//auto it = DSqrt_c.begin();
 		for(int i = 0; i < amountOfClasses; ++i){
 			//SAVE_DELETE(*it); // free last iteration, in init it is null
 			//it = DSqrt_c.insert(it, sqrtPi.segment(i*dataPoints, dataPoints).asDiagonal());
@@ -112,7 +112,7 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 			f2 << "\n\n";
 			E_c[i] = DSqrt_c * L.transpose().triangularView<Eigen::Upper>().solve(nenner);
 			for(int j = 0; j < dataPoints; ++j){
-				z[i] += log((double) L(j,j));
+				z[i] += log((Real) L(j,j));
 			}
 			if(i == 0){
 				E_sum = E_c[i];

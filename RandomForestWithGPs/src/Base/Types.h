@@ -6,6 +6,7 @@
 #define RANDOMFORESTWITHGPS_TYPES_H
 
 #include <boost/random.hpp>
+#include "RealType.h"
 #include <Eigen/Dense>
 #include <vector>
 #include <list>
@@ -15,20 +16,19 @@
 using MemoryType = unsigned long;
 
 using GeneratorType = boost::random::taus88;
-//#define USE_DOUBLE
 
 #ifdef USE_DOUBLE
+
 using VectorX = Eigen::VectorXd;
 
 using Matrix = Eigen::MatrixXd;
 
 using Vector2 = Eigen::Vector2d;
 
-using real = double;
-
 static const auto REAL_MAX = DBL_MAX;
 
 static const auto NEG_REAL_MAX = -REAL_MAX;
+
 #else
 
 using VectorX = Eigen::VectorXf;
@@ -36,8 +36,6 @@ using VectorX = Eigen::VectorXf;
 using Matrix = Eigen::MatrixXf;
 
 using Vector2 = Eigen::Vector2f;
-
-using real = float;
 
 static const auto REAL_MAX = FLT_MAX;
 

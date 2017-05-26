@@ -33,8 +33,8 @@ void GaussianKernel::completeInit(const Matrix& dataMat){
 			const VectorX diff = dataMat.col(i) - dataMat.col(j);
 			m_differences(i,j) = diff.squaredNorm();
 			m_differences(j,i) = m_differences(i,j);
-			const double frac = (double) (counter) / (double) (counter + 1) ;
-			m_randLenMean = m_randLenMean * frac + (double) m_differences(i,j) * (1.0-frac);
+			const Real frac = (Real) (counter) / (Real) (counter + 1) ;
+			m_randLenMean = m_randLenMean * frac + (Real) m_differences(i,j) * (1.0-frac);
 			++counter;
 		}
 	}
@@ -42,8 +42,8 @@ void GaussianKernel::completeInit(const Matrix& dataMat){
 	m_randLenVar = 0;
 	for(int i = 0; i < m_dataPoints ; ++i){
 		for(int j = i + 1; j < m_dataPoints ; ++j){
-			const double update = (m_randLenMean - (double) m_differences(i,j));
-			const double frac = (double) (counter) / (double)  (counter + 1) ;
+			const Real update = (m_randLenMean - (Real) m_differences(i,j));
+			const Real frac = (Real) (counter) / (Real)  (counter + 1) ;
 			m_randLenVar = m_randLenVar * frac + update * update * (1.0-frac);
 			++counter;
 		}
@@ -56,7 +56,7 @@ void GaussianKernel::completeInit(const Matrix& dataMat){
 	m_init = true;
 }*/
 
-double GaussianKernel::kernelFunc(const int row, const int col) const{
+Real GaussianKernel::kernelFunc(const int row, const int col) const{
 	if(!m_calcedDifferenceMatrix){
 		if(m_init){
 			if(m_pData != nullptr){
@@ -71,43 +71,43 @@ double GaussianKernel::kernelFunc(const int row, const int col) const{
 		}
 	}else{
 		return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue()
-				* (double) (*m_differences).coeff(row, col)) + m_kernelParams.m_sNoise.getSquaredValue();
+				* (Real) (*m_differences).coeff(row, col)) + m_kernelParams.m_sNoise.getSquaredValue();
 	}
 	return 0;
 }
 
-double GaussianKernel::kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const {
+Real GaussianKernel::kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const {
 	if(hasLengthMoreThanOneDim()){
-		double squaredNorm = 0;
+		Real squaredNorm = 0;
 		for(unsigned int i = 0; i < lhs.rows(); ++i){
-			const double temp = (lhs.coeff(i) - rhs.coeff(i)) * 1. / m_kernelParams.m_length.getValues()[i];
+			const Real temp = (lhs.coeff(i) - rhs.coeff(i)) * 1. / m_kernelParams.m_length.getValues()[i];
 			squaredNorm += temp * temp;
 		}
 		return m_kernelParams.m_fNoise.getValue() * m_kernelParams.m_fNoise.getValue() *
 				exp(-0.5 * squaredNorm) + m_kernelParams.m_sNoise.getValue() * m_kernelParams.m_sNoise.getValue();
 	}else{
 		return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue()
-				* (double) (lhs-rhs).squaredNorm()) + m_kernelParams.m_sNoise.getSquaredValue();
+				* (Real) (lhs-rhs).squaredNorm()) + m_kernelParams.m_sNoise.getSquaredValue();
 	}
 	return 0;
 }
 
-double GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element) const {
+Real GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element) const {
 	if(type->getKernelNr() == m_kernelParams.m_length.getKernelNr()){
 		if(hasLengthMoreThanOneDim() && element != -1){
-			double squaredNorm = 0;
-			const double lenElement = m_kernelParams.m_length.getValues()[element];
-			double squaredDerivNorm = 0;
+			Real squaredNorm = 0;
+			const Real lenElement = m_kernelParams.m_length.getValues()[element];
+			Real squaredDerivNorm = 0;
 			if(m_pData != nullptr){
 				for(unsigned int i = 0; i < (*m_pData)[row]->rows(); ++i){
-					const double temp = ((*(*m_pData)[row]).coeff(i) - (*(*m_pData)[col]).coeff(i)) * 1. / m_kernelParams.m_length.getValues()[i];
+					const Real temp = ((*(*m_pData)[row]).coeff(i) - (*(*m_pData)[col]).coeff(i)) * 1. / m_kernelParams.m_length.getValues()[i];
 					squaredNorm += temp * temp;
 				}
 				squaredDerivNorm = ((*(*m_pData)[row]).coeff(element) - (*(*m_pData)[col]).coeff(element)) * ((*(*m_pData)[row]).coeff(element) - (*(*m_pData)[col]).coeff(element)) /
 						(lenElement * lenElement * lenElement);
 			}else if(m_pDataMat != nullptr){
 				for(unsigned int i = 0; i < m_pDataMat->col(row).rows(); ++i){
-					const double temp = (m_pDataMat->col(row).coeff(i) - m_pDataMat->col(col).coeff(i)) * 1. / m_kernelParams.m_length.getValues()[i];
+					const Real temp = (m_pDataMat->col(row).coeff(i) - m_pDataMat->col(col).coeff(i)) * 1. / m_kernelParams.m_length.getValues()[i];
 					squaredNorm += temp * temp;
 				}
 				squaredDerivNorm = (m_pDataMat->col(row).coeff(element) - m_pDataMat->col(col).coeff(element)) * (m_pDataMat->col(row).coeff(element) - m_pDataMat->col(col).coeff(element)) /
@@ -115,13 +115,13 @@ double GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col,
 			}
 			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * squaredNorm) * squaredDerivNorm;
 		}else if(m_calcedDifferenceMatrix){
-			const double lenSquared = m_kernelParams.m_length.getSquaredValue();
-			const double dotResult = (double) (*m_differences).coeff(row, col);
+			const Real lenSquared = m_kernelParams.m_length.getSquaredValue();
+			const Real dotResult = (Real) (*m_differences).coeff(row, col);
 			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue() * dotResult)
 					* dotResult / (lenSquared * m_kernelParams.m_length.getValue()); // derivative to m_params[0]
 		}else{
-			const double lenSquared = m_kernelParams.m_length.getSquaredValue();
-			double dotResult = 0;
+			const Real lenSquared = m_kernelParams.m_length.getSquaredValue();
+			Real dotResult = 0;
 			if(m_pData != nullptr){
 				VectorX* lhs = (*m_pData)[row];
 				VectorX* rhs = (*m_pData)[col];
@@ -135,9 +135,9 @@ double GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col,
 	}else if(type->getKernelNr() == m_kernelParams.m_fNoise.getKernelNr()){
 		if(!hasLengthMoreThanOneDim() && m_calcedDifferenceMatrix){
 			return 2.0 * m_kernelParams.m_fNoise.getValue() * exp(-0.5 * (1.0/ (m_kernelParams.m_length.getValue() *
-					m_kernelParams.m_length.getValue())) * (double) m_differences->coeff(row, col)); // derivative to m_params[1]
+					m_kernelParams.m_length.getValue())) * (Real) m_differences->coeff(row, col)); // derivative to m_params[1]
 		}else{
-			double result = 0;
+			Real result = 0;
 			if(m_pData != nullptr){
 				VectorX* lhs = (*m_pData)[row];
 				VectorX* rhs = (*m_pData)[col];
@@ -161,15 +161,15 @@ double GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col,
 }
 
 /*
-double GaussianKernel::kernelFuncDerivativeToLength(const int row, const int col) const{
-	const double lenSquared = m_kernelParams.m_length.getValue() * m_kernelParams.m_length.getValue();
-	const double dotResult = (double) m_differences(row, col);
+Real GaussianKernel::kernelFuncDerivativeToLength(const int row, const int col) const{
+	const Real lenSquared = m_kernelParams.m_length.getValue() * m_kernelParams.m_length.getValue();
+	const Real dotResult = (Real) m_differences(row, col);
 	return m_kernelParams.m_fNoise.getValue() * m_kernelParams.m_fNoise.getValue() * exp(-0.5 * (1.0/ (lenSquared)) * dotResult) * dotResult / (lenSquared * m_kernelParams.m_length.getValue()); // derivative to m_params[0]
 }
 
-double GaussianKernel::kernelFuncDerivativeToFNoise(const int row, const int col) const{
+Real GaussianKernel::kernelFuncDerivativeToFNoise(const int row, const int col) const{
 	return 2.0 * m_kernelParams.m_fNoise.getValue() * exp(-0.5 * (1.0/ (m_kernelParams.m_length.getValue() *
-			m_kernelParams.m_length.getValue())) * (double) m_differences(row, col)); // derivative to m_params[1]
+			m_kernelParams.m_length.getValue())) * (Real) m_differences(row, col)); // derivative to m_params[1]
 }
 */
 
@@ -189,10 +189,10 @@ void GaussianKernel::calcCovarianceDerivativeForInducingPoints(Matrix& cov, cons
 	if(!type->isDerivativeOnlyDiag()){
 		cov.resize(nrOfInducingPoints, nrOfInducingPoints);
 		unsigned int i = 0;
-		for(std::list<unsigned int>::const_iterator it1 = activeSet.begin(); it1 != activeSet.end(); ++it1, ++i){
+		for(auto it1 = activeSet.cbegin(); it1 != activeSet.cend(); ++it1, ++i){
 			cov.coeffRef(i,i) = calcDerivativeDiagElement(*it1, type);
 			unsigned int j = i + 1;
-			std::list<unsigned int>::const_iterator it2 = it1;
+			auto it2 = it1;
 			++it2;
 			for(; it2 != activeSet.end(); ++it2, ++j){
 				cov.coeffRef(i,j) = kernelFuncDerivativeToParam(*it1, *it2, type, element);
@@ -207,7 +207,7 @@ void GaussianKernel::calcCovarianceDerivativeForInducingPoints(Matrix& cov, cons
 	}
 }
 
-double GaussianKernel::calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const{
+Real GaussianKernel::calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const{
 	UNUSED(row);
 	if(type->getKernelNr() == m_kernelParams.m_length.getKernelNr()){
 		return m_kernelParams.m_fNoise.getSquaredValue();
@@ -235,7 +235,7 @@ void GaussianKernel::calcCovarianceDerivative(Matrix& cov, const OwnKernelElemen
 void GaussianKernel::calcKernelVector(const VectorX& vector, const Matrix& dataMat, VectorX& res) const{
 	res = VectorX(m_dataPoints);
 	for(unsigned int i = 0; i < m_dataPoints; ++i){
-		res.coeffRef(i) = (double) kernelFuncVec(vector, dataMat.col(i));
+		res.coeffRef(i) = (Real) kernelFuncVec(vector, dataMat.col(i));
 	}
 }
 
@@ -245,18 +245,18 @@ std::string GaussianKernel::prettyString() const{
 	return ss.str();
 }
 
-void GaussianKernel::setHyperParams(double len, double noiseF){
+void GaussianKernel::setHyperParams(Real len, Real noiseF){
 	m_kernelParams.m_length.setAllValuesTo(len);
 	m_kernelParams.m_fNoise.setAllValuesTo(noiseF);
 }
 
-void GaussianKernel::setHyperParams(double len, double noiseF, double noiseS){
+void GaussianKernel::setHyperParams(Real len, Real noiseF, Real noiseS){
 	m_kernelParams.m_length.setAllValuesTo(len);
 	m_kernelParams.m_fNoise.setAllValuesTo(noiseF);
 	m_kernelParams.m_sNoise.setAllValuesTo(noiseS);
 }
 
-void GaussianKernel::setHyperParams(const std::vector<real>& len, double noiseF, double noiseS){
+void GaussianKernel::setHyperParams(const std::vector<Real>& len, Real noiseF, Real noiseS){
 	m_kernelParams.m_length.changeAmountOfDims(true);
 	for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
 		m_kernelParams.m_length.getValues()[i] = len[i];
@@ -265,7 +265,7 @@ void GaussianKernel::setHyperParams(const std::vector<real>& len, double noiseF,
 	m_kernelParams.m_sNoise.setAllValuesTo(noiseS);
 }
 
-void GaussianKernel::addHyperParams(double len, double noiseF, double noiseS){
+void GaussianKernel::addHyperParams(Real len, Real noiseF, Real noiseS){
 	if(hasLengthMoreThanOneDim()){
 		printError("This function should not be called if there is more than one parameter for the length scale!");
 	}else{

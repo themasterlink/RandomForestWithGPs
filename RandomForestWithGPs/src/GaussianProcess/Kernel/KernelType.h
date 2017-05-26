@@ -28,26 +28,26 @@ public:
 
 	bool operator==(KernelElement& type){ return type.getKernelNr() == getKernelNr(); };
 
-	double* getValues(){ return m_values; };
+	Real* getValues(){ return m_values; };
 
-	const double* getValues() const{ return m_values; };
+	const Real* getValues() const{ return m_values; };
 
-	double getSquaredValue() const{ return getValue() * getValue(); };
+	Real getSquaredValue() const{ return getValue() * getValue(); };
 
-	double getSquaredInverseValue() const{ return 1.0 / getSquaredValue(); };
+	Real getSquaredInverseValue() const{ return 1.0 / getSquaredValue(); };
 
-	void setAllValuesTo(const double value);
+	void setAllValuesTo(const Real value);
 
-	void addToFirstValue(const double value);
+	void addToFirstValue(const Real value);
 
-	double getValue() const { return m_values[0]; };
+	Real getValue() const { return m_values[0]; };
 
 	void changeAmountOfDims(const bool hasMoreThanOneDim);
 
 protected:
 	unsigned int m_kernelNr;
 
-	double* m_values;
+	Real* m_values;
 
 	bool m_hasMoreThanOneDim;
 };
@@ -106,7 +106,7 @@ public:
 
 class RandomForestKernelElementMaxDepth : public RandomForestKernelElement {
 public:
-	RandomForestKernelElementMaxDepth(): RandomForestKernelElement(MaxDepthParam){ m_values = new double; };
+	RandomForestKernelElementMaxDepth(): RandomForestKernelElement(MaxDepthParam){ m_values = new Real; };
 
 	bool hasMoreThanOneDim() const{ return false; };
 
@@ -115,7 +115,7 @@ public:
 
 class RandomForestKernelElementMaxAmountOfClasses : public RandomForestKernelElement {
 public:
-	RandomForestKernelElementMaxAmountOfClasses(): RandomForestKernelElement(AmountOfUsedClassesParam){ m_values = new double; };
+	RandomForestKernelElementMaxAmountOfClasses(): RandomForestKernelElement(AmountOfUsedClassesParam){ m_values = new Real; };
 
 	bool hasMoreThanOneDim() const{ return false; };
 
@@ -124,7 +124,7 @@ public:
 
 class RandomForestKernelElementAmountOfSamplings : public RandomForestKernelElement {
 public:
-	RandomForestKernelElementAmountOfSamplings(): RandomForestKernelElement(AmountOfSamplingsParam){ m_values = new double; };
+	RandomForestKernelElementAmountOfSamplings(): RandomForestKernelElement(AmountOfSamplingsParam){ m_values = new Real; };
 
 	bool hasMoreThanOneDim() const{ return false; };
 
@@ -182,7 +182,7 @@ public:
 
 	OwnKernelElement* m_params[paramsAmount];
 
-	void setAllValuesTo(const double value);
+	void setAllValuesTo(const Real value);
 
 	void writeToFile(const std::string& file);
 
@@ -212,7 +212,7 @@ public:
 
 	RandomForestKernelElementMaxAmountOfClasses m_classAmount;
 
-	void setAllValuesTo(const double value);
+	void setAllValuesTo(const Real value);
 
 	void writeToFile(const std::string& file){UNUSED(file);}; // read and write trees to the file
 

@@ -33,13 +33,13 @@ public:
 	static void toRandClassAndHalfUniformDataMatrix(const LabeledData& data, const std::vector<int>& classCounts, Matrix& result,
 			VectorX& y, const int ele, const unsigned int actClass, std::vector<bool>& usedElements, const std::vector<bool>& blockElements);
 
-	static void getMinMax(const Data& data, real& min, real& max, const bool ignoreREAL_MAX_NEG = false);
+	static void getMinMax(const Data& data, Real& min, Real& max, const bool ignoreREAL_MAX_NEG = false);
 
-	static void getMinMax(const Matrix& mat, real& min, real& max, const bool ignoreREAL_MAX_NEG = false);
+	static void getMinMax(const Matrix& mat, Real& min, Real& max, const bool ignoreREAL_MAX_NEG = false);
 
-	static void getMinMax(const VectorX& vec, real& min, real& max, const bool ignoreREAL_MAX_NEG = false);
+	static void getMinMax(const VectorX& vec, Real& min, Real& max, const bool ignoreREAL_MAX_NEG = false);
 
-	static void getMinMax(const std::list<real>& list, real& min, real& max, const bool ignoreREAL_MAX_NEG = false);
+	static void getMinMax(const std::list<Real>& list, Real& min, Real& max, const bool ignoreREAL_MAX_NEG = false);
 
 	static void getMinMaxIn2D(const std::list<Vector2>& list, Vector2& min, Vector2& max, const bool ignoreDBL_MAX_NEG = false);
 

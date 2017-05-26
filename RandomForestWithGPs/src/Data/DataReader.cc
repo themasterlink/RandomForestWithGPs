@@ -66,7 +66,7 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName, c
 			LabeledVectorX* newEle = new LabeledVectorX((const int) (elements.size() - 1),
 												(const unsigned int) std::stoi(elements.back()));
 			for(int i = 0; i < (int) elements.size() - 1; ++i){
-				(*newEle)[i] = (real) std::stod(elements[i]);
+				(*newEle)[i] = (Real) std::stod(elements[i]);
 			};
 			data.push_back(newEle);
 			if((unsigned int) data.size() == amountOfData){
@@ -118,7 +118,7 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName,
 				}
 				LabeledVectorX* newEle = new LabeledVectorX(int(elements.size()), classNr);
 				for(unsigned int i = 0; i < elements.size(); ++i){
-					newEle->coeffRef(i) = (real) std::stod(elements[i]);
+					newEle->coeffRef(i) = (Real) std::stod(elements[i]);
 				}
 				data.push_back(newEle);
 				if(data.size() == amountOfData){
@@ -162,7 +162,7 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName,
 					// minus 1 because the first element is the label
 					LabeledVectorX* newEle = new LabeledVectorX((int)(maxSize) - start, label);
 					for(unsigned int i = start; i < maxSize; ++i){
-						newEle->coeffRef(i - start) = (real) std::stod(elements[i]);
+						newEle->coeffRef(i - start) = (Real) std::stod(elements[i]);
 					}
 					data.push_back(newEle);
 					if(data.size() == amountOfData){
@@ -450,7 +450,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 					if(elements.size() == 257){
 						LabeledVectorX* newEle = new LabeledVectorX(256, (const unsigned int) std::stoi(elements[0]));
 						for(unsigned int i = 1; i < 257; ++i){
-							newEle->coeffRef(i-1) = (real) std::stod(elements[i]);
+							newEle->coeffRef(i-1) = (Real) std::stod(elements[i]);
 						}
 						data[newEle->getLabel()].push_back(newEle);
 					}else if(elements.size() > 0 && elements[0] == "-1"){

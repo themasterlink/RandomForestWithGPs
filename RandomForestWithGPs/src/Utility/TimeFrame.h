@@ -10,22 +10,23 @@
 
 #include <cmath>
 #include <iostream>
+#include "../Base/RealType.h"
 
 class TimeFrame {
 public:
-	TimeFrame(const double seconds);
+	TimeFrame(const Real seconds);
 
-	void setWithSeconds(const double seconds);
+	void setWithSeconds(const Real seconds);
 
-	inline double getSeconds() const;
+	inline Real getSeconds() const;
 
-	TimeFrame& operator*=(const double fac);
+	TimeFrame& operator*=(const Real fac);
 
 	TimeFrame& operator+=(const TimeFrame& rhs);
 
 	TimeFrame& operator-=(const TimeFrame& rhs);
 
-	inline double getOnlySeconds() const{ return m_seconds; }
+	inline Real getOnlySeconds() const{ return m_seconds; }
 
 	inline int getOnlyMinutes() const{ return m_minutes; }
 
@@ -33,18 +34,18 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& stream, const TimeFrame& time);
 
-	friend const TimeFrame operator*(const TimeFrame& frame, const double fac);
+	friend const TimeFrame operator*(const TimeFrame& frame, const Real fac);
 
 	friend const TimeFrame operator-(const TimeFrame& lhs, const TimeFrame& rhs);
 
 	friend const TimeFrame operator+(const TimeFrame& lhs, const TimeFrame& rhs);
 private:
-	double m_seconds;
+	Real m_seconds;
 	int m_minutes;
 	int m_hours;
 };
 
-inline double TimeFrame::getSeconds() const{
+inline Real TimeFrame::getSeconds() const{
 	return m_seconds + (m_minutes * 60 + m_hours * 3600);
 }
 

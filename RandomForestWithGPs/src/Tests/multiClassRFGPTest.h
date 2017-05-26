@@ -8,7 +8,6 @@
 #ifndef TESTS_MULTICLASSRFGPTEST_H_
 #define TESTS_MULTICLASSRFGPTEST_H_
 
-#include <Eigen/Dense>
 
 #include "../Base/Settings.h"
 #include "../Data/DataReader.h"
@@ -39,7 +38,7 @@ void executeForRFGPMultiClass(const std::string& path){
 	}
 	DataSets trainSets;
 	DataSets testSets;
-	const double facForTraining = 0.8;
+	const Real facForTraining = 0.8;
 	for(DataSetsConstIterator it = dataSets.begin(); it != dataSets.end(); ++it){
 		trainSets.insert(DataSetPair(it->first, LabeledData()));
 		DataSetsIterator itTrain = trainSets.find(it->first);
@@ -56,10 +55,10 @@ void executeForRFGPMultiClass(const std::string& path){
 		}
 	}
 
-	for(DataSets::const_iterator it = trainSets.begin(); it != trainSets.end(); ++it){
+	for(auto it = trainSets.cbegin(); it != trainSets.cend(); ++it){
 		std::cout << "for training: "<< it->first << ", has: " << it->second.size() << std::endl;
 	}
-	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
+	for(auto it = testSets.begin(); it != testSets.end(); ++it){
 		std::cout << "for testing:  "<< it->first << ", has: " << it->second.size() << std::endl;
 	}
 
@@ -80,8 +79,8 @@ void executeForRFGPMultiClass(const std::string& path){
 	int labelCounter = 0;
 	int correct = 0;
 	int amount = 0;
-	std::vector<real> prob;
-	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
+	std::vector<Real> prob;
+	for(auto it = testSets.begin(); it != testSets.end(); ++it){
 		for(int i = 0; i < (int) it->second.size(); ++i){
 			const int rfGPLabel = rfGp.predict(*it->second[i], prob);
 			//std::cout << "Should: " << rfGPLabel << ", is: " << labelCounter << std::endl;
@@ -93,13 +92,13 @@ void executeForRFGPMultiClass(const std::string& path){
 		++labelCounter;
 	}
 	std::cout << RED << "Amount of test data: " << amount << RESET << std::endl;
-	std::cout << RED << "Amount of right: " << (double) correct / amount * 100.0 << "%" << RESET << std::endl;
+	std::cout << RED << "Amount of right: " << (Real) correct / amount * 100.0 << "%" << RESET << std::endl;
 
 	std::cout << CYAN << "Start second prediction" << RESET << std::endl;
 	labelCounter = 0;
 	correct = 0;
 	amount = 0;
-	for(DataSets::const_iterator it = trainSets.begin(); it != trainSets.end(); ++it){
+	for(auto it = trainSets.cbegin(); it != trainSets.cend(); ++it){
 		for(int i = 0; i < (int) it->second.size(); ++i){
 			const int rfGPLabel = rfGp.predict(*it->second[i], prob);
 			//std::cout << "Should: " << rfGPLabel << ", is: " << labelCounter << std::endl;
@@ -111,7 +110,7 @@ void executeForRFGPMultiClass(const std::string& path){
 		++labelCounter;
 	}
 	std::cout << RED << "Amount of test data: " << amount << RESET << std::endl;
-	std::cout << RED << "Amount of right: " << (double) correct / amount * 100.0 << "%" << RESET << std::endl;
+	std::cout << RED << "Amount of right: " << (Real) correct / amount * 100.0 << "%" << RESET << std::endl;
 
 /*RandomForestGaussianProcess rfGp(trainSets);
 	RFGPWriter::readFromFile("rfGp.rfgpbin", rfGp);

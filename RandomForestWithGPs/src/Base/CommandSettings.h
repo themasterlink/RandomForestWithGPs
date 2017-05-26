@@ -50,7 +50,7 @@ public:
 	ADD_PARAM(int, visuRes, 0, "If possible visualize the data, zero means no visualization");
 	ADD_PARAM(int, visuResSimple, 0, "If possible visualize the data in a simple manner, zero means no visualization");
 	ADD_PARAM(bool, onlyDataView, false, "Only visualizes the data, without any training");
-	ADD_PARAM(real, samplingAndTraining, (real) 0.0, "The training and sampling is performed, if the value in seconds is bigger than 0.");
+	ADD_PARAM(Real, samplingAndTraining, (Real) 0.0, "The training and sampling is performed, if the value in seconds is bigger than 0.");
 	ADD_PARAM(bool, plotHistos, false, "Should some histogramms be plotted");
 	ADD_PARAM(std::string, settingsFile, "../Settings/init.json", "location of the settings file");
 	ADD_PARAM(std::string, convertFile, "", "location of the desired file");

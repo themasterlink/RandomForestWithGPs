@@ -10,6 +10,7 @@
 
 #include <boost/thread.hpp>
 #include <map>
+#include "RealType.h"
 
 class Logger {
 public:
@@ -21,7 +22,7 @@ public:
 
 	static void addSpecialLineToFile(const std::string& line, const std::string& identifier);
 
-	static void setTimeBetweenWritingIntervals(const double timeToSleep){ m_timeToSleep = timeToSleep; };
+	static void setTimeBetweenWritingIntervals(const Real timeToSleep){ m_timeToSleep = timeToSleep; };
 
 	static void forcedWrite();
 
@@ -51,7 +52,7 @@ private:
 
 	static std::string m_fileName;
 
-	static double m_timeToSleep;
+	static Real m_timeToSleep;
 
 	static std::map<std::string, std::string> m_specialLines;
 

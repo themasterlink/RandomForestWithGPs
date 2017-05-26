@@ -8,10 +8,9 @@
 #ifndef LEVENBERGMARQUARDTSOLVER_H_
 #define LEVENBERGMARQUARDTSOLVER_H_
 
+#include <unsupported/Eigen/NonLinearOptimization>
 #include "../Utility/Util.h"
 #include <cmath>
-#include <Eigen/Dense>
-#include <unsupported/Eigen/NonLinearOptimization>
 
 #include "GaussianProcess.h"
 
@@ -46,8 +45,8 @@ struct OptimizeFunctor
   }
 
   GaussianProcess* m_gp;
-  mutable std::vector<real> m_dLogZ;
-  mutable double m_logZ;
+  mutable std::vector<Real> m_dLogZ;
+  mutable Real m_logZ;
   int inputs() const { return 3; }
   int values() const { return 3; } // number of constraints
 };

@@ -83,7 +83,7 @@ void RandomForestGaussianProcess::train(){
 			Settings::getValue("MinMaxUsedSplits.maxValue", maxVal);
 			minMaxUsedData << minVal, maxVal;
 		}else{
-			double minVal = 0, maxVal = 0;
+			Real minVal = 0, maxVal = 0;
 			Settings::getValue("MinMaxUsedSplits.minValueFractionDependsOnDataSize", minVal);
 			Settings::getValue("MinMaxUsedSplits.maxValueFractionDependsOnDataSize", maxVal);
 			minMaxUsedData << (int) (minVal * data.size()),  (int) (maxVal * data.size());
@@ -241,11 +241,11 @@ void RandomForestGaussianProcess::trainInParallel(const unsigned int iActClass,
 	VectorX y(amountOfDataInRfRes);
 	const int size = std::min(300, (int)(dataOfActRf.size()));
 	int bestRight = -1;
-	double len = 10, sigmaF = 0.4;
+	Real len = 10, sigmaF = 0.4;
 	StopWatch sw;
 	int noChange = 1;
 	for(int i = 0; i < 20; ++i){
-		m_output.printSwitchingColor("Is in: " + number2String(i) + ", best is at the moment: " + number2String(len) + ", " + number2String(sigmaF) + ", with: " + number2String(bestRight / (double)size * 100.0) + betweenNames);
+		m_output.printSwitchingColor("Is in: " + number2String(i) + ", best is at the moment: " + number2String(len) + ", " + number2String(sigmaF) + ", with: " + number2String(bestRight / (Real)size * 100.0) + betweenNames);
 		Matrix dataHyper;
 		VectorX yHyper;
 		DataConverter::toRandUniformDataMatrix(dataOfActRf, classCounts, dataHyper, yHyper, noChange * amountOfHyperPoints, iActClass); // get a uniform portion of all points
@@ -284,7 +284,7 @@ if(yHyper.rows() < hyperPoints * 0.75){
 	continue;
 }
 for(int i = 0; i < yHyper.rows(); ++i){
-	std::cout << (double) yHyper[i] << std::endl;
+	std::cout << (Real) yHyper[i] << std::endl;
 }
 std::cout << "One: " << oneCounter << std::endl;
 		 */
@@ -322,9 +322,9 @@ std::cout << "One: " << oneCounter << std::endl;
 		actGp->trainWithoutKernelOptimize();
 		int right = 0;
 		for(int i = 0; i < size; ++i){
-			const int nextEle = rand() / (double) RAND_MAX * dataOfActRf.size();
+			const int nextEle = rand() / (Real) RAND_MAX * dataOfActRf.size();
 			LabeledVectorX& ele = *dataOfActRf[nextEle];
-			double prob = actGp->predict(ele, 500);
+			Real prob = actGp->predict(ele, 500);
 			if(prob > 0.5 && ele.getLabel() == iActClass){
 				++right;
 			}else if(prob < 0.5 && ele.getLabel() != iActClass){
@@ -343,12 +343,12 @@ std::cout << "One: " << oneCounter << std::endl;
 		if(noChange > nrOfNoChanges){
 			break;
 		}
-		if(bestRight / (double)size * 100.0 > 95.0){
+		if(bestRight / (Real)size * 100.0 > 95.0){
 			break;
 		}
 	}
 	// set hyper params
-	m_output.printSwitchingColor("Finish optimizing with " + number2String(len) + ", " + number2String(sigmaF) + " in: " + sw.elapsedAsPrettyTime() + ", with: " + number2String(bestRight / (double)size * 100.0) + betweenNames);
+	m_output.printSwitchingColor("Finish optimizing with " + number2String(len) + ", " + number2String(sigmaF) + " in: " + sw.elapsedAsPrettyTime() + ", with: " + number2String(bestRight / (Real)size * 100.0) + betweenNames);
 	sw.startTime();
 	// train on whole data set
 	actGp->getKernel().setHyperParams(len, sigmaF);
@@ -360,11 +360,11 @@ std::cout << "One: " << oneCounter << std::endl;
 	--m_nrOfRunningThreads;
 }
 
-unsigned int RandomForestGaussianProcess::predict(const VectorX& point, std::vector<real>& prob) const {
+unsigned int RandomForestGaussianProcess::predict(const VectorX& point, std::vector<Real>& prob) const {
 	const int rfLabel = m_forest.predict(point);
 	return rfLabel;
 	if(m_pureClassLabelForRfClass[rfLabel] != GP_USED){ // is pure
-		prob = std::vector<real>(m_amountOfUsedClasses, 0.0); // set all probs to zero
+		prob = std::vector<Real>(m_amountOfUsedClasses, 0.0); // set all probs to zero
 		prob[m_pureClassLabelForRfClass[rfLabel]] = 1.0; // set the
 		return m_pureClassLabelForRfClass[rfLabel];
 	}
@@ -377,7 +377,7 @@ unsigned int RandomForestGaussianProcess::predict(const VectorX& point, std::vec
 			prob[i] = 0.0; // there were not enough elements to identify a prob for this class!
 		}
 	}
-	double p = 0;
+	Real p = 0;
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
 		p += prob[i];
 	}
@@ -399,7 +399,7 @@ unsigned int RandomForestGaussianProcess::predict(const VectorX& point, std::vec
 }
 
 unsigned int RandomForestGaussianProcess::predict(const VectorX& point) const{
-	std::vector<real> prob;
+	std::vector<Real> prob;
 	return predict(point, prob);
 }
 

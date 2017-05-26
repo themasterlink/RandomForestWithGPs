@@ -38,7 +38,7 @@ public:
 
 	void calcCovarianceDerivativeForInducingPoints(Matrix& cov, const std::list<int>& activeSet, const OwnKernelElement* type) const;
 
-	double getDifferences(const int row, const int col) const { return (double) (*m_differences)(row, col); };
+	Real getDifferences(const int row, const int col) const { return (Real) (*m_differences)(row, col); };
 
 	void setHyperParamsWith(const KernelType& params);
 
@@ -50,13 +50,13 @@ public:
 
 	virtual void setSeed(const int seed);
 
-	void subGradient(const KernelType& gradient, const double factor);
+	void subGradient(const KernelType& gradient, const Real factor);
 
 	bool wasDifferenceCalced(){ return m_calcedDifferenceMatrix; };
 
-	void setGaussianRandomVariables(const std::vector<real>& means, const std::vector<real> sds);
+	void setGaussianRandomVariables(const std::vector<Real>& means, const std::vector<Real> sds);
 
-	void addToHyperParams(const KernelType& params, const double factor = 1.0);
+	void addToHyperParams(const KernelType& params, const Real factor = 1.0);
 
 	unsigned int getNrOfParams(){ return nrOfParams; };
 
@@ -64,9 +64,9 @@ public:
 
 	static void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf& usedMatrix, const OnlineStorage<LabeledVectorX*>& storage, InformationPackage* package = nullptr);
 
-	virtual double calcDiagElement(unsigned int row) const = 0;
+	virtual Real calcDiagElement(unsigned int row) const = 0;
 
-	virtual double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const = 0;
+	virtual Real calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const = 0;
 
 	virtual void calcKernelVector(const VectorX& vector, const Matrix& dataMat, VectorX& res) const = 0;
 
@@ -77,17 +77,17 @@ public:
 		m_calcedDifferenceMatrix = true;
 	}
 
-	double getSeed(){ return m_seed; };
+	Real getSeed(){ return m_seed; };
 
 protected:
 
 	virtual bool kernelCanHaveDifferenceMatrix() const = 0;
 
-	virtual double kernelFunc(const int row, const int col) const = 0;
+	virtual Real kernelFunc(const int row, const int col) const = 0;
 
-	virtual double kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const = 0;
+	virtual Real kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const = 0;
 
-	virtual double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const = 0;
+	virtual Real kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const = 0;
 
 	Eigen::MatrixXf* m_differences;
 
@@ -105,7 +105,7 @@ protected:
 
 	RandomGaussianNr* m_randomGaussians[nrOfParams];
 
-	double m_seed;
+	Real m_seed;
 
 };
 

@@ -44,7 +44,7 @@ public:
 
 	bool train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const unsigned int tryCounter, const bool saveDataPosition);
 
-	real trySplitFor(const real usedSplitValue, const unsigned int usedDim,
+	Real trySplitFor(const Real usedSplitValue, const unsigned int usedDim,
 			const std::vector<unsigned int>& dataInNode, std::vector<unsigned int>& leftHisto,
 			std::vector<unsigned int>& rightHisto, RandomNumberGeneratorForDT& generator);
 
@@ -61,7 +61,7 @@ public:
 		printError("This function is not implemented!");
 	}
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const{
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
@@ -78,7 +78,7 @@ public:
 
 	MemoryType getMemSize() const;
 
-//	void printStream(std::ostream &output, const real precision = 3);
+//	void printStream(std::ostream &output, const Real precision = 3);
 
 private:
 	// this function is only called if the empty tree constructor was used!
@@ -102,7 +102,7 @@ private:
 	// 		2		3
 	//  4	   5  6 	7
 	// 8 9 	10 11 12 13  14 15
-	std::vector<real> m_splitValues;
+	std::vector<Real> m_splitValues;
 	// order is like with split values
 	std::vector<int> m_splitDim;
 

@@ -14,7 +14,7 @@
 //
 //
 //
-//double BayesOptimizerIVM::evaluateSample(const vectord& x){
+//Real BayesOptimizerIVM::evaluateSample(const vectord& x){
 //	m_ivm.getGaussianKernel()->setHyperParams(x[0], x[1]);
 //	std::cout << "x: " << x[0] << ", " << x[1] << std::endl; // << " with: " << (int) x[2] << std::endl;
 //	StopWatch sw;

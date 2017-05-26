@@ -8,7 +8,6 @@
 #ifndef TESTS_BINARYCLASSRFTEST_H_
 #define TESTS_BINARYCLASSRFTEST_H_
 
-#include <Eigen/Dense>
 #include "../Data/DataReader.h"
 #include "../Data/DataWriterForVisu.h"
 #include "../RandomForests/RandomForest.h"
@@ -78,7 +77,7 @@ void executeForRFBinaryClass(){
 				Settings::getValue("MinMaxUsedData.maxValue", maxVal);
 				minMaxUsedData << minVal, maxVal;
 			}else{
-				double minVal = 0, maxVal = 0;
+				Real minVal = 0, maxVal = 0;
 				Settings::getValue("MinMaxUsedData.minValueFraction", minVal);
 				Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
 				minMaxUsedData << (int) (minVal * data.size()),  (int) (maxVal * data.size());
@@ -96,7 +95,7 @@ void executeForRFBinaryClass(){
 					++right;
 				}
 			}
-			std::cout << RED << "Amount of right: " << (double) right / testData.size() * 100.0 << "%" << RESET << std::endl;
+			std::cout << RED << "Amount of right: " << (Real) right / testData.size() * 100.0 << "%" << RESET << std::endl;
 			break;
 		}
 		break;
@@ -115,7 +114,7 @@ void executeForRFBinaryClass(const std::string& path){
 		Settings::getValue("MinMaxUsedData.maxValue", maxVal);
 		minMaxUsedData << minVal, maxVal;
 	}else{
-		double minVal = 0, maxVal = 0;
+		Real minVal = 0, maxVal = 0;
 		Settings::getValue("MinMaxUsedData.minValueFraction", minVal);
 		Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
 		minMaxUsedData << (int) (minVal * data.size()),  (int) (maxVal * data.size());
@@ -150,7 +149,7 @@ void executeForRFBinaryClass(const std::string& path){
 		}
 	}
 	std::cout << "Other: Amount of test size: " << testData.size() << std::endl;
-	std::cout << "Other: Amount of wrong: " << wrong / (double) testData.size() << std::endl;
+	std::cout << "Other: Amount of wrong: " << wrong / (Real) testData.size() << std::endl;
 
 
 
@@ -175,7 +174,7 @@ void executeForRFBinaryClass(const std::string& path){
 	}
 	std::cout << "Amount of combined trees: " << newForest.getNrOfTrees() << std::endl;
 	std::cout << "Read: Amount of test size: " << testData.size() << std::endl;
-	std::cout << "Read: Amount of wrong: " << wrong / (double) testData.size() << std::endl;
+	std::cout << "Read: Amount of wrong: " << wrong / (Real) testData.size() << std::endl;
 
 
 	int printX, printY;

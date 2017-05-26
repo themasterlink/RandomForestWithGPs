@@ -12,7 +12,7 @@
 
 int ThreadMaster::m_counter = 0;
 unsigned int ThreadMaster::m_maxCounter = 0;
-double ThreadMaster::m_timeToSleep = 0.1;
+Real ThreadMaster::m_timeToSleep = 0.1;
 ThreadMaster::PackageList ThreadMaster::m_waitingList;
 ThreadMaster::PackageList ThreadMaster::m_runningList;
 boost::thread* ThreadMaster::m_mainThread(nullptr);
@@ -37,7 +37,7 @@ void ThreadMaster::start(){
 	}
 }
 
-void ThreadMaster::setFrequence(const double frequence){
+void ThreadMaster::setFrequence(const Real frequence){
 	m_timeToSleep = std::max(1. / frequence, 0.001);
 }
 
@@ -45,18 +45,19 @@ void ThreadMaster::threadHasFinished(InformationPackage* package){
 	m_mutex.lock();
 	package->finishedTask();
 	m_mutex.unlock();
-	bool found = false;
+	bool found;
 	do{
 		found = false;
 		m_mutex.lock();
-		for(PackageList::const_iterator it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
-			if(*it == package){
+		for(auto& waitingPackage : m_waitingList){
+			if(waitingPackage == package){
 				found = true;
 				break;
 			}
 		}
-		for(PackageList::const_iterator it = m_runningList.begin(); it != m_runningList.end(); ++it){
-			if(*it == package){
+
+		for(auto& runningPackage : m_runningList){
+			if(runningPackage == package){
 				found = true;
 				break;
 			}
@@ -73,9 +74,9 @@ void ThreadMaster::run(){
 	while(m_keepRunning){
 		m_mutex.lock();
 //		if(m_counter < m_maxCounter){
-		double bestAttractionLevel = 0;
+		Real bestAttractionLevel = 0;
 		int minAmountOfPoints = INT_MAX, maxAmountOfPoints = 0;
-		for(PackageList::const_iterator it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
+		for(auto it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
 			const int amount = (*it)->amountOfAffectedPoints();
 			if(minAmountOfPoints > amount){
 				minAmountOfPoints = amount;
@@ -212,12 +213,12 @@ bool ThreadMaster::appendThreadToList(InformationPackage* package){
 
 void ThreadMaster::abortAllThreads(){
 	m_mutex.lock();
-	for(PackageList::const_iterator it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
+	for(auto it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
 		if((*it)->canBeAbortedInGeneral()){
 			(*it)->abortTraing();
 		}
 	}
-	for(PackageList::const_iterator it = m_runningList.begin(); it != m_runningList.end(); ++it){
+	for(auto it = m_runningList.begin(); it != m_runningList.end(); ++it){
 		if((*it)->canBeAbortedInGeneral()){
 			(*it)->abortTraing();
 		}

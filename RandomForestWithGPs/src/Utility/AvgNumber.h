@@ -8,25 +8,26 @@
 #ifndef UTILITY_AVGNUMBER_H_
 #define UTILITY_AVGNUMBER_H_
 
+#include "../Base/RealType.h"
 
 class AvgNumber {
 public:
 
 	AvgNumber(): m_mean(0), m_counter(0){};
 
-	void addNew(double val){
+	void addNew(Real val){
 		++m_counter;
-		const double fac = 1.0 / m_counter;
-		m_mean = fac * val + (1.0-fac) * m_mean;
+		const Real fac = (Real) 1.0 / m_counter;
+		m_mean = fac * val + ((Real) 1.0 - fac) * m_mean;
 	}
 
-	double mean() const { return m_mean; };
+	Real mean() const { return m_mean; };
 
-	double counter() const { return m_mean; };
+	Real counter() const { return m_mean; };
 
 private:
-	double m_mean;
-	double m_counter; // no convert needed
+	Real m_mean;
+	Real m_counter; // no convert needed
 };
 
 

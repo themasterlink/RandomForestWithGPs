@@ -14,13 +14,12 @@
 #include "../../Data/OnlineStorage.h"
 #include "../../Utility/Util.h"
 #include "GaussianKernel.h"
-#include <Eigen/Dense>
 
 class GaussianKernelOptimizer {
 public:
 	using base_generator_type = GeneratorType; // generator type
 	using uniform_distribution_int = boost::random::uniform_int_distribution<int>; // generator type
-	using uniform_distribution_real = boost::uniform_real<real>; // generator type
+	using uniform_distribution_real = boost::uniform_real<Real>; // generator type
 
 	GaussianKernelOptimizer(const int maxTriesPerSolution, const int amountOfUsedClasses, const std::vector<Vector2>& minAndMaxValues, const int seed);
 	virtual ~GaussianKernelOptimizer();
@@ -34,7 +33,7 @@ public:
 //		while(neighbourId == iClassNr){ // find a random id which is not equal to the current iClassNr
 //			neighbourId = getRandomNrForClass(iClassNr);
 //		}
-//		const double randDist = getRandDist(iClassNr);
+//		const Real randDist = getRandDist(iClassNr);
 //		params.m_length.changeAmountOfDims(m_solutions[iClassNr].back().m_length.hasMoreThanOneDim());
 //		for(unsigned int k = 0; k < GaussianKernelParams::paramsAmount; ++k){
 //			if(m_solutions[iClassNr].back().m_params[k]->hasMoreThanOneDim()){
@@ -51,7 +50,7 @@ public:
 //		m_mutex.unlock();
 //	}
 //
-//	void addPoint(GaussianKernelParams params, const int iClassNr, const double fitness){
+//	void addPoint(GaussianKernelParams params, const int iClassNr, const Real fitness){
 //		if()
 //		m_solutions[m_usedClasses[iClassNr]].push_back(params);
 //	}
@@ -63,7 +62,7 @@ private:
 	// returns a value between 0 ..< amountOfUsedClass - 1, param needed to specify correct generator (thread safe)
 	unsigned int getRandomNrForClass(const int iClassNr);
 
-	double getRandDist(const int iClassNr);
+	Real getRandDist(const int iClassNr);
 
 	std::vector<Vector2 > m_minAndMaxValues; // should have the dimension of the used params amount
 

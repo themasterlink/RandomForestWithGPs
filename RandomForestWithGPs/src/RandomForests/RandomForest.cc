@@ -13,7 +13,7 @@ RandomForest::RandomForest(const int maxDepth, const int amountOfTrees,
 		:	m_amountOfTrees(amountOfTrees),
 			m_amountOfClasses(amountOfClasses),
 			m_counterIncreaseValue(2),
-			m_trees(amountOfTrees, DecisionTree(maxDepth, amountOfClasses)){
+			m_trees(m_amountOfTrees, DecisionTree(maxDepth, amountOfClasses)){
 }
 
 RandomForest::~RandomForest(){
@@ -21,7 +21,7 @@ RandomForest::~RandomForest(){
 
 void RandomForest::init(const int amountOfTrees){
 	*(const_cast<int*>(&m_amountOfTrees)) = amountOfTrees; // change of const value
-	m_trees = DecisionTreesContainer(amountOfTrees, DecisionTree(0, 0));
+	m_trees = DecisionTreesContainer(m_amountOfTrees, DecisionTree(0, 0));
 }
 
 void RandomForest::generateTreeBasedOnData(const DecisionTreeData& data, const int element){
@@ -54,9 +54,10 @@ void RandomForest::train(const LabeledData& data, const int amountOfUsedDims,
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int seed = i;
 		const int useWholeDataSet = 0; // means that the whole set is used
-		generators.push_back(new RandomNumberGeneratorForDT(data[0]->rows(), minMaxUsedData[0], minMaxUsedData[1], data.size(), seed, useWholeDataSet));
-		const int start = static_cast<const int>(i / static_cast<real>(nrOfParallel) * m_amountOfTrees);
-		const int end =   static_cast<const int>((i + 1) / static_cast<real>(nrOfParallel) * m_amountOfTrees);
+		generators.push_back(new RandomNumberGeneratorForDT((int) data[0]->rows(), minMaxUsedData[0], minMaxUsedData[1],
+															(int) data.size(), seed, useWholeDataSet));
+		const int start = static_cast<const int>(i / static_cast<Real>(nrOfParallel) * m_amountOfTrees);
+		const int end =   static_cast<const int>((i + 1) / static_cast<Real>(nrOfParallel) * m_amountOfTrees);
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::trainInParallel, this, data, amountOfUsedDims, generators[i], start, end, &counter)));
 	}
 	while(counter.getCounter() < m_amountOfTrees){
@@ -66,9 +67,9 @@ void RandomForest::train(const LabeledData& data, const int amountOfUsedDims,
 		if(c != 0){
 			std::cout << "\r                                                                                                   \r";
 			TimeFrame time = sw.elapsedAsTimeFrame();
-			const double fac = (double) (m_amountOfTrees - c) / (double) c;
+			const Real fac = (Real) (m_amountOfTrees - c) / (Real) c;
 			time *= fac;
-			std::cout << "Trees trained: " << c / (double) m_amountOfTrees * 100.0 << " %" << ",\testimated rest time: " << time;
+			std::cout << "Trees trained: " << c / (Real) m_amountOfTrees * 100.0 << " %" << ",\testimated rest time: " << time;
 			flush(std::cout);
 		}
 	}
@@ -93,21 +94,21 @@ void RandomForest::trainInParallel(const LabeledData& data,
 }
 
 unsigned int RandomForest::predict(const VectorX& point) const{
-	std::vector<unsigned int> values(m_amountOfClasses, 0);
-	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
+	std::vector<unsigned int> values((unsigned long) m_amountOfClasses, 0);
+	for(auto it = m_trees.cbegin(); it != m_trees.cend(); ++it){
 		++values[it->predict(point)];
 	}
 	//std::cout << "First: " << values[0] << ", second: " << values[1] << std::endl;
-	return argMax(values.cbegin(), values.cend());
+	return (unsigned int) argMax(values.cbegin(), values.cend());
 }
 
 unsigned int RandomForest::predict(const LabeledVectorX& point) const{
-	std::vector<unsigned int> values(m_amountOfClasses, 0);
-	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
+	std::vector<unsigned int> values((unsigned long) m_amountOfClasses, 0);
+	for(auto it = m_trees.cbegin(); it != m_trees.cend(); ++it){
 		++values[it->predict(point)];
 	}
 	//std::cout << "First: " << values[0] << ", second: " << values[1] << std::endl;
-	return argMax(values.cbegin(), values.cend());
+	return (unsigned int) argMax(values.cbegin(), values.cend());
 }
 
 void RandomForest::predictData(const Data& points, Labels& labels) const{
@@ -115,8 +116,8 @@ void RandomForest::predictData(const Data& points, Labels& labels) const{
 	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 	boost::thread_group group;
 	for(auto i = (decltype(nrOfParallel))(0); i < nrOfParallel; ++i){
-		const int start = (i / (double) nrOfParallel) * points.size();
-		const int end = ((i + 1) / (double) nrOfParallel) * points.size();
+		const int start = (int) ((i / (Real) nrOfParallel) * points.size());
+		const int end = (int) (((i + 1) / (Real) nrOfParallel) * points.size());
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::predictDataInParallel,
 				this, points, &labels, start, end)));
 	}
@@ -128,8 +129,8 @@ void RandomForest::predictData(const LabeledData& points, Labels& labels) const{
 	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 	boost::thread_group group;
 	for(auto i = (decltype(nrOfParallel))(0); i < nrOfParallel; ++i){
-		const int start = (i / (double) nrOfParallel) * points.size();
-		const int end = ((i + 1) / (double) nrOfParallel) * points.size();
+		const int start = (int) ((i / (Real) nrOfParallel) * points.size());
+		const int end = (int) (((i + 1) / (Real) nrOfParallel) * points.size());
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::predictDataInParallelClass,
 				this, points, &labels, start, end)));
 	}
@@ -164,7 +165,7 @@ void RandomForest::addForest(const RandomForest& forest){
 		return;
 	}
 	m_trees.reserve(forest.getTrees().size() + m_trees.size());
-	for(DecisionTreesContainer::const_iterator it = forest.getTrees().cbegin(); it != forest.getTrees().cend(); ++it){
+	for(auto it = forest.getTrees().cbegin(); it != forest.getTrees().cend(); ++it){
 		m_trees.push_back(*it);
 	}
 }

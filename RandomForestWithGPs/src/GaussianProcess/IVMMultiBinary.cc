@@ -42,18 +42,18 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 				m_randClass.setSeed((m_orfClassLabel + 1) * 937);
 				// to find out the amount of used classes in this ivm look at the data
 				std::map<unsigned int, unsigned int> classCounter;
-				for(LabeledData::const_iterator it = m_storage.begin(); it != m_storage.end(); ++it){
+				for(auto it = m_storage.cbegin(); it != m_storage.cend(); ++it){
 					const unsigned int label = (**it).getLabel();
-					std::map<unsigned int, unsigned int>::iterator itClass = classCounter.find(label);
+					auto itClass = classCounter.find(label);
 					if(itClass == classCounter.end()){
-						classCounter.insert(std::pair<unsigned int, unsigned int>(label, 1u));
+						classCounter.emplace(label, 1u);
 					}else{
 						itClass->second += 1u;
 					}
 				}
 				unsigned int amountOfUsedClasses = 0u;
 				const unsigned int minimumNeededAmountOfElements = 100;
-				for (std::map<unsigned int, unsigned int>::const_iterator it = classCounter.begin(); it != classCounter.end(); ++it){
+				for(auto it = classCounter.cbegin(); it != classCounter.cend(); ++it){
 					m_isClassUsed.push_back(it->second > minimumNeededAmountOfElements);
 					m_classOfIVMs.push_back(it->first); // guarentees that classOfIvms and isClassUsed have the same mapping
 					if(m_isClassUsed.back()){
@@ -144,15 +144,15 @@ void IVMMultiBinary::train(){
 	if(!m_firstTraining){
 		if(m_packages.size() > 0 ){
 			// abort all running ivm retrainings
-			for(std::list<InformationPackage*>::iterator it = m_packages.begin(); it != m_packages.end(); ++it){
-				(*it)->abortTraing();
+			for(auto& package : m_packages){
+				package->abortTraing();
 			}
 			// wait until all old runnings ivm retrainings are finished
 			bool taskFinish = true;
 			while(taskFinish){
 				taskFinish = false;
-				for(std::list<InformationPackage*>::iterator it = m_packages.begin(); it != m_packages.end(); ++it){
-					if(!(*it)->isTaskFinished()){
+				for(const auto& package : m_packages){
+					if(!package->isTaskFinished()){
 						taskFinish = true;
 						break;
 					}
@@ -160,7 +160,7 @@ void IVMMultiBinary::train(){
 				sleepFor(0.05);
 			}
 			// remove all running threads
-			for(std::list<InformationPackage*>::iterator it = m_packages.begin(); it != m_packages.end(); ++it){
+			for(auto it = m_packages.begin(); it != m_packages.end(); ++it){
 				SAVE_DELETE(*it);
 			}
 			m_packages.clear();
@@ -170,10 +170,10 @@ void IVMMultiBinary::train(){
 	}else{
 //		printOnScreen("First Value: " << m_storage[0]->getLabel() << " with: " << m_storage[0]->transpose());
 //		if(!Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam")){
-//			std::vector<real> means = {Settings::getDirectRealValue("KernelParam.lenMean"),
+//			std::vector<Real> means = {Settings::getDirectRealValue("KernelParam.lenMean"),
 //					Settings::getDirectRealValue("KernelParam.fNoiseMean"),
 //					Settings::getDirectRealValue("KernelParam.sNoiseMean")};
-//			std::vector<real> sds = {Settings::getDirectRealValue("KernelParam.lenVar"),
+//			std::vector<Real> sds = {Settings::getDirectRealValue("KernelParam.lenVar"),
 //					Settings::getDirectRealValue("KernelParam.fNoiseVar"),
 //					Settings::getDirectRealValue("KernelParam.sNoiseVar")};
 //			std::stringstream stringStream;
@@ -189,7 +189,7 @@ void IVMMultiBinary::train(){
 //			}
 //			printOnScreen(stringStream.str());
 //		}
-		double durationOfTraining = CommandSettings::get_samplingAndTraining();
+		Real durationOfTraining = CommandSettings::get_samplingAndTraining();
 		boost::thread_group group;
 		boost::thread_group groupForRetraining;
 		const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
@@ -202,14 +202,14 @@ void IVMMultiBinary::train(){
 				packages[i] = new InformationPackage(InformationPackage::IVM_TRAIN, m_correctAmountForTrainingDataForClasses[m_classOfIVMs[i]], m_storage.size());
 			}
 		}
-		double durationOfWholeTraining = durationOfTraining;
+		Real durationOfWholeTraining = durationOfTraining;
 		if(amountOfClasses() > nrOfParallel){
-			durationOfWholeTraining *= ceil(amountOfClasses() / (double) nrOfParallel);
+			durationOfWholeTraining *= ceil(amountOfClasses() / (Real) nrOfParallel);
 		}
 //		if(amountOfClasses() <= nrOfParallel){
 		if(m_orfClassLabel == UNDEF_CLASS_LABEL){
-			const bool fitParams = CommandSettings::get_samplingAndTraining();
-			if(fitParams){
+			const auto fitParams = CommandSettings::get_samplingAndTraining();
+			if(fitParams > 0){
 				InLinePercentageFiller::setActMaxTime(durationOfWholeTraining);
 			}else{
 				InLinePercentageFiller::setActMaxTime(5); // max time for sampling
@@ -266,7 +266,7 @@ void IVMMultiBinary::train(){
 			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
 		}
 		group.join_all();
-		for(std::list<InformationPackage*>::const_iterator it = packagesForRetrain.begin(); it != packagesForRetrain.end(); ++it){
+		for(auto it = packagesForRetrain.cbegin(); it != packagesForRetrain.cend(); ++it){
 			(*it)->abortTraing(); // aborts training otherwise it will go on forever
 		}
 		for(unsigned int i = 0; i < amountOfClasses(); ++i){
@@ -276,7 +276,7 @@ void IVMMultiBinary::train(){
 			SAVE_DELETE(packages[i]);
 		}
 		groupForRetraining.join_all(); // to get a little bit of time until we wait on the finished training
-		for(std::list<InformationPackage*>::iterator it = packagesForRetrain.begin(); it != packagesForRetrain.end(); ++it){
+		for(auto it = packagesForRetrain.begin(); it != packagesForRetrain.end(); ++it){
 			ThreadMaster::threadHasFinished(*it);
 			SAVE_DELETE(*it);
 		}
@@ -356,9 +356,9 @@ void IVMMultiBinary::train(){
 		++counterClass[correctLabel];
 	}
 	for(unsigned int i = 0; i < m_amountOfAllClasses; ++i){
-		m_correctAmountForTrainingDataForClasses[i] /= (double) counterClass[i];
+		m_correctAmountForTrainingDataForClasses[i] /= (Real) counterClass[i];
 	}
-	m_correctAmountForTrainingData = amountOfCorrect / (double) m_storage.size();
+	m_correctAmountForTrainingData = amountOfCorrect / (Real) m_storage.size();
 }
 
 void IVMMultiBinary::retrainAllIvmsIfNeeded(InformationPackage* wholePackage){
@@ -422,9 +422,9 @@ void IVMMultiBinary::trainInParallel(IVM* ivm, const int usedIvm, InformationPac
 //	mutex.unlock();
 }
 
-unsigned int IVMMultiBinary::getLabelFrom(const std::vector<real>& probs) const{
+unsigned int IVMMultiBinary::getLabelFrom(const std::vector<Real>& probs) const{
 	unsigned int highestArg = 0;
-	double highestValue = 1e-7;
+	Real highestValue = 1e-7;
 	bool foundValue = false;
 	unsigned int plusOneCounter = 0;
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
@@ -460,7 +460,7 @@ unsigned int IVMMultiBinary::getLabelFrom(const std::vector<real>& probs) const{
 	}
 }
 
-void IVMMultiBinary::predict(const VectorX& point, std::vector<real>& probabilities) const{
+void IVMMultiBinary::predict(const VectorX& point, std::vector<Real>& probabilities) const{
 	probabilities.resize(m_amountOfAllClasses);
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
 		if(m_isClassUsed[i]){
@@ -470,13 +470,13 @@ void IVMMultiBinary::predict(const VectorX& point, std::vector<real>& probabilit
 }
 
 unsigned int IVMMultiBinary::predict(const VectorX& point) const{
-	std::vector<real> probs(m_amountOfAllClasses, 0.);
+	std::vector<Real> probs(m_amountOfAllClasses, 0.);
 	predict(point, probs);
 	return getLabelFrom(probs);
 }
 
 unsigned int IVMMultiBinary::predict(const LabeledVectorX& point) const{
-	std::vector<real> probs(m_amountOfAllClasses, 0.);
+	std::vector<Real> probs(m_amountOfAllClasses, 0.);
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
 		if(m_isClassUsed[i]){
 			probs[m_classOfIVMs[i]] = m_ivms[i]->predict(point);
@@ -486,16 +486,16 @@ unsigned int IVMMultiBinary::predict(const LabeledVectorX& point) const{
 }
 
 void IVMMultiBinary::predictData(const Data& points, Labels& labels) const{
-	std::vector< std::vector<real> > probs;
+	std::vector< std::vector<Real> > probs;
 	predictData(points, labels, probs);
 }
 
 void IVMMultiBinary::predictData(const LabeledData& points, Labels& labels) const{
-	std::vector< std::vector<real> > probs;
+	std::vector< std::vector<Real> > probs;
 	predictData(points, labels, probs);
 }
 
-void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
+void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const{
 	probabilities.resize(points.size());
 	labels.resize(points.size());
 	for(unsigned int i = 0; i < points.size(); ++i){
@@ -519,7 +519,7 @@ void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector
 	}
 }
 
-void IVMMultiBinary::predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
+void IVMMultiBinary::predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const{
 	probabilities.resize(points.size());
 	labels.resize(points.size());
 	for(unsigned int i = 0; i < points.size(); ++i){
@@ -545,7 +545,7 @@ void IVMMultiBinary::predictData(const LabeledData& points, Labels& labels, std:
 	}
 }
 
-void IVMMultiBinary::predictDataInParallel(IVM* ivm, const Data& points, const int usedIvm, std::vector< std::vector<real> >* probabilities, InformationPackage* package) const{
+void IVMMultiBinary::predictDataInParallel(IVM* ivm, const Data& points, const int usedIvm, std::vector< std::vector<Real> >* probabilities, InformationPackage* package) const{
 	package->setStandartInformation("Thread for ivm: " + number2String(usedIvm));
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
@@ -554,7 +554,7 @@ void IVMMultiBinary::predictDataInParallel(IVM* ivm, const Data& points, const i
 	for(unsigned int i = 0; i < points.size(); ++i){
 		(*probabilities)[i][usedClass] = ivm->predict(*points[i]);
 		if(i % percent10 == 0 && i > 0){
-			printInPackageOnScreen(package, i / (double) percent10 * 10 << " %% points done");
+			printInPackageOnScreen(package, i / (Real) percent10 * 10 << " %% points done");
 		}
 		package->performedOneTrainingStep();
 		if(package->shouldTrainingBePaused()){
@@ -566,7 +566,7 @@ void IVMMultiBinary::predictDataInParallel(IVM* ivm, const Data& points, const i
 	package->finishedTask();
 }
 
-void IVMMultiBinary::predictClassDataInParallel(IVM* ivm, const LabeledData& points, const int usedIvm, std::vector< std::vector<real> >* probabilities, InformationPackage* package) const{
+void IVMMultiBinary::predictClassDataInParallel(IVM* ivm, const LabeledData& points, const int usedIvm, std::vector< std::vector<Real> >* probabilities, InformationPackage* package) const{
 	package->setStandartInformation("Thread for ivm: " + number2String(usedIvm));
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
@@ -575,7 +575,7 @@ void IVMMultiBinary::predictClassDataInParallel(IVM* ivm, const LabeledData& poi
 	for(unsigned int i = 0; i < points.size(); ++i){
 		(*probabilities)[i][usedClass] = ivm->predict(*points[i]);
 		if(i % percent10 == 0 && i > 0){
-			printInPackageOnScreen(package, i / (double) percent10 * 10 << " %% points done");
+			printInPackageOnScreen(package, i / (Real) percent10 * 10 << " %% points done");
 		}
 		package->performedOneTrainingStep();
 		if(package->shouldTrainingBePaused()){

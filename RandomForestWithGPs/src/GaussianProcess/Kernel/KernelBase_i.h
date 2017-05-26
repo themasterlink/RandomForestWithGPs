@@ -139,7 +139,7 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 					}
 					if(i != j){
 						(*m_differences).coeffRef(i,j) = (float) (m_pDataMat->col(i) - m_pDataMat->col(j)).squaredNorm();
-						(*m_differences).coeffRef(j,i) = (*m_differences).coeff(i,j);
+						(*m_differences).coeffRef(j,i) = (float) (*m_differences).coeff(i,j);
 					}else{
 						(*m_differences).coeffRef(i,i) = 0.F;
 					}
@@ -166,9 +166,9 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 		++counter;
 		for(unsigned int j = i + 1; j < dataPoints; ++j){
 			if(counter >= start){
-				if(package != nullptr && ((counter - start) % ((int) ((end - start) * 0.001))) == 0){
+				if(package != nullptr && ((counter - start) % ((int) ((end - start) * (Real) 0.001))) == 0){
 					std::stringstream str2;
-					str2 << "Done: " << (counter - start) / (double) (end - start) * 100.0 << " %%" ;
+					str2 << "Done: " << (counter - start) / (Real) (end - start) * (Real) 100.0 << " %%" ;
 					if(counter == start){
 						package->printLineToScreenForThisThread(str2.str());
 					}else{
@@ -188,7 +188,7 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::subGradient(const KernelType& gradient, const double factor){
+void KernelBase<KernelType, nrOfParams>::subGradient(const KernelType& gradient, const Real factor){
 	for(unsigned int i = 0; i < nrOfParams; ++i){
 		if(m_kernelParams.m_params[i]->hasMoreThanOneDim() && gradient.m_params[i]->hasMoreThanOneDim()){ // both true
 			for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){
@@ -241,7 +241,7 @@ const KernelType& KernelBase<KernelType, nrOfParams>::getHyperParams() const {
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::setGaussianRandomVariables(const std::vector<real>& means, const std::vector<real> sds){
+void KernelBase<KernelType, nrOfParams>::setGaussianRandomVariables(const std::vector<Real>& means, const std::vector<Real> sds){
 	if(means.size() == sds.size() && means.size() == nrOfParams){
 		for(unsigned int i = 0; i < nrOfParams; ++i){
 			m_randomGaussians[i]->reset(means[i], sds[i]);
@@ -256,7 +256,7 @@ void KernelBase<KernelType, nrOfParams>::calcCovariance(Matrix& cov) const{
 	if(m_init){
 		cov.conservativeResize(m_dataPoints, m_dataPoints);
 		for(int i = 0; i < m_dataPoints; ++i){
-			cov.coeffRef(i,i) = (real) calcDiagElement(i);
+			cov.coeffRef(i,i) = (Real) calcDiagElement(i);
 			for(int j = i + 1; j < m_dataPoints; ++j){
 				cov.coeffRef(i,j) = kernelFunc(i,j);
 				cov.coeffRef(j,i) = cov.coeff(i,j);
@@ -272,7 +272,7 @@ void KernelBase<KernelType, nrOfParams>::calcCovarianceDerivative(Matrix& cov, c
 	if(m_init){
 		cov.conservativeResize(m_dataPoints, m_dataPoints);
 		for(int i = 0; i < m_dataPoints; ++i){
-			cov(i,i) = (real) calcDerivativeDiagElement(i, type);
+			cov(i,i) = (Real) calcDerivativeDiagElement(i, type);
 			for(int j = i + 1; j < m_dataPoints; ++j){
 				cov.coeffRef(i,j) = kernelFunc(i,j);
 				cov.coeffRef(j,i) = cov.coeff(i,j);
@@ -289,10 +289,10 @@ void KernelBase<KernelType, nrOfParams>::calcCovarianceDerivativeForInducingPoin
 	cov = Matrix(nrOfInducingPoints, nrOfInducingPoints);
 	if(!type->isDerivativeOnlyDiag()){
 		unsigned int i = 0;
-		for(std::list<int>::const_iterator it1 = activeSet.begin(); it1 != activeSet.end(); ++it1, ++i){
+		for(auto it1 = activeSet.begin(); it1 != activeSet.end(); ++it1, ++i){
 			cov.coeffRef(i,i) = calcDerivativeDiagElement(i, type);
 			unsigned int j = i + 1;
-			std::list<int>::const_iterator it2 = it1;
+			auto it2 = it1;
 			++it2;
 			for(; it2 != activeSet.end(); ++it2, ++j){
 				cov.coeffRef(i,j) = kernelFuncDerivativeToParam(*it1, *it2, type);
@@ -329,7 +329,7 @@ void KernelBase<KernelType, nrOfParams>::setSeed(const int seed){
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::addToHyperParams(const KernelType& params, const double factor){
+void KernelBase<KernelType, nrOfParams>::addToHyperParams(const KernelType& params, const Real factor){
 	for(unsigned int i = 0; i < m_kernelParams.paramsAmount; ++i){
 		if(m_kernelParams.m_params[i]->hasMoreThanOneDim() && params.m_params[i]->hasMoreThanOneDim()){
 			for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){

@@ -99,8 +99,8 @@ bool Settings::getDirectBoolValue(const std::string& nameOfValue){
 }
 
 
-real Settings::getDirectRealValue(const std::string &nameOfValue){
-	double value;
+Real Settings::getDirectRealValue(const std::string &nameOfValue){
+	Real value;
 	getValue(nameOfValue, value);
 	return value;
 }

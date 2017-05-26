@@ -21,13 +21,13 @@ public:
 	using normal_distribution = boost::random::normal_distribution<>;
 	using variante_generator = boost::random::variate_generator<base_generator_type&, normal_distribution >;
 
-	RandomGaussianNr(const double mean = 0.0, const double sd = 1.0, const int seed = -1);
+	RandomGaussianNr(const Real mean = (Real) 0.0, const Real sd = (Real) 1.0, const int seed = -1);
 	virtual ~RandomGaussianNr();
 
-	void reset(const double mean, const double sd);
+	void reset(const Real mean, const Real sd);
 
 	// get next Number
-	double operator()();
+	Real operator()();
 
 	void setSeed(const int seed);
 
@@ -36,12 +36,12 @@ private:
 
 	base_generator_type m_generator;
 	std::unique_ptr<variante_generator> m_normalGenerator;
-	double m_mean;
-	double m_sd;
+	Real m_mean;
+	Real m_sd;
 };
 
 inline
-double RandomGaussianNr::operator()(){
+Real RandomGaussianNr::operator()(){
 	return (*m_normalGenerator)();
 }
 

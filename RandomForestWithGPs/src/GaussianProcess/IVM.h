@@ -36,11 +36,11 @@ public:
 
 	bool trainOptimizeStep(const int verboseLevel = 0);
 
-	real predict(const VectorX& input) const;
+	Real predict(const VectorX& input) const;
 
-	real predictMu(const VectorX& input) const;
+	Real predictMu(const VectorX& input) const;
 
-	real predictSigma(const VectorX& input) const;
+	Real predictSigma(const VectorX& input) const;
 
 	const List<unsigned int>& getSelectedInducingPoints() const { return m_I; };
 
@@ -70,7 +70,7 @@ public:
 
 	virtual ~IVM();
 
-	real m_logZ;
+	Real m_logZ;
 	GaussianKernelParams m_derivLogZ;
 
 	void setClassName(const int classNrOfMulti = UNDEF_CLASS_LABEL){
@@ -86,16 +86,16 @@ public:
 
 private:
 
-	real predictOnTraining(const unsigned int id);
+	Real predictOnTraining(const unsigned int id);
 
-	real calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j,
+	Real calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j,
 			const VectorX& zeta, const VectorX& mu,
-			real& g_kn, real& nu_kn,
-			const real fraction, const Vector2i& amountOfPointsPerClassLeft, const int useThisLabel, const int verboseLevel);
+			Real& g_kn, Real& nu_kn,
+			const Real fraction, const Vector2i& amountOfPointsPerClassLeft, const int useThisLabel, const int verboseLevel);
 
-	real cumulativeLog(const real x);
+	Real cumulativeLog(const Real x);
 
-	real cumulativeDerivLog(const real x);
+	Real cumulativeDerivLog(const Real x);
 
 	void calcDerivatives(const VectorX& muL1);
 
@@ -104,10 +104,10 @@ private:
 	bool internalTrain(bool clearActiveSet = true, const int verboseLevel = 0);
 
 	void testOnTrainingsData(int & amountOfOneChecks, int& amountOfOnesCorrect, int& amountOfMinusOneChecks,
-			int& amountOfMinusOnesCorrect, real& correctness, const real probDiff,
+			int& amountOfMinusOnesCorrect, Real& correctness, const Real probDiff,
 			const bool onlyUseOnes, const bool wholeDataSet, const List<unsigned int>& testPoints);
 
-	real calcErrorOnTrainingsData(const bool wholeDataSet, const List<unsigned int>& testPoints, real& oneCorrect, real& minusOneCorrect);
+	Real calcErrorOnTrainingsData(const bool wholeDataSet, const List<unsigned int>& testPoints, Real& oneCorrect, Real& minusOneCorrect);
 
 
 	OnlineStorage<LabeledVectorX*>& m_storage;
@@ -121,12 +121,12 @@ private:
 	VectorX m_muTildePlusBias;
 	unsigned int m_dataPoints;
 	unsigned int m_numberOfInducingPoints;
-	real m_bias;
-	real m_lambda;
+	Real m_bias;
+	Real m_lambda;
 	bool m_doEPUpdate;
-	real m_splitOfClassOneInData;
-	real m_desiredPoint;
-	real m_desiredMargin;
+	Real m_splitOfClassOneInData;
+	Real m_desiredPoint;
+	Real m_desiredMargin;
 	bool m_calcLogZ;
 	bool m_calcDerivLogZ;
 	bool m_trained;

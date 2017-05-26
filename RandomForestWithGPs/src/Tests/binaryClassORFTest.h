@@ -20,31 +20,31 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<LabeledVectorX*>& test){
 	int amountOfCorrect = 0;
 	Labels labels;
 	StopWatch sw;
-	std::vector<std::vector<real> > probs;
+	std::vector<std::vector<Real> > probs;
 	orf.predictData(test.storage(), labels, probs);
 	printOnScreen("Needed " << sw.elapsedAsTimeFrame());
 	Matrix conv = Matrix::Zero(orf.amountOfClasses(), orf.amountOfClasses());
-//	std::vector<std::list<real> > lists(orf.amountOfClasses(), std::list<real>());
+//	std::vector<std::list<Real> > lists(orf.amountOfClasses(), std::list<Real>());
 	AvgNumber oc, uc;
 	AvgNumber ocBVS, ucBVS;
 	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
-	const double logBase = log(amountOfClasses);
+	const Real logBase = log(amountOfClasses);
 	for(unsigned int i = 0; i < labels.size(); ++i){
 		if(labels[i] != UNDEF_CLASS_LABEL){
-			double entropy = 0;
+			Real entropy = 0;
 			for(unsigned int j = 0; j < amountOfClasses; ++j){
 				if(probs[i][j] > 0){
 					entropy -= probs[i][j] * log(probs[i][j]) / logBase;
 				}
 			}
-			double max1 = 0, max2 = 0;
+			Real max1 = 0, max2 = 0;
 			for(unsigned int j = 0; j < amountOfClasses; ++j){
 				if(probs[i][j] > max1){
 					max2 = max1;
 					max1 = probs[i][j];
 				}
 			}
-			double entropyBVS = max2 / max1;
+			Real entropyBVS = max2 / max1;
 			if(test[i]->getLabel() == labels[i]){
 				++amountOfCorrect;
 				uc.addNew(entropy);
@@ -60,7 +60,7 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<LabeledVectorX*>& test){
 		}
 	}
 	printOnScreen("Test size: " << test.size());
-	printOnScreen("Result:    " << amountOfCorrect / (double) test.size() * 100. << " %");
+	printOnScreen("Result:    " << amountOfCorrect / (Real) test.size() * 100. << " %");
 	printOnScreen("Overconf:  " << oc.mean() * 100.0 << "%%");
 	printOnScreen("Underconf: " << uc.mean() * 100.0 << "%%");
 	printOnScreen("Overconf BVS:  " << ocBVS.mean() * 100.0 << "%%");
@@ -69,8 +69,8 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<LabeledVectorX*>& test){
 		ConfusionMatrixPrinter::print(conv);
 	}
 //	for(unsigned int i = 0; i < orf.amountOfClasses(); ++i){
-//		double avg = 0;
-//		for(std::list<real>::const_iterator it = lists[i].begin(); it != lists[i].end(); ++it){
+//		Real avg = 0;
+//		for(std::list<Real>::const_iterator it = lists[i].begin(); it != lists[i].end(); ++it){
 //			avg += *it;
 //		}
 //		avg /= lists[i].size();

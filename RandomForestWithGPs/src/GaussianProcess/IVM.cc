@@ -127,12 +127,12 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 		printError("This kernel type is not supported");
 	}
 //	printInPackageOnScreen(m_package, "Time: " << sw.elapsedAsPrettyTime());
-	//printInPackageOnScreen(m_package, "Frac: " << (real) amountOfOneClass / (real) m_dataPoints);
+	//printInPackageOnScreen(m_package, "Frac: " << (Real) amountOfOneClass / (Real) m_dataPoints);
 
-	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (real) amountOfOneClass / (real) m_dataPoints));
+	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (Real) amountOfOneClass / (Real) m_dataPoints));
 	Settings::getValue("IVM.lambda", m_lambda);
 	Settings::getValue("IVM.desiredMargin", m_desiredMargin);
-	m_splitOfClassOneInData = (real) amountOfOneClass / (real) m_dataPoints;
+	m_splitOfClassOneInData = (Real) amountOfOneClass / (Real) m_dataPoints;
 	m_desiredPoint = (0.5 + m_splitOfClassOneInData) * 0.5; // middle between 0.5 and real margin
 	Settings::getValue("IVM.useNeighbourComparison", m_useNeighbourComparison);
 
@@ -172,11 +172,11 @@ void IVM::setNumberOfInducingPoints(unsigned int nr){
 	m_eye = Matrix::Identity(m_numberOfInducingPoints, m_numberOfInducingPoints);
 }
 
-real IVM::cumulativeDerivLog(const real x){
+Real IVM::cumulativeDerivLog(const Real x){
 	return -(LOG2PI + x * x) * 0.5;
 }
 
-real IVM::cumulativeLog(const real x){
+Real IVM::cumulativeLog(const Real x){
 	return boost::math::erfc(-x / SQRT2) - LOG2;
 }
 
@@ -192,8 +192,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //		return false;
 //	}
 	m_trained = false;
-	const real trainingAbortValue = Settings::getDirectRealValue("IVM.trainingCanBeAbortedIfErrorIsAboveVal");
-	const real minCorrectForWholeClassification = 70;
+	const Real trainingAbortValue = Settings::getDirectRealValue("IVM.trainingCanBeAbortedIfErrorIsAboveVal");
+	const Real minCorrectForWholeClassification = 70;
 	if(m_package == nullptr){
 		printError("The IVM has no set package set!");
 		return false;
@@ -216,8 +216,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 		}
 		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses.coeff(0)) + ".binary";
 		bool loadBestParams = false;
-		real bestLogZ = NEG_REAL_MAX;
-		real bestCorrectness = 0;
+		Real bestLogZ = NEG_REAL_MAX;
+		Real bestCorrectness = 0;
 		if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
 			bestParams.readFromFile(kernelFilePath);
 			loadBestParams = true;
@@ -294,10 +294,10 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 			printInPackageOnScreen(m_package, "Start sampling");
 			bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
 			m_gaussKernel->changeKernelConfig(hasMoreThanOneLengthValue);
-			std::vector<real> means = {Settings::getDirectRealValue("KernelParam.lenMean"),
+			std::vector<Real> means = {Settings::getDirectRealValue("KernelParam.lenMean"),
 									   Settings::getDirectRealValue("KernelParam.fNoiseMean"),
 									   Settings::getDirectRealValue("KernelParam.sNoiseMean")};
-			std::vector<real> sds = {Settings::getDirectRealValue("KernelParam.lenVar"),
+			std::vector<Real> sds = {Settings::getDirectRealValue("KernelParam.lenVar"),
 									 Settings::getDirectRealValue("KernelParam.fNoiseVar"),
 									 Settings::getDirectRealValue("KernelParam.sNoiseVar")};
 			m_gaussKernel->setGaussianRandomVariables(means, sds);
@@ -308,7 +308,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				m_uniformNr.setMinAndMax(0, m_dataPoints - 1);
 				List<unsigned int> testPoints;
 				int counter = 0;
-				const int minAmountOfDataPoints = (const int) ((std::min(m_dataPoints * m_splitOfClassOneInData, (real) m_dataPoints * (real) (1. - m_splitOfClassOneInData)) - 1) * 2);
+				const int minAmountOfDataPoints = (const int) ((std::min(m_dataPoints * m_splitOfClassOneInData, (Real) m_dataPoints * (Real) (1. - m_splitOfClassOneInData)) - 1) * 2);
 				const int maxAmount = std::min((int) 100, minAmountOfDataPoints);
 				while(counter < maxAmount){
 					int value = -1;
@@ -327,7 +327,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					}
 					// check if not used until now
 					bool alreadUsed = false;
-					for(List<unsigned int>::const_iterator it = testPoints.begin(); it != testPoints.end(); ++it){
+					for(auto it = testPoints.begin(); it != testPoints.end(); ++it){
 						if((int) *it == value){
 							alreadUsed = true;
 							break;
@@ -344,36 +344,36 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					/* Iterate until stop criterion holds */
 					StopWatch sw;
 					int iCounter = 0;
-					real negBestLogZ = -bestLogZ;
+					Real negBestLogZ = -bestLogZ;
 					bool foundAtLeastOneParamSet = false;
 					List<Vector2> points;
-					List<real> values;
+					List<Real> values;
 					double *const* pop;
 
 					const int sampleLambda = cmaes::cmaes_Get(&m_evo, "lambda");
 					const unsigned long dimension = (unsigned long) cmaes::cmaes_Get(&m_evo, "dimension");
 					const int desiredAmountOfInducingsPoints = m_numberOfInducingPoints;
-					const real minErrorForCheck = Settings::getDirectRealValue("CMAES.minErrorForCheck");
-					List< List<std::vector<real> > > sampledValues;
+					const Real minErrorForCheck = Settings::getDirectRealValue("CMAES.minErrorForCheck");
+					List< List<std::vector<Real> > > sampledValues;
 					while(m_package != nullptr){
 						/* generate lambda new search points, sample population */
 
 						pop = cmaes::cmaes_SamplePopulation(&m_evo); /* do not change content of pop */
-						List<std::vector<real> > newL;
+						List<std::vector<Real> > newL;
 						sampledValues.push_back(newL);
 						/* transform into bounds and evaluate the new search points */
 						for(int iLambda = 0; iLambda < sampleLambda; ++iLambda) {
-//							const real corr = m_package->correctlyClassified();
-//							const real probDiff = corr < 60. ? 0. : corr < 80 ? 0.1 : corr < 90 ? 0.2 : 0.3;
+//							const Real corr = m_package->correctlyClassified();
+//							const Real probDiff = corr < 60. ? 0. : corr < 80 ? 0.1 : corr < 90 ? 0.2 : 0.3;
 							cmaes::cmaes_boundary_transformation(&m_cmaesBoundaries, pop[iLambda], m_hyperParamsValues, dimension);
-							std::vector<real> t = {(real) m_hyperParamsValues[0],(real) m_hyperParamsValues[1]};
+							std::vector<Real> t = {(Real) m_hyperParamsValues[0],(Real) m_hyperParamsValues[1]};
 							sampledValues.back().push_back(t);
 							/* this loop can be omitted if is_feasible is invariably true */
 //							while(!is_feasible(x_in_bounds, dimension)) { /* is_feasible needs to be user-defined, in case, and can change/repair x */
 //								cmaes_ReSampleSingle(&evo, i);
 //								cmaes_boundary_transformation(&boundaries, pop[i], x_in_bounds, dimension);
 //							}
-							m_gaussKernel->setHyperParams((real) m_hyperParamsValues[0], (real) m_hyperParamsValues[1], 0.1); //m_hyperParamsValues[2]);
+							m_gaussKernel->setHyperParams((Real) m_hyperParamsValues[0], (Real) m_hyperParamsValues[1], 0.1); //m_hyperParamsValues[2]);
 
 							sw.startTime();
 							const int diffInInducingPoints = desiredAmountOfInducingsPoints - m_numberOfInducingPoints;
@@ -381,12 +381,12 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								setNumberOfInducingPoints(desiredAmountOfInducingsPoints);
 							}
 							const bool trained = internalTrain(true, 1);
-							real error = NEG_REAL_MAX;
+							Real error = NEG_REAL_MAX;
 							if(trained){
-								real oneError, minusOneError;
+								Real oneError, minusOneError;
 //								int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
 //								int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
-//								real correctness;
+//								Real correctness;
 //								const bool onlyUseOnes = false;
 //
 //								testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
@@ -398,26 +398,26 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //								}else{
 //									error = 0.25 * oneError + 0.75 * minusOneError;
 //								}
-//								real neededValue = 50.0;
+//								Real neededValue = 50.0;
 								if(error <= minErrorForCheck){
-//									arFunvals[i] = - m_logZ / (real) m_numberOfInducingPoints + (-correctness + 100) * 2;
+//									arFunvals[i] = - m_logZ / (Real) m_numberOfInducingPoints + (-correctness + 100) * 2;
 									const int diff = desiredAmountOfInducingsPoints - m_numberOfInducingPoints; // bad if not all inducing points were used
-									m_arFunvals[iLambda] = - m_logZ / (real) m_numberOfInducingPoints + error + diff / (real) desiredAmountOfInducingsPoints * 100. - 10000;
+									m_arFunvals[iLambda] = - m_logZ / (Real) m_numberOfInducingPoints + error + diff / (Real) desiredAmountOfInducingsPoints * 100. - 10000;
 									if(m_arFunvals[iLambda] < negBestLogZ * 1.2){
 										error = calcErrorOnTrainingsData(true, testPoints, oneError, minusOneError);
 										if(oneError > minusOneError){
-											error = (real) 0.25 * minusOneError + (real) 0.75 * oneError;
+											error = (Real) 0.25 * minusOneError + (Real) 0.75 * oneError;
 										}else{
-											error = (real) 0.25 * oneError + (real) 0.75 * minusOneError;
+											error = (Real) 0.25 * oneError + (Real) 0.75 * minusOneError;
 										}
 										printInPackageOnScreen(m_package, "New full error of: " << error);
 //										testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
 //												amountOfMinusOneChecks, amountOfMinusOnesCorrect,
 //												correctness, probDiff, onlyUseOnes, true, testPoints);
 //										printInPackageOnScreen(m_package, "New full correcntess of: " << correctness);
-//										arFunvals[i] = - m_logZ / (real) m_numberOfInducingPoints + (-correctness + 100) * 2; //fitfun(x_in_bounds, dimension); /* evaluate */
+//										arFunvals[i] = - m_logZ / (Real) m_numberOfInducingPoints + (-correctness + 100) * 2; //fitfun(x_in_bounds, dimension); /* evaluate */
 //										if(arFunvals[i] < negBestLogZ * 1.2 && correctness >= m_package->correctlyClassified()){
-//											const real newProbDiff = correctness < 60. ? 0. : correctness < 80 ? 0.1 : correctness < 90 ? 0.2 : 0.3;
+//											const Real newProbDiff = correctness < 60. ? 0. : correctness < 80 ? 0.1 : correctness < 90 ? 0.2 : 0.3;
 //											if(newProbDiff > probDiff){ // avoids overshooting in the beginning
 //												// test again
 //												testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
@@ -427,7 +427,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //											}
 
 										// still better than take it
-										const real correctness = 100. - error;
+										const Real correctness = 100. - error;
 										if(correctness >= m_package->correctlyClassified()){
 											foundAtLeastOneParamSet = true;
 											m_gaussKernel->getCopyOfParams(bestParams);
@@ -440,13 +440,13 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 														<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
 														<< "e: " << number2String(error, 3) << " %%, 1: "<< number2String(oneError, 3)
 														<< " %%, -1: " << number2String(minusOneError, 3) << " %% obj: " << negBestLogZ << ", logZ: " << m_logZ;
-												//															<< "mc: " << number2String((amountOfMinusOnesCorrect / (real) amountOfMinusOneChecks) * 100., 2) << " %%, pc: "
-												//															<<  number2String((amountOfOnesCorrect / (real) amountOfOneChecks) * 100, 2) << " %%, logZ: " << negBestLogZ << ", " << std::max(newProbDiff, probDiff);
+												//															<< "mc: " << number2String((amountOfMinusOnesCorrect / (Real) amountOfMinusOneChecks) * 100., 2) << " %%, pc: "
+												//															<<  number2String((amountOfOnesCorrect / (Real) amountOfOneChecks) * 100, 2) << " %%, logZ: " << negBestLogZ << ", " << std::max(newProbDiff, probDiff);
 												m_package->setAdditionalInfo(str2.str());
 											}
 											/*
-																		<< " %%, ones: " << (amountOfOnesCorrect / (real) amountOfOneChecks) * 100.
-																		<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (real) amountOfMinusOneChecks) * 100.
+																		<< " %%, ones: " << (amountOfOnesCorrect / (Real) amountOfOneChecks) * 100.
+																		<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (Real) amountOfMinusOneChecks) * 100.
 																		<< ", amount of minues correct: " << amountOfMinusOnesCorrect << ", amount of minus ones: " << amountOfMinusOneChecks
 																		<< " %%, for: " << m_dataPoints << " points";*/
 											printInPackageOnScreen(m_package, "New best params: " << bestParams << ", with correctness of: " << correctness);
@@ -461,7 +461,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								}else{
 									m_arFunvals[iLambda] = m_numberOfInducingPoints * 200;
 								}
-								const real arValue = m_arFunvals[iLambda];
+								const Real arValue = m_arFunvals[iLambda];
 								values.push_back(arValue);
 							}else{
 								m_arFunvals[iLambda] = m_numberOfInducingPoints * 200;
@@ -470,7 +470,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 							points.push_back(Vector2(m_hyperParamsValues[0], m_hyperParamsValues[1]));
 //							values.push_back(m_logZ);
 							if(error > NEG_REAL_MAX){
-							printInPackageOnScreen(m_package, "Test len: " << m_hyperParamsValues[0] << ", fNoise: " << m_hyperParamsValues[1] << ", has: " << -m_logZ / (real) m_numberOfInducingPoints
+							printInPackageOnScreen(m_package, "Test len: " << m_hyperParamsValues[0] << ", fNoise: " << m_hyperParamsValues[1] << ", has: " << -m_logZ / (Real) m_numberOfInducingPoints
 									<< ", logZ: " << -m_logZ << ", inducing: " << m_numberOfInducingPoints << " needed time: " << sw.elapsedAsTimeFrame() << ", error: " << error << " , c: " << iCounter);
 							}else{
 								printInPackageOnScreen(m_package, "Failed len: " << m_hyperParamsValues[0] << ", fNoise: " << m_hyperParamsValues[1]
@@ -500,7 +500,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					}
 					/* get best estimator for the optimum, xmean */
 //					cmaes::cmaes_boundary_transformation(&boundaries,
-//						(real const *) cmaes_GetPtr(&m_evo, "xbestever"), /* "xbestever" might be used as well */
+//						(Real const *) cmaes_GetPtr(&m_evo, "xbestever"), /* "xbestever" might be used as well */
 //						x_in_bounds, dimension);
 //					bestParams.m_length.setAllValuesTo(x_in_bounds[0]);
 					if(foundAtLeastOneParamSet){
@@ -521,9 +521,9 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					//std::ofstream file2;
 					//file2.open(Logger::getActDirectory() + "hp" + getClassName() + ".txt");
 					//int listCounter = 0;
-					//List<real>::iterator itValues = values.begin();
-					//for(List< List<std::vector<real> > >::iterator it = sampledValues.begin(); it != sampledValues.end(); ++it){
-					//	for(List<std::vector<real> >::iterator itInner = it->begin(); itInner != it->end(); ++itInner){
+					//auto itValues = values.begin();
+					//for(auto it = sampledValues.begin(); it != sampledValues.end(); ++it){
+					//	for(auto itInner = it->begin(); itInner != it->end(); ++itInner){
 					//		file2 << listCounter << ", " << (*itInner)[0] << ", " << (*itInner)[1] << ", " << *itValues << "\n";
 					//		++itValues;
 					//	}
@@ -552,8 +552,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						// go over a bunch of points to test it
 						int amountOfOnesCorrect = 0, amountOfMinusOnesCorrect = 0;
 						int amountOfOneChecks = 0, amountOfMinusOneChecks = 0;
-						real correctness;
-						real probDiff = 0;
+						Real correctness;
+						Real probDiff = 0;
 						const bool onlyUseOnes = false;
 						testOnTrainingsData(amountOfOneChecks, amountOfOnesCorrect,
 								amountOfMinusOneChecks, amountOfMinusOnesCorrect,
@@ -578,7 +578,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								// trainingsdata provided a better value than the last full check
 								// setting the means to the new bestParams
 //								if(!m_gaussKernel->hasLengthMoreThanOneDim()){
-//									std::vector<real> newMeans(3);
+//									std::vector<Real> newMeans(3);
 //									for(unsigned int i = 0; i < 3; ++i){
 //										newMeans[i] = m_gaussKernel->getHyperParams().m_params[i]->getValue();
 //									}
@@ -597,8 +597,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 									m_package->setAdditionalInfo(str2.str());
 								}
 								printInPackageOnScreen(m_package, "New best params: " << bestParams << ", with correctness of: " << correctness);/*
-									<< " %%, ones: " << (amountOfOnesCorrect / (real) amountOfOneChecks) * 100.
-									<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (real) amountOfMinusOneChecks) * 100.
+									<< " %%, ones: " << (amountOfOnesCorrect / (Real) amountOfOneChecks) * 100.
+									<< " %%, minus ones: " << (amountOfMinusOnesCorrect / (Real) amountOfMinusOneChecks) * 100.
 									<< ", amount of minues correct: " << amountOfMinusOnesCorrect << ", amount of minus ones: " << amountOfMinusOneChecks
 									<< " %%, for: " << m_dataPoints << " points";*/
 							}
@@ -644,7 +644,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					openFileInViewer("before_ivm_"+ getClassName() +".svg");
 				}
 				int iGradientCounter = 0;
-				List<real> logZs;
+				List<Real> logZs;
 				GaussianKernelParams eSquared;
 				eSquared.setAllValuesTo(0);
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
@@ -656,9 +656,9 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						logZs.push_back(m_logZ);
 						if(!m_gaussKernel->hasLengthMoreThanOneDim()){
 							for(unsigned int j = 0; j < 3; ++j){
-								const real lastLearningRate = sqrt(EPSILON + eSquared.m_params[j]->getValue()); // 0,001
+								const Real lastLearningRate = sqrt(EPSILON + eSquared.m_params[j]->getValue()); // 0,001
 								eSquared.m_params[j]->getValues()[0] = 0.9 * eSquared.m_params[j]->getValue() + 0.1 * m_derivLogZ.m_params[j]->getSquaredValue(); // 0,0000000099856
-								const real actLearningRate = sqrt(EPSILON + eSquared.m_params[j]->getValue());
+								const Real actLearningRate = sqrt(EPSILON + eSquared.m_params[j]->getValue());
 								m_gaussKernel->getHyperParams().m_params[j]->getValues()[0] -= 0.0001 * (lastLearningRate / actLearningRate) * m_derivLogZ.m_params[j]->getValue();
 							}
 						}else{
@@ -687,8 +687,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 
 				std::ofstream file;
 				file.open(Logger::getActDirectory() + "derivLogZ" + getClassName() + ".txt");
-				for(List<real>::iterator it = logZs.begin(); it != logZs.end(); ++it){
-					file << *it << "\n";
+				for(const auto& logZ : logZs){
+					file << logZ << "\n";
 				}
 				file.close();
 				}
@@ -809,29 +809,29 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	VectorX delta = VectorX(m_numberOfInducingPoints);
 	StopWatch updateMat, findPoints;
 	findPoints.startTime();
-	real fraction = 0.;
+	Real fraction = 0.;
 	//printInPackageOnScreen(m_package, "bias: " << m_bias);
-	List<unsigned int>::const_iterator itOfActiveSet = m_I.begin();
+	auto itOfActiveSet = m_I.begin();
 	VectorX s_nk = VectorX(m_dataPoints), k_nk = VectorX(m_dataPoints); // k_nk is not filled for k == 0!!!!
 	const bool visuDeltas = !m_uniformNr.isUsed() && Settings::getDirectBoolValue("VisuParams.visuEntropyForFinalIvm");
-	List<real> deltaValues;
+	List<Real> deltaValues;
 	List<std::string> colors;
 	int forceUsedOfClass = 0; // 1 or -1 are the possible classes (0 == non selected)
-//	List<real> informationOfUsedValues;
+//	List<Real> informationOfUsedValues;
 	for(unsigned int k = 0; k < m_numberOfInducingPoints; ++k){
 
 		if(m_kernelType == KernelType::RF || !m_uniformNr.isUsed()){
 			printInPackageOnScreen(m_package, "Calculation of inducing point nr: " << k);
 		}
 		int argmax = -1;
-		//List<Pair<int, real> > pointEntropies;
+		//List<Pair<int, Real> > pointEntropies;
 		delta.coeffRef(k) = NEG_REAL_MAX;
 		if(clearActiveSet){
-//			List<real> deltasValue;
+//			List<Real> deltasValue;
 //			List<std::string> colorForDeltas;
 
 			unsigned int increaseValue = 1; // if no is activated this is the standart case
-			List<unsigned int>::const_iterator itOfJ = m_J.begin();
+			auto itOfJ = m_J.begin();
 			// do not jump over values in the first 10 iterations or
 			// if the desired amount of points for one of the classes is below 0.35
 			// and the actual fraction is below that desired point, this can be done,
@@ -845,18 +845,18 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				}
 			}
 			while(itOfJ != m_J.end()){
-				real gForJ, nuForJ;
-				real deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, forceUsedOfClass, verboseLevel);
+				Real gForJ, nuForJ;
+				Real deltaForJ = calcInnerOfFindPointWhichDecreaseEntropyMost(*itOfJ, zeta, mu, gForJ, nuForJ, fraction, amountOfPointsPerClass, forceUsedOfClass, verboseLevel);
 				// deltaForJ == NEG_REAL_MAX means this class should not be used (fraction requirment not fullfilled!)
 
 //				printInPackageOnScreen(m_package, "Point: " << *itOfJ << ", with: " << deltaForJ << " and nu: " << nuForJ);
 				if(deltaForJ > NEG_REAL_MAX && nuForJ > 0.){ // if nuForJ is smaller 0 it shouldn't be considered at all
 					if(m_useNeighbourComparison){
 						unsigned int informationCounter = 0;
-						const real labelOfJ = m_y.coeff(*itOfJ);
-						for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
+						const Real labelOfJ = m_y.coeff(*itOfJ);
+						for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++informationCounter){
 							if(labelOfJ == m_y.coeff(*itOfI)){ // only if they have the same class
-								real similiarty = 0;
+								Real similiarty = 0;
 								if(m_kernelType == KernelType::GAUSS){
 									similiarty = m_gaussKernel->kernelFunc(*itOfI, *itOfJ);
 								}else if(m_kernelType == KernelType::RF){
@@ -888,7 +888,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			}
 //			if(k > 0){
 ////				printInPackageOnScreen(m_package, "g[k] is " << g[k]);
-//				real min, max;
+//				Real min, max;
 //				DataConverter::getMinMax(deltasValue, min, max);
 //				if(min == max){
 //					// problem
@@ -904,12 +904,12 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 //			openFileInViewer("deltas1.svg");
 //			sleepFor(1);
 			if(visuDeltas){
-				deltaValues.push_back((real) delta[k]);
+				deltaValues.push_back((Real) delta[k]);
 				colors.push_back(std::string(m_y[argmax] == 1 ? "red" : "blue"));
 			}
 		}else{
 			argmax = *itOfActiveSet;
-			real gForArgmax, nuForArgmax;
+			Real gForArgmax, nuForArgmax;
 			// TODO remove calc of Inner not needed here
 			delta.coeffRef(k) = calcInnerOfFindPointWhichDecreaseEntropyMost(argmax, zeta, mu, gForArgmax, nuForArgmax, fraction, amountOfPointsPerClass, 0, verboseLevel);
 			g.coeffRef(k) = gForArgmax;
@@ -927,7 +927,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 					// change the nr of inducing points:
 					setNumberOfInducingPoints(m_I.size());
 					int l = 0;
-					for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++l){
+					for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++l){
 						m_nuTilde.coeffRef(l) = m.coeff(*itOfI) * beta.coeff(*itOfI);
 						m_tauTilde.coeffRef(l) = beta.coeff(*itOfI);
 					}
@@ -955,8 +955,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			--k;
 			continue;
 //			if(verboseLevel != 0){
-//				for(List<unsigned int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
-//					printInPackageOnScreen(m_package, "(" << *it << ", " << (real) m_y[*it] << ")");
+//				for(auto it = m_I.begin(); it != m_I.end(); ++it){
+//					printInPackageOnScreen(m_package, "(" << *it << ", " << (Real) m_y[*it] << ")");
 //				}
 //				std::string classRes = "";
 //				if(fraction < m_desiredPoint - m_desiredMargin){
@@ -978,13 +978,13 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		}
 		forceUsedOfClass = 0;
 
-		fraction = ((fraction * k) + (m_y.coeff(argmax) == 1 ? 1 : 0)) / (real) (k + 1);
+		fraction = ((fraction * k) + (m_y.coeff(argmax) == 1 ? 1 : 0)) / (Real) (k + 1);
 		if(verboseLevel == 2)
-			printDebug("Next i is: " << argmax << " has label: " << (real) m_y.coeff(argmax));
+			printDebug("Next i is: " << argmax << " has label: " << (Real) m_y.coeff(argmax));
 		// refine site params, posterior params & M, L, K
-		if(fabs((real)g.coeff(k)) < EPSILON){
+		if(fabs((Real)g.coeff(k)) < EPSILON){
 			m.coeffRef(argmax) = mu.coeff(argmax);
-		}else if(fabs((real)nu.coeff(k)) > EPSILON){
+		}else if(fabs((Real)nu.coeff(k)) > EPSILON){
 			m.coeffRef(argmax) = g.coeff(k) / nu.coeff(k) + mu.coeff(argmax);
 		}else{
 			printError("G is zero and nu is not!");
@@ -1004,7 +1004,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				}
 			}
 			for(unsigned int i = 0; i < m_dataPoints; ++i){ // TODO for known active set only the relevant values have to been updated!
-				real temp = 0.;
+				Real temp = 0.;
 				for(unsigned int j = 0; j < k; ++j){
 					temp += m_M.coeff(j, argmax) * m_M.coeff(j,i);
 				}
@@ -1028,8 +1028,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			//	printInPackageOnScreen(m_package, "k_nk: " << k_nk.transpose());
 			printInPackageOnScreen(m_package, "s_nk: " << s_nk.transpose());
 		}
-		//zeta -= ((real) nu[k]) * s_nk.cwiseProduct(s_nk);
-		//mu += ((real) g[k]) * s_nk; // <=> mu += g[k] * s_nk;
+		//zeta -= ((Real) nu[k]) * s_nk.cwiseProduct(s_nk);
+		//mu += ((Real) g[k]) * s_nk; // <=> mu += g[k] * s_nk;
 //		printInPackageOnScreen(m_package, "s_nk: " << min1 << ", " << max1);
 		for(unsigned int i = 0; i < m_dataPoints; ++i){ // TODO for known active set only the relevant values have to been updated!
 			zeta.coeffRef(i) -= nu.coeff(k) * (s_nk.coeff(i) * s_nk.coeff(i)); // <=> zeta -= nu[k] * s_nk.cwiseProduct(s_nk); // <=> diag(A^new) = diag(A) - (u^2)_j
@@ -1049,14 +1049,14 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		 */
 		if(nu.coeff(k) < 0.0){
 			if(verboseLevel != 0){
-				printError("The actual nu is below zero: " <<  (real) nu.coeff(k));
-				for(List<unsigned int>::const_iterator it = m_I.begin(); it != m_I.end(); ++it){
-					printInPackageOnScreen(m_package, "(" << *it << ", " << (real) m_y.coeff(*it) << ")");
+				printError("The actual nu is below zero: " <<  (Real) nu.coeff(k));
+				for(auto it = m_I.begin(); it != m_I.end(); ++it){
+					printInPackageOnScreen(m_package, "(" << *it << ", " << (Real) m_y.coeff(*it) << ")");
 				}
 			}
 			return false;
 		}
-		const real sqrtNu = sqrt((real)nu.coeff(k));
+		const Real sqrtNu = sqrt((Real)nu.coeff(k));
 		// update K and L
 		/*
 		if(k == 0){
@@ -1067,7 +1067,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		}else{
 			VectorX k_vec = VectorX(m_I.size());
 			unsigned int t = 0;
-			for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++t){
+			for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++t){
 				k_vec[t] = m_kernel.kernelFunc(*itOfI, argmax);
 			}
 			Matrix D(m_K.rows() + 1, m_K.cols() + 1);
@@ -1097,9 +1097,9 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			if(m_doEPUpdate){
 				unsigned int t = 0;
 				const unsigned int lastRowAndCol = k;
-				for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end() && t < lastRowAndCol; ++itOfI, ++t){
+				for(auto itOfI = m_I.begin(); itOfI != m_I.end() && t < lastRowAndCol; ++itOfI, ++t){
 					// uses the kernel matrix from the actual element with all other elements in the active set
-					const real temp = k_nk.coeff(*itOfI); // <=> is the same: m_kernel.kernelFunc(*itOfI, argmax); saves recalc
+					const Real temp = k_nk.coeff(*itOfI); // <=> is the same: m_kernel.kernelFunc(*itOfI, argmax); saves recalc
 					m_K.coeffRef(lastRowAndCol, t) = temp;
 					m_K.coeffRef(t, lastRowAndCol) = temp;
 				}
@@ -1149,12 +1149,12 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 
 	if(verboseLevel == 2){
 		int classOneCounter = 0;
-		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI){
+		for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI){
 			if(m_y.coeff(*itOfI) == 1){
 				++classOneCounter;
 			}
 		}
-		printInPackageOnScreen(m_package, "Fraction in including points is: " << classOneCounter / (real) m_I.size() * 100. << " %");
+		printInPackageOnScreen(m_package, "Fraction in including points is: " << classOneCounter / (Real) m_I.size() * 100. << " %");
 		printInPackageOnScreen(m_package, "Find " << m_numberOfInducingPoints << " points: " << findPoints.elapsedAsPrettyTime());
 	}
 	if(visuDeltas){
@@ -1168,7 +1168,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	}
 	unsigned int l = 0;
 	VectorX muSqueezed(m_numberOfInducingPoints);
-	for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++l){
+	for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++l){
 		m_nuTilde.coeffRef(l) = m.coeff(*itOfI) * beta.coeff(*itOfI);
 		m_tauTilde.coeffRef(l) = beta.coeff(*itOfI);
 		muSqueezed.coeffRef(l) = mu.coeff(*itOfI);
@@ -1187,11 +1187,11 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	if(m_doEPUpdate){ // EP update
 		Matrix Sigma = m_K * (m_eye - m_choleskyLLT.solve(m_K));
 		//Matrix controlSigma = m_K * (I - m_choleskyLLT.solve(m_K));
-		real deltaMax = 1.0;
+		Real deltaMax = 1.0;
 		const unsigned int maxEpCounter = 100;
-		real epThreshold = 1e-7;
-		List<real> listToPrint;
-		//real minDelta = REAL_MAX;
+		Real epThreshold = 1e-7;
+		List<Real> listToPrint;
+		//Real minDelta = REAL_MAX;
 		StopWatch updateEP;
 		StopWatch sigmaUp, sigmaUpNew;
 		unsigned int counter = 0;
@@ -1203,28 +1203,28 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			VectorX deltaTau(m_numberOfInducingPoints);
 //			printInPackageOnScreen(m_package, "<<< " << counter << " <<<");
 			unsigned int i = 0;
-			for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
-				const real tauMin = 1. / Sigma.coeff(i,i) - m_tauTilde.coeff(i);
-				const real nuMin  = muSqueezed.coeff(i) / Sigma.coeff(i,i) - m_nuTilde.coeff(i);
+			for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+				const Real tauMin = 1. / Sigma.coeff(i,i) - m_tauTilde.coeff(i);
+				const Real nuMin  = muSqueezed.coeff(i) / Sigma.coeff(i,i) - m_nuTilde.coeff(i);
 				const unsigned int index = (*itOfI);
-				const real label = m_y.coeff(index);
+				const Real label = m_y.coeff(index);
 
-				const std::complex<real> tau_c(tauMin, 0);
-				//real denom = std::max(abs(sqrt(tau_c * (tau_c / (lambda * lambda) + 1.))), D_EPSILON);
-				real denom = std::max(std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + (real) 1.0)))), EPSILON);
-				const real c = label * tauMin / denom;
-				real u;
+				const std::complex<Real> tau_c(tauMin, 0);
+				//Real denom = std::max(abs(sqrt(tau_c * (tau_c / (lambda * lambda) + 1.))), D_EPSILON);
+				Real denom = std::max(std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + (Real) 1.0)))), EPSILON);
+				const Real c = label * tauMin / denom;
+				Real u;
 				if(fabs(nuMin) < EPSILON){
 					u = c * m_bias;
 				}else{
 					u = label * nuMin / denom + c * m_bias;
 				}
-				const real dlZ = (real) (c * exp(cumulativeDerivLog(u) - cumulativeLog(u)));
-				const real d2lZ  = dlZ * (dlZ + u * c);
+				const Real dlZ = (Real) (c * exp(cumulativeDerivLog(u) - cumulativeLog(u)));
+				const Real d2lZ  = dlZ * (dlZ + u * c);
 
-				const real oldTauTilde = m_tauTilde.coeff(i);
+				const Real oldTauTilde = m_tauTilde.coeff(i);
 				denom = 1.0 - d2lZ / tauMin;
-				m_tauTilde.coeffRef(i) = std::max(d2lZ / denom, (real) 0.);
+				m_tauTilde.coeffRef(i) = std::max(d2lZ / denom, (Real) 0.);
 				m_nuTilde.coeffRef(i)  = (dlZ + nuMin / tauMin * d2lZ) / denom;
 				deltaTau.coeffRef(i)  = m_tauTilde.coeff(i) - oldTauTilde;
 //				printInPackageOnScreen(m_package, "Label of " << (*itOfI) << " is: " << label
@@ -1247,12 +1247,12 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				sigmaUpNew.startTime();
 				const VectorX oldSigmaCol = Sigma.col(i);
 				denom = 1.0 + deltaTau.coeff(i) * oldSigmaCol.coeff(i); // <=> 1.0 + deltaTau[i] * si[i] for si = Sigma.col(i)
-				const real fac = deltaTau.coeff(i) / denom;
+				const Real fac = deltaTau.coeff(i) / denom;
 				// is the same as Sigma -= (deltaTau[i] / denom) * (si * si.transpose()); but faster
 				for(int p = 0; p < (int) m_I.size(); ++p){
 					Sigma.coeffRef(p,p) -= fac * oldSigmaCol.coeff(p) * oldSigmaCol.coeff(p);
 					for(int q = p + 1; q < (int) m_I.size(); ++q){
-						const real sub = fac * oldSigmaCol.coeff(p) * oldSigmaCol.coeff(q);
+						const Real sub = fac * oldSigmaCol.coeff(p) * oldSigmaCol.coeff(q);
 						Sigma.coeffRef(p,q) -= sub;
 						Sigma.coeffRef(q,p) -= sub;
 					}
@@ -1271,7 +1271,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				muSqueezed = Sigma * m_nuTilde;
 			}
 			/*VectorX _s_sqrt = VectorX(n); // not used in the moment
-		 const real sqrtEps = sqrt(EPSILON);
+		 const Real sqrtEps = sqrt(EPSILON);
 		 for(unsigned int i=0; i<m_numberOfInducingPoints; i++){
 			 if(m_tauTilde[i] > EPSILON)
 				 _s_sqrt[i] = sqrt(m_tauTilde[i]);
@@ -1284,16 +1284,16 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			updateEP.recordActTime();
 		}
 		printInPackageOnScreen(m_package, "new sigma up time: " << sigmaUpNew.elapsedAvgAsPrettyTime());
-		printInPackageOnScreen(m_package, "total new sigma up time: " << sigmaUpNew.elapsedAvgAsTimeFrame() * ((real) counter * m_I.size()));
+		printInPackageOnScreen(m_package, "total new sigma up time: " << sigmaUpNew.elapsedAvgAsTimeFrame() * ((Real) counter * m_I.size()));
 		printInPackageOnScreen(m_package, "Ep time: " << updateEP.elapsedAvgAsPrettyTime());
-		printInPackageOnScreen(m_package, "Total ep time: " << updateEP.elapsedAvgAsTimeFrame() * (real) counter);
+		printInPackageOnScreen(m_package, "Total ep time: " << updateEP.elapsedAvgAsTimeFrame() * (Real) counter);
 		//printInPackageOnScreen(m_package, "Min delta: " << minDelta);
 
 		DataWriterForVisu::writeSvg("deltas" + m_className + ".svg", listToPrint, true);
 		openFileInViewer("deltas" + m_className + ".svg");
 	/*	Matrix temp = m_K;
 		for(unsigned int i = 0; i < m_tauTilde.rows(); ++i){
-			temp(i,i) += 1. / (real) m_tauTilde[i];
+			temp(i,i) += 1. / (Real) m_tauTilde[i];
 		}
 		m_choleskyLLT.compute(temp);
 		m_L = temp;*/
@@ -1311,7 +1311,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 //	printInPackageOnScreen(m_package, "after m_L: \n" << m_choleskyLLT.matrixL().toDenseMatrix());
 //	printInPackageOnScreen(m_package, "mu tilde before flipping: " << m_muTildePlusBias.transpose());
 	//unsigned int t = 0;
-	/*for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++t){
+	/*for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++t){
 		if(m_y[*itOfI] < 0 ? m_muTildePlusBias[t] > 0 : m_muTildePlusBias[t] < 0){
 			m_muTildePlusBias[t] *= -1.;
 		}
@@ -1348,7 +1348,7 @@ bool IVM::trainOptimizeStep(const int verboseLevel){
 //			for(int classNr : {1, -1}){
 //				file.open(Logger::getActDirectory() + "combinedLatentFunctions" + number2String(classNr) + ".txt");
 //				file << "index, normal, flipped, diff, combined \n";
-//				List<unsigned int>::iterator it = m_I.begin();
+//				auto it = m_I.begin();
 //				for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
 //					if(m_y.coeff(*it) == classNr){
 //						file << m_numberOfInducingPoints - i << ", " << oldInNewOrder.coeff(i) << ", "<< newInNewOrder.coeff(i) << ", " << diff.coeff(i) << ", " << m_muTildePlusBias.coeff(i) << "\n";
@@ -1375,26 +1375,26 @@ void IVM::calcLogZ(){
 	const Matrix& llt = m_choleskyLLT.matrixLLT();
 	//printInPackageOnScreen(m_package, "llt: \n" << llt);
 	for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
-		m_logZ -= log((real) llt.coeff(i,i));
+		m_logZ -= log((Real) llt.coeff(i,i));
 	}
 	if(false){
 		const VectorX muTilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 		VectorX muL0 = VectorX::Zero(m_numberOfInducingPoints);
 		VectorX muL0_2 = VectorX::Zero(m_numberOfInducingPoints);
-		List<unsigned int>::const_iterator it = m_I.begin();
+		auto it = m_I.begin();
 		for(uint i=0; i<m_numberOfInducingPoints; ++i, ++it){
 			if(m_y.coeff(*it) == 1){
-				real sum = muTilde.coeff(i);
+				Real sum = muTilde.coeff(i);
 				for(int k = (int)i-1; k >= 0; --k){
-					sum -= (real)llt.coeff(i,k) * muL0.coeff(k);
+					sum -= (Real)llt.coeff(i,k) * muL0.coeff(k);
 				}
-				muL0.coeffRef(i) = sum / (real) llt.coeff(i,i);
+				muL0.coeffRef(i) = sum / (Real) llt.coeff(i,i);
 			}else{
-				real sum = muTilde.coeff(i);
+				Real sum = muTilde.coeff(i);
 				for(int k = (int)i-1; k >= 0; --k){
-					sum -= (real)llt.coeff(i,k) * muL0_2.coeff(k);
+					sum -= (Real)llt.coeff(i,k) * muL0_2.coeff(k);
 				}
-				muL0_2.coeffRef(i) = sum / (real) llt.coeff(i,i);
+				muL0_2.coeffRef(i) = sum / (Real) llt.coeff(i,i);
 			}
 		}
 		VectorX muL1 = VectorX::Zero(m_numberOfInducingPoints);
@@ -1402,17 +1402,17 @@ void IVM::calcLogZ(){
 		List<unsigned int>::const_reverse_iterator itr = m_I.rbegin();
 		for(int i= (int) m_numberOfInducingPoints - 1; i >= 0; --i, ++itr){
 			if(m_y.coeff(*itr) == 1){
-				real sum = muL0.coeff(i);
+				Real sum = muL0.coeff(i);
 				for(int k = i+1; k < m_numberOfInducingPoints; ++k){
-					sum -= (real)llt.coeff(k,i) * muL1.coeff(k);
+					sum -= (Real)llt.coeff(k,i) * muL1.coeff(k);
 				}
-				muL1.coeffRef(i) = sum / (real)llt.coeff(i,i);
+				muL1.coeffRef(i) = sum / (Real)llt.coeff(i,i);
 			}else{
-				real sum = muL0.coeff(i);
+				Real sum = muL0.coeff(i);
 				for(int k = i+1; k < m_numberOfInducingPoints; ++k){
-					sum -= (real)llt.coeff(k,i) * muL1_2.coeff(k);
+					sum -= (Real)llt.coeff(k,i) * muL1_2.coeff(k);
 				}
-				muL1_2.coeffRef(i) = sum / (real)llt.coeff(i,i);
+				muL1_2.coeffRef(i) = sum / (Real)llt.coeff(i,i);
 			}
 		}
 		m_logZ -= (1. - m_desiredPoint) * (0.5 * muTilde.dot(muL1)) + m_desiredPoint * (0.5 * muTilde.dot(muL1_2));
@@ -1423,19 +1423,19 @@ void IVM::calcLogZ(){
 		const VectorX muTilde = m_nuTilde.cwiseQuotient(m_tauTilde);
 		VectorX muL0 = VectorX::Zero(m_numberOfInducingPoints);
 		for(uint i=0; i<m_numberOfInducingPoints; ++i){
-			real sum = muTilde.coeff(i);
+			Real sum = muTilde.coeff(i);
 			for(int k = (int)i-1; k >= 0; --k){
-				sum -= (real)llt.coeff(i,k) * muL0.coeff(k);
+				sum -= (Real)llt.coeff(i,k) * muL0.coeff(k);
 			}
-			muL0.coeffRef(i) = sum / (real) llt.coeff(i,i);
+			muL0.coeffRef(i) = sum / (Real) llt.coeff(i,i);
 		}
 		VectorX muL1 = VectorX::Zero(m_numberOfInducingPoints);
 		for(int i = (int) m_numberOfInducingPoints - 1; i >= 0; --i){
-			real sum = muL0.coeff(i);
+			Real sum = muL0.coeff(i);
 			for(unsigned int k = i+1; k < m_numberOfInducingPoints; ++k){
-				sum -= (real)llt.coeff(k,i) * muL1.coeff(k);
+				sum -= (Real)llt.coeff(k,i) * muL1.coeff(k);
 			}
-			muL1.coeffRef(i) = sum / (real)llt.coeff(i,i);
+			muL1.coeffRef(i) = sum / (Real)llt.coeff(i,i);
 		}
 		m_logZ -= 0.5 * muTilde.dot(muL1);
 		if(m_calcDerivLogZ){
@@ -1461,7 +1461,7 @@ void IVM::calcDerivatives(const VectorX& muL1){
 			}
 			for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
 				for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
-					const real z2Value = Z2(i,j);
+					const Real z2Value = Z2(i,j);
 					for(unsigned int u = 0; u < m_gaussKernel->getHyperParams().paramsAmount; ++u){ // for every kernel param
 						if(!m_gaussKernel->getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
 							m_derivLogZ.m_params[u]->getValues()[0] += z2Value * CMatrix[u].coeff(i,j);
@@ -1488,7 +1488,7 @@ void IVM::calcDerivatives(const VectorX& muL1){
 			}
 			for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
 				for(unsigned int j = 0; j < m_numberOfInducingPoints; ++j){
-					const real z2Value = Z2.coeff(i,j);
+					const Real z2Value = Z2.coeff(i,j);
 					int t = 0;
 					for(unsigned int u = 0; u < m_gaussKernel->getHyperParams().paramsAmount; ++u){ // for every kernel param
 						if(!m_gaussKernel->getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
@@ -1511,8 +1511,8 @@ void IVM::calcDerivatives(const VectorX& muL1){
 	}
 }
 
-real IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, const VectorX& zeta, const VectorX& mu, real& g_kn, real& nu_kn, const real fraction, const Vector2i& amountOfPointsPerClassLeft, const int useThisLabel, const int verboseLevel){
-	const real label = m_y.coeff(j);
+Real IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, const VectorX& zeta, const VectorX& mu, Real& g_kn, Real& nu_kn, const Real fraction, const Vector2i& amountOfPointsPerClassLeft, const int useThisLabel, const int verboseLevel){
+	const Real label = m_y.coeff(j);
 	if(useThisLabel != 0 && label != useThisLabel){ // use this label if it is not return NEG_REAL_MAX, useThisLabel == 0 -> no forced us
 		return NEG_REAL_MAX;
 	}else if(amountOfPointsPerClassLeft.coeff(0) > 0 && amountOfPointsPerClassLeft.coeff(1) > 0){
@@ -1521,13 +1521,13 @@ real IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, con
 			return NEG_REAL_MAX; // or only less than 20 % of data is -1 choose -1
 		}
 	}
-	const real tau = (real) 1.0 / zeta.coeff(j);
-	const std::complex<real> tau_c(tau, 0);
-	//real denom = std::max(abs(sqrt(tau_c * (tau_c / (lambda * lambda) + 1.))), EPSILON);
-	const real denom = std::max(std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + (real) 1.0)))), EPSILON);
-	const real c = label * tau / denom;
+	const Real tau = (Real) 1.0 / zeta.coeff(j);
+	const std::complex<Real> tau_c(tau, 0);
+	//Real denom = std::max(abs(sqrt(tau_c * (tau_c / (lambda * lambda) + 1.))), EPSILON);
+	const Real denom = std::max(std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + (Real) 1.0)))), EPSILON);
+	const Real c = label * tau / denom;
 	nu_kn = mu.coeff(j) / zeta.coeff(j);
-	real u;
+	Real u;
 	if(fabs(nu_kn) < EPSILON){
 		u = c * m_bias;
 	}else{
@@ -1535,12 +1535,12 @@ real IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, con
 	}
 	g_kn = c * exp(cumulativeDerivLog(u) - cumulativeLog(u));
 	nu_kn = g_kn * (g_kn + u * c);
-	const real delta_kn = log(1.0 - nu_kn * (real) zeta.coeff(j)) / (2.0 * LOG2);
-	//const real delta_kn = zeta[j] * nu_kn;
+	const Real delta_kn = log(1.0 - nu_kn * (Real) zeta.coeff(j)) / (2.0 * LOG2);
+	//const Real delta_kn = zeta[j] * nu_kn;
 	// pointEntropies.append( (j, delta_ln));
 	if(verboseLevel == 2){
 		printInPackageOnScreen(m_package, (label == 1 ? RED : CYAN) << "j: " << j << ", is: " << label << ", with: "
-				<< delta_kn << ", g: " << g_kn << ", nu: " << nu_kn << ", zeta: " << (real) zeta.coeff(j) << ", c: " << c << ", u: " << u<< RESET); }
+				<< delta_kn << ", g: " << g_kn << ", nu: " << nu_kn << ", zeta: " << (Real) zeta.coeff(j) << ", c: " << c << ", u: " << u<< RESET); }
 	/*if(delta_kn > delta[k]){ // nu_kn > EPSILON avoids that the ivm is not trained
 		//if(k == j){
 		//if(nu_kn < 0.)
@@ -1552,13 +1552,13 @@ real IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, con
 	return delta_kn;
 }
 
-real IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const List<unsigned int>& testPoints, real& oneError, real& minusOneError){
+Real IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const List<unsigned int>& testPoints, Real& oneError, Real& minusOneError){
 	AvgNumber plusError;
 	AvgNumber minusError;
 	if(wholeDataSet){
 		for(unsigned int i = 0; i < m_dataPoints; ++i){
 			const unsigned int label = m_storage[i]->getLabel();
-			const real prob = predictOnTraining(i);
+			const Real prob = predictOnTraining(i);
 			if(label == getLabelForOne()){
 				plusError.addNew(1.0 - prob);
 			}else{
@@ -1566,9 +1566,9 @@ real IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const List<unsigned 
 			}
 		}
 	}else{
-		for(List<unsigned int>::const_iterator it = testPoints.cbegin(); it != testPoints.cend(); ++it){
+		for(auto it = testPoints.cbegin(); it != testPoints.cend(); ++it){
 			const unsigned int label = m_storage[*it]->getLabel();
-			const real prob = predictOnTraining(*it);
+			const Real prob = predictOnTraining(*it);
 			if(label == getLabelForOne()){
 				plusError.addNew(1.0 - prob);
 			}else{
@@ -1582,14 +1582,14 @@ real IVM::calcErrorOnTrainingsData(const bool wholeDataSet, const List<unsigned 
 }
 
 void IVM::testOnTrainingsData(int & amountOfOneChecks, int& amountOfOnesCorrect, int& amountOfMinusOneChecks,
-		int& amountOfMinusOnesCorrect, real& correctness, const real probDiff,
+		int& amountOfMinusOnesCorrect, Real& correctness, const Real probDiff,
 		const bool onlyUseOnes, const bool wholeDataSet, const List<unsigned int>& testPoints){
 	amountOfOneChecks = amountOfOnesCorrect = 0;
 	amountOfMinusOneChecks = amountOfMinusOnesCorrect = 0;
 	if(wholeDataSet){
 		for(unsigned int i = 0; i < m_dataPoints; ++i){
 			const unsigned int label = m_storage[i]->getLabel();
-			const real prob = predictOnTraining(i);
+			const Real prob = predictOnTraining(i);
 			if(label == getLabelForOne()){
 				if(prob > 0.5 + probDiff){
 					++amountOfOnesCorrect;
@@ -1603,9 +1603,9 @@ void IVM::testOnTrainingsData(int & amountOfOneChecks, int& amountOfOnesCorrect,
 			}
 		}
 	}else{
-		for(List<unsigned int>::const_iterator it = testPoints.cbegin(); it != testPoints.cend(); ++it){
+		for(auto it = testPoints.cbegin(); it != testPoints.cend(); ++it){
 			const unsigned int label = m_storage[*it]->getLabel();
-			const real prob = predictOnTraining(*it);
+			const Real prob = predictOnTraining(*it);
 			if(label == getLabelForOne()){
 				if(prob > 0.5 + probDiff){
 					++amountOfOnesCorrect;
@@ -1620,25 +1620,25 @@ void IVM::testOnTrainingsData(int & amountOfOneChecks, int& amountOfOnesCorrect,
 		}
 	}
 	if(onlyUseOnes){
-		correctness = (amountOfOnesCorrect / (real) amountOfOneChecks) * 100.;
+		correctness = (amountOfOnesCorrect / (Real) amountOfOneChecks) * 100.;
 	}else{
 		// both classes are equally important, therefore the combination of the correctnes gives a good indiciation how good we are at the moment
-		correctness = ((amountOfMinusOnesCorrect / (real) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (real) amountOfOneChecks) * 0.5) * 100.;
+		correctness = ((amountOfMinusOnesCorrect / (Real) amountOfMinusOneChecks) * 0.5 + (amountOfOnesCorrect / (Real) amountOfOneChecks) * 0.5) * 100.;
 	}
 }
 
-real IVM::predict(const VectorX& input) const{
+Real IVM::predict(const VectorX& input) const{
 	const unsigned int n = m_I.size();
 	VectorX k_star(n);
 	unsigned int i = 0;
-	real diagEle = 0;
+	Real diagEle = 0;
 	if(m_kernelType == KernelType::GAUSS){
-		for(List<unsigned int>::const_iterator itOfI = m_I.cbegin(); itOfI != m_I.cend(); ++itOfI, ++i){
+		for(auto itOfI = m_I.cbegin(); itOfI != m_I.cend(); ++itOfI, ++i){
 			k_star[i] = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_gaussKernel->calcDiagElement(0);
 	}else if(m_kernelType == KernelType::RF){
-		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+		for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_rfKernel->calcDiagElement(0);
@@ -1649,12 +1649,12 @@ real IVM::predict(const VectorX& input) const{
 	const VectorX v = m_choleskyLLT.solve(k_star);
 	/*
 	const VectorX mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
-	real mu_star = (mu_tilde + (m_bias * VectorX::Ones(n))).dot(v);*/
-	real mu_star = m_muTildePlusBias.dot(v);
-	real sigma_star = (diagEle - k_star.dot(v));
+	Real mu_star = (mu_tilde + (m_bias * VectorX::Ones(n))).dot(v);*/
+	Real mu_star = m_muTildePlusBias.dot(v);
+	Real sigma_star = (diagEle - k_star.dot(v));
 	//printInPackageOnScreen(m_package, "mu_start: " << mu_star);
 	//printInPackageOnScreen(m_package, "sigma_star: " << sigma_star);
-	real contentOfSig = 0;
+	Real contentOfSig = 0;
 	if(1.0 / (m_lambda * m_lambda) + sigma_star < 0){
 		contentOfSig = mu_star;
 	}else{
@@ -1664,18 +1664,18 @@ real IVM::predict(const VectorX& input) const{
 	return boost::math::erfc(-contentOfSig / SQRT2) / 2.0;
 }
 
-real IVM::predictOnTraining(const unsigned int id){
+Real IVM::predictOnTraining(const unsigned int id){
 	const unsigned int n = m_I.size();
 	VectorX k_star(n);
-	real diagEle = 0;
+	Real diagEle = 0;
 	unsigned int i = 0;
 	if(m_kernelType == KernelType::GAUSS){
-		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+		for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_gaussKernel->kernelFunc(id, *itOfI);
 		}
 		diagEle = m_gaussKernel->calcDiagElement(0);
 	}else if(m_kernelType == KernelType::RF){
-		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+		for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_rfKernel->kernelFunc(id, *itOfI);
 		}
 		diagEle = m_rfKernel->calcDiagElement(0);
@@ -1686,12 +1686,12 @@ real IVM::predictOnTraining(const unsigned int id){
 	const VectorX v = m_choleskyLLT.solve(k_star);
 	/*
 		const VectorX mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
-		real mu_star = (mu_tilde + (m_bias * VectorX::Ones(n))).dot(v);*/
-	real mu_star = m_muTildePlusBias.dot(v);
-	real sigma_star = (diagEle - k_star.dot(v));
+		Real mu_star = (mu_tilde + (m_bias * VectorX::Ones(n))).dot(v);*/
+	Real mu_star = m_muTildePlusBias.dot(v);
+	Real sigma_star = (diagEle - k_star.dot(v));
 	//printInPackageOnScreen(m_package, "mu_start: " << mu_star);
 	//printInPackageOnScreen(m_package, "sigma_star: " << sigma_star);
-	real contentOfSig = 0;
+	Real contentOfSig = 0;
 	if(1.0 / (m_lambda * m_lambda) + sigma_star < 0){
 		contentOfSig = mu_star;
 	}else{
@@ -1700,38 +1700,38 @@ real IVM::predictOnTraining(const unsigned int id){
 	return boost::math::erfc(-contentOfSig / SQRT2) / 2.0;
 }
 
-real IVM::predictMu(const VectorX& input) const{
+Real IVM::predictMu(const VectorX& input) const{
 	const unsigned int n = m_I.size();
 	VectorX k_star(n);
 	unsigned int i = 0;
 	if(m_kernelType == KernelType::GAUSS){
-		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+		for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 	}else if(m_kernelType == KernelType::RF){
-		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+		for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 	}
 	const VectorX v = m_choleskyLLT.solve(k_star);
 	/*
 		const VectorX mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
-		real mu_star = (mu_tilde + (m_bias * VectorX::Ones(n))).dot(v);*/
+		Real mu_star = (mu_tilde + (m_bias * VectorX::Ones(n))).dot(v);*/
 	return m_muTildePlusBias.dot(v);
 }
 
-real IVM::predictSigma(const VectorX& input) const{
+Real IVM::predictSigma(const VectorX& input) const{
 	const unsigned int n = m_I.size();
 	VectorX k_star(n);
 	unsigned int i = 0;
-	real diagEle = 0;
+	Real diagEle = 0;
 	if(m_kernelType == KernelType::GAUSS){
-		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+		for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_gaussKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_gaussKernel->calcDiagElement(0);
 	}else if(m_kernelType == KernelType::RF){
-		for(List<unsigned int>::const_iterator itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
+		for(auto itOfI = m_I.begin(); itOfI != m_I.end(); ++itOfI, ++i){
 			k_star.coeffRef(i) = m_rfKernel->kernelFuncVec(input, *m_storage[*itOfI]);
 		}
 		diagEle = m_rfKernel->calcDiagElement(0);
@@ -1739,7 +1739,7 @@ real IVM::predictSigma(const VectorX& input) const{
 	const VectorX v = m_choleskyLLT.solve(k_star);
 	/*
 		const VectorX mu_tilde = m_nuTilde.cwiseQuotient(m_tauTilde);
-		real mu_star = (mu_tilde + (m_bias * VectorX::Ones(n))).dot(v);*/
+		Real mu_star = (mu_tilde + (m_bias * VectorX::Ones(n))).dot(v);*/
 	return (diagEle - k_star.dot(v));
 }
 

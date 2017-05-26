@@ -9,17 +9,18 @@
 #define GAUSSIANPROCESS_BESTHYPERPARAMS_H_
 
 #include <boost/thread.hpp> // Boost threads
+#include "../Base/RealType.h"
 
 class BestHyperParams {
 public:
 	BestHyperParams(const int amountOfMaxNoChange);
 	~BestHyperParams();
 
-	void trySet(int newRight, int newRightPositive, int newAmountOfValues, int newAmountOfCorLabels, double len, double sigmaF);
+	void trySet(int newRight, int newRightPositive, int newAmountOfValues, int newAmountOfCorLabels, Real len, Real sigmaF);
 
-	void getBestHypParams(double& bestLen, double& bestSigmaF);
+	void getBestHypParams(Real& bestLen, Real& bestSigmaF);
 
-	void getBestParams(int& bestRight, int& bestRightPositive, int& bestAmountOfValues, int& bestAmountOfCorLabels, double& bestLen, double& bestSigmaF);
+	void getBestParams(int& bestRight, int& bestRightPositive, int& bestAmountOfValues, int& bestAmountOfCorLabels, Real& bestLen, Real& bestSigmaF);
 
 	void getNoChangeCounter(int& noChange);
 
@@ -38,8 +39,8 @@ private:
 	int m_amountOfBestValues;
 	int m_amountOfCorrectBestValues;
 	int m_amountOfBestRightPositive;
-	double m_len;
-	double m_sigmaF;
+	Real m_len;
+	Real m_sigmaF;
 	int m_noChangeCounter;
 	bool m_isFinish;
 	bool m_shutDown;

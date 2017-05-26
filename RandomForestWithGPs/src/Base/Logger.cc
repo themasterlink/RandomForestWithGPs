@@ -17,7 +17,7 @@ bool Logger::m_init(false);
 bool Logger::m_needToWrite(false);
 std::string Logger::m_text("");
 std::string Logger::m_fileName("");
-double Logger::m_timeToSleep(2.);
+Real Logger::m_timeToSleep(2.);
 std::map<std::string, std::string> Logger::m_specialLines;
 std::string Logger::m_actualDirectory = "./"; // default
 
@@ -82,10 +82,10 @@ void Logger::write(){
 	std::fstream file;
 	file.open(getActDirectory() + m_fileName, std::fstream::out | std::fstream::trunc);
 	file.write(m_text.c_str(), m_text.length());
-	for(std::map<std::string, std::string>::const_iterator it = m_specialLines.cbegin(); it != m_specialLines.cend(); ++it){
-		if(!(it->first == "Error" || it->first == "Warning")){
-			file << it->first << "\n";
-			file.write(it->second.c_str(), it->second.length());
+	for(const auto& line : m_specialLines){
+		if(!(line.first == "Error" || line.first == "Warning")){
+			file << line.first << "\n";
+			file.write(line.second.c_str(), line.second.length());
 		}
 	}
 	for(auto&& name : {"Warning", "Error"}){

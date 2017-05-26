@@ -55,6 +55,10 @@ public:
 
 	ConstIterator end() const;
 
+	ConstIterator cbegin() const;
+
+	ConstIterator cend() const;
+
 	T& first();
 
 	T& last();
