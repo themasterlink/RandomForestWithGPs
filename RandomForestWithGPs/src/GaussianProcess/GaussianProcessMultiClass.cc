@@ -57,7 +57,7 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 		// pi was checked! -> should be right
 		VectorX sqrtPi(pi);													// sqrtPi
 		for(int i = 0; i < amountOfEle; ++i){
-			sqrtPi[i] = sqrt((Real) sqrtPi[i]);
+			sqrtPi[i] = sqrtReal(sqrtPi[i]);
 		}
 		// sqrtPi was checked! -> should be right
 		const Matrix D(pi.asDiagonal().toDenseMatrix());					// D

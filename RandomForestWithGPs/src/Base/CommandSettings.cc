@@ -37,27 +37,27 @@ void CommandSettings::init(){
 }
 
 void CommandSettings::setValues(boost::program_options::variables_map& vm){
-	for(auto it = vm.begin(); it != vm.end(); ++it){
-		if(it->first == "help"){ continue; }
+	for(auto& vmEle : vm){
+		if(vmEle.first == "help"){ continue; }
 		bool found = false;
-		for(auto itParam = m_params.begin(); itParam != m_params.end(); ++itParam){
-			if(it->first == itParam->name && !it->second.empty()){
+		for(auto& param : m_params){
+			if(vmEle.first == param.name && !vmEle.second.empty()){
 				found = true;
-				const std::string type = itParam->type();
+				const std::string type = param.type();
 				if(type == "bool"){
-					*(bool*)itParam->ref = !*(bool*)(itParam->ref); // it is there -> flip default
+					*(bool*)param.ref = !*(bool*)(param.ref); // it is there -> flip default
 				}else if(type == "int"){
-					*(int*)itParam->ref = (int) vm[itParam->name].as<int>();
+					*(int*)param.ref = (int) vm[param.name].as<int>();
 				}else if(type == "Real"){
-					*((Real*)itParam->ref) = vm[itParam->name].as<Real>();
+					*((Real*)param.ref) = vm[param.name].as<Real>();
 				}else if(type == "string" || type == "std::string"){
-					*(std::string*)itParam->ref = (std::string) vm[itParam->name].as<std::string>();
+					*(std::string*)param.ref = (std::string) vm[param.name].as<std::string>();
 				}
 				break;
 			}
 		}
 		if(!found){
-			printError("The given param: " << it->first << ", was not defined in the CommandSettings class!");
+			printError("The given param: " << vmEle.first << ", was not defined in the CommandSettings class!");
 		}
 	}
 }
@@ -65,19 +65,19 @@ void CommandSettings::setValues(boost::program_options::variables_map& vm){
 void CommandSettings::printAllSettingsToLog(){
 	std::stringstream line;
 	line << "Program was started with:";
-	for(auto itParam = m_params.begin(); itParam != m_params.end(); ++itParam){
+	for(auto& param : m_params){
 		line << " ";
-		const std::string type = itParam->type();
+		const std::string type = param.type();
 		if(type == "bool"){
-			if(*(bool*)itParam->ref){
-				line << itParam->name;
+			if(*(bool*)param.ref){
+				line << param.name;
 			}
 		}else if(type == "int"){
-			line << itParam->name << " " << *(int*)itParam->ref;
+			line << param.name << " " << *(int*)param.ref;
 		}else if(type == "Real"){
-			line << itParam->name << " " << *(Real*)itParam->ref;
+			line << param.name << " " << *(Real*)param.ref;
 		}else if(type == "string" || type == "std::string"){
-			line << itParam->name << " " << *(std::string*)itParam->ref;
+			line << param.name << " " << *(std::string*)param.ref;
 		}else{
 			printError("Unknown type: " << type);
 		}

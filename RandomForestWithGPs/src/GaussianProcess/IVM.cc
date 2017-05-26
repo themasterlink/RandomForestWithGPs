@@ -656,9 +656,9 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						logZs.push_back(m_logZ);
 						if(!m_gaussKernel->hasLengthMoreThanOneDim()){
 							for(unsigned int j = 0; j < 3; ++j){
-								const Real lastLearningRate = sqrt(EPSILON + eSquared.m_params[j]->getValue()); // 0,001
+								const Real lastLearningRate = sqrtReal(EPSILON + eSquared.m_params[j]->getValue()); // 0,001
 								eSquared.m_params[j]->getValues()[0] = 0.9 * eSquared.m_params[j]->getValue() + 0.1 * m_derivLogZ.m_params[j]->getSquaredValue(); // 0,0000000099856
-								const Real actLearningRate = sqrt(EPSILON + eSquared.m_params[j]->getValue());
+								const Real actLearningRate = sqrtReal(EPSILON + eSquared.m_params[j]->getValue());
 								m_gaussKernel->getHyperParams().m_params[j]->getValues()[0] -= 0.0001 * (lastLearningRate / actLearningRate) * m_derivLogZ.m_params[j]->getValue();
 							}
 						}else{
@@ -1036,12 +1036,12 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			mu.coeffRef(i) += g.coeff(k) * s_nk.coeff(i); // <=> mu += g[k] * s_nk; // h += alpha_i * ( K_.,i - M_.,i^T * M_.,i) <=> alpha_i * (k_nk - s_nk)
 		}
 		/* IVM script:
-		 * h += alpha_i * l / sqrt(p_i) * ->mu
-		 * h += alpha_i * l / sqrt(p_i) * (1 / l * (sqrt(p_i) * K_.,i - sqrt(p_i) * M_.,i^T * M_.,i))
-		 * h += alpha_i * l / sqrt(p_i) * (sqrt(p_i) / l * (K_.,i - M_.,i^T * M_.,i))
+		 * h += alpha_i * l / sqrtReal(p_i) * ->mu
+		 * h += alpha_i * l / sqrtReal(p_i) * (1 / l * (sqrtReal(p_i) * K_.,i - sqrtReal(p_i) * M_.,i^T * M_.,i))
+		 * h += alpha_i * l / sqrtReal(p_i) * (sqrtReal(p_i) / l * (K_.,i - M_.,i^T * M_.,i))
 		 * h += alpha_i * (K_.,i - M_.,i^T * M_.,i)
 		 * diag(A) -= (u_j^2)_j
-		 * diag(A) -= l^-2 * (sqrt(p_i) / l * (K_.,i - M_.,i^T * M_.,i))^2
+		 * diag(A) -= l^-2 * (sqrtReal(p_i) / l * (K_.,i - M_.,i^T * M_.,i))^2
 		 * diag(A) -= l^-2 * (p_i / l^2 * (K_.,i - M_.,i^T * M_.,i)^2)
 		 * diag(A) -= p_i * (K_.,i - M_.,i^T * M_.,i)^2
 		 * for: s_nk = (K_.,i - M_.,i^T * M_.,i)
@@ -1056,7 +1056,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			}
 			return false;
 		}
-		const Real sqrtNu = sqrt((Real)nu.coeff(k));
+		const Real sqrtNu = sqrtReal((Real)nu.coeff(k));
 		// update K and L
 		/*
 		if(k == 0){
@@ -1210,7 +1210,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				const Real label = m_y.coeff(index);
 
 				const std::complex<Real> tau_c(tauMin, 0);
-				//Real denom = std::max(abs(sqrt(tau_c * (tau_c / (lambda * lambda) + 1.))), D_EPSILON);
+				//Real denom = std::max(abs(sqrtReal(tau_c * (tau_c / (lambda * lambda) + 1.))), D_EPSILON);
 				Real denom = std::max(std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + (Real) 1.0)))), EPSILON);
 				const Real c = label * tauMin / denom;
 				Real u;
@@ -1233,7 +1233,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 //						<< ", new new: " << m_nuTilde[i] << ", Sigma(i,i): " << Sigma(i,i));
 													  /*<< ", dlZ: " << dlZ
 						<< ", d2lZ: " << d2lZ << ", c: " << c << ", tauMin: " << tauMin <<", inner denom: "
-						<< std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + 1.0)))));*/
+						<< std::abs((sqrtReal(tau_c * (tau_c / (m_lambda * m_lambda) + 1.0)))));*/
 
 				// update approximate posterior
 				/*
@@ -1271,10 +1271,10 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				muSqueezed = Sigma * m_nuTilde;
 			}
 			/*VectorX _s_sqrt = VectorX(n); // not used in the moment
-		 const Real sqrtEps = sqrt(EPSILON);
+		 const Real sqrtEps = sqrtReal(EPSILON);
 		 for(unsigned int i=0; i<m_numberOfInducingPoints; i++){
 			 if(m_tauTilde[i] > EPSILON)
-				 _s_sqrt[i] = sqrt(m_tauTilde[i]);
+				 _s_sqrt[i] = sqrtReal(m_tauTilde[i]);
 			 else
 				 _s_sqrt[i] = sqrtEps;
 		 }*/
@@ -1523,7 +1523,7 @@ Real IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, con
 	}
 	const Real tau = (Real) 1.0 / zeta.coeff(j);
 	const std::complex<Real> tau_c(tau, 0);
-	//Real denom = std::max(abs(sqrt(tau_c * (tau_c / (lambda * lambda) + 1.))), EPSILON);
+	//Real denom = std::max(abs(sqrtReal(tau_c * (tau_c / (lambda * lambda) + 1.))), EPSILON);
 	const Real denom = std::max(std::abs((sqrt(tau_c * (tau_c / (m_lambda * m_lambda) + (Real) 1.0)))), EPSILON);
 	const Real c = label * tau / denom;
 	nu_kn = mu.coeff(j) / zeta.coeff(j);
@@ -1658,7 +1658,7 @@ Real IVM::predict(const VectorX& input) const{
 	if(1.0 / (m_lambda * m_lambda) + sigma_star < 0){
 		contentOfSig = mu_star;
 	}else{
-		contentOfSig = (mu_star / sqrt(1.0 / (m_lambda * m_lambda) + sigma_star));
+		contentOfSig = (mu_star / sqrtReal(1.0 / (m_lambda * m_lambda) + sigma_star));
 	}
 //	return contentOfSig;
 	return boost::math::erfc(-contentOfSig / SQRT2) / 2.0;
@@ -1695,7 +1695,7 @@ Real IVM::predictOnTraining(const unsigned int id){
 	if(1.0 / (m_lambda * m_lambda) + sigma_star < 0){
 		contentOfSig = mu_star;
 	}else{
-		contentOfSig = (mu_star / sqrt(1.0 / (m_lambda * m_lambda) + sigma_star));
+		contentOfSig = (mu_star / sqrtReal(1.0 / (m_lambda * m_lambda) + sigma_star));
 	}
 	return boost::math::erfc(-contentOfSig / SQRT2) / 2.0;
 }

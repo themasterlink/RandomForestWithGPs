@@ -132,7 +132,7 @@ inline auto argMin(const T& begin, const T& end){
 }
 
 template<class T>
-void overwriteConst(const T& ref, const T& newValue){
+constexpr void overwriteConst(const T& ref, const T& newValue){
 	T* iPointer = const_cast<T*>(&ref);
 	*iPointer = newValue;
 }
@@ -246,6 +246,13 @@ inline int_fast32_t highEndian2LowEndian(int_fast32_t i) {
 //__MakeUniq<_Tp>::__single_object makeUnique(_Args&&... __args)
 //{ return std::unique_ptr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
 
+inline Real sqrtReal(const Real val){
+#ifdef USE_DOUBLE
+	return sqrt(val);
+#else
+	return sqrtf(val);
+#endif
+}
 
 static const auto UNDEF_CLASS_LABEL = pow2(16) - 3;
 

@@ -48,7 +48,7 @@ void GaussianKernel::completeInit(const Matrix& dataMat){
 			++counter;
 		}
 	}
-	m_randLenVar = sqrt(m_randLenVar);
+	m_randLenVar = sqrtReal(m_randLenVar);
 	//std::cout << "Rand mean is: " << m_randLenMean << std::endl;
 	//std::cout << "Rand var is:  " << m_randLenVar << std::endl;
 	m_randLen.reset(m_randLenMean, m_randLenVar);

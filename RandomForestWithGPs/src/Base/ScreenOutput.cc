@@ -142,13 +142,14 @@ void ScreenOutput::run(){
 				}
 			}
 		}
-		for(auto it = m_runningThreads->cbegin(); it != m_runningThreads->cend(); ++it, ++rowCounter){
-			(*it)->m_lineMutex.lock();
-			const int diff = (*it)->m_lines.size() - MAX_HEIGHT;
+		for(auto& runningPackage : *m_runningThreads){
+			runningPackage->m_lineMutex.lock();
+			const int diff = runningPackage->m_lines.size() - MAX_HEIGHT;
 			for(int i = 0; i < diff; ++i){
-				(*it)->m_lines.pop_front(); // to reduce it to HEIGHT OF THREAD INFO is the maximal which can be displayed so the rest can be erased
+				runningPackage->m_lines.pop_front(); // to reduce it to HEIGHT OF THREAD INFO is the maximal which can be displayed so the rest can be erased
 			}
-			(*it)->m_lineMutex.unlock();
+			runningPackage->m_lineMutex.unlock();
+			++rowCounter;
 		}
 //		doupdate();
 		ThreadMaster::m_mutex.unlock();
@@ -436,15 +437,15 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 	}
 	int counter = hasHeadLine ? 3 : 0;
 	int amountOfNeededLines = 0;
-	for(std::list<std::string>::const_iterator itLine = lines.begin(); itLine != lines.end(); ++itLine){
-		if(width < (int) itLine->length()){
-			amountOfNeededLines += ceil((itLine->length() - width) / (Real) width) + 1;
+	for(auto& line : lines){
+		if(width < (int) line.length()){
+			amountOfNeededLines += ceil((line.length() - width) / (Real) width) + 1;
 		}else{
 			++amountOfNeededLines;
 		}
 	}
 	if(amountOfNeededLines < height - 3){
-		std::list<std::string>::const_iterator itLine = lines.begin();
+		auto itLine = lines.cbegin();
 		for(int i = 0; i <= (int) lines.size() - height + 1; ++i){
 			++itLine; // jump over elements in the list which are no needed at the moment
 		}
@@ -466,7 +467,7 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 	}else{
 		counter = 2;
 		const int forStartLine = hasHeadLine ? 2 : 0;
-		for(std::list<std::string>::const_reverse_iterator itLine = lines.rbegin(); itLine != lines.rend(); ++itLine, ++counter){
+		for(auto itLine = lines.rbegin(); itLine != lines.rend(); ++itLine, ++counter){
 			if((int) itLine->length() < width){
 				if(counter + forStartLine < height){ // -1 for the start line
 					mvwprintw(win, height - counter, 2, itLine->c_str());

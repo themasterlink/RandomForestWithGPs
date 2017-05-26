@@ -66,8 +66,8 @@ void ThreadMaster::run(){
 //		if(m_counter < m_maxCounter){
 		Real bestAttractionLevel = 0;
 		int minAmountOfPoints = INT_MAX, maxAmountOfPoints = 0;
-		for(auto it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
-			const int amount = (*it)->amountOfAffectedPoints();
+		for(auto& waitingPackage : m_waitingList){
+			const int amount = waitingPackage->amountOfAffectedPoints();
 			if(minAmountOfPoints > amount){
 				minAmountOfPoints = amount;
 			}
@@ -75,7 +75,7 @@ void ThreadMaster::run(){
 				maxAmountOfPoints = amount;
 			}
 			if(amount == 1){
-				printInPackageOnScreen(*it, "This thread has only 1 element");
+				printInPackageOnScreen(waitingPackage, "This thread has only 1 element");
 			}
 		}
 		sortWaitingList(minAmountOfPoints, maxAmountOfPoints);

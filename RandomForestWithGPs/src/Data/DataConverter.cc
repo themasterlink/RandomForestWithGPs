@@ -21,45 +21,42 @@ DataConverter::~DataConverter()
 
 void DataConverter::centerAndNormalizeData(DataSets& datas, VectorX& center, VectorX& var){
 	if(datas.size() > 0){
-		const unsigned int dim = datas.begin()->second[0]->rows();
+		const unsigned int dim = (unsigned int) datas.begin()->second[0]->rows();
 		if(center.rows() != dim && var.rows() != dim){ // calc center and var first
 			center = VectorX::Zero(dim);
 			VectorX counter = VectorX::Ones(dim);
-			for(DataSetsIterator it = datas.begin(); it != datas.end(); ++it){
-				for(LabeledDataIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
-					LabeledVectorX& ele = **itData;
+			for(auto& dataset : datas){
+				for(auto& ele : dataset.second){
 					for(unsigned int i = 0; i < dim; ++i){
-						const Real fac = 1. / counter.coeff(i);
-						center.coeffRef(i) = fac * ele.coeff(i) + (1. - fac) * center.coeff(i);
+						const Real fac = (Real) (1. / counter.coeff(i));
+						center.coeffRef(i) = fac * ele->coeff(i) + (Real) (1. - fac) * center.coeff(i);
 						++counter.coeffRef(i);
 					}
 				}
 			}
 			counter = VectorX::Ones(dim);
 			var = VectorX::Zero(dim);
-			for(DataSetsIterator it = datas.begin(); it != datas.end(); ++it){
-				for(LabeledDataIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
-					LabeledVectorX& ele = **itData;
+			for(auto& dataset : datas){
+				for(auto& ele : dataset.second){
 					for(unsigned int i = 0; i < dim; ++i){
-						const Real fac = 1. / counter.coeff(i);
-						const Real newVal = ele.coeff(i) - center.coeff(i);
-						var.coeffRef(i) = fac * (newVal * newVal) + (1. - fac) * var.coeff(i);
+						const Real fac = (Real) (1. / counter.coeff(i));
+						const Real newVal = ele->coeff(i) - center.coeff(i);
+						var.coeffRef(i) = fac * (newVal * newVal) + (Real) (1. - fac) * var.coeff(i);
 						++counter.coeffRef(i);
 					}
 				}
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
-				var.coeffRef(i) = sqrt((Real) var.coeff(i));
+				var.coeffRef(i) = sqrtReal((Real) var.coeff(i));
 				if(var.coeff(i) <= EPSILON){
 					var.coeffRef(i) = 1.; // no change
 				}
 			}
 		}
-		for(DataSetsIterator it = datas.begin(); it != datas.end(); ++it){
-			for(LabeledDataIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
-				LabeledVectorX& ele = **itData;
+		for(auto& dataset : datas){
+			for(auto& ele : dataset.second){
 				for(unsigned int i = 0; i < dim; ++i){
-					ele.coeffRef(i) = (ele.coeff(i) - center.coeff(i)) / var.coeff(i);
+					ele->coeffRef(i) = (ele->coeff(i) - center.coeff(i)) / var.coeff(i);
 				}
 			}
 		}
@@ -91,7 +88,7 @@ void DataConverter::centerAndNormalizeData(Data& data, VectorX& center, VectorX&
 				}
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
-				var.coeffRef(i) = sqrt((Real) var.coeff(i));
+				var.coeffRef(i) = sqrtReal(var.coeff(i));
 				if(var.coeff(i) <= EPSILON){
 					var.coeffRef(i) = 1.; // no change
 				}
@@ -131,7 +128,7 @@ void DataConverter::centerAndNormalizeData(LabeledData& data, VectorX& center, V
 				}
 			}
 			for(unsigned int i = 0; i < var.rows(); ++i){
-				var.coeffRef(i) = sqrt((Real) var.coeff(i));
+				var.coeffRef(i) = sqrtReal(var.coeff(i));
 				if(var.coeff(i) <= EPSILON){
 					var.coeffRef(i) = 1.; // no change
 				}
@@ -510,19 +507,19 @@ void DataConverter::getMinMax(const std::list<Real>& list, Real& min, Real& max,
 void DataConverter::getMinMaxIn2D(const std::list<Vector2>& list, Vector2& min, Vector2& max, const bool ignoreREAL_MAX_NEG){
 	min[0] = min[1] =  REAL_MAX;
 	max[0] = max[1] = NEG_REAL_MAX;
-	for(std::list<Vector2>::const_iterator it = list.cbegin(); it != list.cend(); ++it){
+	for(auto& p : list){
 		for(unsigned int i = 0; i < 2; ++i){
 			if(ignoreREAL_MAX_NEG){
-				if((*it)[i] < min[i] && (*it)[i] > NEG_REAL_MAX){
-					min[i] = (*it)[i];
+				if(p[i] < min[i] && p[i] > NEG_REAL_MAX){
+					min[i] = p[i];
 				}
 			}else{
-				if((*it)[i] < min[i]){
-					min[i] = (*it)[i];
+				if(p[i] < min[i]){
+					min[i] = p[i];
 				}
 			}
-			if((*it)[i] > max[i]){
-				max[i] = (*it)[i];
+			if(p[i] > max[i]){
+				max[i] = p[i];
 			}
 		}
 	}

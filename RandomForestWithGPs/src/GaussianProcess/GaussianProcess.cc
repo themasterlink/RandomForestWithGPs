@@ -37,7 +37,7 @@ void GaussianProcess::updatePis(){
 		m_pi[i] = 1.0 / (1.0 + exp((Real) - m_y[i] * (Real) m_f[i]));
 		m_dLogPi[i] = m_t[i] - m_pi[i];
 		m_ddLogPi[i] = -(-m_pi[i] * (1 - m_pi[i])); // first minus to get -ddlog(p_i|f_i)
-		m_sqrtDDLogPi[i] = sqrt((Real) m_ddLogPi[i]);
+		m_sqrtDDLogPi[i] = sqrtReal((Real) m_ddLogPi[i]);
 	}
 }
 
@@ -233,9 +233,9 @@ GaussianProcess::Status GaussianProcess::train(const int dataPoints,
 		std::cout << std::endl;
 		//flush(std::cout);
 		for(int j = 0; j < 3; ++j){
-			const Real lastLearningRate = sqrt(EPSILON + ESquared[j]); // 0,001
+			const Real lastLearningRate = sqrtReal(EPSILON + ESquared[j]); // 0,001
 			ESquared[j] = 0.9 * ESquared[j] + 0.1 * dLogZ[j] * dLogZ[j]; // 0,0000000099856
-			const Real actLearningRate = sqrt(EPSILON + ESquared[j]);  // 0,0001413704354
+			const Real actLearningRate = sqrtReal(EPSILON + ESquared[j]);  // 0,0001413704354
 			const Real fac = std::max(0.0,(Real) (-counter + 100.0) / 100.0);
 			if(j == 1){
 				stepSize[j] = 0.00001; // 0,001222106928
@@ -402,7 +402,7 @@ Real GaussianProcess::predict(const VectorX& newPoint, const int sampleSize) con
 	for(Real p = start; p < end; p+=stepSize){
 		const Real x = rand()/static_cast<Real>(RAND_MAX);
 		const Real y = rand()/static_cast<Real>(RAND_MAX);
-		const Real result = cos(2.0 * M_PI * x)*sqrt(-2*log(y)); // random gaussian after box mueller
+		const Real result = cos(2.0 * M_PI * x)*sqrtReal(-2*log(y)); // random gaussian after box mueller
 		const Real height = 1.0 / (1.0 + exp(-p)) * (result * vFStar + fStar);
 		prob += height * stepSize; // gives the integral
 	}
