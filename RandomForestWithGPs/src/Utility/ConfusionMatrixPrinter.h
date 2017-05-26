@@ -9,11 +9,10 @@
 #define UTILITY_CONFUSIONMATRIXPRINTER_H_
 
 #include "Util.h"
-#include <Eigen/Dense>
 
 class ConfusionMatrixPrinter {
 public:
-	static void print(const Eigen::MatrixXd& conv);
+	static void print(const Matrix& conv);
 
 private:
 

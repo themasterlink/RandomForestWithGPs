@@ -13,16 +13,16 @@
 #include "../Data/TotalStorage.h"
 #include "../Base/CommandSettings.h"
 
-void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<ClassPoint*>& test){
+void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<LabeledVectorX*>& test){
 	if(test.size() > 0){
 		int amountOfCorrect = 0;
 		Labels labels;
 		printOnScreen("Predict Data");
 		std::cout << std::flush;
-		std::vector<std::vector<double> > probs;
+		std::vector<std::vector<real> > probs;
 		orf.predictData(test.storage(), labels, probs);
 		printOnScreen("Predicted Data");
-		Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(orf.amountOfClasses(), orf.amountOfClasses());
+		Matrix conv = Matrix::Zero(orf.amountOfClasses(), orf.amountOfClasses());
 		AvgNumber pos, neg;
 		for(unsigned int i = 0; i < labels.size(); ++i){
 			if(test[i]->getLabel() == labels[i]){
@@ -47,12 +47,12 @@ void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<ClassPoint*>& test){
 void executeForBinaryClassORFIVM(){
 	const int trainAmount = readAllData();
 	if(TotalStorage::getMode() == TotalStorage::Mode::SEPERATE){
-		//	OnlineStorage<ClassPoint*> train;
-		OnlineStorage<ClassPoint*> test;
+		//	OnlineStorage<LabeledVectorX*> train;
+		OnlineStorage<LabeledVectorX*> test;
 		int height;
 		Settings::getValue("Forest.Trees.height", height);
 		const unsigned int amountOfSplits = 5;
-		std::vector<OnlineStorage<ClassPoint*> > trains(amountOfSplits);
+		std::vector<OnlineStorage<LabeledVectorX*> > trains(amountOfSplits);
 		OnlineRandomForestIVMs orf(trains[0], height, TotalStorage::getAmountOfClass());
 
 		TotalStorage::getOnlineStorageCopySplitsWithTest(trains, test);
@@ -70,7 +70,7 @@ void executeForBinaryClassORFIVM(){
 			performTest(orf, trains[i]);
 			printOnScreen("Done on next training set");
 			// filter out the wrong ones
-			ClassData wrongOnes;
+			LabeledData wrongOnes;
 			wrongOnes.reserve(trains[i].size());
 			Labels labels;
 			orf.predictData(trains[i].storage(), labels);
@@ -99,8 +99,8 @@ void executeForBinaryClassORFIVM(){
 
 		printOnScreen("Amount of Classes: " << TotalStorage::getAmountOfClass());
 	}else{
-		OnlineStorage<ClassPoint*> train;
-		OnlineStorage<ClassPoint*> test;
+		OnlineStorage<LabeledVectorX*> train;
+		OnlineStorage<LabeledVectorX*> test;
 		int height;
 		Settings::getValue("Forest.Trees.height", height);
 		OnlineRandomForestIVMs orf(train, height, TotalStorage::getAmountOfClass());
@@ -108,7 +108,7 @@ void executeForBinaryClassORFIVM(){
 
 //		std::vector<unsigned int> counter(10,0);
 		TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
-//		for(OnlineStorage<ClassPoint*>::Iterator it = train.begin(); it != train.end(); ++it){
+//		for(OnlineStorage<LabeledVectorX*>::Iterator it = train.begin(); it != train.end(); ++it){
 //			counter[(*it)->getLabel()] += 1;
 //		}
 //		for(unsigned int i = 0; i < 10; ++i){

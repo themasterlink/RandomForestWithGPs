@@ -8,20 +8,14 @@
 #ifndef DATA_DATABINARYWRITER_H_
 #define DATA_DATABINARYWRITER_H_
 
-#include "Data.h"
-#include "ClassData.h"
-
-enum class BinaryType {
-	WithoutClass = 0,
-	WithClass = 1
-};
+#include "LabeledVectorX.h"
 
 class DataBinaryWriter {
 public:
 
 	static void toFile(const Data& data, const std::string& filePath);
 
-	static void toFile(const ClassData& data, const std::string& filePath);
+	static void toFile(const LabeledData& data, const std::string& filePath);
 
 private:
 	DataBinaryWriter();

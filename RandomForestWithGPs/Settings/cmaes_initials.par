@@ -1,4 +1,17 @@
 function number 1 2 5 6 8 23  # the first number is read by example_restarts.c, see there.
+LabeledVectorX::LabeledVectorX(): m_label(UNDEF_CLASS_LABEL) {
+}
+
+LabeledVectorX::LabeledVectorX(const int size, const unsigned int label):
+	VectorX(size), m_label(label) {
+}
+
+LabeledVectorX::LabeledVectorX(const int size, const real element, const unsigned int label):
+	VectorX(VectorX::Constant(size, element)), m_label(label) {
+}
+
+LabeledVectorX::~LabeledVectorX() = default;
+
 restarts 0                    # read by example_restarts.c, remark that restarts 
                               # with the same initialX might be sub-optimal
 #

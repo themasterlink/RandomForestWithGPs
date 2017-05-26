@@ -7,7 +7,7 @@
 
 #include "RandomForestKernel.h"
 
-RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int samplingAmount, const int amountOfUsedClasses, const bool createOrf):
+RandomForestKernel::RandomForestKernel(OnlineStorage<LabeledVectorX*>& storage, const int maxDepth, const int samplingAmount, const int amountOfUsedClasses, const bool createOrf):
 	KernelBase<RandomForestKernelParams>(OwnKernelInitParams(maxDepth, samplingAmount, amountOfUsedClasses), false),
 	m_heightSampler(3, maxDepth, 234389),
 	m_rf(nullptr),
@@ -18,7 +18,7 @@ RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, cons
 	}
 }
 
-RandomForestKernel::RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const OwnKernelInitParams& initParams, const bool createOrf):
+RandomForestKernel::RandomForestKernel(OnlineStorage<LabeledVectorX*>& storage, const OwnKernelInitParams& initParams, const bool createOrf):
 	KernelBase<RandomForestKernelParams>(initParams),
 	m_heightSampler(3, initParams.m_maxDepth, 234389),
 	m_rf(nullptr),
@@ -58,8 +58,8 @@ double RandomForestKernel::calcDerivativeDiagElement(unsigned int row, const Own
 	return 0;
 }
 
-void RandomForestKernel::calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const{
-	res = Eigen::VectorXd(m_dataPoints);
+void RandomForestKernel::calcKernelVector(const VectorX& vector, const Matrix& dataMat, VectorX& res) const{
+	res = VectorX(m_dataPoints);
 	for(unsigned int i = 0; i < m_dataPoints; ++i){
 		res.coeffRef(i) = (double) kernelFuncVec(vector, dataMat.col(i));
 	}
@@ -84,7 +84,7 @@ double RandomForestKernel::kernelFunc(const int row, const int col) const{
 	return 0;
 }
 
-double RandomForestKernel::kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const{
+double RandomForestKernel::kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const{
 	if(m_init){
 		if(m_mode == KernelMode::LABEL){
 			return m_rf->predict(lhs, rhs, (int) m_kernelParams.m_samplingAmount.getValue());

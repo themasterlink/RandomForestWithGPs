@@ -9,7 +9,6 @@
 #include <random>
 #include <algorithm>
 #include <limits>
-#include "../Data/Data.h"
 #include "../Utility/Util.h"
 #include "DecisionTree.h"
 #include <boost/thread.hpp> // Boost threads
@@ -51,7 +50,7 @@ DecisionTree& DecisionTree::operator=(const DecisionTree& tree){
 DecisionTree::~DecisionTree(){
 }
 
-void DecisionTree::train(const ClassData& data,
+void DecisionTree::train(const LabeledData& data,
 	const int amountOfUsedDims,
 	RandomNumberGeneratorForDT& generator){
 	std::vector<int> usedDims(amountOfUsedDims,-1);
@@ -186,7 +185,7 @@ void DecisionTree::train(const ClassData& data,
 }
 
 double DecisionTree::trySplitFor(const int usedNode, const int usedDim,
-		const ClassData& data,
+		const LabeledData& data,
 		const std::vector<int>& dataInNode, std::vector<int>& leftHisto,
 		std::vector<int>& rightHisto,
 		RandomNumberGeneratorForDT& generator){
@@ -239,7 +238,7 @@ double DecisionTree::trySplitFor(const int usedNode, const int usedDim,
 	return rightAmount * rightCost + leftAmount * leftCost;
 }
 
-int DecisionTree::predict(const DataPoint& point) const{
+int DecisionTree::predict(const VectorX& point) const{
 	int iActNode = 1; // start in root
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED && m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		while(iActNode <= m_maxInternalNodeNr){

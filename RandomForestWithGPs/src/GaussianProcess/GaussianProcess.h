@@ -9,11 +9,11 @@
 #define GAUSSIANPROCESS_GAUSSIANPROCESS_H_
 
 #include "../Utility/Util.h"
+#include "../Data/LabeledVectorX.h"
 #include <cmath>
 #include <Eigen/Cholesky>
 #include <Eigen/Dense>
 #include "Kernel/GaussianKernel.h"
-#include "../Data/DataPoint.h"
 #include "../Base/Predictor.h"
 
 class GaussianProcessWriter;
@@ -32,19 +32,19 @@ public:
 	GaussianProcess();
 	virtual ~GaussianProcess();
 
-	void init(const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
+	void init(const Matrix& dataMat, const VectorX& y);
 
 	void train();
 
 	void trainWithoutKernelOptimize();
 
-	double predict(const DataPoint& newPoint, const int sampleSize) const;
+	real predict(const VectorX& newPoint, const int sampleSize) const;
 
-	double predict(const DataPoint& point) const;
+	real predict(const VectorX& point) const;
 
-	void setKernelParams(const double len, const double fNoise, const double sNoise);
+	void setKernelParams(const real len, const real fNoise, const real sNoise);
 
-	void setKernelParams(const std::vector<double>& lens, const double fNoise, const double sNoise);
+	void setKernelParams(const std::vector<real>& lens, const real fNoise, const real sNoise);
 
 	GaussianKernel& getKernel(){ return m_kernel; };
 
@@ -52,37 +52,37 @@ public:
 
 	void resetFastPredict(){ m_fastPredict = false; };
 
-	GaussianProcess::Status trainBayOpt(double& logZ, const double lambda); // TODO should be private again
+	GaussianProcess::Status trainBayOpt(real& logZ, const real lambda); // TODO should be private again
 private:
 
-	Status trainLM(double& logZ, std::vector<double>& dLogZ);
+	Status trainLM(real& logZ, std::vector<real>& dLogZ);
 
-	Status trainF(const Eigen::MatrixXd& K);
+	Status trainF(const Matrix& K);
 
-	Status train(const int dataPoints, const Eigen::MatrixXd& dataMat, const Eigen::VectorXd& y);
+	Status train(const int dataPoints, const Matrix& dataMat, const VectorX& y);
 
 	void updatePis();
 
-	double m_repetitionStepFactor;
+	real m_repetitionStepFactor;
 
-	Eigen::MatrixXd m_dataMat;
-	Eigen::VectorXd m_a;
-	Eigen::VectorXd m_y;
-	Eigen::VectorXd m_t;
-	Eigen::VectorXd m_f;
-	Eigen::VectorXd m_pi;
-	Eigen::VectorXd m_dLogPi;
-	Eigen::VectorXd m_ddLogPi;
-	Eigen::VectorXd m_sqrtDDLogPi;
-	Eigen::MatrixXd m_innerOfLLT;
-	Eigen::LLT<Eigen::MatrixXd> m_choleskyLLT;
+	Matrix m_dataMat;
+	VectorX m_a;
+	VectorX m_y;
+	VectorX m_t;
+	VectorX m_f;
+	VectorX m_pi;
+	VectorX m_dLogPi;
+	VectorX m_ddLogPi;
+	VectorX m_sqrtDDLogPi;
+	Matrix m_innerOfLLT;
+	Eigen::LLT<Matrix> m_choleskyLLT;
 	int m_dataPoints; // amount of data points
 	StopWatch m_sw;
 
 	bool m_init;
 	bool m_trained;
 	mutable bool m_fastPredict;
-	mutable double m_fastPredictVFStar;
+	mutable real m_fastPredictVFStar;
 	GaussianKernel m_kernel;
 
 

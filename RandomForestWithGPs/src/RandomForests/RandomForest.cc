@@ -33,8 +33,8 @@ void RandomForest::generateTreeBasedOnData(const DecisionTreeData& data, const i
 	}
 }
 
-void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
-		const Eigen::Vector2i& minMaxUsedData){
+void RandomForest::train(const LabeledData& data, const int amountOfUsedDims,
+		const Vector2i& minMaxUsedData){
 	if(data.size() < 2){
 		printError("There must be at least two points!");
 		return;
@@ -55,8 +55,8 @@ void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
 		const int seed = i;
 		const int useWholeDataSet = 0; // means that the whole set is used
 		generators.push_back(new RandomNumberGeneratorForDT(data[0]->rows(), minMaxUsedData[0], minMaxUsedData[1], data.size(), seed, useWholeDataSet));
-		const int start = static_cast<const int>(i / static_cast<double>(nrOfParallel) * m_amountOfTrees);
-		const int end =   static_cast<const int>((i + 1) / static_cast<double>(nrOfParallel) * m_amountOfTrees);
+		const int start = static_cast<const int>(i / static_cast<real>(nrOfParallel) * m_amountOfTrees);
+		const int end =   static_cast<const int>((i + 1) / static_cast<real>(nrOfParallel) * m_amountOfTrees);
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::trainInParallel, this, data, amountOfUsedDims, generators[i], start, end, &counter)));
 	}
 	while(counter.getCounter() < m_amountOfTrees){
@@ -79,7 +79,7 @@ void RandomForest::train(const ClassData& data, const int amountOfUsedDims,
 	std::cout << "\rFinish training in : " << sw.elapsedSeconds() << " sec                                                                 " << std::endl;
 }
 
-void RandomForest::trainInParallel(const ClassData& data,
+void RandomForest::trainInParallel(const LabeledData& data,
 		const int amountOfUsedDims, RandomNumberGeneratorForDT* generator, const int start,
 		const int end, TreeCounter* counter){
 	int iCounter = 0;
@@ -92,7 +92,7 @@ void RandomForest::trainInParallel(const ClassData& data,
 	}
 }
 
-unsigned int RandomForest::predict(const DataPoint& point) const{
+unsigned int RandomForest::predict(const VectorX& point) const{
 	std::vector<unsigned int> values(m_amountOfClasses, 0);
 	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
 		++values[it->predict(point)];
@@ -101,7 +101,7 @@ unsigned int RandomForest::predict(const DataPoint& point) const{
 	return argMax(values.cbegin(), values.cend());
 }
 
-unsigned int RandomForest::predict(const ClassPoint& point) const{
+unsigned int RandomForest::predict(const LabeledVectorX& point) const{
 	std::vector<unsigned int> values(m_amountOfClasses, 0);
 	for(DecisionTreesContainer::const_iterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
 		++values[it->predict(point)];
@@ -123,7 +123,7 @@ void RandomForest::predictData(const Data& points, Labels& labels) const{
 	group.join_all(); // wait until all are finished!
 }
 
-void RandomForest::predictData(const ClassData& points, Labels& labels) const{
+void RandomForest::predictData(const LabeledData& points, Labels& labels) const{
 	labels.resize(points.size());
 	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 	boost::thread_group group;
@@ -136,7 +136,7 @@ void RandomForest::predictData(const ClassData& points, Labels& labels) const{
 	group.join_all(); // wait until all are finished!
 }
 
-void RandomForest::predictDataInParallelClass(const ClassData& points, Labels* labels, const int start,
+void RandomForest::predictDataInParallelClass(const LabeledData& points, Labels* labels, const int start,
 		const int end) const{
 	for(int i = start; i < end; ++i){
 		(*labels)[i] = predict(*points[i]);
@@ -150,7 +150,7 @@ void RandomForest::predictDataInParallel(const Data& points, Labels* labels, con
 	}
 }
 
-void RandomForest::getLeafNrFor(const ClassData& data, std::vector<int>& leafNrs){
+void RandomForest::getLeafNrFor(const LabeledData& data, std::vector<int>& leafNrs){
 	leafNrs = std::vector<int>(m_amountOfClasses, 0);
 	for(unsigned int i = 0; i < (unsigned int) data.size(); ++i){
 		leafNrs[predict(*data[i])] += 1;

@@ -8,24 +8,24 @@
 #ifndef BASE_PREDICTOR_H_
 #define BASE_PREDICTOR_H_
 
-#include "../Data/Data.h"
+#include "Types.h"
 
 class PredictorBinaryClass {
 public:
 	virtual ~PredictorBinaryClass(){};
 
-	virtual double predict(const DataPoint& point) const = 0;
+	virtual real predict(const VectorX& point) const = 0;
 };
 
 class PredictorMultiClass {
 public:
 	virtual ~PredictorMultiClass(){};
 
-	virtual unsigned int predict(const DataPoint& point) const = 0;
+	virtual unsigned int predict(const VectorX& point) const = 0;
 
 	virtual void predictData(const Data& points, Labels& labels) const = 0;
 
-	virtual void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const = 0;
+	virtual void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const = 0;
 
 	virtual unsigned int amountOfClasses() const = 0;
 };

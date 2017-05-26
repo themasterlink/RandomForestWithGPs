@@ -17,21 +17,21 @@
 #include <opencv2/opencv.hpp>
 
 TotalStorage::InternalStorage TotalStorage::m_storage;
-ClassData TotalStorage::m_trainSet;
-ClassData TotalStorage::m_testSet;
-ClassData TotalStorage::m_removeFromTrainSet;
-ClassData TotalStorage::m_removeFromTestSet;
-ClassPoint TotalStorage::m_defaultEle;
+LabeledData TotalStorage::m_trainSet;
+LabeledData TotalStorage::m_testSet;
+LabeledData TotalStorage::m_removeFromTrainSet;
+LabeledData TotalStorage::m_removeFromTestSet;
+LabeledVectorX TotalStorage::m_defaultEle;
 unsigned int TotalStorage::m_totalSize(0);
-DataPoint TotalStorage::m_center;
-DataPoint TotalStorage::m_var;
+VectorX TotalStorage::m_center;
+VectorX TotalStorage::m_var;
 TotalStorage::Mode TotalStorage::m_mode = TotalStorage::Mode::WHOLE;
 
 TotalStorage::TotalStorage(){}
 
 TotalStorage::~TotalStorage(){}
 
-ClassPoint* TotalStorage::getData(unsigned int classNr, unsigned int elementNr){
+LabeledVectorX* TotalStorage::getData(unsigned int classNr, unsigned int elementNr){
 	if(m_storage.size() > 0){
 		Iterator it = m_storage.find(ClassKnowledge::getNameFor(classNr));
 		if(it != m_storage.end()){
@@ -58,7 +58,7 @@ void TotalStorage::readData(const int amountOfData){
 			Settings::getValue("TotalStorage.folderTestNr", testNr);
 			boost::filesystem::path targetDir(folderLocation);
 			boost::filesystem::directory_iterator end_itr;
-			ClassData wholeTrainingSet;
+			LabeledData wholeTrainingSet;
 			for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 				if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".binary"){
 					const std::string inputPath(itr->path().c_str());
@@ -100,7 +100,7 @@ void TotalStorage::readData(const int amountOfData){
 				m_trainSet = wholeTrainingSet;
 			}
 //			std::set<unsigned int> classes;
-//			for(ClassDataConstIterator it = m_trainSet.begin(); it != m_trainSet.end(); ++it){
+//			for(LabeledDataConstIterator it = m_trainSet.begin(); it != m_trainSet.end(); ++it){
 //				if(classes.find((**it).getLabel()) == classes.end()){
 //					classes.insert((**it).getLabel());
 //					ClassKnowledge::setNameFor(number2String((**it).getLabel()), (**it).getLabel());
@@ -135,7 +135,7 @@ void TotalStorage::readData(const int amountOfData){
 			m_mode = Mode::SEPERATE; // seperate train und test set
 			boost::filesystem::path targetDir(folderLocation);
 			boost::filesystem::directory_iterator end_itr;
-			ClassData wholeTrainingSet;
+			LabeledData wholeTrainingSet;
 			for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 				if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".binary"){
 					const std::string inputPath(itr->path().c_str());
@@ -153,14 +153,14 @@ void TotalStorage::readData(const int amountOfData){
 			DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt, didNormalizeStep);
 		}
 	}else{
-		ClassData data;
+		LabeledData data;
 		DataReader::readFromBinaryFile(data, "../binary/dataFor_0.binary", amountOfData);
 		for(unsigned int i = 0; i < data.size(); ++i){
 			DataSetsIterator it = m_storage.find(ClassKnowledge::getNameFor(data[i]->getLabel()));
 			if(it != m_storage.end()){
 				it->second.push_back(data[i]);
 			}else{
-				ClassData newData;
+				LabeledData newData;
 				m_storage.insert(DataSetPair(ClassKnowledge::getNameFor(data[i]->getLabel()), newData));
 				DataSetsIterator newIt = m_storage.find(ClassKnowledge::getNameFor(data[i]->getLabel()));
 				if(newIt != m_storage.end()){
@@ -173,7 +173,7 @@ void TotalStorage::readData(const int amountOfData){
 		if(m_mode == Mode::WHOLE){
 			std::vector<bool> isUsed(ClassKnowledge::amountOfDims(), false);
 			for(unsigned int dim = 0; dim < ClassKnowledge::amountOfDims(); ++dim){
-				const double value = m_storage.begin()->second[0]->coeff(dim);
+				const real value = m_storage.begin()->second[0]->coeff(dim);
 				for(Iterator it = m_storage.begin(); it != m_storage.end() && !isUsed[dim]; ++it){
 					const unsigned int start = m_storage.begin() == it ? 1 : 0;
 					for(unsigned int i = start; i < it->second.size(); ++i){
@@ -193,7 +193,7 @@ void TotalStorage::readData(const int amountOfData){
 			printOnScreen("newAmountOfDims: " << newAmountOfDims);
 			for(Iterator it = m_storage.begin(); it != m_storage.end(); ++it){
 				for(unsigned int i = 0; i < it->second.size(); ++i){
-					ClassPoint* newPoint = new ClassPoint(newAmountOfDims, it->second[i]->getLabel());
+					LabeledVectorX* newPoint = new LabeledVectorX(newAmountOfDims, it->second[i]->getLabel());
 					unsigned int realIndex = 0;
 					for(unsigned int j = 0; j < isUsed.size(); ++j){
 						if(isUsed[j]){
@@ -210,8 +210,8 @@ void TotalStorage::readData(const int amountOfData){
 			}
 //			printOnScreen("First: " << m_storage.begin()->second[0]->transpose());
 //			printOnScreen("Secon: " << m_storage.rbegin()->second[1]->transpose());
-//			ClassPoint& f = *m_storage.begin()->second[0];
-//			ClassPoint& s = *m_storage.begin()->second[1];
+//			LabeledVectorX& f = *m_storage.begin()->second[0];
+//			LabeledVectorX& s = *m_storage.begin()->second[1];
 //			bool isSame = true;
 //			for(unsigned int i = 0; i < newAmountOfDims; ++i){
 //				if(fabs(f.coeff(i) - s.coeff(i)) >= 1e-7){
@@ -228,7 +228,7 @@ void TotalStorage::readData(const int amountOfData){
 			std::vector<bool> isUsed(ClassKnowledge::amountOfDims(), false);
 			printOnScreen("Amount of dims: " << ClassKnowledge::amountOfDims());
 			for(unsigned int dim = 0; dim < ClassKnowledge::amountOfDims(); ++dim){
-				const double value = m_trainSet[0]->coeff(dim);
+				const real value = m_trainSet[0]->coeff(dim);
 				for(unsigned int i = 1; i < m_trainSet.size(); ++i){
 					if(fabs(value - m_trainSet[i]->coeff(dim)) >= 1e-7){
 						isUsed[dim] = true;
@@ -258,9 +258,9 @@ void TotalStorage::readData(const int amountOfData){
 
 			printOnScreen("newAmountOfDims: " << newAmountOfDims);
 			if(newAmountOfDims != ClassKnowledge::amountOfDims()){
-				for(ClassData* it : {&m_trainSet, &m_testSet}){
+				for(LabeledData* it : {&m_trainSet, &m_testSet}){
 					for(unsigned int i = 0; i < it->size(); ++i){
-						ClassPoint* newPoint = new ClassPoint(newAmountOfDims, (*it)[i]->getLabel());
+						LabeledVectorX* newPoint = new LabeledVectorX(newAmountOfDims, (*it)[i]->getLabel());
 						unsigned int realIndex = 0;
 						for(unsigned int j = 0; j < isUsed.size(); ++j){
 							if(isUsed[j]){
@@ -310,7 +310,7 @@ void TotalStorage::readData(const int amountOfData){
 		unsigned int removeClass;
 		Settings::getValue("TotalStorage.excludeClass", removeClass);
 		if(!type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView()){ // type starts with binary -> remove all classes
-			for(ClassData* it : {&m_trainSet, &m_testSet}){
+			for(LabeledData* it : {&m_trainSet, &m_testSet}){
 				for(unsigned int i = 0; i < it->size(); ++i){
 					if(usedClass == (*it)[i]->getLabel()){
 						(*it)[i]->setLabel(0);
@@ -325,7 +325,7 @@ void TotalStorage::readData(const int amountOfData){
 			ClassKnowledge::setNameFor(number2String(usedClass), 0);
 			ClassKnowledge::setNameFor("rest", 1);
 		}else if(ClassKnowledge::hasClassName(removeClass)){
-			std::list<ClassPoint*> trainList;
+			std::list<LabeledVectorX*> trainList;
 			m_removeFromTrainSet.reserve(m_trainSet.size() / ClassKnowledge::amountOfClasses() * 2);
 			for(unsigned int i = 0; i < m_trainSet.size(); ++i){
 				if(m_trainSet[i]->getLabel() != removeClass){
@@ -336,10 +336,10 @@ void TotalStorage::readData(const int amountOfData){
 			}
 			m_trainSet.clear();
 			m_trainSet.reserve(trainList.size());
-			for(std::list<ClassPoint*>::const_iterator it = trainList.begin(); it != trainList.end(); ++it){
+			for(std::list<LabeledVectorX*>::const_iterator it = trainList.begin(); it != trainList.end(); ++it){
 				m_trainSet.push_back(*it);
 			}
-			std::list<ClassPoint*> testList;
+			std::list<LabeledVectorX*> testList;
 			m_removeFromTestSet.reserve(m_testSet.size() / ClassKnowledge::amountOfClasses() * 2);
 			for(unsigned int i = 0; i < m_testSet.size(); ++i){
 				if(m_testSet[i]->getLabel() != removeClass){
@@ -350,7 +350,7 @@ void TotalStorage::readData(const int amountOfData){
 			}
 			m_testSet.clear();
 			m_testSet.reserve(testList.size());
-			for(std::list<ClassPoint*>::const_iterator it = testList.begin(); it != testList.end(); ++it){
+			for(std::list<LabeledVectorX*>::const_iterator it = testList.begin(); it != testList.end(); ++it){
 				m_testSet.push_back(*it);
 			}
 			printOnScreen("Removed class: " << removeClass << " from train: " << m_removeFromTrainSet.size() << ", from test: " << m_removeFromTestSet.size());
@@ -360,7 +360,7 @@ void TotalStorage::readData(const int amountOfData){
 		if(amountOfSizeStep > 1){
 			std::string type = "";
 			Settings::getValue("main.type", type);
-			std::list<ClassPoint*> trainList;
+			std::list<LabeledVectorX*> trainList;
 			const bool useWholeClass = !type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView();
 			printOnScreen("Usewholeclass: " << useWholeClass);
 			if(useWholeClass){
@@ -390,7 +390,7 @@ void TotalStorage::readData(const int amountOfData){
 			printOnScreen("Reduced training size from: " << m_trainSet.size() << " to: " << trainList.size());
 			m_trainSet.clear();
 			m_trainSet.reserve(trainList.size());
-			for(std::list<ClassPoint*>::const_iterator it = trainList.begin(); it != trainList.end(); ++it){
+			for(std::list<LabeledVectorX*>::const_iterator it = trainList.begin(); it != trainList.end(); ++it){
 				m_trainSet.push_back(*it);
 			}
 		}
@@ -402,7 +402,7 @@ void TotalStorage::readData(const int amountOfData){
 	}
 }
 
-ClassPoint* TotalStorage::getDefaultEle(){
+LabeledVectorX* TotalStorage::getDefaultEle(){
 	return &m_defaultEle;
 }
 
@@ -418,11 +418,11 @@ unsigned int TotalStorage::getAmountOfClass(){
 	}
 }
 
-void TotalStorage::getOnlineStorageCopy(OnlineStorage<ClassPoint*>& storage){
+void TotalStorage::getOnlineStorageCopy(OnlineStorage<LabeledVectorX*>& storage){
 	if(m_mode == Mode::WHOLE){
 		storage.resize(m_totalSize);
 		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-			for(ClassDataConstIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
+			for(LabeledDataConstIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
 				storage.append(*itData);
 			}
 		}
@@ -431,18 +431,18 @@ void TotalStorage::getOnlineStorageCopy(OnlineStorage<ClassPoint*>& storage){
 	}
 }
 
-void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train,
-		OnlineStorage<ClassPoint*>& test, const int amountOfPointsForTraining){
+void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& train,
+		OnlineStorage<LabeledVectorX*>& test, const int amountOfPointsForTraining){
 	if(m_mode == Mode::WHOLE){
 		int minValue = amountOfPointsForTraining / getAmountOfClass();
 		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			minValue = std::min(static_cast<int>(it->second.size()), minValue);
 		}
-		std::vector<ClassPoint*> forTraining;
-		std::vector<ClassPoint*> forTesting;
+		std::vector<LabeledVectorX*> forTraining;
+		std::vector<LabeledVectorX*> forTesting;
 		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			int counter = 0;
-			for(ClassDataConstIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
+			for(LabeledDataConstIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
 				if(counter < minValue){
 					forTraining.push_back(*itData);
 				}else{
@@ -462,8 +462,8 @@ void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& trai
 	}
 }
 
-void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train,
-		OnlineStorage<ClassPoint*>& test){
+void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& train,
+		OnlineStorage<LabeledVectorX*>& test){
 	if(m_mode == Mode::WHOLE){
 		printError("Not implemented yet!");
 		Logger::forcedWrite();
@@ -473,11 +473,11 @@ void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*
 	}
 }
 
-void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<ClassPoint*> >& trains, OnlineStorage<ClassPoint*>& test){
+void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<LabeledVectorX*> >& trains, OnlineStorage<LabeledVectorX*>& test){
 	if(m_mode != Mode::WHOLE){
 		if(trains.size() != 0){
-			auto amountOfSplits = static_cast<const unsigned int>(trains.size());
-			std::vector<ClassData> forTrainings(amountOfSplits);
+			auto amountOfSplits = (unsigned int)(trains.size());
+			std::vector<LabeledData> forTrainings(amountOfSplits);
 			for(unsigned int i = 0; i < m_trainSet.size(); ++i){
 				forTrainings[i % amountOfSplits].push_back(m_trainSet[i]);
 			}
@@ -516,7 +516,13 @@ unsigned int TotalStorage::getSmallestClassSize(){
 		}
 		return m_storage.size() != 0 ? min : 0;
 	}else{
-		return (unsigned int) (m_trainSet.size() / getAmountOfClass());
+		const auto amountOfClasses = getAmountOfClass();
+		if(amountOfClasses > 0){
+			return (unsigned int) (m_trainSet.size() / getAmountOfClass());
+		}else{
+			printError("The class amount is zero!");
+			return 0;
+		}
 	}
 	return 0;
 }

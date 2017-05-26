@@ -8,20 +8,19 @@
 #ifndef TESTS_PERFORMANCEMEASUREMENT_H_
 #define TESTS_PERFORMANCEMEASUREMENT_H_
 
-#include <Eigen/Dense>
-#include "../Data/Data.h"
+#include "../Utility/Util.h"
 
 bool testSpeedOfEigenMultWithDiag(){
 	const int dataPoints = 300;
-	Eigen::MatrixXd innerOfLLT(Eigen::MatrixXd::Identity(dataPoints,dataPoints));
-	Eigen::MatrixXd innerOfLLT2(Eigen::MatrixXd::Identity(dataPoints,dataPoints));
-	Eigen::VectorXd sqrtDDLogPi(Eigen::VectorXd::Random(dataPoints));
-	const Eigen::MatrixXd K(Eigen::MatrixXd::Random(dataPoints,dataPoints));
+	Matrix innerOfLLT(Matrix::Identity(dataPoints,dataPoints));
+	Matrix innerOfLLT2(Matrix::Identity(dataPoints,dataPoints));
+	VectorX sqrtDDLogPi(VectorX::Random(dataPoints));
+	const Matrix K(Matrix::Random(dataPoints,dataPoints));
 	StopWatch sw;
 	for(int i = 0; i < 1; ++i){
 		{
-			const Eigen::MatrixXd eye(Eigen::MatrixXd::Identity(dataPoints,dataPoints));
-			const Eigen::MatrixXd WSqrt( DiagMatrixXd(sqrtDDLogPi).toDenseMatrix()); // TODO more efficient
+			const Matrix eye(Matrix::Identity(dataPoints,dataPoints));
+			const Matrix WSqrt( DiagMatrixXd(sqrtDDLogPi).toDenseMatrix()); // TODO more efficient
 
 			//std::cout << "K: \n" << K << std::endl;
 			//std::cout << "inner: \n" << eye + (WSqrt * K * WSqrt) << std::endl;

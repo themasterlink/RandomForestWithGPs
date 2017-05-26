@@ -17,11 +17,11 @@ class BigDynamicDecisionTree : public DynamicDecisionTreeInterface {
 friend ReadWriterHelper;
 
 public:
-	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth,
+	BigDynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage, const unsigned int maxDepth,
 						   const unsigned int amountOfClasses, const int layerAmount = -1,
 						   const int layerAmountForFast = -1, const unsigned int amountOfPointsCheckedPerSplit = 100);
 
-	BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage);
+	BigDynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage);
 
 	void prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses,
 						   const unsigned int amountOfLayers, const unsigned int amountForFast,
@@ -31,28 +31,28 @@ public:
 
 	void train(const unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator);
 
-	unsigned int predict(const DataPoint& point) const;
+	unsigned int predict(const VectorX& point) const;
 
-	bool predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2,
-												 const int usedHeight) const{
+	bool predictIfPointsShareSameLeaveWithHeight(const VectorX& point1, const VectorX& point2,
+												 const int usedHeight) const override {
 		UNUSED(point1); UNUSED(point2); UNUSED(usedHeight);
 		printError("This function is not implemented!");
 		return false;
 	}
 
-	void predictData(const Data& data, Labels& labels) const{
+	void predictData(const Data& data, Labels& labels) const override {
 		UNUSED(data); UNUSED(labels);
 		printError("This function is not implemented!");
 	}
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const override {
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
 
 	unsigned int amountOfClasses() const;
 
-	MemoryType getMemSize() const { return m_usedMemory; };
+	MemoryType getMemSize() const override { return m_usedMemory; };
 
 private:
 
@@ -71,7 +71,7 @@ private:
 			const unsigned int leavesForTreesInTheFatherLayer, const int amountOfUsedDims,
 			RandomNumberGeneratorForDT& generator, const bool saveDataPositions, bool& foundAtLeastOneChild);
 
-	OnlineStorage<ClassPoint*>& m_storage;
+	OnlineStorage<LabeledVectorX*>& m_storage;
 	// max depth allowed in this tree
 	const unsigned int m_maxDepth;
 

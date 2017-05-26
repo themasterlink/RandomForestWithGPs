@@ -8,20 +8,19 @@
 #ifndef DATA_DATAREADER_H_
 #define DATA_DATAREADER_H_
 
-#include "ClassData.h"
-#include "DataSets.h"
+#include "LabeledVectorX.h"
 
 class DataReader{
 
 public:
 
-	static void readFromFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData);
+	static void readFromFile(LabeledData& data, const std::string& inputName, const unsigned int amountOfData);
 
-	static void readFromBinaryFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData);
+	static void readFromBinaryFile(LabeledData& data, const std::string& inputName, const unsigned int amountOfData);
 
 	static void readFromFiles(DataSets& dataSets, const std::string& folderLocation, const unsigned int amountOfData, const bool readTxt, bool& didNormalizeData);
 
-	static void readFromFile(ClassData& data, const std::string& inputName, const unsigned int amountOfData, const unsigned int classNr, const bool readTxt = false, const bool containsDegrees = false);
+	static void readFromFile(LabeledData& data, const std::string& inputName, const unsigned int amountOfData, const unsigned int classNr, const bool readTxt = false, const bool containsDegrees = false);
 
 private:
 

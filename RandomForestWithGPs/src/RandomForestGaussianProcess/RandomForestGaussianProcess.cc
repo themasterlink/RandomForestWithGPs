@@ -53,7 +53,7 @@ RandomForestGaussianProcess::RandomForestGaussianProcess(const DataSets& data, c
 
 void RandomForestGaussianProcess::train(){
 	const int dim = m_data.begin()->second[0]->rows();
-	ClassData data;
+	LabeledData data;
 	DataConverter::setToData(m_data, data);
 	/*// count total data points in dataset
 	for(DataSets::const_iterator it = m_data.begin(); it != m_data.end(); ++it){
@@ -76,7 +76,7 @@ void RandomForestGaussianProcess::train(){
 		// calc min used data for training of random forest bool useFixedValuesForMinMaxUsedData;
 		bool useFixedValuesForMinMaxUsedData;
 		Settings::getValue("MinMaxUsedSplits.useFixedValuesForMinMaxUsedSplits", useFixedValuesForMinMaxUsedData);
-		Eigen::Vector2i minMaxUsedData;
+		Vector2i minMaxUsedData;
 		if(useFixedValuesForMinMaxUsedData){
 			int minVal = 0, maxVal = 0;
 			Settings::getValue("MinMaxUsedSplits.minValue", minVal);
@@ -105,7 +105,7 @@ void RandomForestGaussianProcess::train(){
 		countClasses[guessedLabels[i]] += 1;
 	}
 	// sort the data based on the pre classes of the rf
-	std::vector<ClassData> sortedData;
+	std::vector<LabeledData> sortedData;
 	sortedData.resize(m_amountOfUsedClasses);
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
 		sortedData[i].resize(countClasses[i]);
@@ -139,7 +139,7 @@ void RandomForestGaussianProcess::train(){
 	boost::thread_group group;
 	for(int iActRfRes = 0; iActRfRes < m_amountOfUsedClasses; ++iActRfRes){ // go over all classes
 		//m_output.printSwitchingColor("Act Class: " + m_classNames[iActRfRes]);
-		const ClassData& dataOfActRf = sortedData[iActRfRes];
+		const LabeledData& dataOfActRf = sortedData[iActRfRes];
 		const int amountOfDataInRfRes = dataOfActRf.size();
 
 		//std::cout << "Amount of data: " << amountOfDataInRfRes << std::endl;
@@ -175,10 +175,10 @@ void RandomForestGaussianProcess::train(){
 			}
 			m_output.printSwitchingColor("Class: " + m_classNames[iActRfRes] + ", best for it is: " + m_classNames[idOfMaxClass]);
 			/*
-			Eigen::MatrixXd dataMat; // contains all the data for this specified pre class result of the RF
+			Matrix dataMat; // contains all the data for this specified pre class result of the RF
 			dataMat.conservativeResize(sortedData[iActRfRes][0].rows(), amountOfDataInRfRes);
 			int i = 0;
-			for(ClassDataIterator it = sortedData[iActRfRes].begin(); it != sortedData[iActRfRes].end(); ++it){
+			for(LabeledDataIterator it = sortedData[iActRfRes].begin(); it != sortedData[iActRfRes].end(); ++it){
 				dataMat.col(i++) = *it;
 			}
 			*/
@@ -220,25 +220,25 @@ void RandomForestGaussianProcess::train(){
 
 void RandomForestGaussianProcess::trainInParallel(const unsigned int iActClass,
 		const int amountOfDataInRfRes, const int amountOfHyperPoints,
-		const int iActRfClass, const ClassData& dataOfActRf, const std::vector<int>& classCounts,
+		const int iActRfClass, const LabeledData& dataOfActRf, const std::vector<int>& classCounts,
 		GaussianProcess* actGp) {
 	++m_nrOfRunningThreads;
 	int nrOfNoChanges;
 	Settings::getValue("RFGP.nrOfNoChanges", nrOfNoChanges);
-	Eigen::MatrixXd dataMat;
-	Eigen::VectorXd yGpInit;
+	Matrix dataMat;
+	VectorX yGpInit;
 	// calc for final training
 	DataConverter::toRandUniformDataMatrix(dataOfActRf, classCounts, dataMat, yGpInit, m_maxPointsUsedInGpSingleTraining, iActClass); // get a uniform portion of at most 1000 points
 
-	Eigen::MatrixXd testDataMat;
-	Eigen::VectorXd testYGpInit;
+	Matrix testDataMat;
+	VectorX testYGpInit;
 	// calc for final training
 	DataConverter::toRandUniformDataMatrix(dataOfActRf, classCounts, testDataMat, testYGpInit, m_maxPointsUsedInGpSingleTraining / 5, iActClass); // get a uniform portion of at most 1000 points
 
 	// compare to all other classes! // one vs. all
 	std::string betweenNames = ", for " + m_classNames[iActClass] + " in " + m_classNames[iActRfClass] + ", which has " + number2String(amountOfDataInRfRes);
 	m_output.printSwitchingColor("Start parallel" + betweenNames);
-	Eigen::VectorXd y(amountOfDataInRfRes);
+	VectorX y(amountOfDataInRfRes);
 	const int size = std::min(300, (int)(dataOfActRf.size()));
 	int bestRight = -1;
 	double len = 10, sigmaF = 0.4;
@@ -246,8 +246,8 @@ void RandomForestGaussianProcess::trainInParallel(const unsigned int iActClass,
 	int noChange = 1;
 	for(int i = 0; i < 20; ++i){
 		m_output.printSwitchingColor("Is in: " + number2String(i) + ", best is at the moment: " + number2String(len) + ", " + number2String(sigmaF) + ", with: " + number2String(bestRight / (double)size * 100.0) + betweenNames);
-		Eigen::MatrixXd dataHyper;
-		Eigen::VectorXd yHyper;
+		Matrix dataHyper;
+		VectorX yHyper;
 		DataConverter::toRandUniformDataMatrix(dataOfActRf, classCounts, dataHyper, yHyper, noChange * amountOfHyperPoints, iActClass); // get a uniform portion of all points
 		/* copy the #hyperPoints points of both TODO find way of randomly taking the values
 int oneCounter = 0, minusCounter = 0, counterHyper = 0;
@@ -323,7 +323,7 @@ std::cout << "One: " << oneCounter << std::endl;
 		int right = 0;
 		for(int i = 0; i < size; ++i){
 			const int nextEle = rand() / (double) RAND_MAX * dataOfActRf.size();
-			ClassPoint& ele = *dataOfActRf[nextEle];
+			LabeledVectorX& ele = *dataOfActRf[nextEle];
 			double prob = actGp->predict(ele, 500);
 			if(prob > 0.5 && ele.getLabel() == iActClass){
 				++right;
@@ -360,11 +360,11 @@ std::cout << "One: " << oneCounter << std::endl;
 	--m_nrOfRunningThreads;
 }
 
-unsigned int RandomForestGaussianProcess::predict(const DataPoint& point, std::vector<double>& prob) const {
+unsigned int RandomForestGaussianProcess::predict(const VectorX& point, std::vector<real>& prob) const {
 	const int rfLabel = m_forest.predict(point);
 	return rfLabel;
 	if(m_pureClassLabelForRfClass[rfLabel] != GP_USED){ // is pure
-		prob = std::vector<double>(m_amountOfUsedClasses, 0.0); // set all probs to zero
+		prob = std::vector<real>(m_amountOfUsedClasses, 0.0); // set all probs to zero
 		prob[m_pureClassLabelForRfClass[rfLabel]] = 1.0; // set the
 		return m_pureClassLabelForRfClass[rfLabel];
 	}
@@ -398,8 +398,8 @@ unsigned int RandomForestGaussianProcess::predict(const DataPoint& point, std::v
 	return argMax(prob.cbegin(), prob.cend());
 }
 
-unsigned int RandomForestGaussianProcess::predict(const DataPoint& point) const{
-	std::vector<double> prob;
+unsigned int RandomForestGaussianProcess::predict(const VectorX& point) const{
+	std::vector<real> prob;
 	return predict(point, prob);
 }
 

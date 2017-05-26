@@ -12,7 +12,6 @@
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 #include "DecisionTree.h"
 #include "DecisionTreeData.h"
-#include "../Data/Data.h"
 #include "../Base/Predictor.h"
 #include "TreeCounter.h"
 
@@ -25,22 +24,22 @@ public:
 
 	void addForest(const RandomForest& forest);
 
-	void train(const ClassData& data, const int amountOfUsedDims,
-			const Eigen::Vector2i& minMaxUsedData);
+	void train(const LabeledData& data, const int amountOfUsedDims,
+			const Vector2i& minMaxUsedData);
 
 	void init(const int amountOfTrees);
 
 	void generateTreeBasedOnData(const DecisionTreeData& data, const int element);
 
-	unsigned int predict(const DataPoint& point) const;
+	unsigned int predict(const VectorX& point) const override;
 
-	unsigned int predict(const ClassPoint& point) const;
+	unsigned int predict(const LabeledVectorX& point) const;
 
-	void predictData(const Data& points, Labels& labels) const;
+	void predictData(const Data& points, Labels& labels) const override;
 
-	void predictData(const ClassData& points, Labels& labels) const;
+	void predictData(const LabeledData& points, Labels& labels) const;
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const override{
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
@@ -51,9 +50,9 @@ public:
 
 	DecisionTreesContainer& getTrees(){ return m_trees; };
 
-	void getLeafNrFor(const ClassData& data, std::vector<int>& leafNrs);
+	void getLeafNrFor(const LabeledData& data, std::vector<int>& leafNrs);
 
-	unsigned int amountOfClasses() const;
+	unsigned int amountOfClasses() const override;
 
 private:
 	const int m_amountOfTrees;
@@ -65,14 +64,14 @@ private:
 
 	DecisionTreesContainer m_trees;
 
-	void trainInParallel(const ClassData& data, const int amountOfUsedDims,
+	void trainInParallel(const LabeledData& data, const int amountOfUsedDims,
 			RandomNumberGeneratorForDT* generator, const int start, const int end,
 			TreeCounter* counter);
 
 	void predictDataInParallel(const Data& points, Labels* labels, const int start,
 			const int end) const;
 
-	void predictDataInParallelClass(const ClassData& points, Labels* labels, const int start,
+	void predictDataInParallelClass(const LabeledData& points, Labels* labels, const int start,
 			const int end) const;
 
 };

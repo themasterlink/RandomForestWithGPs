@@ -9,7 +9,6 @@
 #define RANDOMFORESTS_DYNAMICDECISIONTREEINTERFACE_H_
 
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
-#include "../Data/Data.h"
 
 class DynamicDecisionTreeInterface : public PredictorMultiClass {
 public:
@@ -17,7 +16,7 @@ public:
 
 	virtual void train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator) = 0;
 
-	virtual bool predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const = 0;
+	virtual bool predictIfPointsShareSameLeaveWithHeight(const VectorX& point1, const VectorX& point2, const int usedHeight) const = 0;
 
 	virtual MemoryType getMemSize() const = 0;
 };

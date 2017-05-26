@@ -13,7 +13,7 @@
 #include <boost/thread.hpp> // Boost threads
 #include <boost/bind.hpp> // Boost threads
 #include "../GaussianProcess/GaussianProcess.h"
-#include "../Data/DataSets.h"
+#include "../Data/LabeledVectorX.h"
 
 #define GP_USED -1
 
@@ -28,16 +28,16 @@ public:
 
 	virtual ~RandomForestGaussianProcess();
 
-	unsigned int predict(const DataPoint& data, std::vector<double>& prob) const;
+	unsigned int predict(const VectorX& data, std::vector<real>& prob) const;
 
-	unsigned int predict(const DataPoint& point) const;
+	unsigned int predict(const VectorX& point) const;
 
 	void predictData(const Data& data, Labels& labels) const{
 		UNUSED(data); UNUSED(labels);
 		printError("This function is not implemented!");
 	}
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
@@ -50,7 +50,7 @@ private:
 
 	void trainInParallel(const unsigned int iActClass, const int amountOfDataInRfRes,
 			const int amountOfHyperPoints,
-			const int iActRfClass, const ClassData& dataOfActRf,
+			const int iActRfClass, const LabeledData& dataOfActRf,
 			const std::vector<int>& classCounts,
 			GaussianProcess* actGp);
 

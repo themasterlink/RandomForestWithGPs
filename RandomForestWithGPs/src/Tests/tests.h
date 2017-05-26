@@ -15,12 +15,12 @@
 int readAllData(){
 	int firstPoints; // all points
 	Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
-	const double share = Settings::getDirectDoubleValue("TotalStorage.shareForTraining");
+	const real share = Settings::getDirectRealValue("TotalStorage.shareForTraining");
 	firstPoints /= share;
 	printOnScreen("Read " << firstPoints << " points per class");
 	TotalStorage::readData(firstPoints);
 	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << " with " << TotalStorage::getAmountOfClass() << " classes");
-	const int trainAmount = share * (std::min((int) TotalStorage::getSmallestClassSize(), firstPoints) * (double) TotalStorage::getAmountOfClass());
+	const auto trainAmount = (int) (share * (std::min((int) TotalStorage::getSmallestClassSize(), firstPoints) * (real) TotalStorage::getAmountOfClass()));
 	return trainAmount;
 }
 

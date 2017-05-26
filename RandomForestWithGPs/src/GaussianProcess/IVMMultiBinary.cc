@@ -10,7 +10,7 @@
 #include "../Data/DataBinaryWriter.h"
 #include "../Utility/Util.h"
 
-IVMMultiBinary::IVMMultiBinary(OnlineStorage<ClassPoint*>& storage,
+IVMMultiBinary::IVMMultiBinary(OnlineStorage<LabeledVectorX*>& storage,
 		const unsigned int numberOfInducingPointsPerIVM,
 		const bool doEPUpdate, const int orfClassLabel):
 		m_storage(storage),
@@ -29,7 +29,7 @@ IVMMultiBinary::IVMMultiBinary(OnlineStorage<ClassPoint*>& storage,
 
 void IVMMultiBinary::update(Subject* caller, unsigned int event){
 	if(caller->classType() == m_storage.classType()){
-		if(event == OnlineStorage<ClassPoint*>::APPENDBLOCK){
+		if(event == OnlineStorage<LabeledVectorX*>::APPENDBLOCK){
 			if(m_amountOfAllClasses == 0){
 				m_amountOfAllClasses = ClassKnowledge::amountOfClasses();
 			}else if(m_amountOfAllClasses != ClassKnowledge::amountOfClasses()){
@@ -42,7 +42,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 				m_randClass.setSeed((m_orfClassLabel + 1) * 937);
 				// to find out the amount of used classes in this ivm look at the data
 				std::map<unsigned int, unsigned int> classCounter;
-				for(ClassData::const_iterator it = m_storage.begin(); it != m_storage.end(); ++it){
+				for(LabeledData::const_iterator it = m_storage.begin(); it != m_storage.end(); ++it){
 					const unsigned int label = (**it).getLabel();
 					std::map<unsigned int, unsigned int>::iterator itClass = classCounter.find(label);
 					if(itClass == classCounter.end()){
@@ -80,7 +80,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 						m_orfForKernel = new OnlineRandomForest(m_storage, maxDepth, amountOfClasses());
 						// train the trees before the ivms are used
 						m_orfForKernel->setDesiredAmountOfTrees(samplingAmount);
-						m_orfForKernel->update(&m_storage, OnlineStorage<ClassPoint*>::APPENDBLOCK);
+						m_orfForKernel->update(&m_storage, OnlineStorage<LabeledVectorX*>::APPENDBLOCK);
 					}
 					for(unsigned int i = 0; i < amountOfClasses(); ++i){
 						if(m_isClassUsed[i]){
@@ -88,7 +88,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 							if(m_ivms[i]->getKernelType() == IVM::KernelType::RF){
 								m_ivms[i]->setOnlineRandomForest(m_orfForKernel);
 							}
-							Eigen::Vector2i usedClasses;
+							Vector2i usedClasses;
 							usedClasses << m_classOfIVMs[i], UNDEF_CLASS_LABEL;
 							m_ivms[i]->init(m_numberOfInducingPointsPerIVM, usedClasses,
 									m_doEpUpdate, calcDifferenceMatrixAlone);
@@ -170,12 +170,12 @@ void IVMMultiBinary::train(){
 	}else{
 //		printOnScreen("First Value: " << m_storage[0]->getLabel() << " with: " << m_storage[0]->transpose());
 //		if(!Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam")){
-//			std::vector<double> means = {Settings::getDirectDoubleValue("KernelParam.lenMean"),
-//					Settings::getDirectDoubleValue("KernelParam.fNoiseMean"),
-//					Settings::getDirectDoubleValue("KernelParam.sNoiseMean")};
-//			std::vector<double> sds = {Settings::getDirectDoubleValue("KernelParam.lenVar"),
-//					Settings::getDirectDoubleValue("KernelParam.fNoiseVar"),
-//					Settings::getDirectDoubleValue("KernelParam.sNoiseVar")};
+//			std::vector<real> means = {Settings::getDirectRealValue("KernelParam.lenMean"),
+//					Settings::getDirectRealValue("KernelParam.fNoiseMean"),
+//					Settings::getDirectRealValue("KernelParam.sNoiseMean")};
+//			std::vector<real> sds = {Settings::getDirectRealValue("KernelParam.lenVar"),
+//					Settings::getDirectRealValue("KernelParam.fNoiseVar"),
+//					Settings::getDirectRealValue("KernelParam.sNoiseVar")};
 //			std::stringstream stringStream;
 //			stringStream << "Used means: ";
 //			for(unsigned int i = 0; i < 3; ++i){
@@ -404,9 +404,9 @@ void IVMMultiBinary::trainInParallel(IVM* ivm, const int usedIvm, InformationPac
 		ivm->setKernelSeed((m_classOfIVMs[usedIvm] + 1) * 459486); // with: m_classOfIVMs it depends on the label of the ivm
 		const bool ret = ivm->train(true, 1); // package(task is finished) inside the binary ivm training!
 		//	ivm->getKernel().setHyperParams(
-		//			Settings::getDirectDoubleValue("KernelParam.len"),
-		//			Settings::getDirectDoubleValue("KernelParam.fNoise"),
-		//			Settings::getDirectDoubleValue("KernelParam.sNoise"));
+		//			Settings::getDirectRealValue("KernelParam.len"),
+		//			Settings::getDirectRealValue("KernelParam.fNoise"),
+		//			Settings::getDirectRealValue("KernelParam.sNoise"));
 		//	const bool ret = ivm->train(false,1);
 		m_isClassUsed[usedIvm] = ret;
 		if(!ret){
@@ -422,7 +422,7 @@ void IVMMultiBinary::trainInParallel(IVM* ivm, const int usedIvm, InformationPac
 //	mutex.unlock();
 }
 
-unsigned int IVMMultiBinary::getLabelFrom(const std::vector<double>& probs) const{
+unsigned int IVMMultiBinary::getLabelFrom(const std::vector<real>& probs) const{
 	unsigned int highestArg = 0;
 	double highestValue = 1e-7;
 	bool foundValue = false;
@@ -460,7 +460,7 @@ unsigned int IVMMultiBinary::getLabelFrom(const std::vector<double>& probs) cons
 	}
 }
 
-void IVMMultiBinary::predict(const DataPoint& point, std::vector<double>& probabilities) const{
+void IVMMultiBinary::predict(const VectorX& point, std::vector<real>& probabilities) const{
 	probabilities.resize(m_amountOfAllClasses);
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
 		if(m_isClassUsed[i]){
@@ -469,14 +469,14 @@ void IVMMultiBinary::predict(const DataPoint& point, std::vector<double>& probab
 	}
 }
 
-unsigned int IVMMultiBinary::predict(const DataPoint& point) const{
-	std::vector<double> probs(m_amountOfAllClasses, 0.);
+unsigned int IVMMultiBinary::predict(const VectorX& point) const{
+	std::vector<real> probs(m_amountOfAllClasses, 0.);
 	predict(point, probs);
 	return getLabelFrom(probs);
 }
 
-unsigned int IVMMultiBinary::predict(const ClassPoint& point) const{
-	std::vector<double> probs(m_amountOfAllClasses, 0.);
+unsigned int IVMMultiBinary::predict(const LabeledVectorX& point) const{
+	std::vector<real> probs(m_amountOfAllClasses, 0.);
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
 		if(m_isClassUsed[i]){
 			probs[m_classOfIVMs[i]] = m_ivms[i]->predict(point);
@@ -486,16 +486,16 @@ unsigned int IVMMultiBinary::predict(const ClassPoint& point) const{
 }
 
 void IVMMultiBinary::predictData(const Data& points, Labels& labels) const{
-	std::vector< std::vector<double> > probs;
+	std::vector< std::vector<real> > probs;
 	predictData(points, labels, probs);
 }
 
-void IVMMultiBinary::predictData(const ClassData& points, Labels& labels) const{
-	std::vector< std::vector<double> > probs;
+void IVMMultiBinary::predictData(const LabeledData& points, Labels& labels) const{
+	std::vector< std::vector<real> > probs;
 	predictData(points, labels, probs);
 }
 
-void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
 	probabilities.resize(points.size());
 	labels.resize(points.size());
 	for(unsigned int i = 0; i < points.size(); ++i){
@@ -519,7 +519,7 @@ void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector
 	}
 }
 
-void IVMMultiBinary::predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+void IVMMultiBinary::predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
 	probabilities.resize(points.size());
 	labels.resize(points.size());
 	for(unsigned int i = 0; i < points.size(); ++i){
@@ -545,7 +545,7 @@ void IVMMultiBinary::predictData(const ClassData& points, Labels& labels, std::v
 	}
 }
 
-void IVMMultiBinary::predictDataInParallel(IVM* ivm, const Data& points, const int usedIvm, std::vector< std::vector<double> >* probabilities, InformationPackage* package) const{
+void IVMMultiBinary::predictDataInParallel(IVM* ivm, const Data& points, const int usedIvm, std::vector< std::vector<real> >* probabilities, InformationPackage* package) const{
 	package->setStandartInformation("Thread for ivm: " + number2String(usedIvm));
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
@@ -566,7 +566,7 @@ void IVMMultiBinary::predictDataInParallel(IVM* ivm, const Data& points, const i
 	package->finishedTask();
 }
 
-void IVMMultiBinary::predictClassDataInParallel(IVM* ivm, const ClassData& points, const int usedIvm, std::vector< std::vector<double> >* probabilities, InformationPackage* package) const{
+void IVMMultiBinary::predictClassDataInParallel(IVM* ivm, const LabeledData& points, const int usedIvm, std::vector< std::vector<real> >* probabilities, InformationPackage* package) const{
 	package->setStandartInformation("Thread for ivm: " + number2String(usedIvm));
 	ThreadMaster::appendThreadToList(package);
 	package->wait();

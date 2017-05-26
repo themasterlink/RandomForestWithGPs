@@ -34,7 +34,7 @@ public:
 
 	static bool getDirectBoolValue(const std::string& nameOfValue);
 
-	static double getDirectDoubleValue(const std::string& nameOfValue);
+	static real getDirectRealValue(const std::string &nameOfValue);
 
 	static std::string getFilePath(){ return m_filePath; };
 

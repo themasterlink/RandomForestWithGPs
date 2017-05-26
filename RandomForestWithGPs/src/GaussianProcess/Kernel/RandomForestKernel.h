@@ -16,9 +16,9 @@
 
 class RandomForestKernel : public KernelBase<RandomForestKernelParams>, public Observer {
 public:
-	RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int samplingAmount, const int amountOfUsedClasses, const bool createOrf);
+	RandomForestKernel(OnlineStorage<LabeledVectorX*>& storage, const int maxDepth, const int samplingAmount, const int amountOfUsedClasses, const bool createOrf);
 
-	RandomForestKernel(OnlineStorage<ClassPoint*>& storage, const OwnKernelInitParams& initParams, const bool createOrf);
+	RandomForestKernel(OnlineStorage<LabeledVectorX*>& storage, const OwnKernelInitParams& initParams, const bool createOrf);
 	virtual ~RandomForestKernel();
 
 	void init();
@@ -29,13 +29,13 @@ public:
 
 	double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const override;
 
-	void calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const override;
+	void calcKernelVector(const VectorX& vector, const Matrix& dataMat, VectorX& res) const override;
 
 	std::string prettyString() const override;
 
 	double kernelFunc(const int row, const int col) const override;
 
-	double kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const override;
+	double kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const override;
 
 	double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const override;
 

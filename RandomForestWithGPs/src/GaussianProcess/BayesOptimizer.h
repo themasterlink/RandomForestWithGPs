@@ -11,7 +11,6 @@
 //#include <bayesopt/bayesopt.hpp>
 //#include <bayesopt/bayesoptbase.hpp>
 //#include <bayesopt/parameters.hpp>
-//#include "../Data/Data.h"
 //#include <limits>
 //#include "GaussianProcess.h"
 //

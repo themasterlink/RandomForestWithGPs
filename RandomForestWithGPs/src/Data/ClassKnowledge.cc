@@ -7,7 +7,6 @@
 
 #include "ClassKnowledge.h"
 #include "../Utility/Util.h"
-#include "Data.h"
 
 ClassKnowledge::LabelNameMap ClassKnowledge::m_names;
 unsigned int ClassKnowledge::m_amountOfDims(0);
@@ -22,12 +21,12 @@ ClassKnowledge::~ClassKnowledge() {
 void ClassKnowledge::init(){
 	m_names.clear();
 	m_amountOfDims = 0;
-	m_names.insert(LabelNamePair(UNDEF_CLASS_LABEL, "undefined"));
+	m_names.emplace(UNDEF_CLASS_LABEL, "undefined");
 }
 
 void ClassKnowledge::setNameFor(const std::string& name, unsigned int nr){
 	m_mutex.lock();
-	LabelNameMapIterator it = m_names.find(nr);
+	auto it = m_names.find(nr);
 	if(it != m_names.end()){
 		if(it->second == name){
 			printError("This class was already added");
@@ -35,7 +34,7 @@ void ClassKnowledge::setNameFor(const std::string& name, unsigned int nr){
 			printError("This class was already added with another name!");
 		}
 	}else{
-		m_names.insert(LabelNamePair(nr, name));
+		m_names.emplace(nr, name);
 	}
 	if(nr >= UNDEF_CLASS_LABEL){
 		printError("The amount of classes exceeds the amount of supported classes: " << UNDEF_CLASS_LABEL);
@@ -48,14 +47,14 @@ void ClassKnowledge::setNameFor(const std::string& name, unsigned int nr){
 
 std::string ClassKnowledge::getNameFor(unsigned int nr){
 	m_mutex.lock();
-	LabelNameMapIterator it = m_names.find(nr);
+	auto it = m_names.find(nr);
 	if(it != m_names.end()){
-		const std::string ret = it->second;
+		const auto ret = it->second;
 		m_mutex.unlock();
 		return ret;
 	}else{
 		printError("This number has no name: " << nr << "!");
-		const std::string ret = m_names.find(UNDEF_CLASS_LABEL)->second;
+		const auto ret = m_names.find(UNDEF_CLASS_LABEL)->second;
 		m_mutex.unlock();
 		return ret;
 	}
@@ -63,7 +62,7 @@ std::string ClassKnowledge::getNameFor(unsigned int nr){
 
 unsigned int ClassKnowledge::amountOfClasses(){
 	m_mutex.lock();
-	const int size = m_names.size() - 1;// for default class!
+	const auto size = (unsigned int) (m_names.size() - 1);// for default class!
 	m_mutex.unlock();
 	return size;
 }

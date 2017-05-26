@@ -55,7 +55,7 @@ void handleProgrammOptions(int ac, char* av[]){
 					("visuRes", boost::program_options::value<int>()->default_value(0), "visualize something, if possible")
 					("visuResSimple", boost::program_options::value<int>()->default_value(0), "visualize something, if possible")
 					("onlyDataView", "only visualize the data, no training performed")
-					("samplingAndTraining", boost::program_options::value<double>()->default_value(0), "sample and train the hyper params, else just use be configured params")
+					("samplingAndTraining", boost::program_options::value<real>()->default_value(0), "sample and train the hyper params, else just use be configured params")
 					("plotHistos", "should some histogramms be plotted")
 					("settingsFile", boost::program_options::value<std::string>()->default_value("../Settings/init.json"), "Give the filepath of the settingsfile")
 					("convertFile", boost::program_options::value<std::string>()->default_value(""), "Give the filepath of the desired file which should be converted into binary")
@@ -216,15 +216,15 @@ int main(int ac, char** av){
 //	cmaes::cmaes_boundary_transformation_init(&cmaesBoundaries, lowerBounds, upperBounds, nb_bounds);
 //	/* Initialize everything into the struct evo, 0 means default */
 //	const int seed = 12389;
-//	m_arFunvals = cmaes::cmaes_init(&evo, 0, NULL, NULL, seed, 0, "../Settings/cmaes_initials.par");
+//	m_arFunvals = cmaes::cmaes_init(&evo, 0, nullptr, nullptr, seed, 0, "../Settings/cmaes_initials.par");
 //	dimension = (unsigned long) cmaes::cmaes_Get(&evo, "dimension");
 //	if(dimension != nb_bounds){
 //		printError("The dimension in the settings does not fit!");
 //	}
 //	m_hyperParamsValues = cmaes::cmaes_NewDouble(dimension); /* calloc another vector */
 //	const int sampleLambda = cmaes::cmaes_Get(&evo, "lambda");
-//	std::list<Eigen::Vector2d> points;
-//	std::list<double> values;
+//	std::list<Vector2> points;
+//	std::list<real> values;
 //	for(unsigned int k = 0; k < 50; ++k){
 //		/* generate lambda new search points, sample population */
 //
@@ -237,7 +237,7 @@ int main(int ac, char** av){
 //			cmaes::cmaes_boundary_transformation(&cmaesBoundaries, pop[i], m_hyperParamsValues, dimension);
 //			m_arFunvals[i] =  (((m_hyperParamsValues[0] - 10.) * (m_hyperParamsValues[0] - 10.) + (m_hyperParamsValues[1] - 10.) + (m_hyperParamsValues[1] - 10.)));
 //			values.push_back(m_arFunvals[i]);
-//			points.push_back(Eigen::Vector2d(m_hyperParamsValues[0], m_hyperParamsValues[1]));
+//			points.push_back(Vector2(m_hyperParamsValues[0], m_hyperParamsValues[1]));
 //		}
 //		cmaes::cmaes_UpdateDistribution(&evo, m_arFunvals);  /* assumes that pop[i] has not been modified */
 //	}
@@ -260,8 +260,8 @@ int main(int ac, char** av){
 	if(CommandSettings::get_onlyDataView()){
 		const int firstPoints = 10000000; // all points
 		TotalStorage::readData(firstPoints);
-		OnlineStorage<ClassPoint*> train;
-		OnlineStorage<ClassPoint*> test;
+		OnlineStorage<LabeledVectorX*> train;
+		OnlineStorage<LabeledVectorX*> test;
 		// starts the training by its own
 		TotalStorage::getOnlineStorageCopyWithTest(train, test, TotalStorage::getTotalSize());
 		printOnScreen("TotalStorage::getTotalSize(): " << TotalStorage::getTotalSize());
@@ -270,16 +270,23 @@ int main(int ac, char** av){
 		exit(0);
 	}else if(CommandSettings::get_convertFile().length() > 0){
 		printOnScreen("Convert file mode:");
-		ClassData data;
+		LabeledData data;
 		const std::string inputPath = CommandSettings::get_convertFile();
 		const std::string typeLessPath = inputPath.substr(0, inputPath.length() - 4); // for txt and csv
 		if(!boost::filesystem::exists(boost::filesystem::path(typeLessPath + ".binary"))){
-			DataReader::readFromFile(data, typeLessPath, INT_MAX, UNDEF_CLASS_LABEL, true);
-			DataBinaryWriter::toFile(data, typeLessPath + ".binary");
+			const auto containDegrees = false;
+			DataReader::readFromFile(data, typeLessPath, INT_MAX, UNDEF_CLASS_LABEL, true, containDegrees);
+			if(data.size() > 0){
+				printOnScreen("Data amount: " << data.size() << ", dim: " << data[0]->rows());
+				DataBinaryWriter::toFile(data, typeLessPath + ".binary");
+			}
 		}else{
 			printOnScreen("This file was already converted!");
 			sleep(2);
 		}
+		ThreadMaster::stopExecution();
+		ThreadMaster::blockUntilFinished();
+		sleep(2);
 		exit(0);
 	}
 	Logger::start();
@@ -288,8 +295,8 @@ int main(int ac, char** av){
 	if(CommandSettings::get_samplingAndTraining() > 0){
 		printOnScreen("Training time: " << TimeFrame(CommandSettings::get_samplingAndTraining()));
 	}
-//	Eigen::VectorXd testVec = Eigen::VectorXd::Random(1000);
-//	Eigen::VectorXd testVec2 = Eigen::VectorXd::Random(1000);
+//	VectorX testVec = VectorX::Random(1000);
+//	VectorX testVec2 = VectorX::Random(1000);
 //	double res = 0;
 //	for(unsigned int k = 0; k < 100000; ++k){
 //		for(unsigned int i = 0; i < 1000; ++i){
@@ -300,8 +307,8 @@ int main(int ac, char** av){
 
 	/*
     const int nr = 300;
-    Eigen::MatrixXd Sigma, controlSigma;
-    controlSigma = Eigen::MatrixXd::Random(nr, nr);
+    Matrix Sigma, controlSigma;
+    controlSigma = Matrix::Random(nr, nr);
     for(int i = 0; i < nr; ++i){
     	for(int j = 0; j < nr; ++j){
     		controlSigma(i,j) = i * nr + j;
@@ -313,7 +320,7 @@ int main(int ac, char** av){
     for(int t = 0; t < 1000; ++t){
     	int i = t % nr;
     	sigmaUp.startTime();
-    	Eigen::VectorXd si = Sigma.col(i);
+    	VectorX si = Sigma.col(i);
     	double denom = 1.0 + deltaTau * si[i];
     	//if(fabs(denom) > EPSILON)
     	Sigma -= (deltaTau / denom) * (si * si.transpose());
@@ -321,7 +328,7 @@ int main(int ac, char** av){
     	sigmaUpNew.startTime();
     	denom = 1.0 + deltaTau * controlSigma(i,i); // <=> 1.0 + deltaTau[i] * si[i] for si = Sigma.col(i)
     	const double fac = deltaTau / denom;
-    	const Eigen::VectorXd oldSigmaRow = controlSigma.col(i);
+    	const VectorX oldSigmaRow = controlSigma.col(i);
     	for(int p = 0; p < nr; ++p){
     		controlSigma(p,p) -= fac * oldSigmaRow[p] * oldSigmaRow[p];
     		for(int q = p + 1; q < nr; ++q){

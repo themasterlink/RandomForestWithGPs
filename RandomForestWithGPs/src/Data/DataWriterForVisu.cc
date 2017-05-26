@@ -21,7 +21,7 @@ DataWriterForVisu::DataWriterForVisu()
 DataWriterForVisu::~DataWriterForVisu(){
 }
 
-void DataWriterForVisu::writeData(const std::string& fileName, const ClassData& data,
+void DataWriterForVisu::writeData(const std::string& fileName, const LabeledData& data,
 		const int x, const int y){
 	if(data.size() > 0){
 		if(!(data[0]->rows() > x && data[0]->rows() > y && x != y && y >= 0 && x >= 0)){
@@ -31,7 +31,7 @@ void DataWriterForVisu::writeData(const std::string& fileName, const ClassData& 
 		std::ofstream file;
 		file.open(Logger::getActDirectory() + fileName);
 		if(file.is_open()){
-			for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it){
+			for(LabeledDataConstIterator it = data.cbegin(); it != data.cend(); ++it){
 				file << (**it)[x] << " " << (**it)[y] << " " << (*it)->getLabel() << "\n";
 			}
 		}
@@ -43,27 +43,27 @@ void DataWriterForVisu::writeData(const std::string& fileName, const ClassData& 
 
 void DataWriterForVisu::generateGrid(const std::string& fileName,
 		const PredictorMultiClass* predictor,
-		const double amountOfPointsOnOneAxis,
-		const ClassData& data,
+		const real amountOfPointsOnOneAxis,
+		const LabeledData& data,
 		const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
 	}
-	const int dim = data[0]->rows();
-	Eigen::Vector2i dimVec;
+	const int dim = (int) data[0]->rows();
+	Vector2i dimVec;
 	dimVec << x,y;
-	Eigen::Vector2d min, max;
+	Vector2 min, max;
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	std::ofstream file;
 	file.open(fileName);
 	Data points;
 	points.reserve(amountOfPointsOnOneAxis * (amountOfPointsOnOneAxis + 1));
 	int amount = 0;
-	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
-		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-			DataPoint ele(dim);
+	for(real xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
+		for(real yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+			VectorX ele(dim);
 			for(int i = 0; i < dim; ++i){
 				if(i == x){
 					ele[i] = xVal;
@@ -82,27 +82,27 @@ void DataWriterForVisu::generateGrid(const std::string& fileName,
 
 void DataWriterForVisu::generateGrid(const std::string& fileName,
 		const PredictorBinaryClass* predictor,
-		const double amountOfPointsOnOneAxis,
-		const ClassData& data,
+		const real amountOfPointsOnOneAxis,
+		const LabeledData& data,
 		const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
 	}
 	const int dim = data[0]->rows();
-	Eigen::Vector2i dimVec;
+	Vector2i dimVec;
 	dimVec << x,y;
-	Eigen::Vector2d min, max;
+	Vector2 min, max;
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	std::ofstream file;
 	file.open(Logger::getActDirectory() + fileName);
 	Data points;
 	points.reserve(amountOfPointsOnOneAxis * (amountOfPointsOnOneAxis + 1));
 	int amount = 0;
-	for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
-		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-			DataPoint ele(dim);
+	for(real xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
+		for(real yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+			VectorX ele(dim);
 			for(int i = 0; i < dim; ++i){
 				if(i == x){
 					ele[i] = xVal;
@@ -119,35 +119,35 @@ void DataWriterForVisu::generateGrid(const std::string& fileName,
 	file.close();
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorBinaryClass* predictor, const ClassData& data, const int x, const int y){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorBinaryClass* predictor, const LabeledData& data, const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
 	}
 	const int dim = data[0]->rows();
-	Eigen::Vector2i dimVec;
+	Vector2i dimVec;
 	dimVec << x,y;
-	Eigen::Vector2d min, max;
+	Vector2 min, max;
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
-	const Eigen::Vector2d diff = max - min;
+	const Vector2 diff = max - min;
 	max[0] += diff[0] * 0.2;
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
-	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	const real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	int amount = 0;
-	std::vector<double> labels;
-	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
-	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
+	std::vector<real> labels;
+	const real elementInX = (int)((max[0] - min[0]) / stepSize[0]);
+	const real elementInY = (int)((max[1] - min[1]) / stepSize[1]);
 	int iX = 0, iY;
 	std::ofstream file;
-	openSvgFile(fileName, 820., (double) (max[0] - min[0]), (double) (max[1] - min[1]), file);
+	openSvgFile(fileName, (real) 820., (real) (max[0] - min[0]), (real) (max[1] - min[1]), file);
 	const bool complex = CommandSettings::get_visuRes() > 0;
-	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+	for(real xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 		iY = 0;
-		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-			DataPoint ele(dim);
+		for(real yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+			VectorX ele(dim);
 			for(int i = 0; i < dim; ++i){
 				if(i == x){
 					ele[i] = xVal;
@@ -158,14 +158,14 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorBin
 				}
 			}
 			//gp.resetFastPredict();
-			double val = fmax(fmin(1.0, predictor->predict(ele)), 0.0);
+			real val = std::max(std::min((real) 1.0, (real) predictor->predict(ele)), (real) 0.0);
 			if(!complex){
-				val = val >= 0.5 ? 1 : 0.;
+				val = val >= (real) 0.5 ? (real) 1 : (real) 0.;
 			}
-			double r, g, b;
+			real r, g, b;
 			ColorConverter::getProbColorForBinaryRGB(val, r, g, b);
-			drawSvgRect(file, iX / elementInX * 100., iY / elementInY  * 100.,
-					100.0 / elementInX, 100.0 / elementInY, r * 100, g * 100, b * 100);
+			drawSvgRect(file, iX / elementInX * (real) 100., iY / elementInY  * (real) 100.,
+						(real) 100.0 / elementInX, (real) 100.0 / elementInY, r * (real) 100, g * (real) 100, b * (real) 100);
 			++amount;
 			++iY;
 		}
@@ -176,35 +176,35 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorBin
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMultiClass* predictor, const ClassData& data, const int x, const int y){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMultiClass* predictor, const LabeledData& data, const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
 	}
-	const int dim = data[0]->rows();
-	Eigen::Vector2i dimVec;
+	const auto dim = (int) data[0]->rows();
+	Vector2i dimVec;
 	dimVec << x,y;
-	Eigen::Vector2d min, max;
+	Vector2 min, max;
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
-	const Eigen::Vector2d diff = max - min;
+	const Vector2 diff = max - min;
 	max[0] += diff[0] * 0.2;
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
-	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	const real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	int amount = 0;
-	std::vector<double> labels;
-	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
-	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
+	std::vector<real> labels;
+	const real elementInX = (int)((max[0] - min[0]) / stepSize[0]);
+	const real elementInY = (int)((max[1] - min[1]) / stepSize[1]);
 	std::ofstream file;
 	const unsigned int classAmount = predictor->amountOfClasses();
-	openSvgFile(fileName, 820., (double) (max[0] - min[0]), (double) (max[1] - min[1]), file);
+	openSvgFile(fileName, 820., (real) (max[0] - min[0]), (real) (max[1] - min[1]), file);
 	Data points;
-	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
-	//for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
-		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-			DataPoint* ele = new DataPoint(dim);
+	for(real xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+	//for(real xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
+		for(real yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+			VectorX* ele = new VectorX(dim);
 			for(int i = 0; i < dim; ++i){
 				if(i == x){
 					(*ele)[i] = xVal;
@@ -220,7 +220,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 	}
 	const bool complex = CommandSettings::get_visuRes() > 0;
 	Labels result;
-	std::vector< std::vector<double> > probs;
+	std::vector< std::vector<real> > probs;
 	if(complex){
 		predictor->predictData(points, result, probs);
 	}else{
@@ -228,18 +228,18 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 	}
 	int counter = 0;
 	int iX = 0, iY;
-	std::vector< std::vector<double> > colors(classAmount, std::vector<double>(3));
+	std::vector< std::vector<real> > colors(classAmount, std::vector<real>(3));
 	for(unsigned int i = 0; i < classAmount; ++i){ // save all colors
-		ColorConverter::HSV2LAB((i + 1) / (double) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
+		ColorConverter::HSV2LAB((i + 1) / (real) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
 	}
-	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+	for(real xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 		iY = 0;
-		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-				//double val = fmax(fmin(1.0,), 0.0);
-			double r, g, b_;
+		for(real yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+				//real val = fmax(fmin(1.0,), 0.0);
+			real r, g, b_;
 			if(complex){
-				double l = 0, a = 0, b = 0;
-				double sum = 0;
+				real l = 0, a = 0, b = 0;
+				real sum = 0;
 				for(unsigned int i = 0; i < classAmount; ++i){
 					sum += probs[counter][i];
 				}
@@ -252,7 +252,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 				}
 				ColorConverter::LAB2RGB(l, a, b, r, g, b_);
 			}else{
-				double l = 0, a = 0, b = 0;
+				real l = 0, a = 0, b = 0;
 				l = colors[result[counter]][0];
 				a = colors[result[counter]][1];
 				b = colors[result[counter]][2];
@@ -273,12 +273,12 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeHisto(const std::string&fileName, const std::list<double>& list, const unsigned int nrOfBins, const double minValue, const double maxValue){
+void DataWriterForVisu::writeHisto(const std::string&fileName, const std::list<real>& list, const unsigned int nrOfBins, const real minValue, const real maxValue){
 	if(list.size() == 0){
 		printError("No data is given!");
 		return;
 	}
-	double min, max;
+	real min, max;
 	if(minValue == maxValue && minValue == -1){
 		DataConverter::getMinMax(list, min, max);
 	}else{
@@ -288,38 +288,38 @@ void DataWriterForVisu::writeHisto(const std::string&fileName, const std::list<d
 	if(min == max){
 		printError("The min and max value are the same, the calculation of the histogram is not possible!"); return;
 	}
-	Eigen::VectorXd counter = Eigen::VectorXd::Zero(nrOfBins);
-	for(std::list<double>::const_iterator it = list.begin(); it != list.end(); ++it){
+	VectorX counter = VectorX::Zero(nrOfBins);
+	for(std::list<real>::const_iterator it = list.begin(); it != list.end(); ++it){
 		++counter[(*it - min) / (max - min) * (nrOfBins - 1)];
 	}
-	double minCounter, maxCounter;
+	real minCounter, maxCounter;
 	DataConverter::getMinMax(counter, minCounter, maxCounter);
 	std::ofstream file;
 	openSvgFile(fileName, 820., 1., 1., file);
-	const double startOfData = 7.5;
+	const real startOfData = 7.5;
 	drawSvgCoords(file, 5., 5., 7.5, 7.5, nrOfBins + 1, maxCounter, 0, 100., 820, 820, true, 0., 1.);
-	const double dataWidth = (100.0 - 2. * startOfData);
-	const double width = (1. / (double) nrOfBins *  (dataWidth * 0.95));
-	const double offset = (1. / (double) nrOfBins * (dataWidth * 0.05));
+	const real dataWidth = (100.0 - 2. * startOfData);
+	const real width = (1. / (real) nrOfBins *  (dataWidth * 0.95));
+	const real offset = (1. / (real) nrOfBins * (dataWidth * 0.05));
 	for(unsigned int i = 0; i < nrOfBins; ++i){
-		const double height = counter[i] / (double) maxCounter * dataWidth;
-		drawSvgRect(file, i / (double) nrOfBins * dataWidth + offset + startOfData, startOfData, width, height == 0. ? 1. : height, 76, 5, 78);
+		const real height = counter[i] / (real) maxCounter * dataWidth;
+		drawSvgRect(file, i / (real) nrOfBins * dataWidth + offset + startOfData, startOfData, width, height == 0. ? 1. : height, 76, 5, 78);
 	}
 	closeSvgFile(file);
 }
 
 void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, const std::list<unsigned int>& selectedInducingPoints,
-		const ClassData& data, const int x, const int y, const int type){
+		const LabeledData& data, const int x, const int y, const int type){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
 	}
 	const int dim = data[0]->rows();
-	Eigen::Vector2i dimVec;
+	Vector2i dimVec;
 	dimVec << x,y;
-	Eigen::Vector2d min, max;
+	Vector2 min, max;
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
-	const Eigen::Vector2d diff = max - min;
+	const Vector2 diff = max - min;
 	if(diff[0] <= EPSILON || diff[1] <= EPSILON){
 		printError("The min and max of the desired axis is equal for " << fileName << "!"); return;
 	}
@@ -327,23 +327,23 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
-	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	const real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	int amount = 0;
-	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
-	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
+	const real elementInX = (int)((max[0] - min[0]) / stepSize[0]);
+	const real elementInY = (int)((max[1] - min[1]) / stepSize[1]);
 	int iX = 0, iY;
 	std::ofstream file;
-	openSvgFile(fileName, 820., (double) (max[0] - min[0]), (double) (max[1] - min[1]), file);
+	openSvgFile(fileName, 820., (real) (max[0] - min[0]), (real) (max[1] - min[1]), file);
 	const bool complex = CommandSettings::get_visuRes() > 0;
-	std::vector< std::vector<double> > colors(2, std::vector<double>(3));
+	std::vector< std::vector<real> > colors(2, std::vector<real>(3));
 	ColorConverter::RGB2LAB(1,0,0, colors[0][0], colors[0][1], colors[0][2]);
 	ColorConverter::RGB2LAB(0,0,1, colors[1][0], colors[1][1], colors[1][2]);
-	double minMu = DBL_MAX, minSigma = DBL_MAX, maxMu = NEG_DBL_MAX, maxSigma = NEG_DBL_MAX;
+	real minMu = REAL_MAX, minSigma = REAL_MAX, maxMu = NEG_REAL_MAX, maxSigma = NEG_REAL_MAX;
 	if(type == 1 || type == 2){
-		for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
-			for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-				DataPoint ele(dim);
+		for(real xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+			for(real yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+				VectorX ele(dim);
 				for(int i = 0; i < dim; ++i){
 					if(i == x){
 						ele[i] = xVal;
@@ -353,7 +353,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 						ele[i] = 0;
 					}
 				}
-				double prob = 0;
+				real prob = 0;
 				if(type == 1){
 					prob = ivm.predictMu(ele);
 					if(prob < minMu){
@@ -374,11 +374,11 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 			}
 		}
 	}
-	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
-	//for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
+	for(real xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+	//for(real xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
 		iY = 0;
-		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-			DataPoint ele(dim);
+		for(real yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+			VectorX ele(dim);
 			for(int i = 0; i < dim; ++i){
 				if(i == x){
 					ele[i] = xVal;
@@ -388,7 +388,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 					ele[i] = 0;
 				}
 			}
-			double prob = 0;
+			real prob = 0;
 			if(type == 0){
 				prob = ivm.predict(ele);
 			}else if(type == 1){
@@ -399,13 +399,13 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 			if(!complex){
 				prob = prob > 0.5 ? 1 : 0;
 			}
-			double l = prob * colors[0][0] + (1-prob) * colors[1][0];
-			double a = prob * colors[0][1] + (1-prob) * colors[1][1];
-			double b = prob * colors[0][2] + (1-prob) * colors[1][2];
-			double r, g, b_;
+			real l = prob * colors[0][0] + (1-prob) * colors[1][0];
+			real a = prob * colors[0][1] + (1-prob) * colors[1][1];
+			real b = prob * colors[0][2] + (1-prob) * colors[1][2];
+			real r, g, b_;
 			ColorConverter::LAB2RGB(l, a, b, r, g, b_);
 
-			//double val = fmax(fmin(1.0,), 0.0);
+			//real val = fmax(fmin(1.0,), 0.0);
 			drawSvgRect(file, iX / elementInX * 100., iY / elementInY  * 100.,
 					100.0 / elementInX, 100.0 / elementInY, r* 100., g* 100., b_ * 100.);
 			++amount;
@@ -417,12 +417,12 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const ClassData& data, const int x, const int y){
-	Eigen::Vector2i dimVec;
+void DataWriterForVisu::writeSvg(const std::string& fileName, const LabeledData& data, const int x, const int y){
+	Vector2i dimVec;
 	dimVec << x,y;
-	Eigen::Vector2d min, max;
+	Vector2 min, max;
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
-	const Eigen::Vector2d diff = max - min;
+	const Vector2 diff = max - min;
 	max[0] += diff[0] * 0.2;
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
@@ -430,28 +430,29 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const ClassData& d
 	std::list<unsigned int> empty;
 	std::ofstream file;
 	std::map<unsigned int, unsigned int> classCounter;
-	for(ClassData::const_iterator it = data.begin(); it != data.end(); ++it){
-		std::map<unsigned int, unsigned int>::iterator itClass = classCounter.find((*it)->getLabel());
+	for(const auto& pos : data){
+//	for(LabeledData::const_iterator it = data.begin(); it != data.end(); ++it){
+		auto itClass = classCounter.find(pos->getLabel());
 		if(itClass == classCounter.end()){
-			classCounter.insert(std::pair<unsigned int, unsigned int>((*it)->getLabel(), 0));
+			classCounter.emplace(pos->getLabel(), 0);
 		}
 	}
-	openSvgFile(fileName, 820., (double) (max[0] - min[0]), (double) (max[1] - min[1]), file);
+	openSvgFile(fileName, 820., (real) (max[0] - min[0]), (real) (max[1] - min[1]), file);
 	drawSvgDataPoints(file, data, min, max, dimVec, empty, classCounter.size());
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::list<Eigen::Vector2d>& points, const std::list<double>& values){
+void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::list<Vector2>& points, const std::list<real>& values){
 	if(points.size() != values.size()){
 		printError("The size of the values and the points does not match!");
 	}else if(points.size() < 3){
 		printError("There must be at least 3 points");
 	}
-	Eigen::Vector2d min, max;
+	Vector2 min, max;
 	DataConverter::getMinMaxIn2D(points, min, max);
-	double minVal, maxVal;
+	real minVal, maxVal;
 	DataConverter::getMinMax(values, minVal, maxVal, true);
-	const Eigen::Vector2d diff = max - min;
+	const Vector2 diff = max - min;
 	max[0] += diff[0] * 0.2;
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
@@ -459,27 +460,26 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 	std::list<int> empty;
 	std::ofstream file;
 	openSvgFile(fileName, 820., 1., 1.,  file);
-	const double height = 820;
+	const real height = 820;
 	const int amountOfSeg = 10;
 	drawSvgCoords2D(file, 7.5, 7.5, 10, 10, min, max, amountOfSeg, 820., height);
-	double minUsedValue = minVal;
+	real minUsedValue = minVal;
 	const int k = CommandSettings::get_visuRes() > 0 ? 20 : CommandSettings::get_visuResSimple() > 0 ? 1 : 0;
-	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
-	const Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
-	double red[3];
-	double blue[3];
+	const real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	const Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	real red[3];
+	real blue[3];
 	ColorConverter::HSV2LAB(180., 1, 1, red[0], red[1], red[2]);
 	ColorConverter::HSV2LAB(0., 1, 1, blue[0], blue[1], blue[2]);
 	if(points.size() > 10){
-		std::list<double> sortedValues;
-		double mean = 0;
-		for(std::list<double>::const_iterator it = values.cbegin(); it != values.cend(); ++it){
-			if(*it > NEG_DBL_MAX){
+		std::list<real> sortedValues;
+		real mean = 0;
+		for(auto it = values.cbegin(); it != values.cend(); ++it){
+			if(*it > NEG_REAL_MAX){
 				mean += *it;
 			}
 			bool found = false;
-			// can not be cbegin() and cend() is not fully supported in C++11
-			for(std::list<double>::iterator itSort = sortedValues.begin(); itSort != sortedValues.end() && !found; ++itSort){
+			for(auto itSort = sortedValues.cbegin(); itSort != sortedValues.cend() && !found; ++itSort){
 				if(*itSort > *it){
 					sortedValues.insert(itSort, *it);
 					found = true;
@@ -490,59 +490,59 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 			}
 		}
 		mean /= values.size();
-		for(std::list<double>::const_iterator itSort = sortedValues.cbegin(); itSort != sortedValues.cend(); ++itSort){
-			if(*itSort > mean - (maxVal - mean) && *itSort > NEG_DBL_MAX){
+		for(auto itSort = sortedValues.cbegin(); itSort != sortedValues.cend(); ++itSort){
+			if(*itSort > mean - (maxVal - mean) && *itSort > NEG_REAL_MAX){
 				minUsedValue = *itSort;
 				break;
 			}
 		}
 	}
-	const double elementInX = (int)((max[0] - min[0]) / stepSize[0]);
-	const double elementInY = (int)((max[1] - min[1]) / stepSize[1]);
-	std::list<std::pair<double, std::pair<double, double> > > imgPixel;
-	for(double dX = min[0]; dX < max[0]; dX += stepSize[0]){
-		for(double dY = min[1]; dY < max[1]; dY += stepSize[1]){
-			std::list<std::pair<double, double> > closestsPoints;
-			const double newDX = dX + stepSize[0] * 0.5;
-			const double newDY = dY + stepSize[1] * 0.5;
-			std::list<double>::const_iterator itValue = values.begin();
-			for(std::list<Eigen::Vector2d>::const_iterator it = points.cbegin(); it != points.cend(); ++it, ++itValue){
-				const double dist = ((*it).coeff(0) - newDX) * ((*it).coeff(0) - newDX) + ((*it).coeff(1) - newDY) * ((*it).coeff(1) - newDY);
+	const real elementInX = (int)((max[0] - min[0]) / stepSize[0]);
+	const real elementInY = (int)((max[1] - min[1]) / stepSize[1]);
+	std::list<std::pair<real, std::pair<real, real> > > imgPixel;
+	for(real dX = min[0]; dX < max[0]; dX += stepSize[0]){
+		for(real dY = min[1]; dY < max[1]; dY += stepSize[1]){
+			std::list<std::pair<real, real> > closestsPoints;
+			const real newDX = (real) (dX + stepSize[0] * 0.5);
+			const real newDY = (real) (dY + stepSize[1] * 0.5);
+			auto itValue = values.cbegin();
+			for(auto it = points.cbegin(); it != points.cend(); ++it, ++itValue){
+				const real dist = ((*it).coeff(0) - newDX) * ((*it).coeff(0) - newDX) + ((*it).coeff(1) - newDY) * ((*it).coeff(1) - newDY);
 				bool addNew = false;
-				for(std::list<std::pair<double, double> >::iterator it = closestsPoints.begin(); it != closestsPoints.end(); ++it){
+				for(auto it = closestsPoints.begin(); it != closestsPoints.end(); ++it){
 					if(dist < it->second){
-						closestsPoints.insert(it, std::pair<double, double>(*itValue, dist));
+						closestsPoints.emplace(it, *itValue, dist);
 						addNew = true;
 						break;
 					}
 				}
 				if(!addNew && (int) closestsPoints.size() < k){
-					closestsPoints.push_back(std::pair<double, double>(*itValue, dist));
+					closestsPoints.emplace_back(*itValue, dist);
 				}else if((int) closestsPoints.size() > k){
 					closestsPoints.pop_back();
 				}
 			}
-			double val = 0;
-			double totalDist = 0;
-			for(std::list<std::pair<double, double> >::const_iterator it = closestsPoints.begin(); it != closestsPoints.end(); ++it){
-				totalDist += it->second;
+			real val = 0;
+			real totalDist = 0;
+			for(const auto& point : closestsPoints){
+				totalDist += point.second;
 			}
-			for(std::list<std::pair<double, double> >::const_iterator it = closestsPoints.begin(); it != closestsPoints.end(); ++it){
-				if(it->first > NEG_DBL_MAX){
-					val += it->first * (it->second / totalDist);
+			for(const auto& point : closestsPoints){
+				if(point.first > NEG_REAL_MAX){
+					val += point.first * (point.second / totalDist);
 				}else{
-					val = NEG_DBL_MAX;
+					val = NEG_REAL_MAX;
 					break;
 				}
 			}
-			const double xPos = ((dX - min[0]) / (max[0] - min[0]) * 80. + 10.); // see 10. in drawSvgCoords2D
-			const double yPos = ((dY - min[1]) / (max[1] - min[1]) * 80. + 10.);
-			imgPixel.push_back(std::pair<double, std::pair<double, double> >(val,  std::pair<double, double>(xPos, yPos)));
+			const real xPos = (real) ((dX - min[0]) / (max[0] - min[0]) * 80. + 10.); // see 10. in drawSvgCoords2D
+			const real yPos = (real) ((dY - min[1]) / (max[1] - min[1]) * 80. + 10.);
+			imgPixel.push_back(std::pair<real, std::pair<real, real> >(val,  std::pair<real, real>(xPos, yPos)));
 		}
 	}
-	double newMinVal = DBL_MAX;
-	double newMaxVal = -DBL_MAX;
-	for(std::list<std::pair<double, std::pair<double, double> > >::iterator it = imgPixel.begin(); it != imgPixel.end();++it){
+	real newMinVal = REAL_MAX;
+	real newMaxVal = -REAL_MAX;
+	for(std::list<std::pair<real, std::pair<real, real> > >::iterator it = imgPixel.begin(); it != imgPixel.end();++it){
 		if(it->first < newMinVal){
 			newMinVal = it->first;
 		}
@@ -550,30 +550,30 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 			newMaxVal = it->first;
 		}
 	}
-	for(std::list<std::pair<double, std::pair<double, double> > >::iterator it = imgPixel.begin(); it != imgPixel.end();++it){
-		double val = it->first;
-		const double xPos = it->second.first;
-		const double yPos = it->second.second;
+	for(std::list<std::pair<real, std::pair<real, real> > >::iterator it = imgPixel.begin(); it != imgPixel.end();++it){
+		real val = it->first;
+		const real xPos = it->second.first;
+		const real yPos = it->second.second;
 		if(val >= minVal){
 			if(val > minUsedValue){
 				val = (val - newMinVal) / (newMaxVal - newMinVal);
 			}else{
-				val = 0.;
+				val = (real) 0.;
 			}
 		}
-		double r,g,b;
+		real r,g,b;
 		ColorConverter::getProbColorForBinaryRGB(val, r,g,b);
 		drawSvgRect(file, xPos, yPos, 100. / elementInX, 100. / elementInY, r * 100,g * 100,b * 100);
 	}
-	std::list<double>::const_iterator itValues = values.cbegin();
+	std::list<real>::const_iterator itValues = values.cbegin();
 
-	for(std::list<Eigen::Vector2d>::const_iterator it = points.cbegin(); it != points.cend(); ++it, ++itValues){
-		const double dx = (((*it)[0] - min[0]) / (max[0] - min[0]) * 80. + 10.) / 100. * 820.; // see 10. in drawSvgCoords2D
-		const double dy = (((*it)[1] - min[1]) / (max[1] - min[1]) * 80. + 10.) / 100. * height;
-		double r = 0, g = 0, b = 0;
+	for(std::list<Vector2>::const_iterator it = points.cbegin(); it != points.cend(); ++it, ++itValues){
+		const real dx = (((*it)[0] - min[0]) / (max[0] - min[0]) * 80. + 10.) / 100. * 820.; // see 10. in drawSvgCoords2D
+		const real dy = (((*it)[1] - min[1]) / (max[1] - min[1]) * 80. + 10.) / 100. * height;
+		real r = 0, g = 0, b = 0;
 		//std::cout << "(*it)->getLabel(): " << (*it)->getLabel() + 1 << " " << amountOfClasses << ",";
-		if(*itValues > NEG_DBL_MAX){ // ignores NEG_DBL_MAX values make them black
-			double val;
+		if(*itValues > NEG_REAL_MAX){ // ignores NEG_REAL_MAX values make them black
+			real val;
 			if(*itValues > minUsedValue){
 				val = (*itValues - minUsedValue) / (maxVal - minUsedValue);
 			}else{
@@ -587,30 +587,30 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 }
 
 void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorBinaryClass* predictor,
-		const ClassData& data, const int x, const int y){
+		const LabeledData& data, const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
 	}
 	const int dim = data[0]->rows();
-	Eigen::Vector2i dimVec;
+	Vector2i dimVec;
 	dimVec << x,y;
-	Eigen::Vector2d min, max;
+	Vector2 min, max;
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
-	const Eigen::Vector2d diff = max - min;
+	const Vector2 diff = max - min;
 	max[0] += diff[0] * 0.2;
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
 
-	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	const real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 //	stepSize[1] *= 0.5;
-	const double elementInX = ceil((double)((max[0] - min[0]) / stepSize[0])) + 1;
-	const double elementInY = ceil((double)((max[1] - min[1]) / stepSize[1])) + 1;
+	const real elementInX = ceil((real)((max[0] - min[0]) / stepSize[0])) + 1;
+	const real elementInY = ceil((real)((max[1] - min[1]) / stepSize[1])) + 1;
 	const bool complex = CommandSettings::get_visuRes() > 0;
 	int counter = 0;
-	std::vector< std::vector<double> > colors(2, std::vector<double>(3));
+	std::vector< std::vector<real> > colors(2, std::vector<real>(3));
 	const bool modeLab = false;
 	if(modeLab){
 		ColorConverter::RGB2LAB(1,0,0, colors[0][0], colors[0][1], colors[0][2]);
@@ -620,18 +620,18 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorBin
 	cv::Mat img(elementInY * fac, elementInX * fac, CV_8UC3, cv::Scalar(0, 0, 0));
 	int iX = 0, iY;
 	if(predictor != nullptr){
-		for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+		for(real xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 			if(iX >= elementInX){
 				printError("This should not happen for x: " << iX);
 				continue;
 			}
 			iY = 0;
-			for(double yVal = min[1]; yVal < max[1]; yVal += stepSize[1]){
+			for(real yVal = min[1]; yVal < max[1]; yVal += stepSize[1]){
 				if(iY >= elementInY){
 					printError("This should not happen for y: " << iY);
 					continue;
 				}
-				DataPoint* ele = new DataPoint(dim);
+				VectorX* ele = new VectorX(dim);
 				for(int i = 0; i < dim; ++i){
 					if(i == x){
 						(*ele)[i] = xVal;
@@ -641,17 +641,17 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorBin
 						(*ele)[i] = 0;
 					}
 				}
-				double prob = predictor->predict(*ele);
+				real prob = predictor->predict(*ele);
 				delete ele;
-				//double val = fmax(fmin(1.0,), 0.0);
+				//real val = fmax(fmin(1.0,), 0.0);
 				if(!complex){
 					prob = prob > 0.5 ? 1 : 0;
 				}
-				double r, g, b_;
+				real r, g, b_;
 				if(modeLab){
-					double l = prob * colors[0][0] + (1-prob) * colors[1][0];
-					double a = prob * colors[0][1] + (1-prob) * colors[1][1];
-					double b = prob * colors[0][2] + (1-prob) * colors[1][2];
+					real l = prob * colors[0][0] + (1-prob) * colors[1][0];
+					real a = prob * colors[0][1] + (1-prob) * colors[1][1];
+					real b = prob * colors[0][2] + (1-prob) * colors[1][2];
 					ColorConverter::LAB2RGB(l, a, b, r, g, b_);
 				}else{
 					ColorConverter::getProbColorForBinaryRGB(prob, r, g, b_);
@@ -678,48 +678,48 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorBin
 	cv::Scalar black(0,0,0);
 	unsigned int oldFac = fac;
 	fac = 3;
-	for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it, ++counter){
+	for(LabeledDataConstIterator it = data.cbegin(); it != data.cend(); ++it, ++counter){
 		const int dx = ((**it)[x] - min[0]) / (max[0] - min[0]) * elementInX * oldFac;
 		const int dy = (1. - ((**it)[y] - min[1]) / (max[1] - min[1])) * elementInY * oldFac;
 		const int label = (*it)->getLabel();
-		double r, g, b;
+		real r, g, b;
 		if(modeLab){
 			ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
 		}else{
 			ColorConverter::getProbColorForBinaryRGB(label == 1 ? 0.0 : 1.0, r, g, b);
 		}
 		cv::Scalar actColor(b * 255,g * 255,r * 255);// from rgb to bgr
-		cv::circle(img, cv::Point(dx, dy), (double) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
-		cv::circle(img, cv::Point(dx, dy), (double) fac * amountOfPointsOnOneAxis / 50.0, black, (double) fac / 4.0 * (double) amountOfPointsOnOneAxis / 50.0, CV_AA);
+		cv::circle(img, cv::Point(dx, dy), (real) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
+		cv::circle(img, cv::Point(dx, dy), (real) fac * amountOfPointsOnOneAxis / 50.0, black, (real) fac / 4.0 * (real) amountOfPointsOnOneAxis / 50.0, CV_AA);
 	}
 	cv::imwrite(Logger::getActDirectory() + fileName, img);
 }
 
 void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predictor,
-		const ClassData& data, const int x, const int y){
+		const LabeledData& data, const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
 	}
 	const int dim = data[0]->rows();
-	Eigen::Vector2i dimVec;
+	Vector2i dimVec;
 	dimVec << x,y;
-	Eigen::Vector2d min, max;
+	Vector2 min, max;
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
-	const Eigen::Vector2d diff = max - min;
+	const Vector2 diff = max - min;
 	max[0] += diff[0] * 0.2;
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
 
-	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	const real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 //	stepSize[1] *= 0.5;
-	const double elementInX = ceil((double)((max[0] - min[0]) / stepSize[0])) + 1;
-	const double elementInY = ceil((double)((max[1] - min[1]) / stepSize[1])) + 1;
+	const real elementInX = ceil((real)((max[0] - min[0]) / stepSize[0])) + 1;
+	const real elementInY = ceil((real)((max[1] - min[1]) / stepSize[1])) + 1;
 	const bool complex = CommandSettings::get_visuRes() > 0;
 	int counter = 0;
-	std::vector< std::vector<double> > colors(4, std::vector<double>(3));
+	std::vector< std::vector<real> > colors(4, std::vector<real>(3));
 	const bool modeLab = false;
 	if(modeLab){
 		ColorConverter::RGB2LAB(1,0,0, colors[0][0], colors[0][1], colors[0][2]);
@@ -732,18 +732,18 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predict
 	int iX = 0, iY;
 	cv::Scalar white(255,255,255);
 	if(predictor != nullptr){
-		for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+		for(real xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 			if(iX >= elementInX){
 				printError("This should not happen for x: " << iX);
 				continue;
 			}
 			iY = 0;
-			for(double yVal = min[1]; yVal < max[1]; yVal += stepSize[1]){
+			for(real yVal = min[1]; yVal < max[1]; yVal += stepSize[1]){
 				if(iY >= elementInY){
 					printError("This should not happen for y: " << iY);
 					continue;
 				}
-				DataPoint* ele = new DataPoint(dim);
+				VectorX* ele = new VectorX(dim);
 				for(int i = 0; i < dim; ++i){
 					if(i == x){
 						(*ele)[i] = xVal;
@@ -753,17 +753,17 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predict
 						(*ele)[i] = 0;
 					}
 				}
-				double prob = predictor->predict(*ele);
+				real prob = predictor->predict(*ele);
 				delete ele;
-				//double val = fmax(fmin(1.0,), 0.0);
+				//real val = fmax(fmin(1.0,), 0.0);
 				if(!complex){
 					prob = prob > 0.5 ? 1 : 0;
 				}
-				double r, g, b_;
+				real r, g, b_;
 				if(modeLab){
-					double l = prob * colors[0][0] + (1-prob) * colors[1][0];
-					double a = prob * colors[0][1] + (1-prob) * colors[1][1];
-					double b = prob * colors[0][2] + (1-prob) * colors[1][2];
+					real l = prob * colors[0][0] + (1-prob) * colors[1][0];
+					real a = prob * colors[0][1] + (1-prob) * colors[1][1];
+					real b = prob * colors[0][2] + (1-prob) * colors[1][2];
 					ColorConverter::LAB2RGB(l, a, b, r, g, b_);
 				}else{
 					ColorConverter::getProbColorForBinaryRGB(prob, r, g, b_);
@@ -789,27 +789,27 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predict
 	cv::Scalar black(0,0,0);
 	unsigned int oldFac = fac;
 	fac = 3;
-	for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it, ++counter){
+	for(LabeledDataConstIterator it = data.cbegin(); it != data.cend(); ++it, ++counter){
 		const int dx = ((**it)[x] - min[0]) / (max[0] - min[0]) * elementInX * oldFac;
 		const int dy = (1. - ((**it)[y] - min[1]) / (max[1] - min[1])) * elementInY * oldFac;
 		const int label = (*it)->getLabel();
-		double r, g, b;
+		real r, g, b;
 		if(modeLab){
 			ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
 		}else{
 			ColorConverter::getProbColorForBinaryRGB(label == 1 ? 0.0 : 1.0, r, g, b);
 		}
 		cv::Scalar actColor(b * 255,g * 255,r * 255);// from rgb to bgr
-		cv::circle(img, cv::Point(dy, dx), (double) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
-		cv::circle(img, cv::Point(dy, dx), (double) fac * amountOfPointsOnOneAxis / 50.0, black, (double) fac / 4.0 * (double) amountOfPointsOnOneAxis / 50.0, CV_AA);
+		cv::circle(img, cv::Point(dy, dx), (real) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
+		cv::circle(img, cv::Point(dy, dx), (real) fac * amountOfPointsOnOneAxis / 50.0, black, (real) fac / 4.0 * (real) amountOfPointsOnOneAxis / 50.0, CV_AA);
 	}
-	for(IVM::List<unsigned int>::const_iterator itList = predictor->getSelectedInducingPoints().begin(); itList != predictor->getSelectedInducingPoints().end(); ++itList){
-		ClassPoint* it =  data[*itList];
+	for(const auto& indx : predictor->getSelectedInducingPoints()){
+		LabeledVectorX* it =  data[indx];
 		const int dx = (it->coeff(x) - min[0]) / (max[0] - min[0]) * elementInX * oldFac;
 		const int dy = (1. - (it->coeff(y) - min[1]) / (max[1] - min[1])) * elementInY * oldFac;
 		const int label = it->getLabel();
-		double r, g, b;
-		double ir, ig, ib;
+		real r, g, b;
+		real ir, ig, ib;
 		if(modeLab){
 			ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
 		}else{
@@ -818,41 +818,41 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predict
 		}
 		cv::Scalar actColor(b * 255,g * 255,r * 255);// from rgb to bgr
 		cv::Scalar induActColor(ib * 255,ig * 255,ir * 255);// from rgb to bgr
-		cv::circle(img, cv::Point(dy, dx), (double) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
-		cv::circle(img, cv::Point(dy, dx), (double) fac * amountOfPointsOnOneAxis / 50.0, black, (double) fac / 4.0 * (double) amountOfPointsOnOneAxis / 50.0, CV_AA);
-		cv::circle(img, cv::Point(dy, dx), (double) fac * amountOfPointsOnOneAxis / 200.0, induActColor, CV_FILLED, CV_AA);
+		cv::circle(img, cv::Point(dy, dx), (real) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
+		cv::circle(img, cv::Point(dy, dx), (real) fac * amountOfPointsOnOneAxis / 50.0, black, (real) fac / 4.0 * (real) amountOfPointsOnOneAxis / 50.0, CV_AA);
+		cv::circle(img, cv::Point(dy, dx), (real) fac * amountOfPointsOnOneAxis / 200.0, induActColor, CV_FILLED, CV_AA);
 	}
 	cv::imwrite(Logger::getActDirectory() + fileName, img);
 }
 
 
-void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMultiClass* predictor, const ClassData& data, const int x, const int y){
+void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMultiClass* predictor, const LabeledData& data, const int x, const int y){
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
 	}
 	const int dim = data[0]->rows();
-	Eigen::Vector2i dimVec;
+	Vector2i dimVec;
 	dimVec << x,y;
-	Eigen::Vector2d min, max;
+	Vector2 min, max;
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
-	const Eigen::Vector2d diff = max - min;
+	const Vector2 diff = max - min;
 	max[0] += diff[0] * 0.2;
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
-	const double amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
-	Eigen::Vector2d stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
+	const real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	int amount = 0;
-	std::vector<double> labels;
-	const double elementInX = ceil((double)((max[0] - min[0]) / stepSize[0])) + 1;
-	const double elementInY = ceil((double)((max[1] - min[1]) / stepSize[1])) + 1;
+	std::vector<real> labels;
+	const real elementInX = ceil((real)((max[0] - min[0]) / stepSize[0])) + 1;
+	const real elementInY = ceil((real)((max[1] - min[1]) / stepSize[1])) + 1;
 	const unsigned int classAmount = predictor->amountOfClasses();
 	Data points;
-	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
-		//for(double xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
-		for(double yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
-			DataPoint* ele = new DataPoint(dim);
+	for(real xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+		//for(real xVal = max[0]; xVal >= min[0]; xVal -= stepSize[0]){
+		for(real yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
+			VectorX* ele = new VectorX(dim);
 			for(int i = 0; i < dim; ++i){
 				if(i == x){
 					(*ele)[i] = xVal;
@@ -868,7 +868,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	}
 	const bool complex = CommandSettings::get_visuRes() > 0;
 	Labels result;
-	std::vector< std::vector<double> > probs;
+	std::vector< std::vector<real> > probs;
 	if(complex){
 		predictor->predictData(points, result, probs);
 	}else{
@@ -876,31 +876,31 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	}
 	int counter = 0;
 	int iX = 0, iY;
-	std::vector< std::vector<double> > colors(classAmount, std::vector<double>(3));
+	std::vector< std::vector<real> > colors(classAmount, std::vector<real>(3));
 	const bool justTwoClasses = classAmount == 2;
 	if(!justTwoClasses){
 		for(unsigned int i = 0; i < classAmount; ++i){ // save all colors
-			ColorConverter::HSV2LAB((i + 1) / (double) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
+			ColorConverter::HSV2LAB((i + 1) / (real) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
 		}
 	}
 	const unsigned int fac = 32;
 	cv::Mat img(elementInY * fac, elementInX * fac, CV_8UC3, cv::Scalar(0, 0, 0));
-	for(double xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
+	for(real xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 		if(iX >= elementInX){
 			printError("This should not happen for x: " << iX);
 			continue;
 		}
 		iY = 0;
-		for(double yVal = min[1]; yVal < max[1]; yVal += stepSize[1]){
+		for(real yVal = min[1]; yVal < max[1]; yVal += stepSize[1]){
 			if(iY >= elementInY){
 				printError("This should not happen for y: " << iY);
 				continue;
 			}
-			//double val = fmax(fmin(1.0,), 0.0);
-			double r, g, b_;
+			//real val = fmax(fmin(1.0,), 0.0);
+			real r, g, b_;
 			if(complex){
-				double l = 0, a = 0, b = 0;
-				double sum = 0;
+				real l = 0, a = 0, b = 0;
+				real sum = 0;
 				for(unsigned int i = 0; i < classAmount; ++i){
 					sum += probs[counter][i];
 				}
@@ -918,11 +918,11 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 					}
 					ColorConverter::LAB2RGB(l, a, b, r, g, b_);
 				}else{
-					const double prob = probs[counter][0] / sum;
+					const real prob = probs[counter][0] / sum;
 					ColorConverter::getProbColorForBinaryRGB(prob, r, g, b_);
 				}
 			}else{
-				double l = 0, a = 0, b = 0;
+				real l = 0, a = 0, b = 0;
 				l = colors[result[counter]][0];
 				a = colors[result[counter]][1];
 				b = colors[result[counter]][2];
@@ -942,11 +942,11 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 		++iX;
 	}
 	cv::Scalar black(0,0,0);
-	for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it, ++counter){
+	for(LabeledDataConstIterator it = data.cbegin(); it != data.cend(); ++it, ++counter){
 		const int dx = ((**it)[x] - min[0]) / (max[0] - min[0]) * elementInX * fac;
 		const int dy = (1. - ((**it)[y] - min[1]) / (max[1] - min[1])) * elementInY * fac;
 		const int label = (*it)->getLabel();
-		double r, g, b;
+		real r, g, b;
 		if(!justTwoClasses){
 			ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
 		}else{
@@ -962,12 +962,12 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	}
 }
 
-void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& points,
-		const Eigen::Vector2d& min, const Eigen::Vector2d& max, const Eigen::Vector2i& dim, const std::list<unsigned int>& selectedInducingPoints, const int amountOfClasses, const IVM* ivm){
+void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const LabeledData& points,
+		const Vector2& min, const Vector2& max, const Vector2i& dim, const std::list<unsigned int>& selectedInducingPoints, const int amountOfClasses, const IVM* ivm){
 	unsigned int counter = 0;
 	if(selectedInducingPoints.size() > 0){
-		std::list<ClassDataConstIterator> inducedPoints;
-		for(ClassDataConstIterator it = points.cbegin(); it != points.cend(); ++it, ++counter){
+		std::list<LabeledDataConstIterator> inducedPoints;
+		for(LabeledDataConstIterator it = points.cbegin(); it != points.cend(); ++it, ++counter){
 			bool isInduced = false;
 			for(std::list<unsigned int>::const_iterator itI = selectedInducingPoints.begin(); itI != selectedInducingPoints.end(); ++itI){
 				if((*itI) == counter){
@@ -978,8 +978,8 @@ void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& 
 				inducedPoints.push_back(it);
 				continue;
 			}
-			const double dx = ((**it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
-			const double dy = ((**it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
+			const real dx = ((**it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
+			const real dy = ((**it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
 			std::string color = "blue";
 			if(ivm != nullptr){
 				if((*it)->getLabel() == ivm->getLabelForOne()){
@@ -993,9 +993,9 @@ void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& 
 			file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
 		}
 		// draw after all points, to make them more visible
-		for(std::list<ClassDataConstIterator>::const_iterator it = inducedPoints.cbegin(); it != inducedPoints.cend(); ++it){
-			const double dx = ((***it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
-			const double dy = ((***it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
+		for(std::list<LabeledDataConstIterator>::const_iterator it = inducedPoints.cbegin(); it != inducedPoints.cend(); ++it){
+			const real dx = ((***it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
+			const real dy = ((***it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
 			std::string color = "blue";
 			if(ivm != nullptr){
 				if((**it)->getLabel() == ivm->getLabelForOne()){
@@ -1010,11 +1010,11 @@ void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& 
 			file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"3\" fill=\"white\" /> \n";
 		}
 	}else{
-		for(ClassDataConstIterator it = points.cbegin(); it != points.cend(); ++it, ++counter){
-			const double dx = ((**it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
-			const double dy = ((**it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
+		for(LabeledDataConstIterator it = points.cbegin(); it != points.cend(); ++it, ++counter){
+			const real dx = ((**it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
+			const real dy = ((**it)[dim[1]] - min[1]) / (max[1] - min[1]) * 100.;
 			if(amountOfClasses == 2){
-				double prob = 0;
+				real prob = 0;
 				if(ivm != nullptr){
 					if((*it)->getLabel() == ivm->getLabelForOne()){
 						prob = 1;
@@ -1024,53 +1024,53 @@ void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const ClassData& 
 						prob = 1;
 					}
 				}
-				double r, g, b;
+				real r, g, b;
 				ColorConverter::getProbColorForBinaryRGB(prob, r,g,b);
 				std::stringstream color;
 				color << "rgb(" << r * 100. << "%," << g * 100. << "%," << b * 100. << "%)";
 				file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"" << color.str() << "\" stroke=\"black\" stroke-width=\"2\"/> \n";
 			}else{
-				double r, g, b;
+				real r, g, b;
 				//std::cout << "(*it)->getLabel(): " << (*it)->getLabel() + 1 << " " << amountOfClasses << ",";
-				ColorConverter::HSV2RGB(((*it)->getLabel() + 1) / (double) (amountOfClasses) * 360., 1.0, 1.0, r, g, b);
+				ColorConverter::HSV2RGB(((*it)->getLabel() + 1) / (real) (amountOfClasses) * 360., 1.0, 1.0, r, g, b);
 				file << "<circle cx=\"" << dx << "%\" cy=\"" << dy << "%\" r=\"8\" fill=\"rgb(" << r * 100. << "%," << g * 100. << "%," << b * 100. << "%)\" stroke=\"black\" stroke-width=\"2\"/> \n";
 			}
 		}
 	}
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::MatrixXd& mat){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const Matrix& mat){
 	std::ofstream file;
 	openSvgFile(fileName, 1920, mat.cols(), mat.rows(), file);
-	double min, max;
+	real min, max;
 	const bool ignoreDBLMAXNEG = true;
 	DataConverter::getMinMax(mat, min, max, ignoreDBLMAXNEG);
 	for(int iX = 0; iX < mat.rows(); ++iX){
 		for(int iY = 0; iY < mat.cols(); ++iY){
-			if(mat(iX,iY) > NEG_DBL_MAX){
-				const double prob = (mat(iX,iY)  - min) / (max - min);
-				double r,g,b;
+			if(mat(iX,iY) > NEG_REAL_MAX){
+				const real prob = (mat(iX,iY)  - min) / (max - min);
+				real r,g,b;
 				ColorConverter::HSV2RGB(prob * 360.,1.0, 1.0,r,g,b);
-				drawSvgRect(file, iX / (double)mat.rows() * 100., iY / (double)mat.cols()  * 100., 100.0 / mat.rows(), 100.0 / mat.cols(), (r * 100.0), (g * 100.0), (b * 100.0));
+				drawSvgRect(file, iX / (real)mat.rows() * 100., iY / (real)mat.cols()  * 100., 100.0 / mat.rows(), 100.0 / mat.cols(), (r * 100.0), (g * 100.0), (b * 100.0));
 			}else{
-				drawSvgRect(file, iX / (double)mat.rows() * 100., iY / (double)mat.cols()  * 100., 100.0 / mat.rows(), 100.0 / mat.cols(), 10, 10, 10);
+				drawSvgRect(file, iX / (real)mat.rows() * 100., iY / (real)mat.cols()  * 100., 100.0 / mat.rows(), 100.0 / mat.cols(), 10, 10, 10);
 			}
 		}
 	}
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<double>& list, const std::list<std::string>& colors){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<real>& list, const std::list<std::string>& colors){
 	if(list.size() == 0 || list.size() != colors.size()){
 		printError("The lists are unequal or have no elements!");
 		return;
 	}
-	Eigen::VectorXd vec(list.size());
+	VectorX vec(list.size());
 	unsigned int t = 0;
-	for(std::list<double>::const_iterator it = list.begin(); it != list.end(); ++it, ++t){
+	for(std::list<real>::const_iterator it = list.begin(); it != list.end(); ++it, ++t){
 		vec[t] = *it;
 	}
-	double min, max;
+	real min, max;
 	DataConverter::getMinMax(vec, min, max, true);
 	if(max == min){
 		printError("Min and max are equal!");
@@ -1085,11 +1085,11 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<do
 	}
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::VectorXd& vec, const bool drawLine){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const VectorX& vec, const bool drawLine){
 	if(vec.rows() == 0){
 		return;
 	}
-	double min, max;
+	real min, max;
 	DataConverter::getMinMax(vec, min, max);
 	std::ofstream file;
 	openSvgFile(fileName, 820., 1.0, 1.0, file);
@@ -1102,19 +1102,19 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const Eigen::Vecto
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<Eigen::VectorXd>& vecs, const bool drawLine){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<VectorX>& vecs, const bool drawLine){
 	if(vecs.size() == 0){
 		return;
 	}
 	const int size = vecs.begin()->rows();
-	for(std::list<Eigen::VectorXd>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
+	for(std::list<VectorX>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
 		if(size != it->rows()){
 			return;
 		}
 	}
-	double min = DBL_MAX, max = NEG_DBL_MAX;
-	for(std::list<Eigen::VectorXd>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
-		double minAct, maxAct;
+	real min = REAL_MAX, max = NEG_REAL_MAX;
+	for(std::list<VectorX>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
+		real minAct, maxAct;
 		DataConverter::getMinMax(*it, minAct, maxAct);
 		if(minAct < min){
 			min = minAct;
@@ -1133,14 +1133,14 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<Ei
 	colors[3] = "black";
 	std::vector<std::string>::const_iterator itColor = colors.begin();
 	if(drawLine){
-		for(std::list<Eigen::VectorXd>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
+		for(std::list<VectorX>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
 			drawSvgLine(file, *it, 10., 10., min, max, 820., 820., *itColor);
 			++itColor;
 			if(itColor == colors.end())
 				itColor = colors.begin();
 		}
 	}else{
-		for(std::list<Eigen::VectorXd>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
+		for(std::list<VectorX>::const_iterator it = vecs.begin(); it != vecs.end(); ++it){
 			drawSvgDots(file, *it, 10., 10., min, max, 820., 820.,  *itColor);
 			++itColor;
 			if(itColor == colors.end())
@@ -1150,31 +1150,31 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<Ei
 	closeSvgFile(file);
 }
 
-void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<double>& list, const bool drawLine){
+void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<real>& list, const bool drawLine){
 	if(list.size() == 0){
 		return;
 	}
-	Eigen::VectorXd vec(list.size());
+	VectorX vec(list.size());
 	unsigned int i = 0;
-	for(std::list<double>::const_iterator it = list.begin(); it != list.end(); ++it, ++i){
+	for(std::list<real>::const_iterator it = list.begin(); it != list.end(); ++it, ++i){
 		vec.coeffRef(i) = *it;
 	}
 	writeSvg(fileName, vec, drawLine);
 }
 
 void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
-		const double startX, const double startY, const double startXForData, const double startYForData, const double xSize,
-		const double ySize, const double min, const double max, const double width, const double heigth, const bool useAllXSegments
-		, const double minX, const double maxX){
+		const real startX, const real startY, const real startXForData, const real startYForData, const real xSize,
+		const real ySize, const real min, const real max, const real width, const real heigth, const bool useAllXSegments
+		, const real minX, const real maxX){
 	UNUSED(ySize);
 	file << "<path d=\"M " << startX / 100. * width << " "<< startY / 100. * heigth
 		 << " l " << (100. - 2. * startX) / 100. * width  << " 0"
 		 << " M " << startX / 100. * width << " "<< startY / 100. * heigth
 		 << " l 0 " << (100. - 2. * startY) / 100. * heigth
 		 << "\" fill=\"transparent\" stroke=\"black\"/> \n";
-	const double widthOfMarks = 8;
+	const real widthOfMarks = 8;
 	unsigned int amountOfSegm = useAllXSegments ? xSize - 1 : std::min(10, (int) xSize - 1);
-	double segmentWidth = ((100 - startXForData - startXForData) / 100. * width) / amountOfSegm;
+	real segmentWidth = ((100 - startXForData - startXForData) / 100. * width) / amountOfSegm;
 	file << "<path d=\"";//M " << startXForData / 100. * width << " "  << startY / 100. *heigth - widthOfMarks / 2;
 	for(unsigned int i = 0; i <= amountOfSegm; ++i){
 		file << " M " << startXForData / 100. * width + i * segmentWidth
@@ -1194,7 +1194,7 @@ void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 			file << "<text x=\"" << startXForData / 100. * width + i * segmentWidth
 					<< "\" y=\"" << -(startY / 100. * heigth - widthOfMarks / 2. - 20)<< "\" transform=\"scale(1,-1)\" "
 					<< "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
-					<< number2String(((maxX - minX) * i / (double) amountOfSegm + minX), 3) << "</text>\n";
+					<< number2String(((maxX - minX) * i / (real) amountOfSegm + minX), 3) << "</text>\n";
 		}
 	}
 	amountOfSegm = 10;
@@ -1210,7 +1210,7 @@ void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 		file << "<text x=\"" << (startY / 100. * heigth - widthOfMarks / 2. - 20)
 			 << "\" y=\"" << -(startXForData / 100. * width + i * segmentWidth) << "\" transform=\"scale(1,-1)\" "
 			 << "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
-			 << number2String(((max - min) * i / (double) amountOfSegm + min), 3) << "</text>\n";
+			 << number2String(((max - min) * i / (real) amountOfSegm + min), 3) << "</text>\n";
 	}
 	file << "<path d=\"M " << startX / 100. * heigth - widthOfMarks / 2 << " " << (100. - startY) / 100. * width
 		 << " l " << widthOfMarks << " " << 0 << " l " << - widthOfMarks / 2.0 << " " << widthOfMarks * 1.5
@@ -1223,15 +1223,15 @@ void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 }
 
 void DataWriterForVisu::drawSvgCoords2D(std::ofstream& file,
-		const double startX, const double startY, const double startXForData, const double startYForData, const Eigen::Vector2d& min,
-		const Eigen::Vector2d& max, const unsigned int amountOfSegm, const double width, const double heigth){
+		const real startX, const real startY, const real startXForData, const real startYForData, const Vector2& min,
+		const Vector2& max, const unsigned int amountOfSegm, const real width, const real heigth){
 	file << "<path d=\"M " << startX / 100. * width << " "<< startY / 100. * heigth
 			<< " l " << (100. - 2. * startX) / 100. * width  << " 0"
 			<< " M " << startX / 100. * width << " "<< startY / 100. * heigth
 			<< " l 0 " << (100. - 2. * startY) / 100. * heigth
 			<< "\" fill=\"transparent\" stroke=\"black\"/> \n";
-	const double widthOfMarks = 8;
-	double segmentWidth = ((100 - startXForData - startXForData) / 100. * width) / amountOfSegm;
+	const real widthOfMarks = 8;
+	real segmentWidth = ((100 - startXForData - startXForData) / 100. * width) / amountOfSegm;
 	file << "<path d=\"";//M " << startXForData / 100. * width << " "  << startY / 100. *heigth - widthOfMarks / 2;
 	for(unsigned int i = 0; i <= amountOfSegm; ++i){
 		file << " M " << startXForData / 100. * width + i * segmentWidth
@@ -1243,7 +1243,7 @@ void DataWriterForVisu::drawSvgCoords2D(std::ofstream& file,
 		file << "<text x=\"" << startXForData / 100. * width + i * segmentWidth
 				<< "\" y=\"" << -(startY / 100. * heigth - widthOfMarks / 2. - 20)<< "\" transform=\"scale(1,-1)\" "
 				<< "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
-				<< number2String((double) ((i / (double) (amountOfSegm - 1)) * (max[0] - min[0]) + min[0]), 4)  << "</text>\n";
+				<< number2String((real) ((i / (real) (amountOfSegm - 1)) * (max[0] - min[0]) + min[0]), 4)  << "</text>\n";
 	}
 	segmentWidth = ((100 - startXForData - startXForData) / 100. * width) / amountOfSegm;
 	file << "<path d=\"";//M " << startXForData / 100. * width << " "  << startY / 100. *heigth - widthOfMarks / 2;
@@ -1257,7 +1257,7 @@ void DataWriterForVisu::drawSvgCoords2D(std::ofstream& file,
 		file << "<text x=\"" << (startY / 100. * heigth - widthOfMarks / 2. - 20)
 						 << "\" y=\"" << -(startXForData / 100. * width + i * segmentWidth) << "\" transform=\"scale(1,-1)\" "
 						 << "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
-						 << number2String((double) ((i / (double) (amountOfSegm - 1)) * (max[1] - min[1]) + min[1]), 4) << "</text>\n";
+						 << number2String((real) ((i / (real) (amountOfSegm - 1)) * (max[1] - min[1]) + min[1]), 4) << "</text>\n";
 	}
 	file << "<path d=\"M " << startX / 100. * heigth - widthOfMarks / 2 << " " << (100. - startY) / 100. * width
 			<< " l " << widthOfMarks << " " << 0 << " l " << - widthOfMarks / 2.0 << " " << widthOfMarks * 1.5
@@ -1269,42 +1269,42 @@ void DataWriterForVisu::drawSvgCoords2D(std::ofstream& file,
 			<< "\" fill=\"black\" stroke=\"black\"/> \n";
 }
 
-void DataWriterForVisu::drawSvgLine(std::ofstream& file, const Eigen::VectorXd vec,
-		const double startX, const double startY, const double min,
-		const double max, const double width, const double heigth, const std::string& color){
+void DataWriterForVisu::drawSvgLine(std::ofstream& file, const VectorX vec,
+		const real startX, const real startY, const real min,
+		const real max, const real width, const real heigth, const std::string& color){
 	if(vec.rows() > 0){
-		const double diff = max == min ? 1 : max - min;
-		file << "<path d=\"M " << (0 / (double) (vec.rows() - 1) * (100. - 2. * startX) + startX) / 100. * width << " "
+		const real diff = max == min ? 1 : max - min;
+		file << "<path d=\"M " << (0 / (real) (vec.rows() - 1) * (100. - 2. * startX) + startX) / 100. * width << " "
 				 	 	 	   << ((vec[0] - min) / diff * (100. - 2. * startY) + startY) / 100. * heigth << " \n";
 		for(unsigned int i = 1; i < vec.rows(); ++i){
-			file << " L "<< (i / (double) (vec.rows() - 1) * (100. - 2. * startX) + startX) / 100. * width << " "
+			file << " L "<< (i / (real) (vec.rows() - 1) * (100. - 2. * startX) + startX) / 100. * width << " "
 						 << ((vec[i] - min) / diff * (100. - 2. * startY) + startY) / 100. * heigth << " \n";
 		}
 		file << "\" fill=\"transparent\" stroke=\"" << color << "\"/> \n";
 	}
 }
 
-void DataWriterForVisu::drawSvgDots(std::ofstream& file, const Eigen::VectorXd vec,
-		const double startX, const double startY, const double min,
-		const double max, const double width, const double heigth, const std::string& color){
-	const double diff = max == min ? 1 : max - min;
+void DataWriterForVisu::drawSvgDots(std::ofstream& file, const VectorX vec,
+		const real startX, const real startY, const real min,
+		const real max, const real width, const real heigth, const std::string& color){
+	const real diff = max == min ? 1 : max - min;
 	for(unsigned int i = 0; i < vec.rows(); ++i){
-		if(vec[i] > NEG_DBL_MAX){ // don't use NEG_DBL_MAX Values they should be ignored
-			file << "<circle cx=\"" << (i / (double) vec.rows() * (100. - 2. * startX) + startX) / 100. * width
+		if(vec[i] > NEG_REAL_MAX){ // don't use NEG_REAL_MAX Values they should be ignored
+			file << "<circle cx=\"" << (i / (real) vec.rows() * (100. - 2. * startX) + startX) / 100. * width
 					<< "\" cy=\"" << ((vec[i] - min) / diff * (100. - 2. * startY) + startY) / 100. * heigth
 					<< "\" r=\"3\" fill=\"transparent\" stroke=\"" << color << "\" /> \n";
 		}
 	}
 }
 
-void DataWriterForVisu::drawSvgDots(std::ofstream& file, const Eigen::VectorXd vec,
-		const double startX, const double startY, const double min,
-		const double max, const double width, const double heigth, const std::list<std::string>& colors){
-	const double diff = max == min ? 1 : max - min;
+void DataWriterForVisu::drawSvgDots(std::ofstream& file, const VectorX vec,
+		const real startX, const real startY, const real min,
+		const real max, const real width, const real heigth, const std::list<std::string>& colors){
+	const real diff = max == min ? 1 : max - min;
 	std::list<std::string>::const_iterator it = colors.begin();
 	for(unsigned int i = 0; i < vec.rows(); ++i){
-		if(vec[i] > NEG_DBL_MAX){ // don't use NEG_DBL_MAX Values they should be ignored
-			file << "<circle cx=\"" << (i / (double) vec.rows() * (100. - 2. * startX) + startX) / 100. * width
+		if(vec[i] > NEG_REAL_MAX){ // don't use NEG_REAL_MAX Values they should be ignored
+			file << "<circle cx=\"" << (i / (real) vec.rows() * (100. - 2. * startX) + startX) / 100. * width
 					<< "\" cy=\"" << ((vec[i] - min) / diff * (100. - 2. * startY) + startY) / 100. * heigth
 					<< "\" r=\"3\" fill=\"transparent\" stroke=\"" << *it << "\" /> \n";
 		}
@@ -1312,9 +1312,9 @@ void DataWriterForVisu::drawSvgDots(std::ofstream& file, const Eigen::VectorXd v
 	}
 }
 
-bool DataWriterForVisu::openSvgFile(const std::string& fileName, const double width, const double problemWidth, const double problemHeight, std::ofstream& file){
+bool DataWriterForVisu::openSvgFile(const std::string& fileName, const real width, const real problemWidth, const real problemHeight, std::ofstream& file){
 	file.open(Logger::getActDirectory() + fileName);
-	const double height = (width / problemHeight *  problemWidth);
+	const real height = (width / problemHeight *  problemWidth);
 	file << "<svg version=\"1.1\" " <<
 			"\nbaseProfile=\"full\"" <<
 			"\nwidth=\"" << width << "\" height=\""<< (int) height << "\"\n" <<
@@ -1328,8 +1328,8 @@ void DataWriterForVisu::closeSvgFile(std::ofstream& file){
 	file.close();
 }
 
-void DataWriterForVisu::drawSvgRect(std::ofstream& file, const double xPos, const double yPos,
-			const double width, const double height,
+void DataWriterForVisu::drawSvgRect(std::ofstream& file, const real xPos, const real yPos,
+			const real width, const real height,
 			const int r, const int g, const int b){
 	file << "<rect x=\""<< xPos <<"%\" y=\""<< yPos << "%\" width=\"" << width << "%\" height=\""
 						<< height << "%\" fill=\"rgb(" << r << "%," << g << "%," << b << "%)\" /> \n";

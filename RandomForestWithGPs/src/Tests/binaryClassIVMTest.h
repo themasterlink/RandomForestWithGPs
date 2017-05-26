@@ -20,21 +20,21 @@
 #include <chrono>
 #include <thread>
 
-void testIvm(IVM& ivm, const OnlineStorage<ClassPoint*>& data){
+void testIvm(IVM& ivm, const OnlineStorage<LabeledVectorX*>& data){
 	int right = 0;
-	Eigen::Vector2i rightPerClass;
+	Vector2i rightPerClass;
 	rightPerClass[0] = rightPerClass[1] = 0;
 	int amountOfBelow = 0;
 	int amountOfAbove = 0;
 	const int amountOfTestPoints = data.size();
-	std::list<double> probs;
-	Eigen::Vector2i amountPerClass;
+	std::list<real> probs;
+	Vector2i amountPerClass;
 	amountPerClass[0] = amountPerClass[1] = 0;
 	AvgNumber neg, pos;
 	AvgNumber oc, uc, ocBVS, ucBVS;
 	StopWatch sw;
 	for(int i = 0; i < amountOfTestPoints; ++i){
-		double prob = ivm.predict(*data[i]);
+		real prob = ivm.predict(*data[i]);
 		if(data[i]->getLabel() == ivm.getLabelForOne()){
 			++amountPerClass[0];
 			pos.addNew(prob);
@@ -43,7 +43,7 @@ void testIvm(IVM& ivm, const OnlineStorage<ClassPoint*>& data){
 			neg.addNew(prob);
 		}
 		double entropy = 0;
-		std::vector<double> probs = {prob, 1 - prob};
+		std::vector<real> probs = {prob, 1 - prob};
 		for(unsigned int j = 0; j < 2; ++j){
 			if(probs[j] > 0){
 				entropy -= probs[j] * log(probs[j]) / log(2);
@@ -115,12 +115,12 @@ void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, double* bestLo
 	}
 }
 
-GaussianKernelParams sampleParams(OnlineStorage<ClassPoint*>& storage, int number, const Eigen::Vector2i& usedClasses, bool doEpUpdate,
-		const std::vector<double>& means, const std::vector<double>& sds){
+GaussianKernelParams sampleParams(OnlineStorage<LabeledVectorX*>& storage, int number, const Vector2i& usedClasses, bool doEpUpdate,
+		const std::vector<real>& means, const std::vector<real>& sds){
 	boost::thread_group group;
 	boost::mutex mutex;
 	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
-	double bestLogZ = NEG_DBL_MAX;
+	double bestLogZ = NEG_REAL_MAX;
 	const double durationOfTraining = CommandSettings::get_samplingAndTraining();
 	std::vector<IVM*> ivms(nrOfParallel);
 	bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
@@ -154,19 +154,19 @@ void trainIVM(IVM* ivm, const int verboseLevel){
 void executeForBinaryClassIVM(){
 	int firstPoints; // all points
 	Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
-	const double share = Settings::getDirectDoubleValue("TotalStorage.shareForTraining");
+	const double share = Settings::getDirectRealValue("TotalStorage.shareForTraining");
 	firstPoints /= share;
 	printOnScreen("Read " << firstPoints << " points per class");
 	TotalStorage::readData(firstPoints);
 	DataSets datas;
 	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << " with " << TotalStorage::getAmountOfClass() << " classes");
 	const int trainAmount = share * (std::min((int) TotalStorage::getSmallestClassSize(), firstPoints) * (double) TotalStorage::getAmountOfClass());
-	OnlineStorage<ClassPoint*> train;
-	OnlineStorage<ClassPoint*> test;
+	OnlineStorage<LabeledVectorX*> train;
+	OnlineStorage<LabeledVectorX*> test;
 	// starts the training by its own
 	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 	printOnScreen("Finish reading ");
-	Eigen::Vector2i usedClasses;
+	Vector2i usedClasses;
 	usedClasses[0] = 0;
 	usedClasses[1] = 1;
 	bool doEpUpdate;
@@ -193,8 +193,8 @@ void executeForBinaryClassIVM(){
 			DataWriterForVisu::writeImg("test.png", &ivm, train.storage());
 			openFileInViewer("test.png");
 			}
-//			OnlineStorage<ClassPoint*> removedTrain;
-//			OnlineStorage<ClassPoint*> removedTest;
+//			OnlineStorage<LabeledVectorX*> removedTrain;
+//			OnlineStorage<LabeledVectorX*> removedTest;
 //			TotalStorage::getRemovedOnlineStorageCopyWithTest(train, test);
 //			printOnScreen("On " << train.size() << " removed points from trainings data:");
 //			testIvm(ivm, removedTrain);
@@ -210,10 +210,10 @@ void executeForBinaryClassIVM(){
 		}
 //		openFileInViewer("empty.png");
 	}else{
-		double sNoise = Settings::getDirectDoubleValue("KernelParam.sNoise");
+		double sNoise = Settings::getDirectRealValue("KernelParam.sNoise");
 		if(CommandSettings::get_samplingAndTraining() > 0.){
-			std::vector<double> means = {10, 1.2, 0.5};
-			std::vector<double> sds = {8, 0.8, 0.4};
+			std::vector<real> means = {10, 1.2, 0.5};
+			std::vector<real> sds = {8, 0.8, 0.4};
 			int number = 100;
 			if(CommandSettings::get_useFakeData()){
 				means[0] = 1.2;
@@ -227,7 +227,7 @@ void executeForBinaryClassIVM(){
 				ivm.getGaussianKernel()->changeKernelConfig(hasMoreThanOneLengthValue);
 				ivm.getGaussianKernel()->setGaussianRandomVariables(means, sds);
 				ivm.setDerivAndLogZFlag(true, false);
-				std::list<double> list;
+				std::list<real> list;
 				GaussianKernelParams bestParams(!hasMoreThanOneLengthValue);
 				const int randStartGen = StopWatch::getActTime();
 				srand(randStartGen);
@@ -259,7 +259,7 @@ void executeForBinaryClassIVM(){
 				}
 				ivm.setDerivAndLogZFlag(true, true);
 				double fac = 0.0001;
-				double smallestLog = NEG_DBL_MAX;
+				double smallestLog = NEG_REAL_MAX;
 				const int amountOfTrainingSteps = 0;
 				for(int i = 0; i < amountOfTrainingSteps; ++i){
 					printOnScreen("Act " << ivm.getGaussianKernel()->getHyperParams() << ", logZ: " << ivm.m_logZ << ", deriv: "
@@ -343,27 +343,27 @@ void executeForBinaryClassIVM(){
 				bool doEpUpdate;
 				Settings::getValue("IVM.doEpUpdate", doEpUpdate);
 				/*StopWatch total;
-		Eigen::MatrixXd m_L = Eigen::MatrixXd::Zero(1,1);
+		Matrix m_L = Matrix::Zero(1,1);
 		StopWatch sw;
 		const int nr = 50;
 		for(unsigned int i = 0; i < nr; ++i){
-			Eigen::VectorXd a_nk = Eigen::VectorXd::Zero(m_L.rows());
+			VectorX a_nk = VectorX::Zero(m_L.rows());
 			const double sqrtNu = 1;
 			sw.startTime();
-			Eigen::MatrixXd D2(m_L.rows() + 1, m_L.cols() + 1);
-			D2 << m_L, Eigen::VectorXd::Zero(m_L.cols()),
+			Matrix D2(m_L.rows() + 1, m_L.cols() + 1);
+			D2 << m_L, VectorX::Zero(m_L.cols()),
 					a_nk.transpose(), 1. / sqrtNu;
 			m_L = D2;
 			sw.recordActTime();
 		}
 		printOnScreen("Time: " << sw.elapsedAvgAsPrettyTime() << ", total: " << total.elapsedAsPrettyTime());
 		total.startTime();
-		Eigen::MatrixXd m_L2 = Eigen::MatrixXd::Zero(1,1);
+		Matrix m_L2 = Matrix::Zero(1,1);
 		StopWatch sw2;
-		std::list<Eigen::VectorXd> m_list;
-		std::list<double> m_diag;
+		std::list<VectorX> m_list;
+		std::list<real> m_diag;
 		for(unsigned int i = 0; i < nr; ++i){
-			Eigen::VectorXd a_nk = Eigen::VectorXd::Zero(m_L2.rows());
+			VectorX a_nk = VectorX::Zero(m_L2.rows());
 			const double sqrtNu = 1;
 			sw2.startTime();
 			m_list.push_back(a_nk);
@@ -372,9 +372,9 @@ void executeForBinaryClassIVM(){
 		}
 		sw2.startTime();
 		unsigned int k = 1;
-		m_L2 = Eigen::MatrixXd::Zero(nr + 1, nr + 1);
-		std::list<double>::iterator diag = m_diag.begin();
-		for(std::list<Eigen::VectorXd>::iterator it = m_list.begin(); it != m_list.end(); ++it, ++k){
+		m_L2 = Matrix::Zero(nr + 1, nr + 1);
+		std::list<real>::iterator diag = m_diag.begin();
+		for(std::list<VectorX>::iterator it = m_list.begin(); it != m_list.end(); ++it, ++k){
 			for(unsigned int i = 0; i < it->rows(); ++i){
 				m_L2(k,i) = (*it)[i];
 			}
@@ -441,24 +441,24 @@ void executeForBinaryClassIVM(){
 				return;
 			}
 		}else{
-			Eigen::MatrixXd finalMat;
+			Matrix finalMat;
 			double bestResult = 0;
-			double bestX = Settings::getDirectDoubleValue("KernelParam.len");
-			double bestY = Settings::getDirectDoubleValue("KernelParam.fNoise");
+			double bestX = Settings::getDirectRealValue("KernelParam.len");
+			double bestY = Settings::getDirectRealValue("KernelParam.fNoise");
 			if(!CommandSettings::get_useFakeData()){
 				bestX = 32.5579;
 				bestY = 1.24258;
 				sNoise = 1.33968;
 			}
 			double worstX = 0.57, worstY = 0.84;
-			double worstResult = DBL_MAX;
+			double worstResult = REAL_MAX;
 			//for(unsigned int i = 0; i < 100000; ++i){
 			const int size = ((1. - 0.9) / 0.005 + 1);
 			InLinePercentageFiller::setActMax(size * size);
 			int i = 0;
-			double bestLogZ = NEG_DBL_MAX;
+			double bestLogZ = NEG_REAL_MAX;
 			if(false){
-				Eigen::VectorXd correctVec = Eigen::VectorXd::Zero(size * size);
+				VectorX correctVec = VectorX::Zero(size * size);
 				for(double x = 0.5; x < 0.6; x += 0.005){
 					int j = 0;
 					for(double y2 = 0.8; y2 < 0.9; y2 += 0.005)
@@ -473,7 +473,7 @@ void executeForBinaryClassIVM(){
 							int amountOfBelow = 0;
 							int amountOfAbove = 0;
 							for(int j = 0; j < test.size(); ++j){
-								ClassPoint& ele = *test[j];
+								LabeledVectorX& ele = *test[j];
 								double prob = ivm.predict(ele);
 								//printOnScreen("Prob: " << prob << ", label is: " << labels[j]);
 								if(prob < 0.5 && ele.getLabel() == 0){
@@ -542,7 +542,7 @@ void executeForBinaryClassIVM(){
 			ivm.setDerivAndLogZFlag(true, true);
 			if(Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam")){
 				bestY = 1.24258; //1.67215;
-				std::vector<double> bestXs = {1.72188, 0.209048};//{1.03035, -0.280561};
+				std::vector<real> bestXs = {1.72188, 0.209048};//{1.03035, -0.280561};
 				if(!CommandSettings::get_useFakeData()){
 					bestXs = {13.469127, 12.469127};
 					bestY = 0.0357228;
@@ -558,7 +558,7 @@ void executeForBinaryClassIVM(){
 			ivm.train(false, 1);
 			printOnScreen("Needed for training: " << swTraining.elapsedAsTimeFrame());
 			/*
-		std::list<double> times;
+		std::list<real> times;
 		for(unsigned int k = 2; k < 350; k += 2){
 			StopWatch sw;
 			ivm.setNumberOfInducingPoints(k);
@@ -574,7 +574,7 @@ void executeForBinaryClassIVM(){
 			if((CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
 				int x = 0, y = 1;
 				if(!CommandSettings::get_useFakeData() && ivm.getGaussianKernel()->hasLengthMoreThanOneDim()){
-					double highestVal = NEG_DBL_MAX, secondHighestVal = NEG_DBL_MAX;
+					double highestVal = NEG_REAL_MAX, secondHighestVal = NEG_REAL_MAX;
 					for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
 						const double len = ivm.getGaussianKernel()->getHyperParams().m_length.getValues()[i];
 						if(len > highestVal){

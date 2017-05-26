@@ -30,6 +30,7 @@ find_package(OpenCV COMPONENTS opencv_core opencv_imgcodecs opencv_highgui openc
 #include_directories("/home/f_soft/foreign_packages/OpenCV/3.1.0/include/")
 
 set(SOURCE_FILES
+        src/Base/Types.h
         src/Base/CommandSettings.cc
         src/Base/CommandSettings.h
         src/Base/InformationPackage.cc
@@ -49,22 +50,16 @@ set(SOURCE_FILES
         src/CMAES/boundary_transformation.h
         src/CMAES/cmaes.cc
         src/CMAES/cmaes.h
-        src/Data/ClassData.cc
-        src/Data/ClassData.h
         src/Data/ClassKnowledge.cc
         src/Data/ClassKnowledge.h
-        src/Data/ClassPoint.cc
-        src/Data/ClassPoint.h
-        src/Data/Data.h
+        src/Data/LabeledVectorX.cc
+        src/Data/LabeledVectorX.h
         src/Data/DataBinaryWriter.cc
         src/Data/DataBinaryWriter.h
         src/Data/DataConverter.cc
         src/Data/DataConverter.h
-        src/Data/DataPoint.cc
-        src/Data/DataPoint.h
         src/Data/DataReader.cc
         src/Data/DataReader.h
-        src/Data/DataSets.h
         src/Data/DataWriterForVisu.cc
         src/Data/DataWriterForVisu.h
         src/Data/OnlineStorage.h

@@ -13,15 +13,13 @@
 #include <fstream>
 #include <istream>
 #include <iostream>
-#include <string>
-#include <vector>
 #include <algorithm>
+#include "../Base/Types.h"
 #include "StopWatch.h"
 #include "InLinePercentageFiller.h"
 #include "../Base/ScreenOutput.h"
 #include "../Base/Logger.h"
 #include <boost/filesystem.hpp>
-#include <boost/random.hpp>
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -41,13 +39,9 @@
 #define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
-using MemoryType = unsigned long;
+static const auto UNDEF_CLASS_LABEL = 99999999u;
 
-using GeneratorType = boost::random::taus88;
-
-#define EPSILON 1e-15
-
-#define NEG_DBL_MAX -DBL_MAX
+static const auto EPSILON = real(1e-15);
 
 #define SAVE_DELETE(pointer) \
 	delete(pointer); \

@@ -40,7 +40,7 @@ void DataBinaryWriter::toFile(const Data& data, const std::string& filePath){
 	file.close();
 }
 
-void DataBinaryWriter::toFile(const ClassData& data, const std::string& filePath){
+void DataBinaryWriter::toFile(const LabeledData& data, const std::string& filePath){
 	std::fstream file;
 	std::string cpy(filePath);
 	if(cpy.find_last_of(".")  != std::string::npos){
@@ -53,7 +53,7 @@ void DataBinaryWriter::toFile(const ClassData& data, const std::string& filePath
 	if(file.is_open()){
 		long size = data.size();
 		file.write((char*) &size, sizeof(long));
-		for(ClassDataConstIterator it = data.begin(); it != data.end(); ++it){
+		for(LabeledDataConstIterator it = data.begin(); it != data.end(); ++it){
 			ReadWriterHelper::writePoint(file, **it);
 		}
 	}else{

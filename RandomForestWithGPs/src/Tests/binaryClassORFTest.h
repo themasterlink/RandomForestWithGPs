@@ -13,18 +13,18 @@
 #include "../Data/TotalStorage.h"
 #include "../Base/CommandSettings.h"
 
-void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
+void performTest(OnlineRandomForest& orf, OnlineStorage<LabeledVectorX*>& test){
 	if(test.size() == 0){
 		return;
 	}
 	int amountOfCorrect = 0;
 	Labels labels;
 	StopWatch sw;
-	std::vector<std::vector<double> > probs;
+	std::vector<std::vector<real> > probs;
 	orf.predictData(test.storage(), labels, probs);
 	printOnScreen("Needed " << sw.elapsedAsTimeFrame());
-	Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(orf.amountOfClasses(), orf.amountOfClasses());
-//	std::vector<std::list<double> > lists(orf.amountOfClasses(), std::list<double>());
+	Matrix conv = Matrix::Zero(orf.amountOfClasses(), orf.amountOfClasses());
+//	std::vector<std::list<real> > lists(orf.amountOfClasses(), std::list<real>());
 	AvgNumber oc, uc;
 	AvgNumber ocBVS, ucBVS;
 	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
@@ -70,7 +70,7 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<ClassPoint*>& test){
 	}
 //	for(unsigned int i = 0; i < orf.amountOfClasses(); ++i){
 //		double avg = 0;
-//		for(std::list<double>::const_iterator it = lists[i].begin(); it != lists[i].end(); ++it){
+//		for(std::list<real>::const_iterator it = lists[i].begin(); it != lists[i].end(); ++it){
 //			avg += *it;
 //		}
 //		avg /= lists[i].size();
@@ -88,12 +88,12 @@ void executeForBinaryClassORF(){
 	if(TotalStorage::getMode() == TotalStorage::Mode::SEPERATE){
 		std::unique_ptr<OnlineRandomForest> newOrf;
 		if(true){
-			//	OnlineStorage<ClassPoint*> train;
-			OnlineStorage<ClassPoint*> test;
+			//	OnlineStorage<LabeledVectorX*> train;
+			OnlineStorage<LabeledVectorX*> test;
 			int height;
 			Settings::getValue("Forest.Trees.height", height);
 			const unsigned int amountOfSplits = 10;
-			std::vector<OnlineStorage<ClassPoint*> > trains(amountOfSplits);
+			std::vector<OnlineStorage<LabeledVectorX*> > trains(amountOfSplits);
 			newOrf = std::make_unique<OnlineRandomForest>(trains[0], (unsigned int) height, TotalStorage::getAmountOfClass());
 			// starts the training by its own
 			//	TotalStorage::getOnlineStorageCopySplitsWithTest(trains, test);
@@ -124,6 +124,7 @@ void executeForBinaryClassORF(){
 
 
 			TotalStorage::getOnlineStorageCopySplitsWithTest(trains, test);
+			printOnScreen("point: " << trains[0][0]->transpose());
 			//	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 			printOnScreen("Training finished");
 			auto& orf = *newOrf.get();
@@ -139,7 +140,7 @@ void executeForBinaryClassORF(){
 				performTest(orf, trains[i]);
 				printOnScreen("Done on next training set");
 				// filter out the wrong ones
-				ClassData wrongOnes;
+				LabeledData wrongOnes;
 				wrongOnes.reserve(trains[i].size());
 				Labels labels;
 				orf.predictData(trains[i].storage(), labels);
@@ -167,10 +168,10 @@ void executeForBinaryClassORF(){
 
 			printOnScreen("Amount of Classes: " << TotalStorage::getAmountOfClass());
 		}else{
-			OnlineStorage<ClassPoint*> test;
+			OnlineStorage<LabeledVectorX*> test;
 			int height;
 			Settings::getValue("Forest.Trees.height", height);
-			OnlineStorage<ClassPoint*> train;
+			OnlineStorage<LabeledVectorX*> train;
 			newOrf = std::make_unique<OnlineRandomForest>(train, (unsigned int) height, TotalStorage::getAmountOfClass());
 			auto& orf = *newOrf;
 
@@ -182,12 +183,12 @@ void executeForBinaryClassORF(){
 			performTest(orf, test);
 			printOnScreen("Test on test set finished");
 		}
-		int removedClass;
+		unsigned int removedClass;
 		Settings::getValue("TotalStorage.excludeClass",removedClass);
 		if(ClassKnowledge::hasClassName(removedClass) && newOrf != nullptr){
 			printOnScreen("Removed class: " << removedClass);
-			OnlineStorage<ClassPoint*> removedTrain;
-			OnlineStorage<ClassPoint*> removedTest;
+			OnlineStorage<LabeledVectorX*> removedTrain;
+			OnlineStorage<LabeledVectorX*> removedTest;
 			TotalStorage::getRemovedOnlineStorageCopyWithTest(removedTrain, removedTest);
 			printOnScreen("On " << removedTrain.size() << " removed points from trainings data:");
 			performTest(*newOrf, removedTrain);
@@ -195,9 +196,9 @@ void executeForBinaryClassORF(){
 			performTest(*newOrf, removedTest);
 		}
 	}else{
-		OnlineStorage<ClassPoint*> train;
-		OnlineStorage<ClassPoint*> test;
-		int height;
+		OnlineStorage<LabeledVectorX*> train;
+		OnlineStorage<LabeledVectorX*> test;
+		unsigned int height;
 		Settings::getValue("Forest.Trees.height", height);
 		OnlineRandomForest orf(train, height, TotalStorage::getAmountOfClass());
 		TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);

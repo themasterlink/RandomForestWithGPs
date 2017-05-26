@@ -11,7 +11,6 @@
 //#include <bayesopt/bayesopt.hpp>
 //#include <bayesopt/bayesoptbase.hpp>
 //#include <bayesopt/parameters.hpp>
-//#include "../Data/Data.h"
 //#include <limits>
 //#include "IVM.h"
 //
@@ -26,7 +25,7 @@
 //
 //	bool checkReachability(const vectord& query);
 //
-//	std::list<double> m_logZValues;
+//	std::list<real> m_logZValues;
 //
 //private:
 //	IVM& m_ivm;

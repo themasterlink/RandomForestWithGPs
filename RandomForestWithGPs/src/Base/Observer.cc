@@ -36,9 +36,9 @@ void Subject::deattachAll(){
 }
 
 void Subject::notify(const unsigned int event){
-	for(std::list<Observer*>::iterator it = m_observers.begin(); it != m_observers.end(); ++it){
-		if((*it) != nullptr){
-			(*it)->update(this, event);
+	for(auto& observer : m_observers){
+		if(observer != nullptr){
+			observer->update(this, event);
 		}
 	}
 }

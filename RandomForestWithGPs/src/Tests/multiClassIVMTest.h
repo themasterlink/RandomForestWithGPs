@@ -21,19 +21,19 @@
 #include <chrono>
 #include <thread>
 
-void testIvm(IVMMultiBinary& ivms, const ClassData& data){
+void testIvm(IVMMultiBinary& ivms, const LabeledData& data){
 	const int amountOfTestPoints = data.size();
 	int right = 0;
-//	Eigen::Vector2i rightPerClass;
+//	Vector2i rightPerClass;
 //	rightPerClass[0] = rightPerClass[1] = 0;
 //	int amountOfBelow = 0;
 //	int amountOfAbove = 0;
-//	std::list<double> probs;
-//	Eigen::Vector2i amountPerClass;
+//	std::list<real> probs;
+//	Vector2i amountPerClass;
 //	amountPerClass[0] = amountPerClass[1] = 0;
-	Eigen::MatrixXd conv = Eigen::MatrixXd::Zero(ivms.amountOfClasses(), ivms.amountOfClasses());
+	Matrix conv = Matrix::Zero(ivms.amountOfClasses(), ivms.amountOfClasses());
 	Labels labels;
-	std::vector< std::vector<double> > probs;
+	std::vector< std::vector<real> > probs;
 	ivms.predictData(data, labels, probs);
 	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
 	const double logBase = log(amountOfClasses);
@@ -144,8 +144,8 @@ void testIvm(IVMMultiBinary& ivms, const ClassData& data){
 
 void executeForMutliClassIVM(){
 	const int trainAmount = readAllData();
-	OnlineStorage<ClassPoint*> train;
-	OnlineStorage<ClassPoint*> test;
+	OnlineStorage<LabeledVectorX*> train;
+	OnlineStorage<LabeledVectorX*> test;
 	printOnScreen("Finish reading");
 
 	bool doEpUpdate;

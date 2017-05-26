@@ -34,17 +34,17 @@ void executeForRFGPMultiClass(const std::string& path){
 	bool didNormalize = false;
 	DataReader::readFromFiles(dataSets, path, 500, false, didNormalize);
 	if(!didNormalize){
-		DataPoint center, var;
+		VectorX center, var;
 		DataConverter::centerAndNormalizeData(dataSets, center, var);
 	}
 	DataSets trainSets;
 	DataSets testSets;
 	const double facForTraining = 0.8;
 	for(DataSetsConstIterator it = dataSets.begin(); it != dataSets.end(); ++it){
-		trainSets.insert(DataSetPair(it->first, ClassData()));
+		trainSets.insert(DataSetPair(it->first, LabeledData()));
 		DataSetsIterator itTrain = trainSets.find(it->first);
 		itTrain->second.reserve(facForTraining * it->second.size());
-		testSets.insert(DataSetPair(it->first, ClassData()));
+		testSets.insert(DataSetPair(it->first, LabeledData()));
 		DataSetsIterator itTest = testSets.find(it->first);
 		itTest->second.reserve((1-facForTraining) * it->second.size());
 		for(int i = 0; i < (int) it->second.size(); ++i){
@@ -80,7 +80,7 @@ void executeForRFGPMultiClass(const std::string& path){
 	int labelCounter = 0;
 	int correct = 0;
 	int amount = 0;
-	std::vector<double> prob;
+	std::vector<real> prob;
 	for(DataSets::const_iterator it = testSets.begin(); it != testSets.end(); ++it){
 		for(int i = 0; i < (int) it->second.size(); ++i){
 			const int rfGPLabel = rfGp.predict(*it->second[i], prob);

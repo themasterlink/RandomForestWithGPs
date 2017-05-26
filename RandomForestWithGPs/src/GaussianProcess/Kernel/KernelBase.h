@@ -8,7 +8,7 @@
 #ifndef GAUSSIANPROCESS_KERNEL_KERNELBASE_H_
 #define GAUSSIANPROCESS_KERNEL_KERNELBASE_H_
 
-#include "../../Data/ClassData.h"
+#include "../../Data/LabeledVectorX.h"
 #include "../../Utility/Util.h"
 #include "KernelType.h"
 #include "../../RandomNumberGenerator/RandomGaussianNr.h"
@@ -26,17 +26,17 @@ public:
 	KernelBase(const OwnKernelInitParams& initParams, const bool sampleNewParams = true);
 	virtual ~KernelBase() = 0;
 
-	void init(const Eigen::MatrixXd& dataMat, const bool calcDifferenceMatrix, const bool useSharedDifferenceMatrix);
+	void init(const Matrix& dataMat, const bool calcDifferenceMatrix, const bool useSharedDifferenceMatrix);
 
-	void init(const ClassData& data, const bool calcDifferenceMatrix, const bool useSharedDifferenceMatrix);
+	void init(const LabeledData& data, const bool calcDifferenceMatrix, const bool useSharedDifferenceMatrix);
 
 	bool isInit() const { return m_init; };
 
-	void calcCovariance(Eigen::MatrixXd& cov) const;
+	void calcCovariance(Matrix& cov) const;
 
-	void calcCovarianceDerivative(Eigen::MatrixXd& cov, const OwnKernelElement* type) const;
+	void calcCovarianceDerivative(Matrix& cov, const OwnKernelElement* type) const;
 
-	void calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& cov, const std::list<int>& activeSet, const OwnKernelElement* type) const;
+	void calcCovarianceDerivativeForInducingPoints(Matrix& cov, const std::list<int>& activeSet, const OwnKernelElement* type) const;
 
 	double getDifferences(const int row, const int col) const { return (double) (*m_differences)(row, col); };
 
@@ -54,7 +54,7 @@ public:
 
 	bool wasDifferenceCalced(){ return m_calcedDifferenceMatrix; };
 
-	void setGaussianRandomVariables(const std::vector<double>& means, const std::vector<double> sds);
+	void setGaussianRandomVariables(const std::vector<real>& means, const std::vector<real> sds);
 
 	void addToHyperParams(const KernelType& params, const double factor = 1.0);
 
@@ -62,13 +62,13 @@ public:
 
 	void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf* usedMatrix);
 
-	static void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf& usedMatrix, const OnlineStorage<ClassPoint*>& storage, InformationPackage* package = nullptr);
+	static void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf& usedMatrix, const OnlineStorage<LabeledVectorX*>& storage, InformationPackage* package = nullptr);
 
 	virtual double calcDiagElement(unsigned int row) const = 0;
 
 	virtual double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const = 0;
 
-	virtual void calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const = 0;
+	virtual void calcKernelVector(const VectorX& vector, const Matrix& dataMat, VectorX& res) const = 0;
 
 	virtual std::string prettyString() const = 0;
 
@@ -85,15 +85,15 @@ protected:
 
 	virtual double kernelFunc(const int row, const int col) const = 0;
 
-	virtual double kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const = 0;
+	virtual double kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const = 0;
 
 	virtual double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const = 0;
 
 	Eigen::MatrixXf* m_differences;
 
-	Eigen::MatrixXd* m_pDataMat;
+	Matrix* m_pDataMat;
 
-	ClassData* m_pData;
+	LabeledData* m_pData;
 
 	bool m_init;
 

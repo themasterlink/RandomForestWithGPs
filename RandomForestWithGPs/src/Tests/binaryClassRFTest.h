@@ -16,13 +16,13 @@
 #include "../Base/Settings.h"
 
 void executeForRFBinaryClass(){
-	ClassData data;
-	ClassData testData;
+	LabeledData data;
+	LabeledData testData;
 	DataSets datas;
 	bool didNormalize = false;
 	DataReader::readFromFiles(datas, "../realData/", 500, false, didNormalize);
 	if(!didNormalize){
-		DataPoint center, var;
+		VectorX center, var;
 		DataConverter::centerAndNormalizeData(datas, center, var);
 	}
 	int labelCounter = 0;
@@ -71,7 +71,7 @@ void executeForRFBinaryClass(){
 			std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
 			bool useFixedValuesForMinMaxUsedData;
 			Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
-			Eigen::Vector2i minMaxUsedData;
+			Vector2i minMaxUsedData;
 			if(useFixedValuesForMinMaxUsedData){
 				int minVal = 0, maxVal = 0;
 				Settings::getValue("MinMaxUsedData.minValue", minVal);
@@ -104,11 +104,11 @@ void executeForRFBinaryClass(){
 }
 
 void executeForRFBinaryClass(const std::string& path){
-	ClassData data;
+	LabeledData data;
 	DataReader::readFromFile(data, path, 500);
 	bool useFixedValuesForMinMaxUsedData;
 	Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
-	Eigen::Vector2i minMaxUsedData;
+	Vector2i minMaxUsedData;
 	if(useFixedValuesForMinMaxUsedData){
 		int minVal = 0, maxVal = 0;
 		Settings::getValue("MinMaxUsedData.minValue", minVal);
@@ -122,7 +122,7 @@ void executeForRFBinaryClass(const std::string& path){
 	}
 	std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";
 
-	ClassData testData;
+	LabeledData testData;
 	std::string testPath;
 	Settings::getValue("Test.path", testPath);
 	DataReader::readFromFile(testData, testPath, 500);

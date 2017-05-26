@@ -6,6 +6,7 @@
  */
 
 #include "GaussianProcessMultiClass.h"
+#include <cmath>
 
 GaussianProcessMultiClass::GaussianProcessMultiClass(){
 	// TODO Auto-generated constructor stub
@@ -17,12 +18,12 @@ GaussianProcessMultiClass::~GaussianProcessMultiClass()
 }
 
 
-void GaussianProcessMultiClass::calcPhiBasedOnF(const Eigen::VectorXd& f, Eigen::VectorXd& pi, const int amountOfClasses, const int dataPoints){
+void GaussianProcessMultiClass::calcPhiBasedOnF(const VectorX& f, VectorX& pi, const int amountOfClasses, const int dataPoints){
 	const int amountOfEle = dataPoints * amountOfClasses;
 	if(f.rows() != amountOfEle){
 		printError("Amount of rows in f is wrong!");
 	}
-	pi = Eigen::VectorXd::Zero(amountOfEle);
+	pi = VectorX::Zero(amountOfEle);
 	for(int i = 0; i < amountOfClasses; ++i){
 		double normalizer = 0.;
 		for(int j = 0; j < amountOfClasses; ++j){
@@ -36,36 +37,36 @@ void GaussianProcessMultiClass::calcPhiBasedOnF(const Eigen::VectorXd& f, Eigen:
 	}
 }
 
-void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int dataPoints, const std::vector<Eigen::MatrixXd>& K_c, const Eigen::VectorXd& y){
+void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int dataPoints, const std::vector<Matrix>& K_c, const VectorX& y){
 	const int amountOfEle = dataPoints * amountOfClasses;
-	const Eigen::MatrixXd eye(Eigen::MatrixXd::Identity(dataPoints,dataPoints));
-	Eigen::MatrixXd R(Eigen::MatrixXd::Zero(amountOfEle, dataPoints));			// R <-- compute R (just a giant stacked identy matrix)
+	const Matrix eye(Matrix::Identity(dataPoints,dataPoints));
+	Matrix R(Matrix::Zero(amountOfEle, dataPoints));			// R <-- compute R (just a giant stacked identy matrix)
 	for(int j = 0; j < dataPoints; ++j){ // todo find faster way
 		for(int i = 0; i < amountOfClasses; ++i){
 			R(i*dataPoints + j,j) = 1;
 		}
 	}
-	Eigen::VectorXd f = Eigen::VectorXd::Zero(amountOfEle); 						// f <-- init with zeros
+	VectorX f = VectorX::Zero(amountOfEle); 						// f <-- init with zeros
 	// R and f were check! -> should be right
 	bool converged = false;
 	while(!converged){
 		std::fstream f2("t2.txt", std::ios::out);
-		Eigen::VectorXd lastF = f;													// lastF <- save f for converge controll
-		Eigen::VectorXd pi; 														// pi
+		VectorX lastF = f;													// lastF <- save f for converge controll
+		VectorX pi; 														// pi
 		calcPhiBasedOnF(f, pi, amountOfClasses, dataPoints);
 		// pi was checked! -> should be right
-		Eigen::VectorXd sqrtPi(pi);													// sqrtPi
+		VectorX sqrtPi(pi);													// sqrtPi
 		for(int i = 0; i < amountOfEle; ++i){
 			sqrtPi[i] = sqrt((double) sqrtPi[i]);
 		}
 		// sqrtPi was checked! -> should be right
-		const Eigen::MatrixXd D(pi.asDiagonal().toDenseMatrix());					// D
-		//Eigen::DiagonalWrapper<const Eigen::MatrixXd> DSqrt(sqrtPi.asDiagonal()); 	// DSqrt
+		const Matrix D(pi.asDiagonal().toDenseMatrix());					// D
+		//Eigen::DiagonalWrapper<const Matrix> DSqrt(sqrtPi.asDiagonal()); 	// DSqrt
 		//std::vector<DiagMatrixXd*> DSqrt_c(amountOfClasses, NULL);					//	DSqrt_c
-		std::vector<Eigen::MatrixXd> E_c(amountOfClasses);							// E_c
+		std::vector<Matrix> E_c(amountOfClasses);							// E_c
 
-		//std::vector<Eigen::MatrixXd> K_c;											// K_c
-		/*Eigen::MatrixXd F(amountOfClasses, dataPoints); 							// F just to calc covariances
+		//std::vector<Matrix> K_c;											// K_c
+		/*Matrix F(amountOfClasses, dataPoints); 							// F just to calc covariances
 		for(int i = 0; i < dataPoints; ++i){ // todo find better way
 			for(int j = 0; j < amountOfClasses; ++j){
 				F(j,i) = (double) f(i*amountOfClasses + j);
@@ -73,20 +74,20 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 		}
 
 		for(int i = 0; i < amountOfClasses; ++i){ // calc the covariance matrix for each f_c
-			const Eigen::MatrixXd centered = F.colwise() - F.rowwise().mean();
+			const Matrix centered = F.colwise() - F.rowwise().mean();
 			K_c.push_back(centered.adjoint() * centered);
 		}
 */
 		// TODO find way to construct bigPi in a nice an efficient way ...
-		Eigen::MatrixXd bigPi(amountOfEle, dataPoints);
+		Matrix bigPi(amountOfEle, dataPoints);
 		for(int i = 0; i < amountOfClasses / 2; i+=2){
 			bigPi << pi.segment(i*dataPoints, dataPoints).asDiagonal().toDenseMatrix(),
 					pi.segment((i+1)*dataPoints, dataPoints).asDiagonal().toDenseMatrix();
 		}
 		// bigPi was checked! -> should be right (checked only for classAmount = 2) (check for C > 2 && C is uneven
 
-		Eigen::MatrixXd E_sum;
-		Eigen::VectorXd z(amountOfClasses);
+		Matrix E_sum;
+		VectorX z(amountOfClasses);
 		//std::vector<DiagMatrixXd*>::iterator it = DSqrt_c.begin();
 		for(int i = 0; i < amountOfClasses; ++i){
 			//SAVE_DELETE(*it); // free last iteration, in init it is null
@@ -97,16 +98,16 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 			//}
 			const DiagMatrixXd DSqrt_c(sqrtPi.segment(i*dataPoints, dataPoints));
 			// DSqrt_c was checked! -> should be right
-			Eigen::MatrixXd C = (DSqrt_c * K_c[i] * DSqrt_c) + eye;
+			Matrix C = (DSqrt_c * K_c[i] * DSqrt_c) + eye;
 			// C was checked -> might be right (didn't try to calc it)
-			Eigen::MatrixXd L = Eigen::LLT<Eigen::MatrixXd>(C).matrixL();
+			Matrix L = Eigen::LLT<Matrix>(C).matrixL();
 			f2 << "C:\n" << C << std::endl;
 			f2 << "\n\n";
 			f2 << "L*L^T:\n" << L * L.transpose() << std::endl;
 			f2 << "\n\n";
 			f2 << "L:\n" << L << std::endl;
 			f2 << "\n\n";
-			Eigen::MatrixXd nenner = L.triangularView<Eigen::Lower>().solve(DSqrt_c.toDenseMatrix());
+			Matrix nenner = L.triangularView<Eigen::Lower>().solve(DSqrt_c.toDenseMatrix());
 			f2 << "nenner:\n" << nenner << std::endl;
 			f2 << "\n\n";
 			E_c[i] = DSqrt_c * L.transpose().triangularView<Eigen::Upper>().solve(nenner);
@@ -120,18 +121,18 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 			}
 		}
 
-		Eigen::MatrixXd M = Eigen::LLT<Eigen::MatrixXd>(E_sum).matrixL();
+		Matrix M = Eigen::LLT<Matrix>(E_sum).matrixL();
 
-		Eigen::VectorXd b = (D - (bigPi * bigPi.transpose())) * f + y - pi;							// b
+		VectorX b = (D - (bigPi * bigPi.transpose())) * f + y - pi;							// b
 
-		Eigen::VectorXd c(amountOfEle);																// c
+		VectorX c(amountOfEle);																// c
 		for(int i = 0; i < amountOfClasses; ++i){
-			const Eigen::VectorXd k = E_c[i] * K_c[i] * b.segment(i*dataPoints, dataPoints);
+			const VectorX k = E_c[i] * K_c[i] * b.segment(i*dataPoints, dataPoints);
 			for(int j = 0; j < dataPoints; ++j){ // todo rewrite -> faster
 				c[i*dataPoints + j] = k[j];
 			}
 		}
-		Eigen::MatrixXd E(amountOfEle, amountOfEle);
+		Matrix E(amountOfEle, amountOfEle);
 		for(int i = 0; i < amountOfClasses; ++i){
 			for(int j = 0; j < dataPoints; ++j){
 				for(int k = 0; k < dataPoints; ++k){
@@ -139,7 +140,7 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 				}
 			}
 		}
-		Eigen::MatrixXd res = M.triangularView<Eigen::Lower>().solve(R.transpose() * c); 			// M^-1 * (R^T* c)
+		Matrix res = M.triangularView<Eigen::Lower>().solve(R.transpose() * c); 			// M^-1 * (R^T* c)
 		f2 << b.transpose() << "\n\n\n\n\n";
 		f2 << E_c[0]<< "\n\n\n\n\n";
 		f2 << E_c[1]<< "\n\n\n\n\n";
@@ -155,13 +156,13 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 		std::cout << "\n\n";
 		std::cout << "c: " << c.transpose() << std::endl;
 		std::cout << "\n\n";
-		const Eigen::VectorXd a = b - c + E * R * (M.transpose().triangularView<Eigen::Upper>().solve(res)); // b-c + E * R * ((M^T)^-1 * (res))
+		const VectorX a = b - c + E * R * (M.transpose().triangularView<Eigen::Upper>().solve(res)); // b-c + E * R * ((M^T)^-1 * (res))
 		std::cout << "a: " << a.transpose() << std::endl;
 		std::cout << "\n\n";
 		std::cout << "before f: " << f.transpose() << std::endl;
 		for(int i = 0; i < amountOfClasses; ++i){
 
-			const Eigen::VectorXd k = K_c[i] * a.segment(i*dataPoints, dataPoints);
+			const VectorX k = K_c[i] * a.segment(i*dataPoints, dataPoints);
 			std::cout << "k: " << k.transpose() << std::endl;
 			for(int j = 0; j < dataPoints; ++j){ // todo rewrite -> faster
 				f[i*dataPoints + j] = k[j];

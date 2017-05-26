@@ -8,15 +8,14 @@
 #ifndef KERNELCALC_H_
 #define KERNELCALC_H_
 
-#include <Eigen/Dense>
-#include <math.h>
+#include "Base/Types.h"
 
 namespace Kernel2 {
 
 
 /*
- Eigen::MatrixXd xA(10,1);
- Eigen::VectorXd col; // input data
+ Matrix xA(10,1);
+ VectorX col; // input data
  xA(0,0) = 0;
  xA(1,0) = 0.1;
  xA(2,0) = 0.2;
@@ -27,47 +26,47 @@ namespace Kernel2 {
  xA(7,0) =  1.5;
  xA(8,0) =  1.9;
  xA(9,0) =  2.0;
- Eigen::MatrixXd res;
+ Matrix res;
  Kernel::getSeKernelFor(xA, xA, res, 5.0, 0.2);
 
  std::cout << "res: " << res << std::endl;
- Eigen::MatrixXd inv = res.inverse();
+ Matrix inv = res.inverse();
  std::cout << "inv: " << inv << std::endl;
  */
 
 
 //analytical solution not sure if needed here ...
-void getSeKernelFor(const Eigen::MatrixXd& xA, const Eigen::MatrixXd& xB, Eigen::MatrixXd& result,
+void getSeKernelFor(const Matrix& xA, const Matrix& xB, Matrix& result,
 		const double sigma = 1.0, const double l = 0.1){
-	result = Eigen::MatrixXd(xA.rows(), xB.rows());
+	result = Matrix(xA.rows(), xB.rows());
 	const double sigmaSquared = sigma * sigma;
 	const double expFac = -1. / (2.0 * l * l);
 	for(int i = 0; i < xA.rows(); ++i){
-		const Eigen::VectorXd xARow = xA.row(i);
+		const VectorX xARow = xA.row(i);
 		for(int j = 0; j < xB.rows(); ++j){
-			const Eigen::VectorXd diff = xARow - xB.row(j);
+			const VectorX diff = xARow - xB.row(j);
 			result(i, j) = sigmaSquared * exp(expFac * diff.dot(diff));
 		}
 	}
 }
 
-Eigen::MatrixXd meanFun(const Eigen::MatrixXd& x){
-	Eigen::MatrixXd mat;
+Matrix meanFun(const Matrix& x){
+	Matrix mat;
 	mat.Zero(x.rows(), 1);
 	return mat;
 }
 
 struct MuSigma{
-	Eigen::MatrixXd mu;
-	Eigen::MatrixXd sigma;
+	Matrix mu;
+	Matrix sigma;
 };
 
 // X = data
 // f = resulting value
 // xStar = new points
-MuSigma predict(const Eigen::MatrixXd& X, const Eigen::MatrixXd& f, const Eigen::MatrixXd& XStar,
+MuSigma predict(const Matrix& X, const Matrix& f, const Matrix& XStar,
 		const double noiseSigma = 0){
-	Eigen::MatrixXd K, Kinv, Kstar, Kstarstar, KstarTransposed;
+	Matrix K, Kinv, Kstar, Kstarstar, KstarTransposed;
 	getSeKernelFor(X, X, K, 5, 0.1);
 	K = noiseSigma * K;
 	Kinv = K.inverse();

@@ -9,11 +9,9 @@
 #define RANDOMFORESTS_ONLINERANDOMFOREST_H_
 
 #include "BigDynamicDecisionTree.h"
-#include "../Data/Data.h"
 #include "../Data/OnlineStorage.h"
-#include "../Data/ClassData.h"
+#include "../Data/LabeledVectorX.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
-#include <list>
 #include "TreeCounter.h"
 
 class OnlineRandomForest : public Observer, public PredictorMultiClass, public Subject {
@@ -23,7 +21,7 @@ public:
 	using DecisionTreeIterator = DecisionTreesContainer::iterator;
 	using DecisionTreeConstIterator = DecisionTreesContainer::const_iterator;
 
-	OnlineRandomForest(OnlineStorage<ClassPoint *> &storage,
+	OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
 					   const unsigned int maxDepth, const int amountOfUsedClasses);
 
 	virtual ~OnlineRandomForest();
@@ -35,21 +33,21 @@ public:
 		m_desiredAmountOfTrees = desiredAmountOfTrees;
 	}
 
-	unsigned int predict(const DataPoint& point) const override;
+	unsigned int predict(const VectorX& point) const override;
 
-	double predict(const DataPoint& point1, const DataPoint& point2, const unsigned int sampleAmount) const;
+	double predict(const VectorX& point1, const VectorX& point2, const unsigned int sampleAmount) const;
 
-	double predictPartitionEquality(const DataPoint& point1, const DataPoint& point2,
+	double predictPartitionEquality(const VectorX& point1, const VectorX& point2,
 									RandomUniformNr& uniformNr, unsigned int amountOfSamples) const;
 
 	void predictData(const Data& points, Labels& labels) const override;
 
 	void predictData(const Data& points, Labels& labels,
-					 std::vector< std::vector<double> >& probabilities) const override;
+					 std::vector< std::vector<real> >& probabilities) const override;
 
-	void predictData(const ClassData& points, Labels& labels) const;
+	void predictData(const LabeledData& points, Labels& labels) const;
 
-	void predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
+	void predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const;
 
 	void getLeafNrFor(std::vector<int>& leafNrs);
 
@@ -61,13 +59,13 @@ public:
 
 	unsigned int amountOfClasses() const override;
 
-	OnlineStorage<ClassPoint*>& getStorageRef();
+	OnlineStorage<LabeledVectorX*>& getStorageRef();
 
-	const OnlineStorage<ClassPoint*>& getStorageRef() const;
+	const OnlineStorage<LabeledVectorX*>& getStorageRef() const;
 
 	ClassTypeSubject classType() const override;
 
-	const std::vector<Eigen::Vector2d >& getMinMaxValues(){ return m_minMaxValues;};
+	const std::vector<Vector2>& getMinMaxValues(){ return m_minMaxValues;};
 
 private:
 
@@ -77,21 +75,21 @@ private:
 	void predictDataInParallel(const Data& points, Labels* labels,
 							   const unsigned int start, const unsigned int end) const;
 
-	void predictClassDataInParallel(const ClassData& points, Labels* labels,
+	void predictClassDataInParallel(const LabeledData& points, Labels* labels,
 									const unsigned int start, const unsigned int end) const;
 
 	void predictDataProbInParallelStartEnd(const Data& points, Labels* labels,
-										   std::vector< std::vector<double> >* probabilities, const unsigned int start,
+										   std::vector< std::vector<real> >* probabilities, const unsigned int start,
 										   const unsigned int end) const;
 
-	void predictClassDataProbInParallelStartEnd(const ClassData& points, Labels* labels,
-												std::vector< std::vector<double> >* probabilities,
+	void predictClassDataProbInParallelStartEnd(const LabeledData& points, Labels* labels,
+												std::vector< std::vector<real> >* probabilities,
 												const unsigned int start, const unsigned int end) const;
 
-	void predictDataProbInParallel(const Data& points, std::vector< std::vector<double> >* probabilities,
+	void predictDataProbInParallel(const Data& points, std::vector< std::vector<real> >* probabilities,
 			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
 
-	void predictClassDataProbInParallel(const ClassData& points, std::vector< std::vector<double> >* probabilities,
+	void predictClassDataProbInParallel(const LabeledData& points, std::vector< std::vector<real> >* probabilities,
 			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
 
 	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package,
@@ -134,12 +132,12 @@ private:
 
 	double m_factorForUsedDims;
 
-	Eigen::Vector2d m_minMaxUsedDataFactor;
+	Vector2 m_minMaxUsedDataFactor;
 
 	// used in all decision trees -> no copies needed!
-	std::vector<Eigen::Vector2d > m_minMaxValues;
+	std::vector<Vector2 > m_minMaxValues;
 
-	OnlineStorage<ClassPoint*>& m_storage;
+	OnlineStorage<LabeledVectorX*>& m_storage;
 
 	mutable DecisionTreesContainer m_trees;
 

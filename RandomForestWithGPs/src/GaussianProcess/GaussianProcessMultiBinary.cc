@@ -9,7 +9,7 @@
 
 #include "../Base/Settings.h"
 #include "../Data/DataConverter.h"
-#include "../Data/ClassData.h"
+#include "../Data/LabeledVectorX.h"
 #include "../Data/ClassKnowledge.h"
 
 GaussianProcessMultiBinary::GaussianProcessMultiBinary(int amountOfUsedClasses):
@@ -26,12 +26,12 @@ GaussianProcessMultiBinary::GaussianProcessMultiBinary(int amountOfUsedClasses):
 //	Settings::getValue("MultiBinaryGP.upperBoundNoise",  m_upperBound[1]);
 }
 
-void GaussianProcessMultiBinary::train(const ClassData& data, const Labels* guessedLabels){
+void GaussianProcessMultiBinary::train(const LabeledData& data, const Labels* guessedLabels){
 	UNUSED(guessedLabels);
 	m_amountOfDataPoints = data.size();
 	// count the occurence of each pre class of the random forest
 	std::vector<int> countClasses(m_amountOfUsedClasses, 0);
-	for(ClassDataConstIterator it = data.begin(); it != data.end(); ++it){
+	for(LabeledDataConstIterator it = data.begin(); it != data.end(); ++it){
 		countClasses[(*it)->getLabel()] += 1;
 	}
 	m_amountOfDataPointsForUseAllTestsPoints = 300;
@@ -74,20 +74,20 @@ void GaussianProcessMultiBinary::train(const ClassData& data, const Labels* gues
 }
 
 void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
-		const int amountOfHyperPoints, const ClassData& data,
+		const int amountOfHyperPoints, const LabeledData& data,
 		const std::vector<int>& classCounts, GaussianProcess* actGp) {
 	int nrOfNoChanges;
 	Settings::getValue("RFGP.nrOfNoChanges", nrOfNoChanges);
-	Eigen::MatrixXd dataMat;
-	Eigen::VectorXd yGpInit;
+	Matrix dataMat;
+	VectorX yGpInit;
 	// calc for final training
 	std::vector<bool> usedElements;
 	std::vector<bool> blockElements(data.size(), false); // block none
 	DataConverter::toRandClassAndHalfUniformDataMatrix(data, classCounts,
 			dataMat, yGpInit, m_maxPointsUsedInGpSingleTraining, iActClass, usedElements, blockElements); // get a uniform portion of at most 1000 points
 
-	Eigen::MatrixXd testDataMat;
-	Eigen::VectorXd testYGpInit;
+	Matrix testDataMat;
+	VectorX testYGpInit;
 	const int amountOfPointsUsedForTrainingTheTest = 300; // min(max(200,container.amountOfPoints / 3),m_maxPointsUsedInGpSingleTraining / 3); TODO
 	// calc for final training
 	std::vector<bool> usedElementsForTheValidationSet; // save the blocked values, for the testing of the hyper params
@@ -99,7 +99,7 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 	const int numberOfPointsForClass = classCounts[iActClass];
 	const std::string betweenNames = ", for " + ClassKnowledge::getNameFor(iActClass) + " has " + number2String(numberOfPointsForClass);
 	m_output.printSwitchingColor("Start parallel with " + number2String(amountOfPointsUsedForTrainingTheTest) + " amount of points, which are used in the training for the testing" + betweenNames);
-	//Eigen::VectorXd y(numberOfPointsForClass);
+	//VectorX y(numberOfPointsForClass);
 	StopWatch sw;
 	BestHyperParams bestHyperParams(20);
 	boost::thread_group group;
@@ -144,9 +144,9 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 }
 
 void GaussianProcessMultiBinary::optimizeHyperParams(const unsigned int iActClass,
-		const int amountOfHyperPoints, const ClassData& data,
+		const int amountOfHyperPoints, const LabeledData& data,
 		const std::vector<int>& classCounts, const std::vector<bool>& elementsUsedForValidation,
-		const Eigen::MatrixXd& testDataMat, const Eigen::VectorXd& testYGpInit, BestHyperParams* bestHyperParams){
+		const Matrix& testDataMat, const VectorX& testYGpInit, BestHyperParams* bestHyperParams){
 	GaussianProcess usedGp;
 	const int numberOfPointsForClass = classCounts[iActClass];
 	const std::string betweenNames = ", for " + ClassKnowledge::getNameFor(iActClass) + " has " + number2String(numberOfPointsForClass);
@@ -156,8 +156,8 @@ void GaussianProcessMultiBinary::optimizeHyperParams(const unsigned int iActClas
 	bool isFinished = false;
 	bestHyperParams->getNoChangeCounter(noChange);
 	while(!isFinished){
-		Eigen::MatrixXd dataHyper;
-		Eigen::VectorXd yHyper;
+		Matrix dataHyper;
+		VectorX yHyper;
 		std::vector<bool> usedElements;
 		DataConverter::toRandClassAndHalfUniformDataMatrix(data, classCounts, dataHyper,
 				yHyper, std::min(100, noChange * amountOfHyperPoints), iActClass, usedElements, elementsUsedForValidation); // get a uniform portion of all points
@@ -240,7 +240,7 @@ std::cout << "One: " << oneCounter << std::endl;
 			for(int i = 0; i < size; ++i){
 				const int nextEle = rand() / (double) RAND_MAX * m_amountOfDataPoints;
 				if(!elementsUsedForValidation[nextEle]){ // is not part of the validation trainings part
-					ClassPoint& ele = *data[nextEle];
+					LabeledVectorX& ele = *data[nextEle];
 					double prob = usedGp.predict(ele, 500);
 					if(prob > 0.5 && ele.getLabel() == iActClass){
 						++right;
@@ -253,7 +253,7 @@ std::cout << "One: " << oneCounter << std::endl;
 			for(int i = 0; i < (int) data.size(); ++i){
 				if(!elementsUsedForValidation[i]){ // is not part of the validation trainings part
 					++amountOfUsedValues;
-					ClassPoint& ele = *data[i];
+					LabeledVectorX& ele = *data[i];
 					double prob = usedGp.predict(ele, 500);
 					if(ele.getLabel() == iActClass)
 						++amountOfCorrectLabels;
@@ -285,7 +285,7 @@ std::cout << "One: " << oneCounter << std::endl;
 	m_threadCounter.removeThread();
 }
 
-unsigned int GaussianProcessMultiBinary::predict(const DataPoint& point, std::vector<double>& prob) const {
+unsigned int GaussianProcessMultiBinary::predict(const VectorX& point, std::vector<real>& prob) const {
 	prob.resize(m_amountOfUsedClasses);
 	double p = 0;
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
@@ -320,8 +320,8 @@ unsigned int GaussianProcessMultiBinary::predict(const DataPoint& point, std::ve
 	return argMax(prob.cbegin(), prob.cend());
 }
 
-unsigned int GaussianProcessMultiBinary::predict(const DataPoint& point) const{
-	std::vector<double> prob;
+unsigned int GaussianProcessMultiBinary::predict(const VectorX& point) const{
+	std::vector<real> prob;
 	return predict(point, prob);
 }
 

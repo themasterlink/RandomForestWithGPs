@@ -10,7 +10,7 @@
 
 #include <Eigen/Dense>
 #include "../Data/DataReader.h"
-#include "../Data/ClassData.h"
+#include "../Data/LabeledVectorX.h"
 #include "../Data/DataConverter.h"
 #include "../Data/DataWriterForVisu.h"
 #include "../GaussianProcess/GaussianProcess.h"
@@ -23,8 +23,8 @@
 #include <thread>
 
 void executeForBinaryClass(const bool useRealData){
-	ClassData data;
-	ClassData testData;
+	LabeledData data;
+	LabeledData testData;
 	DataSets datas;
 	const int trainAmount = 500;
 	const int testAmount = 200;
@@ -32,7 +32,7 @@ void executeForBinaryClass(const bool useRealData){
 		bool didNormalize = false;
 		DataReader::readFromFiles(datas, "../realTest/", trainAmount + testAmount, false, didNormalize);
 		if(!didNormalize){
-			DataPoint center, var;
+			VectorX center, var;
 			DataConverter::centerAndNormalizeData(datas, center, var);
 		}
 		std::cout << "Amount of datas: " << datas.size() << std::endl;
@@ -61,11 +61,11 @@ void executeForBinaryClass(const bool useRealData){
 		std::cout << "Training size: " << data.size() << std::endl;
 		std::cout << "Data has dim: " << data[0]->rows() << std::endl;
 		const int firstPoints = 35;
-		Eigen::VectorXd y;
-		Eigen::MatrixXd dataMat;
+		VectorX y;
+		Matrix dataMat;
 		std::vector<int> classCounts(2,trainAmount);
-		Eigen::VectorXd y3;
-		Eigen::MatrixXd dataMat3;
+		VectorX y3;
+		Matrix dataMat3;
 		std::vector<bool> usedElements;
 		std::vector<bool> blockElements(data.size(), false);
 		DataConverter::toRandClassAndHalfUniformDataMatrix(data, classCounts, dataMat, y, firstPoints, 0, usedElements, blockElements);
@@ -93,8 +93,8 @@ void executeForBinaryClass(const bool useRealData){
 //		std::cout << RED << "Result: " << result[0] << ", "<< result[1] << RESET << std::endl;
 //		gp.getKernel().setHyperParams(result[0], result[1], 0.95);
 
-		Eigen::VectorXd y2;
-		Eigen::MatrixXd dataMat2;
+		VectorX y2;
+		Matrix dataMat2;
 		//DataConverter::toRandDataMatrix(data, labels, dataMat2, y2, 400);
 		std::vector<bool> usedElements2;
 		std::vector<bool> blockElements2(data.size(), false);
@@ -113,11 +113,11 @@ void executeForBinaryClass(const bool useRealData){
 		 */
 /*
 		const int dataPoints = data.size();
-		Eigen::VectorXd y2(dataPoints);
+		VectorX y2(dataPoints);
 		for(int i = 0; i < dataPoints; ++i){
 			y2[i] = labels[i] != 0 ? 1 : -1; // just two classes left!
 		}
-		Eigen::MatrixXd dataMat2;
+		Matrix dataMat2;
 
 		DataConverter::toDataMatrix(dataRef, dataMat2, dataRef.size());
 		gp.init(dataMat2, y2);
@@ -126,14 +126,14 @@ void executeForBinaryClass(const bool useRealData){
 		//gp.m_kernel.setHyperParams(gp.m_kernel.len(),gp.m_kernel.sigmaF(),1);
 		//gp.train();//WithoutKernelChange(dataMat2, y2); // train only the latent functions
 		std::cout << "Start predicting for " << testData.size() << " points!" << std::endl;
-		const ClassData& dataRef = testData;
+		const LabeledData& dataRef = testData;
 		int right = 0;
 		int amountOfBelow = 0;
 		int amountOfAbove = 0;
 		std::cout << "Test" << std::endl;
 		InLinePercentageFiller::setActMax(dataRef.size());
 		for(int j = 0; j < dataRef.size(); ++j){
-			ClassPoint& ele = *dataRef[j];
+			LabeledVectorX& ele = *dataRef[j];
 			double prob = gp.predict(ele);
 			if(prob > 0.5 && ele.getLabel() == 0){
 				++right;
@@ -183,7 +183,7 @@ void executeForBinaryClass(const bool useRealData){
 	}else if(useRealData){
 		std::cout << std::setiosflags(std::ios::fixed) << std::setprecision(6);
 		GaussianProcessMultiBinary gp(datas.size());
-		ClassData data;
+		LabeledData data;
 		int labelCounter = 0;
 		//const double fac = 0.80;
 		int trainAmount = 400;
@@ -210,27 +210,27 @@ void executeForBinaryClass(const bool useRealData){
 		gp.train(data);
 		/*
 				const int dataPoints = data.size();
-				Eigen::VectorXd y2(dataPoints);
+				VectorX y2(dataPoints);
 				for(int i = 0; i < dataPoints; ++i){
 					y2[i] = labels[i] != 0 ? 1 : -1; // just two classes left!
 				}
-				Eigen::MatrixXd dataMat2;
+				Matrix dataMat2;
 				DataConverter::toDataMatrix(dataRef, dataMat2, dataRef.size());
 				gp.init(dataMat2, y2);
 		 */
 		//gp.m_kernel.newRandHyperParams();
 		//gp.m_kernel.setHyperParams(gp.m_kernel.len(),gp.m_kernel.sigmaF(),1);
 		//gp.train();//WithoutKernelChange(dataMat2, y2); // train only the latent functions
-		const ClassData& dataRef = testData;
+		const LabeledData& dataRef = testData;
 		std::cout << "Start predicting for " << dataRef.size() << " points!" << std::endl;
 		int right = 0;
 		std::cout << "Test" << std::endl;
-		std::vector<double> prob;
-		Eigen::MatrixXd confusion = Eigen::MatrixXd::Zero(datas.size(), datas.size());
+		std::vector<real> prob;
+		Matrix confusion = Matrix::Zero(datas.size(), datas.size());
 		int unknownCounter = 0;
 		InLinePercentageFiller::setActMax(dataRef.size());
 		for(int j = 0; j < (int) dataRef.size(); ++j){
-			ClassPoint& ele = *dataRef[j];
+			LabeledVectorX& ele = *dataRef[j];
 			const unsigned int label = gp.predict(ele, prob);
 			if(ele.getLabel() == label){
 				++right;
@@ -253,8 +253,8 @@ void executeForBinaryClass(const bool useRealData){
 		}
 	}else{
 		const int firstPoints = 10000000; // all points
-		Eigen::VectorXd y;
-		Eigen::MatrixXd dataMat;
+		VectorX y;
+		Matrix dataMat;
 		DataConverter::toDataMatrix(data, dataMat, y, firstPoints);
 		GaussianProcess gp;
 		gp.init(dataMat, y);
@@ -264,10 +264,10 @@ void executeForBinaryClass(const bool useRealData){
 			double step = 0.025;
 			int size1 = (up1 - 0.005) / step + 1;
 			int size2 = (up2 - 0.) / step + 1;
-			Eigen::MatrixXd mat = Eigen::MatrixXd::Zero(size1, size2);
+			Matrix mat = Matrix::Zero(size1, size2);
 			int i = 0,j,k = 0;
 			double minX, minY, minZ;
-			double minVal = NEG_DBL_MAX;
+			double minVal = NEG_REAL_MAX;
 			InLinePercentageFiller::setActMax(size1 * size2);
 			//for(double z = -1.; z < 1.0; z += 0.01){
 			{	double z = 0.1;
@@ -278,7 +278,7 @@ void executeForBinaryClass(const bool useRealData){
 					for(double y = 0.; y < up2; y += step){
 					//{
 						gp.getKernel().setHyperParams(x, y, z);
-						double val;
+						real val;
 						gp.trainBayOpt(val,1);
 						if(val < 10){
 							if(minVal < val){
@@ -289,7 +289,7 @@ void executeForBinaryClass(const bool useRealData){
 							}
 							mat(i,j) = val;
 						}else{
-							mat(i,j) = NEG_DBL_MAX;
+							mat(i,j) = NEG_REAL_MAX;
 						}
 					//	std::cout << "z: " << z << ", val: " << val << std::endl;
 						std::cout << "x: " << x << ", y: " << y << std::endl;
@@ -342,7 +342,7 @@ void executeForBinaryClass(const bool useRealData){
 		int amountOfAbove = 0;
 		for(int j = 0; j < (int) data.size(); ++j){
 			gp.resetFastPredict();
-			ClassPoint& ele = *data[j];
+			LabeledVectorX& ele = *data[j];
 			double prob = gp.predict(ele, 100000);
 			std::cout << "Prob: " << prob << ", label is: " << ele.getLabel() << std::endl;
 			if(prob > 0.5 && ele.getLabel() == 0){
@@ -368,7 +368,7 @@ void executeForBinaryClass(const bool useRealData){
 	//DataReader::readFromFile(data, labels, path);
 
 	/*gp.setValues(dataMat, y);
-	Eigen::VectorXd x(3);
+	VectorX x(3);
 	x(0) = 0.5; // length
 	x(1) = 0.5; // sigmaF
 	x(2) = 0.5; // sigmaN
@@ -386,11 +386,11 @@ void executeForBinaryClass(const bool useRealData){
 	getchar();*/
 /*
 	const int dim = data[0].rows();
-	Eigen::Vector2d dimVec;
+	Vector2d dimVec;
 	dimVec << 0,1;
 	double min = 1000000;
 	double max = -1000000;
-	for(ClassDataConstIterator it = data.cbegin(); it != data.cend(); ++it){
+	for(LabeledDataConstIterator it = data.cbegin(); it != data.cend(); ++it){
 		for(int i = 0; i < 2; ++i){
 			int j = dimVec[i];
 			if(min > (*it)[j]){

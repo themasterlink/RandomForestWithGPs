@@ -14,38 +14,38 @@
 
 class OnlineRandomForestIVMs : public PredictorMultiClass, public Observer {
 public:
-	OnlineRandomForestIVMs(OnlineStorage<ClassPoint*>& storage, const int maxDepth, const int amountOfUsedClasses);
+	OnlineRandomForestIVMs(OnlineStorage<LabeledVectorX*>& storage, const int maxDepth, const int amountOfUsedClasses);
 	virtual ~OnlineRandomForestIVMs();
 
 	void update(Subject* caller, unsigned int event) override;
 
-	unsigned int predict(const DataPoint& point) const override;
+	unsigned int predict(const VectorX& point) const override;
 
-	unsigned int predict(const ClassPoint& point) const;
+	unsigned int predict(const LabeledVectorX& point) const;
 
 	void predictData(const Data& points, Labels& labels) const override;
 
-	void predictData(const ClassData& points, Labels& labels) const;
+	void predictData(const LabeledData& points, Labels& labels) const;
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const override;
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const override;
 
-	void predictData(const ClassData& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const;
+	void predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const;
 
 	unsigned int amountOfClasses() const override;
 
 private:
 
-	void trainIvm(const int usedIvm, const int nrOfInducingPoints, const bool doEpUpdate, ClassData* data, const int orfClass);
+	void trainIvm(const int usedIvm, const int nrOfInducingPoints, const bool doEpUpdate, LabeledData* data, const int orfClass);
 
 	void update();
 
-	OnlineStorage<ClassPoint*>& m_storage;
+	OnlineStorage<LabeledVectorX*>& m_storage;
 
 	OnlineRandomForest m_orf;
 
 	std::vector<IVMMultiBinary*> m_ivms;
 
-	std::vector<OnlineStorage<ClassPoint*>* > m_onlineStoragesForIvms;
+	std::vector<OnlineStorage<LabeledVectorX*>* > m_onlineStoragesForIvms;
 
 	int m_amountOfUsedClasses;
 

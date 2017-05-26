@@ -89,7 +89,7 @@ void Logger::write(){
 		}
 	}
 	for(auto&& name : {"Warning", "Error"}){
-		std::map<std::string, std::string>::iterator itOther = m_specialLines.find(name);
+		auto itOther = m_specialLines.find(name);
 		if(itOther != m_specialLines.end()){
 			file << itOther->first << "\n";
 			file.write(itOther->second.c_str(), itOther->second.length());
@@ -122,12 +122,12 @@ void Logger::addNormalLineToFile(const std::string& line){
 void Logger::addSpecialLineToFile(const std::string& line, const std::string& identifier){
 	if(m_init){
 		m_mutex.lock();
-		std::map<std::string, std::string>::iterator it = m_specialLines.find(identifier);
+		auto it = m_specialLines.find(identifier);
 		if(it != m_specialLines.end()){
 			it->second += ("\t" + line + "\n");
 		}else{
 			const std::string input = "\t" + line + "\n";
-			m_specialLines.insert(std::pair<std::string, std::string>(identifier, input));
+			m_specialLines.emplace(identifier, input);
 		}
 		m_needToWrite = true;
 		m_mutex.unlock();

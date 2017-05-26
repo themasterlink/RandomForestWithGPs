@@ -8,7 +8,7 @@
 #include "BigDynamicDecisionTree.h"
 #include "../Base/Settings.h"
 
-BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage, const unsigned int maxDepth,
+BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage, const unsigned int maxDepth,
 											   const unsigned int amountOfClasses, const int layerAmount,
 											   const int layerAmountForFast, const unsigned int amountOfPointsCheckedPerSplit):
 	m_storage(storage),
@@ -29,7 +29,7 @@ BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& stora
 		printError("The amount of layers is: " << amountOfLayers << ", can not be smaller than 1!");
 	}
 }
-BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<ClassPoint*>& storage):
+BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage):
 		m_storage(storage), m_maxDepth(0), m_amountOfClasses(0), m_amountOfPointsCheckedPerSplit(100), m_depthPerLayer(0), m_usedMemory(0){
 }
 
@@ -260,7 +260,7 @@ bool BigDynamicDecisionTree::shouldNewTreeBeCalculatedFor(std::vector<unsigned i
 	return false;
 }
 
-unsigned int BigDynamicDecisionTree::predict(const DataPoint& point) const{
+unsigned int BigDynamicDecisionTree::predict(const VectorX& point) const{
 	if(m_fastInnerTrees[0][0] != nullptr){
 		// the father layer always has the same height, because only the last layer can change the height
 		const auto depthForFatherLayer = m_depthPerLayer;

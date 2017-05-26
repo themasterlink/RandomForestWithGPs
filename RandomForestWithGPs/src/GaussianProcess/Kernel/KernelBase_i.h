@@ -36,11 +36,11 @@ KernelBase<KernelType, nrOfParams>::~KernelBase(){
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, const bool shouldDifferenceMatrixBeCalculated, const bool useSharedDifferenceMatrix){
+void KernelBase<KernelType, nrOfParams>::init(const Matrix& dataMat, const bool shouldDifferenceMatrixBeCalculated, const bool useSharedDifferenceMatrix){
 	if(!kernelCanHaveDifferenceMatrix()){
 		printError("This function should only be called from a kernel which supports the difference matrix!");
 	}
-	m_pDataMat = const_cast<Eigen::MatrixXd*>(&dataMat);
+	m_pDataMat = const_cast<Matrix*>(&dataMat);
 	m_calcedDifferenceMatrix = shouldDifferenceMatrixBeCalculated;
 	if(m_calcedDifferenceMatrix){
 		std::string path;
@@ -50,7 +50,7 @@ void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, co
 		if(boost::filesystem::exists(path) && m_differences == nullptr){
 			std::fstream input(path, std::ios::binary| std::ios::in);
 			m_differences = new Eigen::MatrixXf();
-			ReadWriterHelper::readMatrix(input, *m_differences);
+			ReadWriterHelper::readMatrix<Matrix>(input, *m_differences);
 			input.close();
 			m_dataPoints = m_differences->cols();
 			read = m_differences->cols() == dataMat.cols(); // else this means the kernel data does not fit the actual load data
@@ -61,7 +61,7 @@ void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, co
 			m_differences = new Eigen::MatrixXf(m_dataPoints, m_dataPoints);
 			calcDifferenceMatrix(0, amountOfElementsInTriangluarMatrix, m_differences);
 			std::fstream output(path, std::ios::binary | std::ios::out);
-			ReadWriterHelper::writeMatrix(output, *m_differences);
+			ReadWriterHelper::writeMatrix<Matrix>(output, *m_differences);
 			output.close();
 			m_calcedDifferenceMatrix = true;
 		}
@@ -71,11 +71,11 @@ void KernelBase<KernelType, nrOfParams>::init(const Eigen::MatrixXd& dataMat, co
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::init(const ClassData& data, const bool shouldDifferenceMatrixBeCalculated, const bool useSharedDifferenceMatrix){
+void KernelBase<KernelType, nrOfParams>::init(const LabeledData& data, const bool shouldDifferenceMatrixBeCalculated, const bool useSharedDifferenceMatrix){
 	if(!kernelCanHaveDifferenceMatrix()){
 		printError("This function should only be called from a kernel which supports the difference matrix!");
 	}
-	m_pData = const_cast<ClassData*>(&data);
+	m_pData = const_cast<LabeledData*>(&data);
 	m_calcedDifferenceMatrix = shouldDifferenceMatrixBeCalculated;
 	if(m_calcedDifferenceMatrix){
 		std::string path;
@@ -84,19 +84,19 @@ void KernelBase<KernelType, nrOfParams>::init(const ClassData& data, const bool 
 		bool read = false;
 		if(boost::filesystem::exists(path)){
 			std::fstream input(path, std::ios::binary| std::ios::in);
-			ReadWriterHelper::readMatrix(input, *m_differences);
+			ReadWriterHelper::readMatrix<Eigen::MatrixXf>(input, *m_differences);
 			input.close();
-			m_dataPoints = m_differences->cols();
+			m_dataPoints = (unsigned int) m_differences->cols();
 			read = m_dataPoints == (unsigned int) data.size(); // else this means the kernel data does not fit the actual load data
 			m_calcedDifferenceMatrix = true;
 		}
 		if(!read && !useSharedDifferenceMatrix){
-			const int amountOfElementsInTriangluarMatrix = (m_pData->size() * m_pData->size() + m_pData->size()) / 2;
+			const int amountOfElementsInTriangluarMatrix = (int) ((m_pData->size() * m_pData->size() + m_pData->size()) / 2);
 			m_differences = new Eigen::MatrixXf();
 			calcDifferenceMatrix(0, amountOfElementsInTriangluarMatrix, m_differences);
 			m_calcedDifferenceMatrix = true;
 			std::fstream output(path, std::ios::binary | std::ios::out);
-			ReadWriterHelper::writeMatrix(output, *m_differences);
+			ReadWriterHelper::writeMatrix<Matrix>(output, *m_differences);
 			output.close();
 		}
 	}
@@ -128,7 +128,7 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 		}
 		m_calcedDifferenceMatrix = true;
 	}else if(m_pDataMat != nullptr){
-		m_dataPoints = m_pDataMat->cols();
+		m_dataPoints = (unsigned int) m_pDataMat->cols();
 		int counter = 0;
 		for(unsigned int i = 0; i < m_dataPoints; ++i){
 			for(unsigned int j = i; j < m_dataPoints; ++j){
@@ -138,10 +138,10 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 						break;
 					}
 					if(i != j){
-						(*m_differences).coeffRef(i,j) = (m_pDataMat->col(i) - m_pDataMat->col(j)).squaredNorm();
+						(*m_differences).coeffRef(i,j) = (float) (m_pDataMat->col(i) - m_pDataMat->col(j)).squaredNorm();
 						(*m_differences).coeffRef(j,i) = (*m_differences).coeff(i,j);
 					}else{
-						(*m_differences).coeffRef(i,i) = 0.;
+						(*m_differences).coeffRef(i,i) = 0.F;
 					}
 				}
 				++counter;
@@ -155,7 +155,7 @@ void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, c
 
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf& usedMatrix, const OnlineStorage<ClassPoint*>& storage, InformationPackage* package){
+void KernelBase<KernelType, nrOfParams>::calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf& usedMatrix, const OnlineStorage<LabeledVectorX*>& storage, InformationPackage* package){
 	const unsigned int dataPoints = storage.size();
 	int counter = 0;
 	if(usedMatrix.rows() != dataPoints || usedMatrix.cols() != dataPoints){
@@ -241,7 +241,7 @@ const KernelType& KernelBase<KernelType, nrOfParams>::getHyperParams() const {
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::setGaussianRandomVariables(const std::vector<double>& means, const std::vector<double> sds){
+void KernelBase<KernelType, nrOfParams>::setGaussianRandomVariables(const std::vector<real>& means, const std::vector<real> sds){
 	if(means.size() == sds.size() && means.size() == nrOfParams){
 		for(unsigned int i = 0; i < nrOfParams; ++i){
 			m_randomGaussians[i]->reset(means[i], sds[i]);
@@ -252,11 +252,11 @@ void KernelBase<KernelType, nrOfParams>::setGaussianRandomVariables(const std::v
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::calcCovariance(Eigen::MatrixXd& cov) const{
+void KernelBase<KernelType, nrOfParams>::calcCovariance(Matrix& cov) const{
 	if(m_init){
 		cov.conservativeResize(m_dataPoints, m_dataPoints);
 		for(int i = 0; i < m_dataPoints; ++i){
-			cov.coeffRef(i,i) =  calcDiagElement(i);
+			cov.coeffRef(i,i) = (real) calcDiagElement(i);
 			for(int j = i + 1; j < m_dataPoints; ++j){
 				cov.coeffRef(i,j) = kernelFunc(i,j);
 				cov.coeffRef(j,i) = cov.coeff(i,j);
@@ -268,11 +268,11 @@ void KernelBase<KernelType, nrOfParams>::calcCovariance(Eigen::MatrixXd& cov) co
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::calcCovarianceDerivative(Eigen::MatrixXd& cov, const OwnKernelElement* type) const{
+void KernelBase<KernelType, nrOfParams>::calcCovarianceDerivative(Matrix& cov, const OwnKernelElement* type) const{
 	if(m_init){
 		cov.conservativeResize(m_dataPoints, m_dataPoints);
 		for(int i = 0; i < m_dataPoints; ++i){
-			cov(i,i) =  calcDerivativeDiagElement(i, type);
+			cov(i,i) = (real) calcDerivativeDiagElement(i, type);
 			for(int j = i + 1; j < m_dataPoints; ++j){
 				cov.coeffRef(i,j) = kernelFunc(i,j);
 				cov.coeffRef(j,i) = cov.coeff(i,j);
@@ -284,9 +284,9 @@ void KernelBase<KernelType, nrOfParams>::calcCovarianceDerivative(Eigen::MatrixX
 }
 
 template<typename KernelType, unsigned int nrOfParams>
-void KernelBase<KernelType, nrOfParams>::calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& cov, const std::list<int>& activeSet, const OwnKernelElement* type) const{
+void KernelBase<KernelType, nrOfParams>::calcCovarianceDerivativeForInducingPoints(Matrix& cov, const std::list<int>& activeSet, const OwnKernelElement* type) const{
 	const int nrOfInducingPoints = activeSet.size();
-	cov = Eigen::MatrixXd(nrOfInducingPoints, nrOfInducingPoints);
+	cov = Matrix(nrOfInducingPoints, nrOfInducingPoints);
 	if(!type->isDerivativeOnlyDiag()){
 		unsigned int i = 0;
 		for(std::list<int>::const_iterator it1 = activeSet.begin(); it1 != activeSet.end(); ++it1, ++i){

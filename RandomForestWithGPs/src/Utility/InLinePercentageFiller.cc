@@ -47,7 +47,7 @@ void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned 
 	char buffer [20];
 	sprintf(buffer, "| %3.2f", dAct); // all other methods are ugly
 	str << buffer << " %%";
-	if(dAct > 0. && dAct < 100.){
+	if(dAct > 0. && dAct < 100. && seconds > 0.){
 		str << ", rest time is: " << TimeFrame(m_dMax - seconds);
 	}else if(dAct >= 100.){
 		str <<", done in: " << m_sw.elapsedAsTimeFrame();

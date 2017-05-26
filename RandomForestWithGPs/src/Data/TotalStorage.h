@@ -9,8 +9,7 @@
 #define DATA_TOTALSTORAGE_H_
 
 #include <vector>
-#include "ClassPoint.h"
-#include "DataSets.h"
+#include "LabeledVectorX.h"
 #include "OnlineStorage.h"
 
 class TotalStorage {
@@ -25,9 +24,9 @@ public:
 	using Iterator = DataSetsIterator;
 	using ConstIterator = DataSetsConstIterator;
 
-	static ClassPoint* getData(unsigned int classNr, unsigned int elementNr);
+	static LabeledVectorX* getData(unsigned int classNr, unsigned int elementNr);
 
-	static ClassPoint* getDefaultEle();
+	static LabeledVectorX* getDefaultEle();
 
 	static void readData(const int amountOfData);
 
@@ -39,35 +38,35 @@ public:
 
 	static unsigned int getSmallestClassSize();
 
-	static void getOnlineStorageCopy(OnlineStorage<ClassPoint*>& storage);
+	static void getOnlineStorageCopy(OnlineStorage<LabeledVectorX*>& storage);
 
-	static void getOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train, OnlineStorage<ClassPoint*>& test, const int amountOfPointsForTraining);
+	static void getOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& train, OnlineStorage<LabeledVectorX*>& test, const int amountOfPointsForTraining);
 
-	static void getRemovedOnlineStorageCopyWithTest(OnlineStorage<ClassPoint*>& train, OnlineStorage<ClassPoint*>& test);
+	static void getRemovedOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& train, OnlineStorage<LabeledVectorX*>& test);
 
 	static InternalStorage& getStorage(){ return m_storage; };
 
-	static void getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<ClassPoint*> >& trains, OnlineStorage<ClassPoint*>& test);
+	static void getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<LabeledVectorX*> >& trains, OnlineStorage<LabeledVectorX*>& test);
 
 	static Mode getMode(){ return m_mode; };
 
 private:
 
-	static DataPoint m_center;
+	static VectorX m_center;
 
-	static DataPoint m_var;
+	static VectorX m_var;
 
 	static InternalStorage m_storage;
 
-	static ClassData m_trainSet;
+	static LabeledData m_trainSet;
 
-	static ClassData m_testSet;
+	static LabeledData m_testSet;
 
-	static ClassData m_removeFromTrainSet;
+	static LabeledData m_removeFromTrainSet;
 
-	static ClassData m_removeFromTestSet;
+	static LabeledData m_removeFromTestSet;
 
-	static ClassPoint m_defaultEle;
+	static LabeledVectorX m_defaultEle;
 
 	static Mode m_mode;
 

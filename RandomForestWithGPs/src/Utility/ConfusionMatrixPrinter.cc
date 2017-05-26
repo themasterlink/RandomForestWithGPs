@@ -20,7 +20,7 @@ ConfusionMatrixPrinter::~ConfusionMatrixPrinter() {
 
 
 
-void ConfusionMatrixPrinter::print(const Eigen::MatrixXd& conv){
+void ConfusionMatrixPrinter::print(const Matrix& conv){
 	if(conv.rows() != ClassKnowledge::amountOfClasses() || conv.cols() != ClassKnowledge::amountOfClasses()){
 		printError("The amount of rows or cols does not correspond to the amount of names: ("
 				<< conv.rows() << "," << conv.cols() << ") != " << ClassKnowledge::amountOfClasses());

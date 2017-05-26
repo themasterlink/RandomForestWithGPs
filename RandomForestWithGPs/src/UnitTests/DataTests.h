@@ -13,7 +13,7 @@
 class Tests {
 public:
 //	static void testForUniformRandDataConverter(){
-//		std::vector<double> dataTest;
+//		std::vector<real> dataTest;
 //		Labels labelTest;
 //		std::vector<int> countClass(4,0);
 //		Eigen::VectorXd p(2);
@@ -34,7 +34,7 @@ public:
 //				countClass[3]++;
 //			}
 //		}
-//		Eigen::MatrixXd result2;
+//		Matrix result2;
 //		Eigen::VectorXd y2;
 ////		DataConverter::toRandUniformDataMatrix(dataTest, labelTest, countClass, result2, y2, 12, 0);
 //		std::cout << "result2: \n" << result2 << std::endl;

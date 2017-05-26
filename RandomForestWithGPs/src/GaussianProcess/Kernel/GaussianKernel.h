@@ -8,11 +8,10 @@
 #ifndef GAUSSIANPROCESS_KERNEL_H_
 #define GAUSSIANPROCESS_KERNEL_H_
 
-#include "../../Data/ClassData.h"
+#include "../../Data/LabeledVectorX.h"
 #include "../../RandomNumberGenerator/RandomGaussianNr.h"
 #include "KernelType.h"
 #include "KernelBase.h"
-#include <list>
 
 class GaussianProcessWriter;
 
@@ -32,13 +31,13 @@ public:
 
 	double calcDerivativeDiagElement(unsigned int row, const OwnKernelElement* type) const override;
 
-	void calcKernelVector(const Eigen::VectorXd& vector, const Eigen::MatrixXd& dataMat, Eigen::VectorXd& res) const override;
+	void calcKernelVector(const VectorX& vector, const Matrix& dataMat, VectorX& res) const override;
 
-	void calcCovariance(Eigen::MatrixXd& cov) const;
+	void calcCovariance(Matrix& cov) const;
 
-	void calcCovarianceDerivative(Eigen::MatrixXd& cov, const OwnKernelElement* type) const;
+	void calcCovarianceDerivative(Matrix& cov, const OwnKernelElement* type) const;
 
-	void calcCovarianceDerivativeForInducingPoints(Eigen::MatrixXd& cov, const std::list<unsigned int>& activeSet, const OwnKernelElement* type, const int element = -1) const;
+	void calcCovarianceDerivativeForInducingPoints(Matrix& cov, const std::list<unsigned int>& activeSet, const OwnKernelElement* type, const int element = -1) const;
 
 	std::string prettyString() const override;
 
@@ -46,7 +45,7 @@ public:
 
 	void setHyperParams(double len, double noiseF, double noiseS);
 
-	void setHyperParams(const std::vector<double>& len, double noiseF, double noiseS);
+	void setHyperParams(const std::vector<real>& len, double noiseF, double noiseS);
 
 	void addHyperParams(double len, double noiseF, double noiseS = 0.);
 
@@ -60,7 +59,7 @@ public:
 
 	double kernelFunc(const int row, const int col) const override;
 
-	double kernelFuncVec(const Eigen::VectorXd& lhs, const Eigen::VectorXd& rhs) const override;
+	double kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const override;
 
 	double kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const override;
 

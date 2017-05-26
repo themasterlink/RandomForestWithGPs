@@ -8,19 +8,19 @@
 #include "GaussianKernelOptimizer.h"
 
 //GaussianKernelOptimizer::GaussianKernelRandomGenerator(){
-//	std::vector<double> means = {Settings::getDirectDoubleValue("KernelParam.lenMean"),
-//			Settings::getDirectDoubleValue("KernelParam.fNoiseMean"),
-//			Settings::getDirectDoubleValue("KernelParam.sNoiseMean")};
-//	std::vector<double> sds = {Settings::getDirectDoubleValue("KernelParam.lenVar"),
-//			Settings::getDirectDoubleValue("KernelParam.fNoiseVar"),
-//			Settings::getDirectDoubleValue("KernelParam.sNoiseVar")};
+//	std::vector<real> means = {Settings::getDirectRealValue("KernelParam.lenMean"),
+//			Settings::getDirectRealValue("KernelParam.fNoiseMean"),
+//			Settings::getDirectRealValue("KernelParam.sNoiseMean")};
+//	std::vector<real> sds = {Settings::getDirectRealValue("KernelParam.lenVar"),
+//			Settings::getDirectRealValue("KernelParam.fNoiseVar"),
+//			Settings::getDirectRealValue("KernelParam.sNoiseVar")};
 //	setMeansAndVars(means, sds);
 //}
 
 GaussianKernelOptimizer::~GaussianKernelOptimizer(){
 }
 
-//void GaussianKernelOptimizer::addPointWithMeansAndVars(const std::vector<double>& means, const std::vector<double>& vars){
+//void GaussianKernelOptimizer::addPointWithMeansAndVars(const std::vector<real>& means, const std::vector<real>& vars){
 //	if(means.size() == vars.size() && means.size() == GaussianKernelParams::paramsAmount){
 //		m_means.m_length.setAllValuesTo(means[0]);
 //		m_means.m_fNoise.setAllValuesTo(means[1]);

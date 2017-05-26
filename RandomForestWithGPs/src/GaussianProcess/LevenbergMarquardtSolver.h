@@ -17,7 +17,7 @@
 
 struct OptimizeFunctor
 {
-  int operator()(const Eigen::VectorXd &x, Eigen::VectorXd &fvec) const{
+  int operator()(const VectorX &x, VectorX &fvec) const{
       if(m_gp != NULL){
   		std::cout << "x: " << x.transpose() << std::endl;
 		m_gp->trainLM(m_logZ, m_dLogZ);
@@ -30,9 +30,9 @@ struct OptimizeFunctor
     return 0;
   }
 
-  int df(const Eigen::VectorXd &x, Eigen::MatrixXd &fjac) const{
+  int df(const VectorX &x, Matrix &fjac) const{
 	  std::cout << "x: " << x.transpose() << std::endl;
-	  fjac = Eigen::MatrixXd::Zero(3,3);
+	  fjac = Matrix::Zero(3,3);
 	  for(int i = 0; i < 3; ++i){
 		  fjac(i,i) = m_dLogZ[i];
 		  std::cout << "df is called!" << std::endl;
@@ -46,7 +46,7 @@ struct OptimizeFunctor
   }
 
   GaussianProcess* m_gp;
-  mutable std::vector<double> m_dLogZ;
+  mutable std::vector<real> m_dLogZ;
   mutable double m_logZ;
   int inputs() const { return 3; }
   int values() const { return 3; } // number of constraints

@@ -20,9 +20,9 @@ class GaussianKernelOptimizer {
 public:
 	using base_generator_type = GeneratorType; // generator type
 	using uniform_distribution_int = boost::random::uniform_int_distribution<int>; // generator type
-	using uniform_distribution_real = boost::uniform_real<double>; // generator type
+	using uniform_distribution_real = boost::uniform_real<real>; // generator type
 
-	GaussianKernelOptimizer(const int maxTriesPerSolution, const int amountOfUsedClasses, const std::vector<Eigen::Vector2d >& minAndMaxValues, const int seed);
+	GaussianKernelOptimizer(const int maxTriesPerSolution, const int amountOfUsedClasses, const std::vector<Vector2>& minAndMaxValues, const int seed);
 	virtual ~GaussianKernelOptimizer();
 
 	void init();
@@ -65,7 +65,7 @@ private:
 
 	double getRandDist(const int iClassNr);
 
-	std::vector<Eigen::Vector2d > m_minAndMaxValues; // should have the dimension of the used params amount
+	std::vector<Vector2 > m_minAndMaxValues; // should have the dimension of the used params amount
 
 	uniform_distribution_int m_randomDistrubtionInts; // gives a value between 0 and the amount of used classes - 1
 

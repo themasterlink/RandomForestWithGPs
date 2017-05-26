@@ -8,7 +8,7 @@
 #ifndef GAUSSIANPROCESS_GAUSSIANPROCESSMULTIBINARY_H_
 #define GAUSSIANPROCESS_GAUSSIANPROCESSMULTIBINARY_H_
 
-#include "../Data/ClassData.h"
+#include "../Data/LabeledVectorX.h"
 #include "GaussianProcess.h"
 #include "../Utility/ThreadSafeOutput.h"
 #include "../Utility/ThreadSafeThreadCounter.h"
@@ -22,18 +22,18 @@ public:
 	GaussianProcessMultiBinary(int amountOfUsedClasses);
 	virtual ~GaussianProcessMultiBinary();
 
-	void train(const ClassData& data, const Labels* guessedLabels = NULL);
+	void train(const LabeledData& data, const Labels* guessedLabels = NULL);
 
-	unsigned int predict(const DataPoint& point, std::vector<double>& prob) const;
+	unsigned int predict(const VectorX& point, std::vector<real>& prob) const;
 
-	unsigned int predict(const DataPoint& point) const;
+	unsigned int predict(const VectorX& point) const;
 
 	void predictData(const Data& data, Labels& labels) const{
 		UNUSED(data); UNUSED(labels);
 		printError("This function is not implemented!");
 	}
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
@@ -43,13 +43,13 @@ public:
 private:
 
 	void trainInParallel(const int iActClass,
-			const int amountOfHyperPoints, const ClassData& data,
+			const int amountOfHyperPoints, const LabeledData& data,
 			const std::vector<int>& classCounts, GaussianProcess* actGp);
 
 	void optimizeHyperParams(const unsigned int iActClass,
-			const int amountOfHyperPoints, const ClassData& data,
+			const int amountOfHyperPoints, const LabeledData& data,
 			const std::vector<int>& classCounts, const std::vector<bool>& elementsUsedForValidation,
-			const Eigen::MatrixXd& testDataMat, const Eigen::VectorXd& testYGpInit, BestHyperParams* bestHyperParams);
+			const Matrix& testDataMat, const VectorX& testYGpInit, BestHyperParams* bestHyperParams);
 
 	const int m_amountOfUsedClasses;
 	int m_amountOfDataPoints;

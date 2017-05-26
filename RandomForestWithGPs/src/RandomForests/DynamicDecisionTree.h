@@ -9,7 +9,7 @@
 #define RANDOMFORESTS_DYNAMICDECISIONTREE_H_
 
 #include "../Data/OnlineStorage.h"
-#include "../Data/ClassPoint.h"
+#include "../Data/LabeledVectorX.h"
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 #include "../RandomForests/DecisionTreeData.h"
 #include "../Base/Predictor.h"
@@ -27,11 +27,11 @@ public:
 		NODE_CAN_BE_USED = -2,
 	};
 
-	DynamicDecisionTree(OnlineStorage<ClassPoint *> &storage, const unsigned int maxDepth,
+	DynamicDecisionTree(OnlineStorage<LabeledVectorX *> &storage, const unsigned int maxDepth,
 							const unsigned int amountOfClasses, const unsigned int amountOfPointsPerSplit);
 
 	// construct empty tree
-	DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage);
+	DynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage);
 
 	// copy construct
 	DynamicDecisionTree(const DynamicDecisionTree& tree);
@@ -44,24 +44,24 @@ public:
 
 	bool train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const unsigned int tryCounter, const bool saveDataPosition);
 
-	double trySplitFor(const double usedSplitValue, const unsigned int usedDim,
+	real trySplitFor(const real usedSplitValue, const unsigned int usedDim,
 			const std::vector<unsigned int>& dataInNode, std::vector<unsigned int>& leftHisto,
 			std::vector<unsigned int>& rightHisto, RandomNumberGeneratorForDT& generator);
 
 	void adjustToNewData();
 
-	unsigned int predict(const DataPoint& point) const;
+	unsigned int predict(const VectorX& point) const;
 
-	unsigned int predict(const DataPoint& point, int& winningLeafNode) const;
+	unsigned int predict(const VectorX& point, int& winningLeafNode) const;
 
-	bool predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1, const DataPoint& point2, const int usedHeight) const;
+	bool predictIfPointsShareSameLeaveWithHeight(const VectorX& point1, const VectorX& point2, const int usedHeight) const;
 
 	void predictData(const Data& data, Labels& labels) const{
 		UNUSED(data); UNUSED(labels);
 		printError("This function is not implemented!");
 	}
 
-	void predictData(const Data& points, Labels& labels, std::vector< std::vector<double> >& probabilities) const{
+	void predictData(const Data& points, Labels& labels, std::vector< std::vector<real> >& probabilities) const{
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
 	}
@@ -78,13 +78,13 @@ public:
 
 	MemoryType getMemSize() const;
 
-//	void printStream(std::ostream &output, const double precision = 3);
+//	void printStream(std::ostream &output, const real precision = 3);
 
 private:
 	// this function is only called if the empty tree constructor was used!
 	void prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses);
 
-	OnlineStorage<ClassPoint*>& m_storage;
+	OnlineStorage<LabeledVectorX*>& m_storage;
 	// max depth allowed in this tree
 	const unsigned int m_maxDepth;
 	// max number of nodes possible in this tree
@@ -102,7 +102,7 @@ private:
 	// 		2		3
 	//  4	   5  6 	7
 	// 8 9 	10 11 12 13  14 15
-	std::vector<double> m_splitValues;
+	std::vector<real> m_splitValues;
 	// order is like with split values
 	std::vector<int> m_splitDim;
 

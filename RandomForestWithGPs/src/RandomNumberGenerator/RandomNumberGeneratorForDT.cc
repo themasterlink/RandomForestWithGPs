@@ -11,7 +11,7 @@
 RandomNumberGeneratorForDT::RandomNumberGeneratorForDT(const int dim, const int minUsedData,
 	const int maxUsedData, const int amountOfData, const int seed, const int amountOfDataUsedPerTree)
 	:	m_stepSize(std::max(1,std::min(amountOfDataUsedPerTree, amountOfData))),
-		m_generator(seed),
+		m_generator((unsigned int) seed),
 		m_uniformDistDimension(0, dim - 1), // 0 ... (dimension of data - 1)
 		m_uniformDistUsedData(minUsedData, maxUsedData),
 		m_uniformDistData(0, amountOfData - 1),
@@ -20,13 +20,13 @@ RandomNumberGeneratorForDT::RandomNumberGeneratorForDT(const int dim, const int 
 		m_varGenUsedData(m_generator, m_uniformDistUsedData),
 		m_varGenData(m_generator, m_uniformDistData),
 		m_varGenStepOverStorage(m_generator, m_uniformStepOverStorage),
-		m_useDim(dim, false){
+		m_useDim((unsigned long) dim, false){
 }
 
 RandomNumberGeneratorForDT::~RandomNumberGeneratorForDT(){
 }
 
-void RandomNumberGeneratorForDT::setMinAndMaxForSplitInDim(const unsigned int dim, const double min, const double max){
+void RandomNumberGeneratorForDT::setMinAndMaxForSplitInDim(const unsigned int dim, const real min, const real max){
 	m_useDim[dim] = min < max;
 	if(m_useDim[dim]){
 		m_uniformSplitValues[dim].param(uniform_distribution_real::param_type(min, max));
@@ -37,7 +37,7 @@ void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 	UNUSED(event);
 	if(caller != nullptr && caller->classType() == ClassTypeSubject::ONLINERANDOMFOREST){
 		OnlineRandomForest* forest = dynamic_cast<OnlineRandomForest*>(caller);
-		OnlineStorage<ClassPoint*>& storage = forest->getStorageRef();
+		OnlineStorage<LabeledVectorX*>& storage = forest->getStorageRef();
 		const unsigned int dim = storage.dim();
 		if(!useWholeDataSet()){
 			m_stepSize = (std::max(1,std::min(m_stepSize, (int) storage.size())));
@@ -48,7 +48,7 @@ void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 			m_useDim.resize(dim);
 		}
 		m_mutex.lock();
-		const std::vector<Eigen::Vector2d >& minMaxValues = forest->getMinMaxValues();
+		const std::vector<Vector2>& minMaxValues = forest->getMinMaxValues();
 		for(unsigned int i = 0; i < dim; ++i){
 			setMinAndMaxForSplitInDim(i, minMaxValues[i][0], minMaxValues[i][1]);
 //			else{

@@ -8,33 +8,28 @@
 #ifndef UTILITY_READWRITERHELPER_H_
 #define UTILITY_READWRITERHELPER_H_
 
-#include <fstream>
-#include <Eigen/Dense>
-#include <vector>
-#include <iostream>
+#include "../Utility/Util.h"
 #include "boost/filesystem.hpp"
-#include "../Data/ClassPoint.h"
+#include "../Data/LabeledVectorX.h"
 #include "../RandomForests/DynamicDecisionTree.h"
 #include "../RandomForests/BigDynamicDecisionTree.h"
 
 class ReadWriterHelper {
 public:
 
-	static 	void writeMatrix(std::fstream& stream, const Eigen::MatrixXd& matrix);
+	template<class T>
+	static void writeMatrix(std::fstream& stream, const T& matrix);
 
-	static 	void writeMatrix(std::fstream& stream, const Eigen::MatrixXf& matrix);
+	template<class T>
+	static void readMatrix(std::fstream& stream, T& matrix);
 
-	static 	void readMatrix(std::fstream& stream, Eigen::MatrixXd& matrix);
+	static void readVector(std::fstream& stream, VectorX& vector);
 
-	static 	void readMatrix(std::fstream& stream, Eigen::MatrixXf& matrix);
+	static void writeVector(std::fstream& stream, const VectorX& vector);
 
-	static 	void readVector(std::fstream& stream, Eigen::VectorXd& vector);
+	static void readPoint(std::fstream& stream, LabeledVectorX& vector);
 
-	static void writeVector(std::fstream& stream, const Eigen::VectorXd& vector);
-
-	static 	void readPoint(std::fstream& stream, ClassPoint& vector);
-
-	static void writePoint(std::fstream& stream, const ClassPoint& vector);
+	static void writePoint(std::fstream& stream, const LabeledVectorX& vector);
 
 	template<class T>
 	static void writeVector(std::fstream& stream, const std::vector<T>& vector);
@@ -54,6 +49,26 @@ private:
 	ReadWriterHelper();
 	virtual ~ReadWriterHelper();
 };
+
+
+template<class T>
+void ReadWriterHelper::writeMatrix(std::fstream& stream, const T& matrix){
+	using Index = typename T::Index;
+	Index rows = matrix.rows(), cols=matrix.cols();
+	stream.write((char*) (&rows), sizeof(Index));
+	stream.write((char*) (&cols), sizeof(Index));
+	stream.write((char*) matrix.data(), rows*cols*sizeof(typename T::Scalar));
+}
+
+template<class T>
+void ReadWriterHelper::readMatrix(std::fstream& stream, T& matrix){
+	using Index = typename T::Index;
+	Index rows=0, cols=0;
+	stream.read((char*) (&rows),sizeof(Index));
+	stream.read((char*) (&cols),sizeof(Index));
+	matrix.resize(rows, cols);
+	stream.read( (char *) matrix.data() , rows*cols*sizeof(typename T::Scalar));
+}
 
 template<class T>
 void ReadWriterHelper::writeVector(std::fstream& stream, const std::vector<T>& vector){

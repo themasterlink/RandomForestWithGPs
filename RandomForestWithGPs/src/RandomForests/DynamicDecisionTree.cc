@@ -8,7 +8,7 @@
 #include "DynamicDecisionTree.h"
 #include "../Data/ClassKnowledge.h"
 
-DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint *> &storage, const unsigned int maxDepth,
+DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<LabeledVectorX *> &storage, const unsigned int maxDepth,
 										 const unsigned int amountOfClasses, const unsigned int amountOfPointsPerSplit):
 		m_storage(storage),
 		m_maxDepth(maxDepth),
@@ -27,12 +27,12 @@ DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint *> &storage, c
 	if(m_maxDepth <= 0 || m_maxDepth >= 28){
 		printError("This height is not supported here: " << m_maxDepth);
 	}
-//	printOnScreen("Size is: " << (m_splitDim.size() * sizeof(int) + m_splitValues.size() * sizeof(double) + m_labelsOfWinningClassesInLeaves.size() * sizeof(int)));
+//	printOnScreen("Size is: " << (m_splitDim.size() * sizeof(int) + m_splitValues.size() * sizeof(real) + m_labelsOfWinningClassesInLeaves.size() * sizeof(int)));
 }
 
 
 // construct empty tree
-DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<ClassPoint*>& storage):
+DynamicDecisionTree::DynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage):
 		DynamicDecisionTree(storage, 1, ClassKnowledge::amountOfClasses(), 100){
 }
 
@@ -157,13 +157,13 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 		// calc split value for each node
 		// choose dimension for split
 		int randDim, amountOfUsedData;
-		double minDimValue, maxDimValue;
+		real minDimValue, maxDimValue;
 		// try different dimension and find one where the points have a difference
 		amountOfUsedData = generator.getRandAmountOfUsedData();
 		for(unsigned int i = 0; i < amountOfTriedDims; ++i){
 			randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
-			minDimValue = DBL_MAX;
-			maxDimValue = NEG_DBL_MAX;
+			minDimValue = REAL_MAX;
+			maxDimValue = NEG_REAL_MAX;
 			for(auto& pos : actDataPos){
 				if(m_storage[pos]->coeff(randDim) > maxDimValue){
 					maxDimValue = m_storage[pos]->coeff(randDim);
@@ -184,18 +184,18 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			}
 			continue;
 		}
-		generator.setMinAndMaxForSplitInDim(randDim, minDimValue, maxDimValue);
+		generator.setMinAndMaxForSplitInDim((unsigned int) randDim, minDimValue, maxDimValue);
 
-		double maxScoreElementValue = 0;
-		double actScore = NEG_DBL_MAX; // TODO check magic number
+		real maxScoreElementValue = 0;
+		real actScore = NEG_REAL_MAX; // TODO check magic number
 		std::sort(actDataPos.begin(), actDataPos.end(),
 				  [this, &randDim](const auto& a, const auto& b) -> bool
 				  { return m_storage[a]->coeff(randDim) < m_storage[b]->coeff(randDim); });
 		for(int j = 0; j < amountOfUsedData; ++j){ // amount of checks for a specified split
 //			const int randElementId = generator.getRandNextDataEle();
-//			const double usedValue = (*m_storage[usedNode])[usedDim];
-			const double usedValue = generator.getRandSplitValueInDim(randDim);
-			const double score = trySplitFor(usedValue, randDim,
+//			const real usedValue = (*m_storage[usedNode])[usedDim];
+			const real usedValue = generator.getRandSplitValueInDim(randDim);
+			const real score = trySplitFor(usedValue, randDim,
 					actDataPos, leftHisto, rightHisto, generator);
 //			if(iActNode == 1 && randDim == 0){
 //				printOnScreen(usedValue <<"," << score);
@@ -206,7 +206,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 			}
 		}
 		// save actual split
-		m_splitValues[iActNode] = maxScoreElementValue;//(double) (*m_storage[maxScoreElement])[randDim];
+		m_splitValues[iActNode] = maxScoreElementValue;//(real) (*m_storage[maxScoreElement])[randDim];
 		m_splitDim[iActNode] = randDim;
 		// apply split to data
 		const int leftPos = iActNode * 2, rightPos = iActNode * 2 + 1;
@@ -276,7 +276,7 @@ bool DynamicDecisionTree::train(unsigned int amountOfUsedDims, RandomNumberGener
 	return true;
 }
 
-double DynamicDecisionTree::trySplitFor(const double usedSplitValue, const unsigned int usedDim,
+real DynamicDecisionTree::trySplitFor(const real usedSplitValue, const unsigned int usedDim,
 		const std::vector<unsigned int>& dataInNode, std::vector<unsigned int>& leftHisto,
 		std::vector<unsigned int>& rightHisto, RandomNumberGeneratorForDT& generator){
 	int leftAmount = 0, rightAmount = 0;
@@ -308,11 +308,11 @@ double DynamicDecisionTree::trySplitFor(const double usedSplitValue, const unsig
 		}
 	}
 	// Entropy -> TODO maybe Gini
-	double leftCost = 0, rightCost = 0;
+	real leftCost = 0, rightCost = 0;
 	for(unsigned int i = 0; i < m_amountOfClasses; ++i){
-		const double normalizer = leftHisto[i] + rightHisto[i];
+		const real normalizer = leftHisto[i] + rightHisto[i];
 		if(normalizer > 0){
-			const double leftClassProb = leftHisto[i] / normalizer;
+			const real leftClassProb = leftHisto[i] / normalizer;
 			if(leftClassProb > 0){
 				leftCost -= leftClassProb * log(leftClassProb);
 			}
@@ -332,13 +332,13 @@ double DynamicDecisionTree::trySplitFor(const double usedSplitValue, const unsig
 	return rightAmount * rightCost + leftAmount * leftCost;
 }
 
-unsigned int DynamicDecisionTree::predict(const DataPoint& point) const{
+unsigned int DynamicDecisionTree::predict(const VectorX& point) const{
 	int iActNode = 1; // start in root
 	return predict(point, iActNode);
 }
 
 // is named iActNode here, is easier, but represents in the end the winningLeafNode
-unsigned int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode) const {
+unsigned int DynamicDecisionTree::predict(const VectorX& point, int& iActNode) const {
 	iActNode = 1;
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED && m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		while(iActNode <= (int) m_maxInternalNodeNr){
@@ -364,8 +364,8 @@ unsigned int DynamicDecisionTree::predict(const DataPoint& point, int& iActNode)
 	}
 }
 
-bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const DataPoint& point1,
-																  const DataPoint& point2,
+bool DynamicDecisionTree::predictIfPointsShareSameLeaveWithHeight(const VectorX& point1,
+																  const VectorX& point2,
 																  const int usedHeight) const {
 	int iActNode = 1; // start in root
 	int actLevel = 1;
@@ -409,7 +409,7 @@ void DynamicDecisionTree::adjustToNewData(){
 	std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), 0);
 	const unsigned int leafAmount = pow2(m_maxDepth);
 	std::vector< std::vector<int> > histo(leafAmount, std::vector<int>(m_amountOfClasses, 0));
-	for(OnlineStorage<ClassPoint*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
+	for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 		int iActNode = 1; // start in root
 		while(iActNode <= (int) m_maxInternalNodeNr){
 			if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){
@@ -459,11 +459,13 @@ void DynamicDecisionTree::deleteDataPositions(){
 	SAVE_DELETE(m_dataPositions);
 }
 
-MemoryType DynamicDecisionTree::getMemSize() const{
-	return ((MemoryType) m_maxInternalNodeNr + 1) * 16 + 40; // 16 + 24 = 40, 16 general info, 40 pointers and ref
+MemoryType DynamicDecisionTree::getMemSize() const {
+	const auto splits = ((MemoryType) m_maxInternalNodeNr + 1) * (sizeof(real) + sizeof(unsigned int) + sizeof(int));
+	const auto refs = (MemoryType) sizeof(int*) * 6; // size of pointers and refs
+	return refs + splits; // 16 + 24 = 40, 16 general info, 40 pointers and ref
 }
 
-//void DynamicDecisionTree::printStream(std::ostream &output, const double precision){
+//void DynamicDecisionTree::printStream(std::ostream &output, const real precision){
 //	if(&output == &std::cout){
 //#ifdef USE_SCREEN_OUPUT
 //		printError("This print message is not supported if output is std::cout and the panels are used!");
