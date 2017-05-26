@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "boundary_transformation.h"
 #include "cmaes.h"
+#include "../Utility/Util.h"
 
 namespace cmaes {
 
@@ -18,7 +19,7 @@ static double default_upper[1];
 void _FatalError(const char *s)
 {
     printf("Fatal error in cmaes_boundary_transformation: %s\n", s);
-    exit(1);
+    quitApplication();
 }
 
 void cmaes_boundary_transformation_init(cmaes_boundary_transformation_t *t,

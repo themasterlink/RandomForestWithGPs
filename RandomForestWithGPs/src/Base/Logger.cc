@@ -12,14 +12,14 @@
 #include <boost/date_time.hpp>
 
 boost::mutex Logger::m_mutex;
-boost::thread* Logger::m_ownThread(nullptr);
 bool Logger::m_init(false);
 bool Logger::m_needToWrite(false);
 std::string Logger::m_text("");
 std::string Logger::m_fileName("");
-Real Logger::m_timeToSleep(2.);
+Real Logger::m_timeToSleep((Real) 2.);
 std::map<std::string, std::string> Logger::m_specialLines;
 std::string Logger::m_actualDirectory = "./"; // default
+boost::thread* Logger::m_ownThread(nullptr);
 
 Logger::Logger() {
 }
@@ -36,8 +36,7 @@ void Logger::start(){
 
 		boost::gregorian::date dayte(boost::gregorian::day_clock::local_day());
 		boost::posix_time::ptime midnight(dayte);
-		boost::posix_time::ptime
-		now(boost::posix_time::microsec_clock::local_time());
+		boost::posix_time::ptime now(boost::posix_time::microsec_clock::local_time());
 		boost::posix_time::time_duration td = now - midnight;
 		std::stringstream clockTime;
 		if(td.fractional_seconds() > 0){

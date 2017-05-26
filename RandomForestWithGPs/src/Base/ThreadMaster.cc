@@ -20,16 +20,6 @@ boost::mutex ThreadMaster::m_mutex;
 std::atomic<bool> ThreadMaster::m_keepRunning(true);
 boost::mutex ThreadMaster::m_isFinished;
 
-ThreadMaster::ThreadMaster() {
-	// TODO Auto-generated constructor stub
-
-}
-
-ThreadMaster::~ThreadMaster() {
-	// TODO Auto-generated destructor stub
-}
-
-
 void ThreadMaster::start(){
 	if(m_mainThread == nullptr){
 		setMaxCounter();
@@ -38,7 +28,7 @@ void ThreadMaster::start(){
 }
 
 void ThreadMaster::setFrequence(const Real frequence){
-	m_timeToSleep = std::max(1. / frequence, 0.001);
+	m_timeToSleep = std::max(Real(1.) / frequence, (Real) 0.001);
 }
 
 void ThreadMaster::threadHasFinished(InformationPackage* package){
@@ -107,7 +97,7 @@ void ThreadMaster::run(){
 		auto selectedValue = m_waitingList.begin();
 		for(auto it = m_runningList.begin(); it != m_runningList.end(); ++it){
 			// for each running element check if execution is finished
-			const int maxTrainingsTime = (*it)->getMaxTrainingsTime() > 0 ? (*it)->getMaxTrainingsTime() : CommandSettings::get_samplingAndTraining();
+			const int maxTrainingsTime = (int) ((*it)->getMaxTrainingsTime() > 0 ? (*it)->getMaxTrainingsTime() : CommandSettings::get_samplingAndTraining());
 			if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime * 0.05 || (*it)->isTaskFinished()){ // each training have to take at least 5 seconds!
 				if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime && !(*it)->shouldTrainingBeAborted() && (*it)->canBeAbortedAfterCertainTime()){
 //					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
@@ -178,7 +168,8 @@ void ThreadMaster::sortWaitingList(const int minAmountOfPoints, const int maxAmo
 						break;
 					case InfoType::IVM_PREDICT:{
 						const int diff = (*itPrev)->amountOfTrainingStepsPerformed() - (*it)->amountOfTrainingStepsPerformed();
-						const int amountOfPoints = ((*it)->amountOfAffectedPoints() + (*itPrev)->amountOfAffectedPoints()) * 0.5;
+						const int amountOfPoints = (int) (
+								((*it)->amountOfAffectedPoints() + (*itPrev)->amountOfAffectedPoints()) * 0.5);
 						if(diff > 0.1 * amountOfPoints){
 							swap = true;
 						}
@@ -203,7 +194,7 @@ void ThreadMaster::sortWaitingList(const int minAmountOfPoints, const int maxAmo
 }
 
 bool ThreadMaster::appendThreadToList(InformationPackage* package){
-	bool ret = false;
+	bool ret;
 	m_mutex.lock();
 	m_waitingList.push_back(package);
 	ret = true;
@@ -213,14 +204,14 @@ bool ThreadMaster::appendThreadToList(InformationPackage* package){
 
 void ThreadMaster::abortAllThreads(){
 	m_mutex.lock();
-	for(auto it = m_waitingList.begin(); it != m_waitingList.end(); ++it){
-		if((*it)->canBeAbortedInGeneral()){
-			(*it)->abortTraing();
+	for(auto& waitingPackage : m_waitingList){
+		if(waitingPackage->canBeAbortedInGeneral()){
+			waitingPackage->abortTraing();
 		}
 	}
-	for(auto it = m_runningList.begin(); it != m_runningList.end(); ++it){
-		if((*it)->canBeAbortedInGeneral()){
-			(*it)->abortTraing();
+	for(auto& runningPackage : m_runningList){
+		if(runningPackage->canBeAbortedInGeneral()){
+			runningPackage->abortTraing();
 		}
 	}
 	m_mutex.unlock();

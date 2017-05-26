@@ -35,11 +35,13 @@ public:
 	void predictData(const Data& data, Labels& labels) const{
 		UNUSED(data); UNUSED(labels);
 		printError("This function is not implemented!");
+		quitApplication();
 	}
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const{
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
 		printError("Not implemented yet!");
+		quitApplication();
 	}
 
 	unsigned int amountOfClasses() const {return m_amountOfUsedClasses;};

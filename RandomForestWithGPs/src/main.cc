@@ -70,7 +70,7 @@ void handleProgrammOptions(int ac, char* av[]){
 	boost::program_options::notify(vm);
 	if (vm.count("help")) {
 		std::cout << desc << "\n";
-		exit(0);
+		quitApplication();
 	}
 }
 
@@ -84,10 +84,6 @@ void handleProgrammOptions(int ac, char* av[]){
 	cv::drawKeypoints(input, keypoints, output);
 	cv::imwrite("../sift_result.jpg", output);
 */
-
-void quit() {
-  endwin();
-}
 
 std::string make_daytime_string(){
   std::time_t now = std::time(0);
@@ -267,14 +263,15 @@ int main(int ac, char** av){
 		printOnScreen("TotalStorage::getTotalSize(): " << TotalStorage::getTotalSize());
 		DataWriterForVisu::writeSvg("justData.svg", train.storage());
 		openFileInViewer("justData.svg");
-		exit(0);
+		const bool wait = false;
+		quitApplication(wait);
 	}else if(CommandSettings::get_convertFile().length() > 0){
 		printOnScreen("Convert file mode:");
 		LabeledData data;
 		const std::string inputPath = CommandSettings::get_convertFile();
 		const std::string typeLessPath = inputPath.substr(0, inputPath.length() - 4); // for txt and csv
 		if(!boost::filesystem::exists(boost::filesystem::path(typeLessPath + ".binary"))){
-			const auto containDegrees = false;
+			const auto containDegrees = true;
 			DataReader::readFromFile(data, typeLessPath, INT_MAX, UNDEF_CLASS_LABEL, true, containDegrees);
 			if(data.size() > 0){
 				printOnScreen("Data amount: " << data.size() << ", dim: " << data[0]->rows());
@@ -282,12 +279,8 @@ int main(int ac, char** av){
 			}
 		}else{
 			printOnScreen("This file was already converted!");
-			sleepFor(2);
 		}
-		ThreadMaster::stopExecution();
-		ThreadMaster::blockUntilFinished();
-		sleepFor(2);
-		exit(0);
+		quitApplication();
 	}
 	Logger::start();
 	printOnScreen("Settingsfile: " << settingsFile);
@@ -373,13 +366,7 @@ int main(int ac, char** av){
 	}else{
 		printError("Type \"main.type\" can only be binaryIvm, multiIvm or ORF not: " << type);
 	}
-	Logger::forcedWrite();
-	if(CommandSettings::get_settingsFile().length() == 0){
-		printOnScreen("Press any key to quit application");
-		getchar();
-	}
-	ThreadMaster::stopExecution();
-	ThreadMaster::blockUntilFinished();
+	quitApplication();
 
 	return 0;
 }

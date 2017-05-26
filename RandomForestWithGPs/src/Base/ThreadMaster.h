@@ -44,8 +44,8 @@ private:
 
 	static void sortWaitingList(const int minAmountOfPoints, const int maxAmountOfPoints);
 
-	ThreadMaster();
-	virtual ~ThreadMaster();
+	ThreadMaster() = default;
+	~ThreadMaster() = default;
 
 	using PackageList = std::list<InformationPackage*>;
 	using PackageListIterator = PackageList::iterator;

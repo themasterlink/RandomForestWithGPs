@@ -82,8 +82,7 @@ void TotalStorage::readData(const int amountOfData){
 			}
 //			if(m_testSet.size() == 0){
 //				printError("No test point found for testNr: " << testNr);
-//				Logger::forcedWrite();
-//				exit(0);
+//				quitApplication();
 //			}
 			const unsigned int jumper = 1;
 			if(jumper > 1){
@@ -428,6 +427,7 @@ void TotalStorage::getOnlineStorageCopy(OnlineStorage<LabeledVectorX*>& storage)
 		}
 	}else{
 		printError("Not implemented for this mode!");
+		quitApplication();
 	}
 }
 
@@ -466,7 +466,7 @@ void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<LabeledVect
 		OnlineStorage<LabeledVectorX*>& test){
 	if(m_mode == Mode::WHOLE){
 		printError("Not implemented yet!");
-		Logger::forcedWrite();
+		quitApplication();
 	}else{
 		train.append(m_removeFromTrainSet);
 		test.append(m_removeFromTestSet);
@@ -492,7 +492,7 @@ void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<
 		}
 	}else{
 		printError("Not implemented yet!");
-		Logger::forcedWrite();
+		quitApplication();
 	}
 }
 
@@ -504,6 +504,7 @@ unsigned int TotalStorage::getSize(unsigned int classNr){
 		}
 	}else{
 		printError("Not implemented for this mode");
+		quitApplication();
 	}
 	return 0;
 }

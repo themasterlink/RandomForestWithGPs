@@ -42,8 +42,6 @@ private:
 
 	static boost::mutex m_mutex;
 
-	static boost::thread* m_ownThread;
-
 	static bool m_init;
 
 	static bool m_needToWrite;
@@ -58,6 +56,8 @@ private:
 
 	Logger();
 	virtual ~Logger();
+
+	static boost::thread *m_ownThread;
 };
 
 #endif /* BASE_LOGGER_H_ */

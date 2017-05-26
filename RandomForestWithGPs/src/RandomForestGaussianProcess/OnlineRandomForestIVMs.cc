@@ -29,6 +29,7 @@ void OnlineRandomForestIVMs::update(Subject* caller, unsigned int event){
 	switch(event){
 	case OnlineStorage<LabeledVectorX*>::Event::APPEND:{
 		printError("This is not implemented yet!");
+		quitApplication();
 		break;
 	}
 	case OnlineStorage<LabeledVectorX*>::Event::APPENDBLOCK:{
@@ -65,7 +66,6 @@ void OnlineRandomForestIVMs::update(){
 		printOnScreen("Just ORFs:");
 		ConfusionMatrixPrinter::print(conv);
 		printOnScreen("Just ORFs correct: " << number2String(amountOfCorrect / (Real) m_storage.size() * 100.0, 2));
-		Logger::forcedWrite();
 		boost::thread_group* group = new boost::thread_group();
 		std::vector<LabeledData*> datasForPredictedClasses(amountOfClasses(), nullptr);
 		int nrOfInducingPoints = 40;
@@ -99,6 +99,7 @@ void OnlineRandomForestIVMs::update(){
 		printOnScreen("Finished Training!");
 	}else{
 		printError("Not implemented yet!");
+		quitApplication();
 	}
 }
 

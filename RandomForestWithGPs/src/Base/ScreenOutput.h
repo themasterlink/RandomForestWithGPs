@@ -28,10 +28,10 @@ public:
 
 	static void printInProgressLine(const std::string& line);
 
-private:
-
 	// is interally called by the curses library
 	static void quitForScreenMode();
+
+private:
 
 	static void run();
 
@@ -52,14 +52,14 @@ private:
 
 	static ThreadMaster::PackageList* m_runningThreads;
 
-	static boost::thread* m_mainThread;
+	static boost::thread *m_mainThread;
 
 	static Real m_timeToSleep;
 
 	static std::string m_progressLine;
+	ScreenOutput() = default;
 
-	ScreenOutput();
-	virtual ~ScreenOutput();
+	~ScreenOutput() = default;
 };
 
 #ifdef USE_SCREEN_OUPUT

@@ -19,18 +19,11 @@ std::list<std::string> ScreenOutput::m_errorLines;
 std::list<int> ScreenOutput::m_errorCounters;
 std::string ScreenOutput::m_progressLine;
 
-ScreenOutput::ScreenOutput() {
-	// TODO Auto-generated constructor stub
-
-}
-
-ScreenOutput::~ScreenOutput() {
-	// TODO Auto-generated destructor stub
-}
-
 void ScreenOutput::quitForScreenMode(){
+#ifdef USE_SCREEN_OUPUT
 	clear();
 	endwin();
+#endif
 }
 
 void ScreenOutput::start(){
@@ -77,7 +70,7 @@ void ScreenOutput::run(){
 			completeWhite += " ";
 		}
 		const int progressBar = LINES - 3;
-		const int heightOfThreadInfo = LINES * 0.7;
+		const int heightOfThreadInfo = (int) (LINES * 0.7);
 		const int restOfLines = LINES - 7 - heightOfThreadInfo;
 		if(heightOfThreadInfo < 25 && restOfLines > 3 && COLS < 80){
 			clear();
@@ -97,25 +90,27 @@ void ScreenOutput::run(){
 		attron(A_BOLD);
 		attron(COLOR_PAIR(6));
 		const std::string runningThreadAsString = number2String(m_runningThreads->size()) + ", " + number2String(ThreadMaster::m_waitingList.size());
-		mvprintw(actLine,amountOfThreadsString.length() + 5, runningThreadAsString.c_str());
+		mvprintw(actLine, (int) (amountOfThreadsString.length() + 5), runningThreadAsString.c_str());
 		attroff(A_BOLD);
 		attron(COLOR_PAIR(1));
 		if(m_runningThreads->size() == 0 || (modeNr < 8 && modeNr + 1 > (int) m_runningThreads->size())){
 			modeNr = -1;
 		}
 		if(modeNr > -1 && modeNr < 8){
-			mvprintw(actLine,amountOfThreadsString.length() + 5 + runningThreadAsString.length(), (", mode: " + number2String(modeNr + 1)).c_str());
+			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()), (", mode: " + number2String(modeNr + 1)).c_str());
 		}else if(modeNr == 11){
-			mvprintw(actLine,amountOfThreadsString.length() + 5 + runningThreadAsString.length(), ", show general information");
+			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()), ", show general information");
 		}else if(modeNr == 10){
-			mvprintw(actLine,amountOfThreadsString.length() + 5 + runningThreadAsString.length(), ", show error log");
+			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()), ", show error log");
 		}
 		actLine = startOfMainContent;
 
 		int rowCounter = 0;
 		const int col = COLS - 6; // 3 on both sides
 		const int startOfRight = COLS / 2 + 2;
-		const int amountOfLinesPerThread =  m_runningThreads->size() > 1 ?  heightOfThreadInfo / ceil(m_runningThreads->size() / 2.0) : heightOfThreadInfo;
+		const int amountOfLinesPerThread = (int) (m_runningThreads->size() > 1 ?
+												  heightOfThreadInfo / ceil(m_runningThreads->size() / 2.0) :
+												  heightOfThreadInfo);
 		if(modeNr < 8){
 			if(modeNr == -1){
 				for(auto it = m_runningThreads->cbegin(); it != m_runningThreads->cend(); ++it, ++rowCounter){
@@ -123,7 +118,7 @@ void ScreenOutput::run(){
 					const int row = rowCounter / 2; // for 0 and 1 the first and so on
 					updateRunningPackage(it, rowCounter, row, isLeft, m_runningThreads->size() > 1 ? col / 2 : col, amountOfLinesPerThread, actLine, startOfRight, windows, panels);
 				}
-				for(unsigned int i = m_runningThreads->size(); i < 8; ++i){
+				for(unsigned int i = (unsigned int) m_runningThreads->size(); i < 8; ++i){
 					if(panels[i] != nullptr){
 						hide_panel(panels[i]);
 					}
@@ -169,7 +164,7 @@ void ScreenOutput::run(){
 		}else if(modeNr == 11){
 			actLine = startOfMainContent;
 		}
-		int heightOfGeneralInfo = std::max(std::min((int) LINES - actLine - 7 - (int) m_errorLines.size(), (int) m_lines.size()), std::min((int)m_lines.size(), 3)) + 2;
+		int heightOfGeneralInfo = std::max(std::min(LINES - actLine - 7 - (int) m_errorLines.size(), (int) m_lines.size()), std::min((int)m_lines.size(), 3)) + 2;
 		const bool hasHeadLine = false;
 		drawWindow(&generalInfo.first, &generalInfo.second, heightOfGeneralInfo, col + 1, actLine, 2, hasHeadLine);
 		show_panel(generalInfo.second);
@@ -255,9 +250,7 @@ void ScreenOutput::run(){
 			}else if(ch == KEY_DOWN){
 				--lineOffset;
 			}else if(ch == 27){ // end of program == esc
-				endwin();
-				Logger::forcedWrite();
-				exit(0);
+				quitApplication();
 			}else if(49 <= ch && ch <= 56){
 				const int newNr = ch - 49;
 				if(newNr == modeNr){
@@ -302,9 +295,9 @@ void ScreenOutput::updateRunningPackage(ThreadMaster::PackageListConstIterator& 
 	const std::string standartLine = (*it)->m_standartInfo + ((*it)->m_additionalInformation.length() > 0 ? (", " + (*it)->m_additionalInformation) : "");
 	wattron(win, COLOR_PAIR(6));
 	if((int) standartLine.length() > width){
-		mvwprintw(win, 1, 1, (standartLine.substr(0, width - 3) + "...").c_str());
+		mvwprintw(win, 1, 1, (standartLine.substr(0, (unsigned long) (width - 3)) + "...").c_str());
 	}else{
-		mvwprintw(win, 1, (width - standartLine.length()) / 2, standartLine.c_str());
+		mvwprintw(win, 1, (int) ((width - standartLine.length()) / 2), standartLine.c_str());
 	}
 	wattron(win, COLOR_PAIR(1));
 // drawing the box
@@ -444,7 +437,7 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 	int counter = hasHeadLine ? 3 : 0;
 	int amountOfNeededLines = 0;
 	for(std::list<std::string>::const_iterator itLine = lines.begin(); itLine != lines.end(); ++itLine){
-		if((int) itLine->length() > width){
+		if(width < (int) itLine->length()){
 			amountOfNeededLines += ceil((itLine->length() - width) / (Real) width) + 1;
 		}else{
 			++amountOfNeededLines;
@@ -462,12 +455,12 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 				std::string line = *itLine;
 				int diff = 0;
 				while((int) line.length() > width){
-					mvwprintw(win, counter, 2 + diff, line.substr(0, width - diff).c_str());
+					mvwprintw(win, counter, 2 + diff, line.substr(0, (unsigned long) (width - diff)).c_str());
 					++counter;
-					line = line.substr(width, line.length() - width);
+					line = line.substr((unsigned long) width, line.length() - width);
 					diff = 2;
 				}
-				mvwprintw(win, counter, 2 + diff, line.substr(0, width - diff).c_str());
+				mvwprintw(win, counter, 2 + diff, line.substr(0, (unsigned long) (width - diff)).c_str());
 			}
 		}
 	}else{
@@ -480,19 +473,19 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 				}
 			}else{
 				std::string line = *itLine;
-				const int neededLen = ceil(itLine->length() / (Real) width) - 1; // the last line will be printed normally
+				const int neededLen = (int) (ceil(itLine->length() / (Real) width) - 1); // the last line will be printed normally
 				counter += neededLen;
 				int diff = 0;
 				while((int) line.length() > width){
 					if(counter + forStartLine < height){ // -1 for the start line
-						mvwprintw(win, height - counter, 2 + diff, line.substr(0, width - diff).c_str());
+						mvwprintw(win, height - counter, 2 + diff, line.substr(0, (unsigned long) (width - diff)).c_str());
 					}
 					diff = 2;
-					line = line.substr(width, line.length() - width);
+					line = line.substr((unsigned long) width, line.length() - width);
 					--counter;
 				}
 				if(counter + forStartLine < height){ // -1 for the start line
-					mvwprintw(win, height - counter, 2 + diff, line.substr(0, width - diff).c_str());
+					mvwprintw(win, height - counter, 2 + diff, line.substr(0, (unsigned long) (width - diff)).c_str());
 				}
 				counter += neededLen;
 			}

@@ -19,6 +19,7 @@
 #include "InLinePercentageFiller.h"
 #include "../Base/ScreenOutput.h"
 #include "../Base/Logger.h"
+#include "../Base/CommandSettings.h"
 #include <boost/filesystem.hpp>
 
 #define RESET   "\033[0m"
@@ -161,11 +162,11 @@ inline bool startsWith(const std::string& word, const std::string& cmp){
 
 inline bool endsWith(const std::string& word, const std::string& cmp){
 	if(word.size() > cmp.size()){
-		int t = word.size() - 1;
+		int t = (int) (word.size() - 1);
 		if(cmp.size() == 0){
 			return false;
 		}
-		for(int i = cmp.size() - 1; i > -1; --i, --t){
+		for(int i = (int) (cmp.size() - 1); i > -1; --i, --t){
 			if(cmp[i] != word[t]){
 				return false;
 			}
@@ -181,6 +182,20 @@ inline bool endsWith(const std::string& word, const std::string& cmp){
 template<class T>
 inline void sleepFor(const T seconds){
 	usleep((__useconds_t) seconds * (__useconds_t) 1e6);
+}
+
+inline void quitApplication(const bool wait = true){
+	Logger::forcedWrite();
+	if(wait){
+		if(CommandSettings::get_settingsFile() == CommandSettings::defaultvalue_settingsFile()){
+			printOnScreen("Press any key to quit application");
+			getchar();
+		}
+	}
+	ThreadMaster::stopExecution();
+	ThreadMaster::blockUntilFinished();
+	ScreenOutput::quitForScreenMode();
+	exit(0);
 }
 
 #ifdef USE_SCREEN_OUPUT
@@ -216,10 +231,10 @@ inline void sleepFor(const T seconds){
 inline int_fast32_t highEndian2LowEndian(int_fast32_t i) {
     unsigned char c1, c2, c3, c4;
 
-    c1 = i & 255;
-    c2 = (i >> 8) & 255;
-    c3 = (i >> 16) & 255;
-    c4 = (i >> 24) & 255;
+    c1 = (unsigned char) (i & 255);
+    c2 = (unsigned char) ((i >> 8) & 255);
+    c3 = (unsigned char) ((i >> 16) & 255);
+    c4 = (unsigned char) ((i >> 24) & 255);
 
     return ((int_fast32_t)c1 << 24) + ((int_fast32_t)c2 << 16) + ((int_fast32_t)c3 << 8) + c4;
 }
