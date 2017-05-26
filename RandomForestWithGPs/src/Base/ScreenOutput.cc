@@ -84,7 +84,7 @@ void ScreenOutput::run(){
 			mvprintw(1,0, firstLine.c_str());
 			mvprintw(2,0, "There is not enough room to fill the rest with information!");
 			refresh();
-			usleep(m_timeToSleep * 1e6);
+			sleepFor(m_timeToSleep);
 			continue;
 		}
 		int actLine = 2;
@@ -281,7 +281,7 @@ void ScreenOutput::run(){
 		}
 		const double elapsedTime = sw.elapsedSeconds();
 		if(elapsedTime < m_timeToSleep){
-			usleep((m_timeToSleep - elapsedTime) * 1e6);
+			sleepFor(m_timeToSleep - elapsedTime);
 		}
 		sw.startTime();
 	}

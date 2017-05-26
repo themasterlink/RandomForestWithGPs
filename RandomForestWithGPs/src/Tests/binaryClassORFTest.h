@@ -119,7 +119,7 @@ void executeForBinaryClassORF(){
 			//			}
 			//		}
 			//	}
-			//	sleep(5);
+			//	sleepFor(5);
 			//	exit(0);
 
 
@@ -225,7 +225,7 @@ void executeForBinaryClassORF(){
 		}
 	}
 	printOnScreen("Reached end of binary ORF");
-	sleep(2);
+	sleepFor(2);
 }
 
 #endif /* TESTS_BINARYCLASSORFTEST_H_ */

@@ -56,8 +56,8 @@ private:
 
 	const DataSets& m_data;
 
-	int m_amountOfUsedClasses;
-	int m_amountOfDataPoints;
+	const unsigned int m_amountOfUsedClasses;
+	unsigned int m_amountOfDataPoints;
 	RandomForest m_forest;
 	std::vector<int> m_pureClassLabelForRfClass;
 	//std::vector< std::vector<bool> > m_isGpInUse;

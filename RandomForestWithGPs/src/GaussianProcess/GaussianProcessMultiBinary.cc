@@ -55,7 +55,7 @@ void GaussianProcessMultiBinary::train(const LabeledData& data, const Labels* gu
 		m_gps[iActClass] = new GaussianProcess();
 
 		while(!m_threadCounter.addNewThread()){ // if it is not possible wait
-			usleep(0.35 * 1e6);
+			sleepFor(0.35);
 		}
 		group.add_thread(new boost::thread(boost::bind(&GaussianProcessMultiBinary::trainInParallel, this, iActClass,
 				std::min(maxNrOfPointsForBayesOpt, pointsPerClassForBayOpt * (int) m_amountOfUsedClasses),
@@ -121,7 +121,7 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 		}
 		bestHyperParams.getFinishLast(isFinish);
 		if(!isFinish){
-			usleep(0.35 * 1e6);
+			sleepFor(0.35);
 		}
 		++iCounter;
 	}

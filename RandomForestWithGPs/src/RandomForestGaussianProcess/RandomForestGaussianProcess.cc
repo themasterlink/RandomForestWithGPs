@@ -15,7 +15,7 @@
 
 RandomForestGaussianProcess::RandomForestGaussianProcess(const DataSets& data, const int heightOfTrees,
 		const int amountOfTrees, const std::string& folderPath) :
-	m_data(data), m_amountOfUsedClasses(data.size()),
+	m_data(data), m_amountOfUsedClasses((unsigned int) data.size()),
 	m_amountOfDataPoints(0),
 	m_forest(heightOfTrees, amountOfTrees, m_amountOfUsedClasses),
 	m_pureClassLabelForRfClass(m_amountOfUsedClasses, GP_USED),
@@ -52,7 +52,7 @@ RandomForestGaussianProcess::RandomForestGaussianProcess(const DataSets& data, c
 }
 
 void RandomForestGaussianProcess::train(){
-	const int dim = m_data.begin()->second[0]->rows();
+	const auto dim = (unsigned int) m_data.begin()->second[0]->rows();
 	LabeledData data;
 	DataConverter::setToData(m_data, data);
 	/*// count total data points in dataset
@@ -108,7 +108,7 @@ void RandomForestGaussianProcess::train(){
 	std::vector<LabeledData> sortedData;
 	sortedData.resize(m_amountOfUsedClasses);
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
-		sortedData[i].resize(countClasses[i]);
+		sortedData[i].resize((unsigned long) countClasses[i]);
 	}
 	// copy the data in the right pre classes
 	std::vector<int> counter(m_amountOfUsedClasses,0);
@@ -140,7 +140,7 @@ void RandomForestGaussianProcess::train(){
 	for(int iActRfRes = 0; iActRfRes < m_amountOfUsedClasses; ++iActRfRes){ // go over all classes
 		//m_output.printSwitchingColor("Act Class: " + m_classNames[iActRfRes]);
 		const LabeledData& dataOfActRf = sortedData[iActRfRes];
-		const int amountOfDataInRfRes = dataOfActRf.size();
+		const int amountOfDataInRfRes = (int) dataOfActRf.size();
 
 		//std::cout << "Amount of data: " << amountOfDataInRfRes << std::endl;
 		// count the amount of class labels per pre class
@@ -193,7 +193,7 @@ void RandomForestGaussianProcess::train(){
 				m_gps[iActRfRes][iActClass] = new GaussianProcess();
 				const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 				while(m_nrOfRunningThreads >= nrOfParallel){
-					usleep(0.35 * 1e6);
+					sleepFor(0.35);
 				}
 				group.add_thread(new boost::thread(boost::bind(&RandomForestGaussianProcess::trainInParallel, this, iActClass, amountOfDataInRfRes,
 						std::min(maxNrOfPointsForBayesOpt, pointsPerClassForBayOpt * amountOfClassesOverThreshold),

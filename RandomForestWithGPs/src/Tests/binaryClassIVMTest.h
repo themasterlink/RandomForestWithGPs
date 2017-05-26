@@ -139,7 +139,7 @@ GaussianKernelParams sampleParams(OnlineStorage<LabeledVectorX*>& storage, int n
 	StopWatch sw;
 	while(sw.elapsedSeconds() < durationOfTraining){
 		InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter);
-		usleep(0.1 * 1e6);
+		sleepFor(0.1);
 	}
 	group.join_all();
 	InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);

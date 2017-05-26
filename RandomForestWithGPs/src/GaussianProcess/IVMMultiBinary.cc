@@ -157,7 +157,7 @@ void IVMMultiBinary::train(){
 						break;
 					}
 				}
-				usleep(0.05 * 1e6);
+				sleepFor(0.05);
 			}
 			// remove all running threads
 			for(std::list<InformationPackage*>::iterator it = m_packages.begin(); it != m_packages.end(); ++it){
@@ -254,7 +254,7 @@ void IVMMultiBinary::train(){
 			if(m_orfClassLabel == UNDEF_CLASS_LABEL){
 				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
 			}
-			usleep(0.15 * 1e6);
+			sleepFor(0.15);
 		}
 		counter = 0;
 		for(unsigned int i = 0; i < amountOfClasses(); ++i){
@@ -329,7 +329,7 @@ void IVMMultiBinary::train(){
 //					++counterForClass;
 //					++runningCounter;
 //				}
-//				usleep(0.1 * 1e6);
+//				sleepFor(0.1);
 //			}
 //			counter = 0;
 //			for(unsigned int i = 0; i < amountOfClasses(); ++i){

@@ -106,7 +106,7 @@ void Logger::run(){
 			write();
 		}
 		m_mutex.unlock();
-		usleep(m_timeToSleep * 1e6);
+		sleepFor(m_timeToSleep);
 	}
 }
 

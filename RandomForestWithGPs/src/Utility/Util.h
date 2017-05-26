@@ -178,6 +178,11 @@ inline bool endsWith(const std::string& word, const std::string& cmp){
 	}
 }
 
+template<class T>
+inline void sleepFor(const T seconds){
+	usleep((__useconds_t) seconds * (__useconds_t) 1e6);
+}
+
 #ifdef USE_SCREEN_OUPUT
 
 #define printError(message) \

@@ -114,7 +114,7 @@ void executeForBinaryClassORFIVM(){
 //		for(unsigned int i = 0; i < 10; ++i){
 //			printOnScreen("i: " << i << ", " << counter[i]);
 //		}
-//		sleep(5);
+//		sleepFor(5);
 //
 		printOnScreen("Training finished");
 		performTest(orf, train);

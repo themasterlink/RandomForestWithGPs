@@ -61,7 +61,7 @@ void RandomForest::train(const LabeledData& data, const int amountOfUsedDims,
 	}
 	while(counter.getCounter() < m_amountOfTrees){
 		// just the update for the amount of training left:
-		usleep(0.2 * 1e6);
+		sleepFor(0.2);
 		const int c = counter.getCounter();
 		if(c != 0){
 			std::cout << "\r                                                                                                   \r";

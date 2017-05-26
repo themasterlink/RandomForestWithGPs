@@ -95,7 +95,7 @@ void ThreadMaster::run(){
 				m_runningList.push_back(*selectedValue); // first add to the running list
 				++m_counter; // increase the counter of running threads
 				while(!(*selectedValue)->isWaiting()){ // if the thread is not waiting wait until it waits for reactivation -> should happen fast
-					usleep(0.05 * 1e6);
+					sleepFor(0.05);
 				}
 				(*selectedValue)->notify(); // start running of the thread
 				printInPackageOnScreen(*selectedValue, "This thread was selected in the beginning!");
@@ -147,7 +147,7 @@ void ThreadMaster::run(){
 			}
 		}
 		m_mutex.unlock();
-		usleep(m_timeToSleep * 1e6);
+		sleepFor(m_timeToSleep);
 	}
 	m_isFinished.unlock();
 }

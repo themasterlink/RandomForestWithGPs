@@ -176,7 +176,7 @@ std::string make_daytime_string(){
 //
 //				std::cout.write(buf.data(), len);
 //			}
-//			sleep(1);
+//			sleepFor(1);
 //		}
 //	}
 //	// handle any exceptions that may have been thrown.
@@ -282,11 +282,11 @@ int main(int ac, char** av){
 			}
 		}else{
 			printOnScreen("This file was already converted!");
-			sleep(2);
+			sleepFor(2);
 		}
 		ThreadMaster::stopExecution();
 		ThreadMaster::blockUntilFinished();
-		sleep(2);
+		sleepFor(2);
 		exit(0);
 	}
 	Logger::start();

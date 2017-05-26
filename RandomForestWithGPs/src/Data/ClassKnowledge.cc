@@ -38,7 +38,7 @@ void ClassKnowledge::setNameFor(const std::string& name, unsigned int nr){
 	}
 	if(nr >= UNDEF_CLASS_LABEL){
 		printError("The amount of classes exceeds the amount of supported classes: " << UNDEF_CLASS_LABEL);
-		sleep(10);
+		sleepFor(10);
 		m_mutex.unlock();
 		exit(0);
 	}

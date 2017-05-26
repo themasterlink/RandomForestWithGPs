@@ -286,7 +286,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //				bestParams.m_fNoise.setAllValuesTo(4.474911884497);
 //			}else{
 //				printError("This class is unknown!");
-//				sleep(5);
+//				sleepFor(5);
 //				exit(0);
 //			}
 //		}
@@ -902,7 +902,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 //			printInPackageOnScreen(m_package, "mu: " << mu.transpose());
 //			DataWriterForVisu::writeSvg("deltas1.svg", deltasValue, colorForDeltas);
 //			openFileInViewer("deltas1.svg");
-//			sleep(1);
+//			sleepFor(1);
 			if(visuDeltas){
 				deltaValues.push_back((real) delta[k]);
 				colors.push_back(std::string(m_y[argmax] == 1 ? "red" : "blue"));

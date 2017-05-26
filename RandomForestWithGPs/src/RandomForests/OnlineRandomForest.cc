@@ -254,7 +254,7 @@ void OnlineRandomForest::train(){
 			mutexForCounter.unlock();
 			points.push_back(correct / (double) m_storage.size() * 100.);
 		}
-		usleep(0.05 * 1e6);
+		sleepFor(0.05);
 	}
 	group.join_all();
 	if(m_savedAnyTreesToDisk){
@@ -474,7 +474,7 @@ bool OnlineRandomForest::update(){
 				}
 			}
 			InLinePercentageFiller::setActValueAndPrintLine(counter);
-			usleep(0.1 * 1e6);
+			sleepFor(0.1);
 		}
 		group.join_all();
 		for(auto& package : packages){
