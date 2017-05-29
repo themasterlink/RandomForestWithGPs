@@ -48,22 +48,31 @@
 #define UNUSED(expr) \
  	 (void)(expr) \
 
+template<typename T>
+inline std::string number2String(const T& in){
+	std::stringstream ss;
+	ss << in;
+	return ss.str();
+}
+
 inline std::string number2String(const Real& in, const int precision = -1){
-	if(precision != -1){
+	if(precision > 0){
 		if(in < 10000.){
 			char buffer[10 + precision];
-			std::string format = "%."+number2String(precision)+ "f";
-			sprintf(buffer,format.c_str(), in);
-			std::stringstream ss;
-			ss << buffer;
-			return ss.str();
+			std::stringstream str;
+			str << "%." << precision << "f";
+			sprintf(buffer,str.str().c_str(), in);
+			str.clear();
+			str << buffer;
+			return str.str();
 		}else{
 			char buffer[350 + precision]; // higher should be impossible
-			std::string format = "%."+number2String(precision)+ "f";
-			sprintf(buffer,format.c_str(), in);
-			std::stringstream ss;
-			ss << buffer;
-			return ss.str();
+			std::stringstream str;
+			str << "%." << precision << "f";
+			sprintf(buffer,str.str().c_str(), in);
+			str.clear();
+			str << buffer;
+			return str.str();
 		}
 	}else{
 		std::stringstream ss;
@@ -88,13 +97,6 @@ inline std::string convertMemorySpace(MemoryType mem){
 		}
 		++i;
 	}
-	return ss.str();
-}
-
-template<typename T>
-inline std::string number2String(const T& in){
-	std::stringstream ss;
-	ss << in;
 	return ss.str();
 }
 

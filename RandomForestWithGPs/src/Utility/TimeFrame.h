@@ -46,7 +46,7 @@ private:
 };
 
 inline Real TimeFrame::getSeconds() const{
-	return m_seconds + (m_minutes * 60 + m_hours * 3600);
+	return m_seconds + (Real) (m_minutes * 60 + m_hours * 3600);
 }
 
 #endif /* UTILITY_TIMEFRAME_H_ */

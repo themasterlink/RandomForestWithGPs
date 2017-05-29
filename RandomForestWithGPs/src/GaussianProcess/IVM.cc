@@ -838,8 +838,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 			// because in this case only 0.35 of the data has to be searched and the rest is skipped
 			if(m_uniformNr.isUsed() && k > 10 && !((m_desiredPoint < 0.35 && fraction < m_desiredPoint - m_desiredMargin)
 					|| (m_desiredPoint > 0.65 && fraction > m_desiredPoint + m_desiredMargin))){
-				increaseValue = m_uniformNr(); // returns a random value
-				const unsigned int start = m_uniformNr();
+				increaseValue = (unsigned int) m_uniformNr(); // returns a random value
+				const unsigned int start = (const unsigned int) m_uniformNr();
 				for(unsigned int i = 0; i < start; ++i){
 					++itOfJ;
 				}
