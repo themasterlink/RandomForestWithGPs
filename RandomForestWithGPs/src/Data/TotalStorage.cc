@@ -62,18 +62,18 @@ void TotalStorage::readData(const int amountOfData){
 			for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 				if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".binary"){
 					const std::string inputPath(itr->path().c_str());
-//					bool endsWithBool = false;
+//					bool StringHelper::endsWithBool = false;
 //					for(unsigned int i = 0; i < 10; ++i){
 //						if(i != testNr){
-//							endsWithBool = endsWithBool || endsWith(inputPath, "rgbd_features_train_split" + number2String(i) + "_5th.binary");
+//							StringHelper::endsWithBool = StringHelper::endsWithBool || StringHelper::endsWith(inputPath, "rgbd_features_train_split" + StringHelper::number2String(i) + "_5th.binary");
 //						}
 //					}
 					//finetuned_8192_
-					if(endsWith(inputPath, "rgbd_features_train_split" + number2String(testNr) + "_5th.binary")){
+					if(StringHelper::endsWith(inputPath, "rgbd_features_train_split" + StringHelper::number2String(testNr) + "_5th.binary")){
 						printOnScreen("As training:");
 						DataReader::readFromBinaryFile(wholeTrainingSet, inputPath, INT_MAX);
 //						DataReader::readFromFile(wholeTrainingSet, inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
-					}else if(endsWith(inputPath, "rgbd_features_test_split" + number2String(testNr) + "_5th.binary")){
+					}else if(StringHelper::endsWith(inputPath, "rgbd_features_test_split" + StringHelper::number2String(testNr) + "_5th.binary")){
 						printOnScreen("As test:");
 						DataReader::readFromBinaryFile(m_testSet, inputPath, INT_MAX);
 //						DataReader::readFromFile(m_testSet,  inputPath.substr(0, inputPath.length() - 4), INT_MAX, UNDEF_CLASS_LABEL, true);
@@ -102,7 +102,7 @@ void TotalStorage::readData(const int amountOfData){
 //			for(LabeledDataConstIterator it = m_trainSet.begin(); it != m_trainSet.end(); ++it){
 //				if(classes.find((**it).getLabel()) == classes.end()){
 //					classes.insert((**it).getLabel());
-//					ClassKnowledge::setNameFor(number2String((**it).getLabel()), (**it).getLabel());
+//					ClassKnowledge::setNameFor(StringHelper::number2String((**it).getLabel()), (**it).getLabel());
 //				}
 //			}
 		}else if(folderLocation == "../mnistOrg/" || folderLocation == "../uspsOrg/"){
@@ -130,7 +130,7 @@ void TotalStorage::readData(const int amountOfData){
 					m_testSet.push_back(it->second[i]);
 				}
 			}
-		}else if(endsWith(folderLocation, "/washingtonData") || endsWith(folderLocation, "/washingtonData/")){
+		}else if(StringHelper::endsWith(folderLocation, "/washingtonData") || StringHelper::endsWith(folderLocation, "/washingtonData/")){
 			m_mode = Mode::SEPERATE; // seperate train und test set
 			boost::filesystem::path targetDir(folderLocation);
 			boost::filesystem::directory_iterator end_itr;
@@ -138,7 +138,7 @@ void TotalStorage::readData(const int amountOfData){
 			for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 				if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".binary"){
 					const std::string inputPath(itr->path().c_str());
-					if(!endsWith(inputPath, "eval_flatten_complete.binary")){
+					if(!StringHelper::endsWith(inputPath, "eval_flatten_complete.binary")){
 						printOnScreen("As training:");
 						DataReader::readFromBinaryFile(wholeTrainingSet, inputPath, INT_MAX);
 					}else{
@@ -321,7 +321,7 @@ void TotalStorage::readData(const int amountOfData){
 			unsigned int amountOfDims = ClassKnowledge::amountOfDims();
 			ClassKnowledge::init();
 			ClassKnowledge::setAmountOfDims(amountOfDims);
-			ClassKnowledge::setNameFor(number2String(usedClass), 0);
+			ClassKnowledge::setNameFor(StringHelper::number2String(usedClass), 0);
 			ClassKnowledge::setNameFor("rest", 1);
 		}else if(ClassKnowledge::hasClassName(removeClass)){
 			std::list<LabeledVectorX*> trainList;

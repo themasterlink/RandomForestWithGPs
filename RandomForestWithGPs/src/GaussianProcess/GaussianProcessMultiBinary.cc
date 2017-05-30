@@ -46,10 +46,10 @@ void GaussianProcessMultiBinary::train(const LabeledData& data, const Labels* gu
 	boost::thread_group group;
 	for(int iActClass = 0; iActClass < m_amountOfUsedClasses; ++iActClass){
 		if(countClasses[iActClass] < thresholdForNoise){
-			m_output.printSwitchingColor(ClassKnowledge::getNameFor(iActClass) + " is not used, because count class is: " + number2String(countClasses[iActClass]) + "!");
+			m_output.printSwitchingColor(ClassKnowledge::getNameFor(iActClass) + " is not used, because count class is: " + StringHelper::number2String(countClasses[iActClass]) + "!");
 			continue; // do not use this class
 		}
-		m_output.printSwitchingColor("In Class: " + ClassKnowledge::getNameFor(iActClass) + " has so many points: " + number2String(countClasses[iActClass]));
+		m_output.printSwitchingColor("In Class: " + ClassKnowledge::getNameFor(iActClass) + " has so many points: " + StringHelper::number2String(countClasses[iActClass]));
 		//m_isGpInUse[iActRfRes][iActClass] = true; // there is actually a gp for this config
 
 		m_gps[iActClass] = new GaussianProcess();
@@ -97,8 +97,8 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 
 	// compare to all other classes! // one vs. all
 	const int numberOfPointsForClass = classCounts[iActClass];
-	const std::string betweenNames = ", for " + ClassKnowledge::getNameFor(iActClass) + " has " + number2String(numberOfPointsForClass);
-	m_output.printSwitchingColor("Start parallel with " + number2String(amountOfPointsUsedForTrainingTheTest) + " amount of points, which are used in the training for the testing" + betweenNames);
+	const std::string betweenNames = ", for " + ClassKnowledge::getNameFor(iActClass) + " has " + StringHelper::number2String(numberOfPointsForClass);
+	m_output.printSwitchingColor("Start parallel with " + StringHelper::number2String(amountOfPointsUsedForTrainingTheTest) + " amount of points, which are used in the training for the testing" + betweenNames);
 	//VectorX y(numberOfPointsForClass);
 	StopWatch sw;
 	BestHyperParams bestHyperParams(20);
@@ -117,7 +117,7 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 			// create a new one for this problem
 			group.add_thread(new boost::thread(boost::bind(&GaussianProcessMultiBinary::optimizeHyperParams, this,
 					iActClass, amountOfHyperPoints, data, classCounts, usedElementsForTheValidationSet, testDataMat, testYGpInit, &bestHyperParams)));
-			m_output.printInColor("At the moment are " + number2String(m_threadCounter.currentThreadCount()) + " threads running" + betweenNames, RESET);
+			m_output.printInColor("At the moment are " + StringHelper::number2String(m_threadCounter.currentThreadCount()) + " threads running" + betweenNames, RESET);
 		}
 		bestHyperParams.getFinishLast(isFinish);
 		if(!isFinish){
@@ -136,10 +136,10 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 	actGp->getKernel().setHyperParams(len, sigmaF);
 	// train on whole data set
 	actGp->init(dataMat,yGpInit);
-	m_output.printInColor("Finish init for " + number2String(yGpInit.rows()) + " elements in: " + sw.elapsedAsPrettyTime() + betweenNames, MAGENTA);
+	m_output.printInColor("Finish init for " + StringHelper::number2String(yGpInit.rows()) + " elements in: " + sw.elapsedAsPrettyTime() + betweenNames, MAGENTA);
 	sw.startTime();
 	actGp->trainWithoutKernelOptimize();
-	m_output.printInColor("Finish training for " + number2String(yGpInit.rows()) + " elements in: " + sw.elapsedAsPrettyTime() + betweenNames, MAGENTA);
+	m_output.printInColor("Finish training for " + StringHelper::number2String(yGpInit.rows()) + " elements in: " + sw.elapsedAsPrettyTime() + betweenNames, MAGENTA);
 	m_threadCounter.removeThread();
 }
 
@@ -149,7 +149,7 @@ void GaussianProcessMultiBinary::optimizeHyperParams(const unsigned int iActClas
 		const Matrix& testDataMat, const VectorX& testYGpInit, BestHyperParams* bestHyperParams){
 	GaussianProcess usedGp;
 	const int numberOfPointsForClass = classCounts[iActClass];
-	const std::string betweenNames = ", for " + ClassKnowledge::getNameFor(iActClass) + " has " + number2String(numberOfPointsForClass);
+	const std::string betweenNames = ", for " + ClassKnowledge::getNameFor(iActClass) + " has " + StringHelper::number2String(numberOfPointsForClass);
 	int noChange = 1;
 	const bool useAllTestValues = true; //m_amountOfDataPoints <= m_amountOfDataPointsForUseAllTestsPoints; TODO
 	int size = std::min(m_amountOfDataPointsForUseAllTestsPoints, m_amountOfDataPoints);
@@ -270,12 +270,12 @@ std::cout << "One: " << oneCounter << std::endl;
 //		bestHyperParams->trySet(right, rr, amountOfUsedValues, amountOfCorrectLabels, result[0], result[1]);
 		bestHyperParams->getNoChangeCounter(noChange);
 		const int percentagePrecision = 2;
-//		m_output.printSwitchingColor("Act is: " + number2String(result[0], percentagePrecision) + ", " + number2String(result[1], percentagePrecision)
-//						+ " with: " + number2String(right / (Real) amountOfUsedValues * 100.0, percentagePrecision) + " %, for " + number2String(amountOfUsedValues)
-//						+ " test elements, just right: " + number2String(rr / (Real) amountOfCorrectLabels * 100.0, percentagePrecision)
+//		m_output.printSwitchingColor("Act is: " + StringHelper::number2String(result[0], percentagePrecision) + ", " + StringHelper::number2String(result[1], percentagePrecision)
+//						+ " with: " + StringHelper::number2String(right / (Real) amountOfUsedValues * 100.0, percentagePrecision) + " %, for " + StringHelper::number2String(amountOfUsedValues)
+//						+ " test elements, just right: " + StringHelper::number2String(rr / (Real) amountOfCorrectLabels * 100.0, percentagePrecision)
 //						+ " %, best now: "
 //						+ bestHyperParams->prettyStringOfBest(percentagePrecision) + ", use "
-//						+ number2String(std::min(100, noChange * amountOfHyperPoints))
+//						+ StringHelper::number2String(std::min(100, noChange * amountOfHyperPoints))
 //						+ " HPs" + betweenNames + " time in trainF was: " + usedGp.getTrainFWatch().elapsedAvgAsPrettyTime());
 		if(bestHyperParams->checkGoal()){
 			break;

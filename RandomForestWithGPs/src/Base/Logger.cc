@@ -40,14 +40,14 @@ void Logger::start(){
 		boost::posix_time::time_duration td = now - midnight;
 		std::stringstream clockTime;
 		if(td.fractional_seconds() > 0){
-			const char cFracSec = number2String(td.fractional_seconds())[0];
+			const char cFracSec = StringHelper::number2String(td.fractional_seconds())[0];
 			clockTime << td.hours() << ":" << td.minutes() << ":" << td.seconds() << "." << cFracSec;
 		}else{
 			clockTime << td.hours() << ":" << td.minutes() << ":" << td.seconds() << "." << 0;
 		}
-		for(auto&& folder : {number2String(dayte.year()),
-			number2String(dayte.month().as_number()),
-			number2String(dayte.day()),
+		for(auto&& folder : {StringHelper::number2String(dayte.year()),
+			StringHelper::number2String(dayte.month().as_number()),
+			StringHelper::number2String(dayte.day()),
 			clockTime.str()} ){
 			m_actualDirectory += folder + "/";
 			if(!boost::filesystem::exists(m_actualDirectory)){

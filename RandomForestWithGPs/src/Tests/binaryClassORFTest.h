@@ -76,7 +76,7 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<LabeledVectorX*>& test){
 //		avg /= lists[i].size();
 //		printOnScreen("Avg for " << i << " is " << avg << " has " << lists[i].size() << " elements");
 //		if(CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0){
-//			const std::string fileName = "histForOrf" + number2String(i) + ".svg";
+//			const std::string fileName = "histForOrf" + StringHelper::number2String(i) + ".svg";
 //			DataWriterForVisu::writeHisto(fileName, lists[i], 10, 0, 1);
 //			openFileInViewer(fileName);
 //		}

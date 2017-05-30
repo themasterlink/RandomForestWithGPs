@@ -89,7 +89,7 @@ void ScreenOutput::run(){
 		mvprintw(actLine, 5, amountOfThreadsString.c_str());
 		attron(A_BOLD);
 		attron(COLOR_PAIR(6));
-		const std::string runningThreadAsString = number2String(m_runningThreads->size()) + ", " + number2String(ThreadMaster::m_waitingList.size());
+		const std::string runningThreadAsString = StringHelper::number2String(m_runningThreads->size()) + ", " + StringHelper::number2String(ThreadMaster::m_waitingList.size());
 		mvprintw(actLine, (int) (amountOfThreadsString.length() + 5), runningThreadAsString.c_str());
 		attroff(A_BOLD);
 		attron(COLOR_PAIR(1));
@@ -97,7 +97,7 @@ void ScreenOutput::run(){
 			modeNr = -1;
 		}
 		if(modeNr > -1 && modeNr < 8){
-			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()), (", mode: " + number2String(modeNr + 1)).c_str());
+			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()), (", mode: " + StringHelper::number2String(modeNr + 1)).c_str());
 		}else if(modeNr == 11){
 			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()), ", show general information");
 		}else if(modeNr == 10){
@@ -204,7 +204,7 @@ void ScreenOutput::run(){
 				auto itNr = m_errorCounters.begin();
 				for(const auto& line : m_errorLines){
 					if(*itNr > 1){
-						combinedErrorLines.push_back(line + " x"+ number2String(*itNr));
+						combinedErrorLines.push_back(line + " x"+ StringHelper::number2String(*itNr));
 					}else{
 						combinedErrorLines.push_back(line);
 					}

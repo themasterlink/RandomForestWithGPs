@@ -115,7 +115,7 @@ void testIvm(IVMMultiBinary& ivms, const LabeledData& data){
 				++classCounter[data[i]->getLabel()];
 				output << data[i]->getLabel() << ";" << labels[i];
 				for(unsigned int j = 0; j < ivms.amountOfClasses(); ++j){
-					output << ";" << number2String(probs[i][j], 5);
+					output << ";" << StringHelper::number2String(probs[i][j], 5);
 				}
 				output << "\n";
 			}

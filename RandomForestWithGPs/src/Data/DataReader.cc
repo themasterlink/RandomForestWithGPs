@@ -39,7 +39,7 @@ void DataReader::readFromBinaryFile(LabeledData& data, const std::string& inputN
 			LabeledVectorX* p = new LabeledVectorX();
 			ReadWriterHelper::readPoint(input, *p);
 			if(!ClassKnowledge::hasClassName(p->getLabel())){
-				ClassKnowledge::setNameFor(number2String(p->getLabel()), p->getLabel());
+				ClassKnowledge::setNameFor(StringHelper::number2String(p->getLabel()), p->getLabel());
 			}
 			data.push_back(p);
 		}
@@ -299,9 +299,9 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		const bool createNewClasses = ClassKnowledge::amountOfClasses() == 0;
 		for(unsigned int i = 0; i < 10; ++i){
 			if(createNewClasses){
-				ClassKnowledge::setNameFor(number2String(i), i);
+				ClassKnowledge::setNameFor(StringHelper::number2String(i), i);
 			}
-			dataSets.emplace(number2String(i), data[i]);
+			dataSets.emplace(StringHelper::number2String(i), data[i]);
 		}
 //		const unsigned int amountOfDim = data[0][0]->rows();
 //		std::vector<Vector2> minMaxValues(amountOfDim);
@@ -413,10 +413,10 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 //			system(("mkdir " + mnistFolder).c_str());
 //		}
 //		for(unsigned int i = 0; i < 10; ++i){
-//			if(!boost::filesystem::exists(mnistFolder + number2String(i))){
-//				system(("mkdir " + mnistFolder + number2String(i)).c_str());
+//			if(!boost::filesystem::exists(mnistFolder + StringHelper::number2String(i))){
+//				system(("mkdir " + mnistFolder + StringHelper::number2String(i)).c_str());
 //			}
-//			DataBinaryWriter::toFile(data[i], mnistFolder + number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
+//			DataBinaryWriter::toFile(data[i], mnistFolder + StringHelper::number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
 //		}
 		break;
 	}
@@ -468,9 +468,9 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		const bool firstTime = ClassKnowledge::amountOfClasses() == 0;
 		for(unsigned int i = 0; i < 10; ++i){
 			if(firstTime){
-				ClassKnowledge::setNameFor(number2String(i), i);
+				ClassKnowledge::setNameFor(StringHelper::number2String(i), i);
 			}
-			dataSets.emplace(number2String(i), data[i]);
+			dataSets.emplace(StringHelper::number2String(i), data[i]);
 		}
 		if(data[0].size() == 0){
 			printError("Class 0 is not represented here!");
@@ -485,11 +485,11 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 //			system(("mkdir " + uspsFolder).c_str());
 //		}
 //		for(unsigned int i = 0; i < 10; ++i){
-//			if(!boost::filesystem::exists(uspsFolder + number2String(i))){
-//				system(("mkdir " + uspsFolder + number2String(i)).c_str());
+//			if(!boost::filesystem::exists(uspsFolder + StringHelper::number2String(i))){
+//				system(("mkdir " + uspsFolder + StringHelper::number2String(i)).c_str());
 //			}
 //			if(data[i].size() > 0)
-//				DataBinaryWriter::toFile(data[i], uspsFolder + number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
+//				DataBinaryWriter::toFile(data[i], uspsFolder + StringHelper::number2String(i) + "/vectors.binary"); // create binary to avoid rereading .txt
 //		}
 		break;
 	}
@@ -512,7 +512,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 				}else{
 					const unsigned int newNumber = ClassKnowledge::amountOfClasses();
 					mapFromOldToNewLabels.emplace(data[i]->getLabel(), newNumber);
-					ClassKnowledge::setNameFor(number2String(newNumber), newNumber);
+					ClassKnowledge::setNameFor(StringHelper::number2String(newNumber), newNumber);
 					LabeledData newData;
 					dataSets.emplace(ClassKnowledge::getNameFor(newNumber), newData);
 					dataSets.find(ClassKnowledge::getNameFor(newNumber))->second.push_back(data[i]);

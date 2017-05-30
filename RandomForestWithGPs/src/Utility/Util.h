@@ -8,11 +8,7 @@
 #ifndef UTILITY_UTIL_H_
 #define UTILITY_UTIL_H_
 
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <istream>
-#include <iostream>
+#include "StringHelper.h"
 #include <algorithm>
 #include "../Base/Types.h"
 #include "StopWatch.h"
@@ -48,57 +44,6 @@
 #define UNUSED(expr) \
  	 (void)(expr) \
 
-template<typename T>
-inline std::string number2String(const T& in){
-	std::stringstream ss;
-	ss << in;
-	return ss.str();
-}
-
-inline std::string number2String(const Real& in, const int precision = -1){
-	if(precision > 0){
-		if(in < 10000.){
-			char buffer[10 + precision];
-			std::stringstream str;
-			str << "%." << precision << "f";
-			sprintf(buffer,str.str().c_str(), in);
-			str.clear();
-			str << buffer;
-			return str.str();
-		}else{
-			char buffer[350 + precision]; // higher should be impossible
-			std::stringstream str;
-			str << "%." << precision << "f";
-			sprintf(buffer,str.str().c_str(), in);
-			str.clear();
-			str << buffer;
-			return str.str();
-		}
-	}else{
-		std::stringstream ss;
-		ss << in;
-		return ss.str();
-	}
-}
-
-inline std::string convertMemorySpace(MemoryType mem){
-	std::stringstream ss;
-	bool useSpace = false;
-	std::vector<std::string> names = {" GB", " MB", " kB", " B"};
-	unsigned int i = 0;
-	for(MemoryType val = 1000000000; val > 0; val /= 1000){
-		if(mem >= val){
-			if(useSpace){
-				ss << " ";
-			}
-			ss << mem / val << names[i];
-			mem %= val;
-			useSpace = true;
-		}
-		++i;
-	}
-	return ss.str();
-}
 
 inline void openFileInViewer(const std::string& filename){
 	if(boost::filesystem::exists(Logger::getActDirectory() + filename)){
@@ -139,44 +84,6 @@ constexpr void overwriteConst(const T& ref, const T& newValue){
 	*iPointer = newValue;
 }
 
-inline bool startsWith(const std::string& word, const std::string& cmp){
-	if(word.size() > cmp.size()){
-		if(cmp.size() == 0){
-			return false;
-		}
-		int t = 0;
-		for(int i = 0; i < cmp.size(); ++i, ++t){
-			if(cmp[i] != word[t]){
-				return false;
-			}
-		}
-		return true;
-	}else if(word.size() < cmp.size()){
-		return false;
-	}else{
-		return word == cmp;
-	}
-}
-
-inline bool endsWith(const std::string& word, const std::string& cmp){
-	if(word.size() > cmp.size()){
-		int t = (int) (word.size() - 1);
-		if(cmp.size() == 0){
-			return false;
-		}
-		for(int i = (int) (cmp.size() - 1); i > -1; --i, --t){
-			if(cmp[i] != word[t]){
-				return false;
-			}
-		}
-		return true;
-	}else if(word.size() < cmp.size()){
-		return false;
-	}else{
-		return word == cmp;
-	}
-}
-
 template<class T>
 inline void sleepFor(const T seconds){
 	usleep((__useconds_t) seconds * (__useconds_t) 1e6);
@@ -200,16 +107,16 @@ inline void quitApplication(const bool wait = true){
 #ifdef USE_SCREEN_OUPUT
 
 #define printError(message) \
-	do{	std::stringstream str; str << "Error in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message; ScreenOutput::printErrorLine(str.str()); }while(false) \
+	do{	std::stringstream str; str << "Error in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message; ScreenOutput::printErrorLine(str.str()); }while(false) \
 
 #define printWarning(message) \
-	printOnScreen("Warning in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message) \
+	printOnScreen("Warning in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message) \
 
 #define printLine() \
-	printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__)) \
+	printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__)) \
 
 #define printDebug(message) \
-	printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message) \
+	printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message) \
 
 #else
 

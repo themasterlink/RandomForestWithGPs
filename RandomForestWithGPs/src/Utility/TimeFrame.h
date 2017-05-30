@@ -10,7 +10,7 @@
 
 #include <cmath>
 #include <iostream>
-#include "../Base/RealType.h"
+#include "../Base/BaseType.h"
 
 class TimeFrame {
 public:

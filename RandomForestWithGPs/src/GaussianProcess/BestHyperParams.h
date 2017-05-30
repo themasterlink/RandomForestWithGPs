@@ -9,7 +9,7 @@
 #define GAUSSIANPROCESS_BESTHYPERPARAMS_H_
 
 #include <boost/thread.hpp> // Boost threads
-#include "../Base/RealType.h"
+#include "../Base/BaseType.h"
 
 class BestHyperParams {
 public:

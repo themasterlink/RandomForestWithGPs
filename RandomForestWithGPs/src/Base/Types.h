@@ -6,14 +6,12 @@
 #define RANDOMFORESTWITHGPS_TYPES_H
 
 #include <boost/random.hpp>
-#include "RealType.h"
+#include "BaseType.h"
 #include <Eigen/Dense>
 #include <vector>
 #include <list>
 #include <map>
 #include <string>
-
-using MemoryType = unsigned long;
 
 using GeneratorType = boost::random::taus88;
 

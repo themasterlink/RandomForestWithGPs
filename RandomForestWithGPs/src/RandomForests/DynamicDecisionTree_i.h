@@ -492,9 +492,9 @@ void DynamicDecisionTree<dimType>::deleteDataPositions(){
 
 template<typename dimType>
 MemoryType DynamicDecisionTree<dimType>::getMemSize() const {
-	const auto splits = ((MemoryType) m_maxInternalNodeNr + 1) * (sizeof(Real) + sizeof(dimType) * 2);
+	const auto splits = ((MemoryType) m_maxInternalNodeNr + 1) * (sizeof(Real) + sizeof(dimType) * 2); // size of data
 	const auto refs = (MemoryType) sizeof(int*) * 6; // size of pointers and refs
-	return refs + splits; // 16 + 24 = 40, 16 general info, 40 pointers and ref
+	return refs + splits;
 }
 
 //void DynamicDecisionTree<dimType>::printStream(std::ostream &output, const Real precision){
@@ -518,7 +518,7 @@ MemoryType DynamicDecisionTree<dimType>::getMemSize() const {
 //				tabs += "\t";
 //			}
 //			for(auto iActNode = firstElementInLayer; iActNode < maxNumberInLayer; ++iActNode){
-//				output << "(" << m_splitDim[iActNode] << ", " << number2String(m_splitValues[iActNode], precision) << ")" << tabs;
+//				output << "(" << m_splitDim[iActNode] << ", " << StringHelper::number2String(m_splitValues[iActNode], precision) << ")" << tabs;
 //			}
 //			output << "\n";
 //		}

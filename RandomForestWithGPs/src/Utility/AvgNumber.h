@@ -8,7 +8,7 @@
 #ifndef UTILITY_AVGNUMBER_H_
 #define UTILITY_AVGNUMBER_H_
 
-#include "../Base/RealType.h"
+#include "../Base/BaseType.h"
 
 class AvgNumber {
 public:

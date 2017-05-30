@@ -27,6 +27,7 @@
 #include <string>
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
+#include "Tests/TestManager.h"
 
 /*
 void compress(const std::string& path){
@@ -196,6 +197,8 @@ int main(int ac, char** av){
 	}
 #endif
 
+	TestManager::init("../Settings/testSettings.init");
+ 	exit(0);
 	printOnScreen("Start");
 //	getchar();
 	handleProgrammOptions(ac,av);

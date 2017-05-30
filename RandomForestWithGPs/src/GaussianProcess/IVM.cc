@@ -214,7 +214,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 		}else{
 			Settings::getValue("TotalStorage.folderLocReal", folderLocation);
 		}
-		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + number2String((int)m_labelsForClasses.coeff(0)) + ".binary";
+		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + StringHelper::number2String((int)m_labelsForClasses.coeff(0)) + ".binary";
 		bool loadBestParams = false;
 		Real bestLogZ = NEG_REAL_MAX;
 		Real bestCorrectness = 0;
@@ -229,10 +229,10 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 			bestLogZ = m_logZ; // should be set correctly on the last training with this params
 			if(Settings::getDirectBoolValue("IVM.useCmaes")){
 				std::stringstream str2;
-				str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
-						<< number2String(bestParams.m_fNoise.getValue(),4) << ", "
-						<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
-						<< "e: " << number2String(100 - m_package->correctlyClassified(), 3) << " %%";
+				str2 << "Best: " << StringHelper::number2String(bestParams.m_length.getValue(),3) << ", "
+						<< StringHelper::number2String(bestParams.m_fNoise.getValue(),4) << ", "
+						<< StringHelper::number2String(bestParams.m_sNoise.getValue(),3) << ", "
+						<< "e: " << StringHelper::number2String(100 - m_package->correctlyClassified(), 3) << " %%";
 				m_package->setAdditionalInfo(str2.str());
 				bestCorrectness = m_package->correctlyClassified();
 			}else if(m_package->correctlyClassified() > minCorrectForWholeClassification){
@@ -435,13 +435,13 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 											m_package->changeCorrectlyClassified(correctness);
 											if(!m_gaussKernel->hasLengthMoreThanOneDim()){
 												std::stringstream str2;
-												str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
-														<< number2String(bestParams.m_fNoise.getValue(),4) << ", "
-														<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
-														<< "e: " << number2String(error, 3) << " %%, 1: "<< number2String(oneError, 3)
-														<< " %%, -1: " << number2String(minusOneError, 3) << " %% obj: " << negBestLogZ << ", logZ: " << m_logZ;
-												//															<< "mc: " << number2String((amountOfMinusOnesCorrect / (Real) amountOfMinusOneChecks) * 100., 2) << " %%, pc: "
-												//															<<  number2String((amountOfOnesCorrect / (Real) amountOfOneChecks) * 100, 2) << " %%, logZ: " << negBestLogZ << ", " << std::max(newProbDiff, probDiff);
+												str2 << "Best: " << StringHelper::number2String(bestParams.m_length.getValue(),3) << ", "
+														<< StringHelper::number2String(bestParams.m_fNoise.getValue(),4) << ", "
+														<< StringHelper::number2String(bestParams.m_sNoise.getValue(),3) << ", "
+														<< "e: " << StringHelper::number2String(error, 3) << " %%, 1: "<< StringHelper::number2String(oneError, 3)
+														<< " %%, -1: " << StringHelper::number2String(minusOneError, 3) << " %% obj: " << negBestLogZ << ", logZ: " << m_logZ;
+												//															<< "mc: " << StringHelper::number2String((amountOfMinusOnesCorrect / (Real) amountOfMinusOneChecks) * 100., 2) << " %%, pc: "
+												//															<<  StringHelper::number2String((amountOfOnesCorrect / (Real) amountOfOneChecks) * 100, 2) << " %%, logZ: " << negBestLogZ << ", " << std::max(newProbDiff, probDiff);
 												m_package->setAdditionalInfo(str2.str());
 											}
 											/*
@@ -590,10 +590,10 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								m_package->changeCorrectlyClassified(correctness);
 								if(!m_gaussKernel->hasLengthMoreThanOneDim()){
 									std::stringstream str2;
-									str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
-											<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
-											<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
-											<< "complex: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
+									str2 << "Best: " << StringHelper::number2String(bestParams.m_length.getValue(),3) << ", "
+											<< StringHelper::number2String(bestParams.m_fNoise.getValue(),6) << ", "
+											<< StringHelper::number2String(bestParams.m_sNoise.getValue(),3) << ", "
+											<< "complex: " << StringHelper::number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
 									m_package->setAdditionalInfo(str2.str());
 								}
 								printInPackageOnScreen(m_package, "New best params: " << bestParams << ", with correctness of: " << correctness);/*
@@ -611,10 +611,10 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 								m_package->changeCorrectlyClassified(correctness);
 								if(!m_gaussKernel->hasLengthMoreThanOneDim()){
 									std::stringstream str2;
-									str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
-											<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
-											<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
-											<< "simple: " << number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
+									str2 << "Best: " << StringHelper::number2String(bestParams.m_length.getValue(),3) << ", "
+											<< StringHelper::number2String(bestParams.m_fNoise.getValue(),6) << ", "
+											<< StringHelper::number2String(bestParams.m_sNoise.getValue(),3) << ", "
+											<< "simple: " << StringHelper::number2String(correctness, 2) << " %%, logZ: " << bestLogZ;
 									m_package->setAdditionalInfo(str2.str());
 								}
 								printInPackageOnScreen(m_package, "New best params: " << bestParams << ", with simple correctness of: " << correctness);
@@ -672,9 +672,9 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						m_gaussKernel->getCopyOfParams(bestParams);
 						if(!m_gaussKernel->hasLengthMoreThanOneDim()){
 							std::stringstream str2;
-							str2 << "Best: " << number2String(bestParams.m_length.getValue(),3) << ", "
-									<< number2String(bestParams.m_fNoise.getValue(),6) << ", "
-									<< number2String(bestParams.m_sNoise.getValue(),3) << ", "
+							str2 << "Best: " << StringHelper::number2String(bestParams.m_length.getValue(),3) << ", "
+									<< StringHelper::number2String(bestParams.m_fNoise.getValue(),6) << ", "
+									<< StringHelper::number2String(bestParams.m_sNoise.getValue(),3) << ", "
 									<< "logZ: " << bestLogZ;
 							m_package->setAdditionalInfo(str2.str());
 						}
@@ -683,7 +683,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						break;
 					}
 				}
-				//				DataWriterForVisu::writeSvg("logZ_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", logZs);
+				//				DataWriterForVisu::writeSvg("logZ_"+StringHelper::number2String((int)m_labelsForClasses.coeff(0))+".svg", logZs);
 
 				std::ofstream file;
 				file.open(Logger::getActDirectory() + "derivLogZ" + getClassName() + ".txt");
@@ -704,9 +704,9 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				return false;
 			}
 			printOnScreen("For IVM: " << getClassName() << " logZ: " << bestLogZ <<
-					", len: "<< number2String(bestParams.m_length.getValue(), 12) <<
-					 ", fNoise: "<< number2String(bestParams.m_fNoise.getValue(), 12) <<
-					 ", sNoise: "<< number2String(bestParams.m_sNoise.getValue(), 12) << ", has: " << m_package->correctlyClassified() << ", with IPs: " << m_numberOfInducingPoints);
+					", len: "<< StringHelper::number2String(bestParams.m_length.getValue(), 12) <<
+					 ", fNoise: "<< StringHelper::number2String(bestParams.m_fNoise.getValue(), 12) <<
+					 ", sNoise: "<< StringHelper::number2String(bestParams.m_sNoise.getValue(), 12) << ", has: " << m_package->correctlyClassified() << ", with IPs: " << m_numberOfInducingPoints);
 			m_gaussKernel->setHyperParamsWith(bestParams);
 			setDerivAndLogZFlag(false, false);
 			m_uniformNr.setMinAndMax(1, 1); // final training with all points considered
@@ -735,8 +735,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				// train the whole active set again but in the oposite direction similiar to an ep step
 				trainOptimizeStep(verboseLevel);
 			}
-			//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_data);
-			//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
+			//		DataWriterForVisu::writeSvg("ivm_"+StringHelper::number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_data);
+			//		openFileInViewer("ivm_"+StringHelper::number2String((int)m_labelsForClasses.coeff(0))+".svg");
 			m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 
 			if(m_package != nullptr){
@@ -759,8 +759,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 			DataWriterForVisu::writeSvg("ivm_"+m_className+".svg", *this, m_I, m_storage.storage());
 			openFileInViewer("ivm_"+m_className+".svg");
 		}
-		//		DataWriterForVisu::writeSvg("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_data);
-		//		openFileInViewer("ivm_"+number2String((int)m_labelsForClasses.coeff(0))+".svg");
+		//		DataWriterForVisu::writeSvg("ivm_"+StringHelper::number2String((int)m_labelsForClasses.coeff(0))+".svg", *this, m_I, m_data);
+		//		openFileInViewer("ivm_"+StringHelper::number2String((int)m_labelsForClasses.coeff(0))+".svg");
 		m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 		if(m_package != nullptr){
 			m_package->finishedTask(); // tell thread master this thread is finished and will be done in just a second
@@ -1346,7 +1346,7 @@ bool IVM::trainOptimizeStep(const int verboseLevel){
 //			std::ofstream file;
 //			m_I.reverse(); // flip order!
 //			for(int classNr : {1, -1}){
-//				file.open(Logger::getActDirectory() + "combinedLatentFunctions" + number2String(classNr) + ".txt");
+//				file.open(Logger::getActDirectory() + "combinedLatentFunctions" + StringHelper::number2String(classNr) + ".txt");
 //				file << "index, normal, flipped, diff, combined \n";
 //				auto it = m_I.begin();
 //				for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){

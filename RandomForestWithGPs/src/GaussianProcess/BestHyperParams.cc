@@ -100,10 +100,10 @@ const std::string BestHyperParams::prettyStringOfBest(const int precision){
 	if(precision != -1){
 		std::stringstream str;
 		m_mutex.lock();
-		str << number2String(m_len, precision) << ", " << number2String(m_sigmaF, precision) << ", with: "
-				<< number2String(m_amountOfBestRight / (Real) m_amountOfBestValues * 100.0, precision)
+		str << StringHelper::number2String(m_len, precision) << ", " << StringHelper::number2String(m_sigmaF, precision) << ", with: "
+				<< StringHelper::number2String(m_amountOfBestRight / (Real) m_amountOfBestValues * 100.0, precision)
 				<< " %, just right: "
-				<< number2String(m_amountOfBestRightPositive / (Real) m_amountOfCorrectBestValues * 100.0, precision) << " %";
+				<< StringHelper::number2String(m_amountOfBestRightPositive / (Real) m_amountOfCorrectBestValues * 100.0, precision) << " %";
 		m_mutex.unlock();
 		return str.str();
 	}else{

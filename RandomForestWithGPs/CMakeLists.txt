@@ -151,7 +151,7 @@ set(SOURCE_FILES
         src/Utility/TimeFrame.h
         src/Utility/Util.h
         src/kernelCalc.h
-        src/main.cc src/Base/RealType.h)
+        src/main.cc src/Base/BaseType.h src/Tests/TestManager.cc src/Tests/TestManager.h src/Utility/StringHelper.h)
 
 add_executable(RandomForestWithGPs ${SOURCE_FILES})
 target_link_libraries(RandomForestWithGPs ${CMAKE_THREAD_LIBS_INIT})

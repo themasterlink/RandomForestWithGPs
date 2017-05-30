@@ -217,7 +217,7 @@ void IVMMultiBinary::train(){
 		}
 
 		// write to file
-		DataBinaryWriter::toFile(m_storage.storage(), "dataFor_" + number2String(m_orfClassLabel) + ".binary");
+		DataBinaryWriter::toFile(m_storage.storage(), "dataFor_" + StringHelper::number2String(m_orfClassLabel) + ".binary");
 
 		std::list<InformationPackage*> packagesForRetrain;
 		std::vector<unsigned char> stateOfIvms(amountOfClasses(), 0);
@@ -389,7 +389,7 @@ void IVMMultiBinary::retrainIvmIfNeeded(IVM* ivm, InformationPackage* package, c
 
 void IVMMultiBinary::initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXf* differenceMatrix, InformationPackage* package){
 	ThreadMaster::appendThreadToList(package);
-	package->setStandartInformation("Calc of difference matrix from: " + number2String(startOfKernel) + " to: " +  number2String(endOfKernel) + (m_orfClassLabel != UNDEF_CLASS_LABEL ? ", for orf class: " + number2String(m_orfClassLabel) : ""));
+	package->setStandartInformation("Calc of difference matrix from: " + StringHelper::number2String(startOfKernel) + " to: " +  StringHelper::number2String(endOfKernel) + (m_orfClassLabel != UNDEF_CLASS_LABEL ? ", for orf class: " + StringHelper::number2String(m_orfClassLabel) : ""));
 	package->wait();
 	GaussianKernel::calcDifferenceMatrix(startOfKernel, endOfKernel, *differenceMatrix, m_storage, package);
 	package->finishedTask();
@@ -546,7 +546,7 @@ void IVMMultiBinary::predictData(const LabeledData& points, Labels& labels, std:
 }
 
 void IVMMultiBinary::predictDataInParallel(IVM* ivm, const Data& points, const int usedIvm, std::vector< std::vector<Real> >* probabilities, InformationPackage* package) const{
-	package->setStandartInformation("Thread for ivm: " + number2String(usedIvm));
+	package->setStandartInformation("Thread for ivm: " + StringHelper::number2String(usedIvm));
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
 	const int percent10 = std::max((int) points.size() / 10, 10);
@@ -567,7 +567,7 @@ void IVMMultiBinary::predictDataInParallel(IVM* ivm, const Data& points, const i
 }
 
 void IVMMultiBinary::predictClassDataInParallel(IVM* ivm, const LabeledData& points, const int usedIvm, std::vector< std::vector<Real> >* probabilities, InformationPackage* package) const{
-	package->setStandartInformation("Thread for ivm: " + number2String(usedIvm));
+	package->setStandartInformation("Thread for ivm: " + StringHelper::number2String(usedIvm));
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
 	const int percent10 = std::max((int) points.size() / 10, 10);

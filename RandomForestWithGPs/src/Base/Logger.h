@@ -10,7 +10,7 @@
 
 #include <boost/thread.hpp>
 #include <map>
-#include "RealType.h"
+#include "BaseType.h"
 
 class Logger {
 public:

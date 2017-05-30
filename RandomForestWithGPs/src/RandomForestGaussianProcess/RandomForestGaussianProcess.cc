@@ -162,7 +162,7 @@ void RandomForestGaussianProcess::train(){
 				idOfMaxClass = i;
 			}
 		}
-		m_output.printSwitchingColor("Class: " + m_classNames[iActRfRes] + ", has " + number2String(amountOfDataInRfRes) + " points, pure level is: " + number2String(m_pureClassLabelForRfClass[iActRfRes]));
+		m_output.printSwitchingColor("Class: " + m_classNames[iActRfRes] + ", has " + StringHelper::number2String(amountOfDataInRfRes) + " points, pure level is: " + StringHelper::number2String(m_pureClassLabelForRfClass[iActRfRes]));
 
 		if(amountOfDataInRfRes > thresholdForNoise * 2){
 			if(amountOfClassesOverThreshold <= 1){ // only one class or no class
@@ -188,7 +188,7 @@ void RandomForestGaussianProcess::train(){
 				if(classCounts[iActClass] <= thresholdForNoise && iActClass != iActRfRes){ // check if class is there, otherwise go to next!
 					continue;
 				}
-				m_output.printSwitchingColor("In Class: " + m_classNames[iActRfRes] + ", has act class: " + m_classNames[iActClass] + " so many points: " + number2String(classCounts[iActClass]));
+				m_output.printSwitchingColor("In Class: " + m_classNames[iActRfRes] + ", has act class: " + m_classNames[iActClass] + " so many points: " + StringHelper::number2String(classCounts[iActClass]));
 				//m_isGpInUse[iActRfRes][iActClass] = true; // there is actually a gp for this config
 				m_gps[iActRfRes][iActClass] = new GaussianProcess();
 				const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
@@ -236,7 +236,7 @@ void RandomForestGaussianProcess::trainInParallel(const unsigned int iActClass,
 	DataConverter::toRandUniformDataMatrix(dataOfActRf, classCounts, testDataMat, testYGpInit, m_maxPointsUsedInGpSingleTraining / 5, iActClass); // get a uniform portion of at most 1000 points
 
 	// compare to all other classes! // one vs. all
-	std::string betweenNames = ", for " + m_classNames[iActClass] + " in " + m_classNames[iActRfClass] + ", which has " + number2String(amountOfDataInRfRes);
+	std::string betweenNames = ", for " + m_classNames[iActClass] + " in " + m_classNames[iActRfClass] + ", which has " + StringHelper::number2String(amountOfDataInRfRes);
 	m_output.printSwitchingColor("Start parallel" + betweenNames);
 	VectorX y(amountOfDataInRfRes);
 	const int size = std::min(300, (int)(dataOfActRf.size()));
@@ -245,7 +245,7 @@ void RandomForestGaussianProcess::trainInParallel(const unsigned int iActClass,
 	StopWatch sw;
 	int noChange = 1;
 	for(int i = 0; i < 20; ++i){
-		m_output.printSwitchingColor("Is in: " + number2String(i) + ", best is at the moment: " + number2String(len) + ", " + number2String(sigmaF) + ", with: " + number2String(bestRight / (Real)size * 100.0) + betweenNames);
+		m_output.printSwitchingColor("Is in: " + StringHelper::number2String(i) + ", best is at the moment: " + StringHelper::number2String(len) + ", " + StringHelper::number2String(sigmaF) + ", with: " + StringHelper::number2String(bestRight / (Real)size * 100.0) + betweenNames);
 		Matrix dataHyper;
 		VectorX yHyper;
 		DataConverter::toRandUniformDataMatrix(dataOfActRf, classCounts, dataHyper, yHyper, noChange * amountOfHyperPoints, iActClass); // get a uniform portion of all points
@@ -348,7 +348,7 @@ std::cout << "One: " << oneCounter << std::endl;
 		}
 	}
 	// set hyper params
-	m_output.printSwitchingColor("Finish optimizing with " + number2String(len) + ", " + number2String(sigmaF) + " in: " + sw.elapsedAsPrettyTime() + ", with: " + number2String(bestRight / (Real)size * 100.0) + betweenNames);
+	m_output.printSwitchingColor("Finish optimizing with " + StringHelper::number2String(len) + ", " + StringHelper::number2String(sigmaF) + " in: " + sw.elapsedAsPrettyTime() + ", with: " + StringHelper::number2String(bestRight / (Real)size * 100.0) + betweenNames);
 	sw.startTime();
 	// train on whole data set
 	actGp->getKernel().setHyperParams(len, sigmaF);

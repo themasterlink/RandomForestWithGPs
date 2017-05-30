@@ -84,7 +84,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 			treePointer = new DynamicDecisionTree<unsigned int>(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 		}
 		treePointer->train(m_amountOfUsedDims, *generator);
-		printInPackageOnScreen(package, "Number " << i++ << " was calculated, total memory usage: " << convertMemorySpace(m_usedMemory));
+		printInPackageOnScreen(package, "Number " << i++ << " was calculated, total memory usage: " << StringHelper::convertMemorySpace(m_usedMemory));
 		if(printErrorGraph){
 			for(unsigned int i = 0; i < m_storage.size(); ++i){
 				(*labels)[i] = treePointer->predict(*m_storage[i]);
@@ -204,7 +204,7 @@ void OnlineRandomForest::train(){
 	boost::thread_group group;
 	for(unsigned int i = 0; i < packages.size(); ++i){
 		packages[i] = new InformationPackage(m_desiredAmountOfTrees == 0 ? InformationPackage::InfoType::ORF_TRAIN : InformationPackage::InfoType::ORF_TRAIN_FIX, 0, (m_trees.size() / (Real) nrOfParallel));
-		packages[i]->setStandartInformation("Train trees, thread nr: " + number2String(i));
+		packages[i]->setStandartInformation("Train trees, thread nr: " + StringHelper::number2String(i));
 		packages[i]->setTrainingsTime(trainingsTime);
 		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i], m_desiredAmountOfTrees, counterForClasses, &mutexForCounter)));
 	}
@@ -261,7 +261,7 @@ void OnlineRandomForest::train(){
 		writeTreesToDisk(m_trees.size()); // will delete all trees fsrom memory
 		loadBatchOfTreesFromDisk(0); // load first batch
 	}else{
-		printOnScreen("Used memory: " << convertMemorySpace(m_usedMemory));
+		printOnScreen("Used memory: " << StringHelper::convertMemorySpace(m_usedMemory));
 	}
 	printOnScreen("Calculated " << m_trees.size() << " trees with depth: " << m_maxDepth);
 	if(m_desiredAmountOfTrees == 0){
@@ -285,8 +285,8 @@ void OnlineRandomForest::writeTreesToDisk(const unsigned int amountOfTrees) cons
 	if(amountOfTrees > 1){
 		m_treesMutex.lock();
 		// two different files are needed
-		const std::string fileFirst = m_folderForSavedTrees + "trees_" + number2String(m_savedToDiskTreesFilePaths.size()) + "_firstHalf.binary";
-		const std::string fileSecond = m_folderForSavedTrees + "trees_" + number2String(m_savedToDiskTreesFilePaths.size()) + "_secondHalf.binary";
+		const std::string fileFirst = m_folderForSavedTrees + "trees_" + StringHelper::number2String(m_savedToDiskTreesFilePaths.size()) + "_firstHalf.binary";
+		const std::string fileSecond = m_folderForSavedTrees + "trees_" + StringHelper::number2String(m_savedToDiskTreesFilePaths.size()) + "_secondHalf.binary";
 		m_savedToDiskTreesFilePaths.push_back(std::pair<std::string, std::string>(fileFirst, fileSecond));
 		std::string file = fileFirst;
 		unsigned int start = 0;
@@ -581,10 +581,10 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 
 void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps, boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, unsigned int* counter){
 	if(package == nullptr){
-		printError("This thread has no valid information package: " + number2String(threadNr));
+		printError("This thread has no valid information package: " + StringHelper::number2String(threadNr));
 		return;
 	}
-	package->setStandartInformation("Orf updating thread Nr: " + number2String(threadNr));
+	package->setStandartInformation("Orf updating thread Nr: " + StringHelper::number2String(threadNr));
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
 	mutex->lock();
@@ -621,13 +621,13 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 			usedCorrectVal = correctVal;
 			correctValOfSwitcher = pair.second; // value of the switcher
 			// add to list again!
-			printInPackageOnScreen(package, "Performed new step with better correctness of: " << number2String(correctVal, 2) << " %%, worst had: " << pair.second);
+			printInPackageOnScreen(package, "Performed new step with better correctness of: " << StringHelper::number2String(correctVal, 2) << " %%, worst had: " << pair.second);
 		}else{
 			addToList = pair.first;
 			usedCorrectVal = pair.second;
 			correctValOfSwitcher = correctVal;
 			// no switch -> the switcher is trys to improve itself
-			printInPackageOnScreen(package, "Performed new step with worse correctness of " << number2String(correctVal, 2) << " %% not used, worst had: " << pair.second);
+			printInPackageOnScreen(package, "Performed new step with worse correctness of " << StringHelper::number2String(correctVal, 2) << " %% not used, worst had: " << pair.second);
 		}
 		mutex->lock();
 		*counter += 1; // is already protected in mutex lock

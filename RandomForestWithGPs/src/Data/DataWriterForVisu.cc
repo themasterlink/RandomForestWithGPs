@@ -1194,7 +1194,7 @@ void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 			file << "<text x=\"" << startXForData / 100. * width + i * segmentWidth
 					<< "\" y=\"" << -(startY / 100. * heigth - widthOfMarks / 2. - 20)<< "\" transform=\"scale(1,-1)\" "
 					<< "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
-					<< number2String(((maxX - minX) * i / (Real) amountOfSegm + minX), 3) << "</text>\n";
+					<< StringHelper::number2String(((maxX - minX) * i / (Real) amountOfSegm + minX), 3) << "</text>\n";
 		}
 	}
 	amountOfSegm = 10;
@@ -1210,7 +1210,7 @@ void DataWriterForVisu::drawSvgCoords(std::ofstream& file,
 		file << "<text x=\"" << (startY / 100. * heigth - widthOfMarks / 2. - 20)
 			 << "\" y=\"" << -(startXForData / 100. * width + i * segmentWidth) << "\" transform=\"scale(1,-1)\" "
 			 << "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
-			 << number2String(((max - min) * i / (Real) amountOfSegm + min), 3) << "</text>\n";
+			 << StringHelper::number2String(((max - min) * i / (Real) amountOfSegm + min), 3) << "</text>\n";
 	}
 	file << "<path d=\"M " << startX / 100. * heigth - widthOfMarks / 2 << " " << (100. - startY) / 100. * width
 		 << " l " << widthOfMarks << " " << 0 << " l " << - widthOfMarks / 2.0 << " " << widthOfMarks * 1.5
@@ -1243,7 +1243,7 @@ void DataWriterForVisu::drawSvgCoords2D(std::ofstream& file,
 		file << "<text x=\"" << startXForData / 100. * width + i * segmentWidth
 				<< "\" y=\"" << -(startY / 100. * heigth - widthOfMarks / 2. - 20)<< "\" transform=\"scale(1,-1)\" "
 				<< "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
-				<< number2String((Real) ((i / (Real) (amountOfSegm - 1)) * (max[0] - min[0]) + min[0]), 4)  << "</text>\n";
+				<< StringHelper::number2String((Real) ((i / (Real) (amountOfSegm - 1)) * (max[0] - min[0]) + min[0]), 4)  << "</text>\n";
 	}
 	segmentWidth = ((100 - startXForData - startXForData) / 100. * width) / amountOfSegm;
 	file << "<path d=\"";//M " << startXForData / 100. * width << " "  << startY / 100. *heigth - widthOfMarks / 2;
@@ -1257,7 +1257,7 @@ void DataWriterForVisu::drawSvgCoords2D(std::ofstream& file,
 		file << "<text x=\"" << (startY / 100. * heigth - widthOfMarks / 2. - 20)
 						 << "\" y=\"" << -(startXForData / 100. * width + i * segmentWidth) << "\" transform=\"scale(1,-1)\" "
 						 << "font-family=\"sans-serif\" font-size=\"10px\" text-anchor=\"middle\" fill=\"black\">"
-						 << number2String((Real) ((i / (Real) (amountOfSegm - 1)) * (max[1] - min[1]) + min[1]), 4) << "</text>\n";
+						 << StringHelper::number2String((Real) ((i / (Real) (amountOfSegm - 1)) * (max[1] - min[1]) + min[1]), 4) << "</text>\n";
 	}
 	file << "<path d=\"M " << startX / 100. * heigth - widthOfMarks / 2 << " " << (100. - startY) / 100. * width
 			<< " l " << widthOfMarks << " " << 0 << " l " << - widthOfMarks / 2.0 << " " << widthOfMarks * 1.5

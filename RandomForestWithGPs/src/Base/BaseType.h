@@ -30,5 +30,6 @@ using dimTypeForDDT = unsigned short;
 
 #endif
 
+using MemoryType = unsigned long;
 
 #endif //RANDOMFORESTWITHGPS_REALTYPE_H
