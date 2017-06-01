@@ -45,7 +45,7 @@ void testIvm(IVM& ivm, const OnlineStorage<LabeledVectorX*>& data){
 		std::vector<Real> probs = {prob, 1 - prob};
 		for(unsigned int j = 0; j < 2; ++j){
 			if(probs[j] > 0){
-				entropy -= probs[j] * log(probs[j]) / log(2);
+				entropy -= probs[j] * logReal(probs[j]) / logReal(2);
 			}
 		}
 		Real max1 = 0, max2 = 0;

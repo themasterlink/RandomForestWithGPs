@@ -70,7 +70,7 @@ Real GaussianKernel::kernelFunc(const int row, const int col) const{
 			printError("The init process failed, init was tried: " << m_init);
 		}
 	}else{
-		return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue()
+		return m_kernelParams.m_fNoise.getSquaredValue() * expReal(-0.5 * m_kernelParams.m_length.getSquaredInverseValue()
 				* (Real) (*m_differences).coeff(row, col)) + m_kernelParams.m_sNoise.getSquaredValue();
 	}
 	return 0;
@@ -84,9 +84,9 @@ Real GaussianKernel::kernelFuncVec(const VectorX& lhs, const VectorX& rhs) const
 			squaredNorm += temp * temp;
 		}
 		return m_kernelParams.m_fNoise.getValue() * m_kernelParams.m_fNoise.getValue() *
-				exp(-0.5 * squaredNorm) + m_kernelParams.m_sNoise.getValue() * m_kernelParams.m_sNoise.getValue();
+				expReal(-0.5 * squaredNorm) + m_kernelParams.m_sNoise.getValue() * m_kernelParams.m_sNoise.getValue();
 	}else{
-		return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue()
+		return m_kernelParams.m_fNoise.getSquaredValue() * expReal(-0.5 * m_kernelParams.m_length.getSquaredInverseValue()
 				* (Real) (lhs-rhs).squaredNorm()) + m_kernelParams.m_sNoise.getSquaredValue();
 	}
 	return 0;
@@ -113,11 +113,11 @@ Real GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col, c
 				squaredDerivNorm = (m_pDataMat->col(row).coeff(element) - m_pDataMat->col(col).coeff(element)) * (m_pDataMat->col(row).coeff(element) - m_pDataMat->col(col).coeff(element)) /
 						(lenElement * lenElement * lenElement);
 			}
-			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * squaredNorm) * squaredDerivNorm;
+			return m_kernelParams.m_fNoise.getSquaredValue() * expReal(-0.5 * squaredNorm) * squaredDerivNorm;
 		}else if(m_calcedDifferenceMatrix){
 			const Real lenSquared = m_kernelParams.m_length.getSquaredValue();
 			const Real dotResult = (Real) (*m_differences).coeff(row, col);
-			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue() * dotResult)
+			return m_kernelParams.m_fNoise.getSquaredValue() * expReal(-0.5 * m_kernelParams.m_length.getSquaredInverseValue() * dotResult)
 					* dotResult / (lenSquared * m_kernelParams.m_length.getValue()); // derivative to m_params[0]
 		}else{
 			const Real lenSquared = m_kernelParams.m_length.getSquaredValue();
@@ -129,12 +129,12 @@ Real GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col, c
 			}else if(m_pDataMat != nullptr){
 				return (m_pDataMat->col(row) - m_pDataMat->col(row)).squaredNorm();
 			}
-			return m_kernelParams.m_fNoise.getSquaredValue() * exp(-0.5 * m_kernelParams.m_length.getSquaredInverseValue() * dotResult)
+			return m_kernelParams.m_fNoise.getSquaredValue() * expReal(-0.5 * m_kernelParams.m_length.getSquaredInverseValue() * dotResult)
 					* dotResult / (lenSquared * m_kernelParams.m_length.getValue());
 		}
 	}else if(type->getKernelNr() == m_kernelParams.m_fNoise.getKernelNr()){
 		if(!hasLengthMoreThanOneDim() && m_calcedDifferenceMatrix){
-			return 2.0 * m_kernelParams.m_fNoise.getValue() * exp(-0.5 * (1.0/ (m_kernelParams.m_length.getValue() *
+			return 2.0 * m_kernelParams.m_fNoise.getValue() * expReal(-0.5 * (1.0/ (m_kernelParams.m_length.getValue() *
 					m_kernelParams.m_length.getValue())) * (Real) m_differences->coeff(row, col)); // derivative to m_params[1]
 		}else{
 			Real result = 0;
@@ -164,11 +164,11 @@ Real GaussianKernel::kernelFuncDerivativeToParam(const int row, const int col, c
 Real GaussianKernel::kernelFuncDerivativeToLength(const int row, const int col) const{
 	const Real lenSquared = m_kernelParams.m_length.getValue() * m_kernelParams.m_length.getValue();
 	const Real dotResult = (Real) m_differences(row, col);
-	return m_kernelParams.m_fNoise.getValue() * m_kernelParams.m_fNoise.getValue() * exp(-0.5 * (1.0/ (lenSquared)) * dotResult) * dotResult / (lenSquared * m_kernelParams.m_length.getValue()); // derivative to m_params[0]
+	return m_kernelParams.m_fNoise.getValue() * m_kernelParams.m_fNoise.getValue() * expReal(-0.5 * (1.0/ (lenSquared)) * dotResult) * dotResult / (lenSquared * m_kernelParams.m_length.getValue()); // derivative to m_params[0]
 }
 
 Real GaussianKernel::kernelFuncDerivativeToFNoise(const int row, const int col) const{
-	return 2.0 * m_kernelParams.m_fNoise.getValue() * exp(-0.5 * (1.0/ (m_kernelParams.m_length.getValue() *
+	return 2.0 * m_kernelParams.m_fNoise.getValue() * expReal(-0.5 * (1.0/ (m_kernelParams.m_length.getValue() *
 			m_kernelParams.m_length.getValue())) * (Real) m_differences(row, col)); // derivative to m_params[1]
 }
 */

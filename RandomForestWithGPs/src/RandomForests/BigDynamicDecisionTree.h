@@ -36,21 +36,18 @@ public:
 	bool predictIfPointsShareSameLeaveWithHeight(const VectorX& point1, const VectorX& point2,
 												 const int usedHeight) const override {
 		UNUSED(point1); UNUSED(point2); UNUSED(usedHeight);
-		printError("This function is not implemented!");
-		quitApplication();
+		printErrorAndQuit("This function is not implemented!");
 		return false;
 	}
 
 	void predictData(const Data& data, Labels& labels) const override {
 		UNUSED(data); UNUSED(labels);
-		printError("This function is not implemented!");
-		quitApplication();
+		printErrorAndQuit("This function is not implemented!");
 	}
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const override {
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
-		printError("Not implemented yet!");
-		quitApplication();
+		printErrorAndQuit("Not implemented yet!");
 	}
 
 	unsigned int amountOfClasses() const;

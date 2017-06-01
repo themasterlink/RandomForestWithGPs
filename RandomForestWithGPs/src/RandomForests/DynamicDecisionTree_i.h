@@ -30,9 +30,8 @@ DynamicDecisionTree<dimType>::DynamicDecisionTree(OnlineStorage<LabeledVectorX *
 		m_useOnlyThisDataPositions(nullptr){
 	static_assert(m_maxAmountOfElements > UNDEF_CLASS_LABEL, "The undef class label is higher than the highest value allowed in the DDT!");
 	if(maxDepth >= sizeof(dimType) * 8 || amountOfClasses >= m_maxAmountOfElements){
-		printError("For this training set the amount of classes or dimension is higher than "
+		printErrorAndQuit("For this training set the amount of classes or dimension is higher than "
 						   << m_maxAmountOfElements << ", which is not supported here!");
-		quitApplication();
 	}
 	if(m_amountOfPointsCheckedPerSplit == 0){
 		printError("This tree can not be trained!");
@@ -54,9 +53,8 @@ DynamicDecisionTree<dimType>::DynamicDecisionTree(OnlineStorage<LabeledVectorX*>
 template<typename dimType>
 void DynamicDecisionTree<dimType>::prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses){
 	if(maxDepth >= sizeof(dimType) * 8 || amountOfClasses >= m_maxAmountOfElements){
-		printError("For this training set the amount of classes or dimension is higher than "
+		printErrorAndQuit("For this training set the amount of classes or dimension is higher than "
 						   << m_maxAmountOfElements << ", which is not supported here!");
-		quitApplication();
 	}
 	if(m_maxDepth == 1 && maxDepth > 0 && maxDepth < 28){
 		overwriteConst(m_maxDepth, (dimType) maxDepth);
@@ -338,10 +336,10 @@ Real DynamicDecisionTree<dimType>::trySplitFor(const Real usedSplitValue, const 
 		if(normalizer > 0){
 			const Real leftClassProb = leftHisto[i] / normalizer;
 			if(leftClassProb > 0){
-				leftCost -= leftClassProb * log(leftClassProb);
+				leftCost -= leftClassProb * logReal(leftClassProb);
 			}
 			if(leftClassProb < 1.0){
-				rightCost -= (1. - leftClassProb) * log(1. - leftClassProb);
+				rightCost -= (1. - leftClassProb) * logReal(1. - leftClassProb);
 			}
 //			if(leftClassProb > 0){
 //				leftCost += leftClassProb * (1- leftClassProb);

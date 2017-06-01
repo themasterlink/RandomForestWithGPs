@@ -28,8 +28,7 @@ void OnlineRandomForestIVMs::update(Subject* caller, unsigned int event){
 	UNUSED(caller);
 	switch(event){
 	case OnlineStorage<LabeledVectorX*>::Event::APPEND:{
-		printError("This is not implemented yet!");
-		quitApplication();
+		printErrorAndQuit("This is not implemented yet!");
 		break;
 	}
 	case OnlineStorage<LabeledVectorX*>::Event::APPENDBLOCK:{
@@ -98,8 +97,7 @@ void OnlineRandomForestIVMs::update(){
 		SAVE_DELETE(group);
 		printOnScreen("Finished Training!");
 	}else{
-		printError("Not implemented yet!");
-		quitApplication();
+		printErrorAndQuit("Not implemented yet!");
 	}
 }
 

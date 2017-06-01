@@ -25,14 +25,14 @@ void GaussianProcessMultiClass::calcPhiBasedOnF(const VectorX& f, VectorX& pi, c
 	}
 	pi = VectorX::Zero(amountOfEle);
 	for(int i = 0; i < amountOfClasses; ++i){
-		Real normalizer = 0.;
+		Real normalizer((Real) 0.);
 		for(int j = 0; j < amountOfClasses; ++j){
-			normalizer += exp((Real) f[i * amountOfClasses + j]);
+			normalizer += expReal((Real) f[i * amountOfClasses + j]);
 		}
-		normalizer = 1.0 / normalizer;
+		normalizer = (Real) 1.0 / normalizer;
 		for(int j = 0; j < dataPoints; ++j){
 			const int iActEle = i * dataPoints + j;
-			pi[iActEle] = normalizer * exp((Real) f[iActEle]);
+			pi[iActEle] = normalizer * expReal((Real) f[iActEle]);
 		}
 	}
 }
@@ -112,7 +112,7 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 			f2 << "\n\n";
 			E_c[i] = DSqrt_c * L.transpose().triangularView<Eigen::Upper>().solve(nenner);
 			for(int j = 0; j < dataPoints; ++j){
-				z[i] += log((Real) L(j,j));
+				z[i] += logReal(L(j,j));
 			}
 			if(i == 0){
 				E_sum = E_c[i];

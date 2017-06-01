@@ -426,34 +426,16 @@ void TotalStorage::getOnlineStorageCopy(OnlineStorage<LabeledVectorX*>& storage)
 			}
 		}
 	}else{
-		printError("Not implemented for this mode!");
-		quitApplication();
+		printErrorAndQuit("Not implemented for this mode!");
 	}
 }
 
 void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& train,
 		OnlineStorage<LabeledVectorX*>& test, const int amountOfPointsForTraining){
 	if(m_mode == Mode::WHOLE){
-		int minValue = amountOfPointsForTraining / getAmountOfClass();
-		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-			minValue = std::min(static_cast<int>(it->second.size()), minValue);
-		}
-		std::vector<LabeledVectorX*> forTraining;
-		std::vector<LabeledVectorX*> forTesting;
-		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-			int counter = 0;
-			for(LabeledDataConstIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
-				if(counter < minValue){
-					forTraining.push_back(*itData);
-				}else{
-					forTesting.push_back(*itData);
-				}
-				++counter;
-			}
-		}
-		printOnScreen("For training: " << forTraining.size());
-		printOnScreen("For testing: " << forTesting.size());
-		// to guarantee that the append block update is called which invokes the training
+		LabeledData forTraining;
+		LabeledData forTesting;
+		getLabeledDataCopyWithTest(forTraining, forTesting, amountOfPointsForTraining);
 		train.append(forTraining);
 		test.append(forTesting);
 	}else{
@@ -462,11 +444,36 @@ void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& 
 	}
 }
 
+void TotalStorage::getLabeledDataCopyWithTest(LabeledData& train, LabeledData& test,
+											  const int amountOfPointsForTraining){
+	if(m_mode == Mode::WHOLE){
+		int minValue = amountOfPointsForTraining / getAmountOfClass();
+		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
+			minValue = std::min(static_cast<int>(it->second.size()), minValue);
+		}
+		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
+			int counter = 0;
+			for(LabeledDataConstIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
+				if(counter < minValue){
+					train.push_back(*itData);
+				}else{
+					test.push_back(*itData);
+				}
+				++counter;
+			}
+		}
+		printOnScreen("For training: " << train.size());
+		printOnScreen("For testing: " << test.size());
+	}else{
+		train = m_trainSet;
+		test = m_testSet;
+	}
+}
+
 void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& train,
 		OnlineStorage<LabeledVectorX*>& test){
 	if(m_mode == Mode::WHOLE){
-		printError("Not implemented yet!");
-		quitApplication();
+		printErrorAndQuit("Not implemented yet!");
 	}else{
 		train.append(m_removeFromTrainSet);
 		test.append(m_removeFromTestSet);
@@ -487,12 +494,10 @@ void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<
 			}
 			test.append(m_testSet);
 		}else{
-			printError("Amount of splits can not be zero!");
-			Logger::forcedWrite();
+			printErrorAndQuit("Amount of splits can not be zero!");
 		}
 	}else{
-		printError("Not implemented yet!");
-		quitApplication();
+		printErrorAndQuit("Not implemented yet!");
 	}
 }
 
@@ -503,8 +508,7 @@ unsigned int TotalStorage::getSize(unsigned int classNr){
 			return (unsigned int) it->second.size();
 		}
 	}else{
-		printError("Not implemented for this mode");
-		quitApplication();
+		printErrorAndQuit("Not implemented for this mode");
 	}
 	return 0;
 }

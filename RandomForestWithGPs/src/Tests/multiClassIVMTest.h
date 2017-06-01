@@ -35,14 +35,14 @@ void testIvm(IVMMultiBinary& ivms, const LabeledData& data){
 	std::vector< std::vector<Real> > probs;
 	ivms.predictData(data, labels, probs);
 	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
-	const Real logBase = log(amountOfClasses);
+	const Real logBase = logReal(amountOfClasses);
 	AvgNumber oc, uc;
 	AvgNumber ocBVS, ucBVS;
 	for(int i = 0; i < amountOfTestPoints; ++i){
 		Real entropy = 0;
 		for(unsigned int j = 0; j < amountOfClasses; ++j){
 			if(probs[i][j] > 0){
-				entropy -= probs[i][j] * log(probs[i][j]) / logBase;
+				entropy -= probs[i][j] * logReal(probs[i][j]) / logBase;
 			}
 		}
 		Real max1 = 0, max2 = 0;

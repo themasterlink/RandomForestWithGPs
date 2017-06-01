@@ -14,7 +14,10 @@ RandomForestKernel::RandomForestKernel(OnlineStorage<LabeledVectorX*>& storage, 
 	m_mode(KernelMode::PARTITION){
 	if(createOrf){
 		m_rf = new OnlineRandomForest(storage, maxDepth, amountOfUsedClasses);
-		m_rf->setDesiredAmountOfTrees(samplingAmount+1);
+		OnlineRandomForest::TrainingsConfig trainingsConfig;
+		trainingsConfig.m_mode = OnlineRandomForest::TrainingsConfig::TrainingsMode::TREEAMOUNT;
+		trainingsConfig.m_amountOfTrees = (unsigned int) (samplingAmount + 1);
+		m_rf->setTrainingsMode(trainingsConfig);
 	}
 }
 
@@ -25,7 +28,10 @@ RandomForestKernel::RandomForestKernel(OnlineStorage<LabeledVectorX*>& storage, 
 	m_mode(KernelMode::PARTITION){
 	if(createOrf){
 		m_rf = new OnlineRandomForest(storage, initParams.m_maxDepth, initParams.m_amountOfUsedClasses);
-		m_rf->setDesiredAmountOfTrees(initParams.m_samplingAmount);
+		OnlineRandomForest::TrainingsConfig trainingsConfig;
+		trainingsConfig.m_mode = OnlineRandomForest::TrainingsConfig::TrainingsMode::TREEAMOUNT;
+		trainingsConfig.m_amountOfTrees = (unsigned int) (initParams.m_samplingAmount + 1);
+		m_rf->setTrainingsMode(trainingsConfig);
 	}
 }
 

@@ -14,15 +14,13 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
 									   const unsigned int maxDepth,
 									   const int amountOfUsedClasses):
 		m_maxDepth(maxDepth),
-		m_amountOfClasses(amountOfUsedClasses),
+		m_amountOfClasses((unsigned int) amountOfUsedClasses),
 		m_amountOfPointsUntilRetrain(0),
 		m_counterForRetrain(0),
 		m_amountOfUsedDims(0),
-		m_factorForUsedDims(0.),
+		m_factorForUsedDims((Real) 0.),
 		m_storage(storage),
 		m_firstTrainingDone(false),
-		m_ownSamplingTime(-1),
-		m_desiredAmountOfTrees(0),
 		m_useBigDynamicDecisionTrees(false),
 		m_amountOfUsedLayer(0,0),
 		m_folderForSavedTrees("./"),
@@ -32,10 +30,9 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
 	storage.attach(this);
 	Settings::getValue("OnlineRandomForest.factorAmountOfUsedDims", m_factorForUsedDims);
 	Settings::getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
-	Settings::getValue("OnlineRandomForest.ownSamplingTime", m_ownSamplingTime, m_ownSamplingTime);
 	Settings::getValue("OnlineRandomForest.useBigDynamicDecisionTrees", m_useBigDynamicDecisionTrees);
 	Settings::getValue("OnlineRandomForest.amountOfPointsCheckedPerSplit", m_amountOfPointsCheckedPerSplit);
-//	setDesiredAmountOfTrees(1);
+	readTrainingsModeFromSetting();
 }
 
 OnlineRandomForest::~OnlineRandomForest(){
@@ -48,9 +45,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 		std::vector<std::vector<unsigned int> >* counterForClasses, boost::mutex* mutexForCounter){
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
-	MemoryType maxAmountOfUsedMemory;
-	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
-	int i = 0;
+	int counter = 0;
 	const bool printErrorGraph = counterForClasses != nullptr;
 	Labels* labels = nullptr;
 	if(printErrorGraph){
@@ -68,12 +63,9 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 		// check if the memory consumption is to high -> write trees to disk
 		mutexForCounter->lock();
 //		printInPackageOnScreen(package, "Mem: " << getPercentageForUsedMemory());
-		if(maxAmountOfUsedMemory > 0 && m_usedMemory > maxAmountOfUsedMemory && package->canBeAbortedInGeneral()){
+		if(m_trainingsConfig.hasMemoryConstraint() && package->canBeAbortedInGeneral()){
 			package->abortTraing();
 			printOnScreen("Abort because of memory");
-//			printOnScreen("Save to file");
-//			m_savedAnyTreesToDisk = true;
-//			writeTreesToDisk(treeAmount);
 		}
 		mutexForCounter->unlock();
 		// performing this outside the lock makes the lock shorter (because the constructor calls contains a lot of memory allocation)
@@ -84,7 +76,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 			treePointer = new DynamicDecisionTree<unsigned int>(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 		}
 		treePointer->train(m_amountOfUsedDims, *generator);
-		printInPackageOnScreen(package, "Number " << i++ << " was calculated, total memory usage: " << StringHelper::convertMemorySpace(m_usedMemory));
+		printInPackageOnScreen(package, "Number " << counter++ << " was calculated, total memory usage: " << StringHelper::convertMemorySpace(m_usedMemory));
 		if(printErrorGraph){
 			for(unsigned int i = 0; i < m_storage.size(); ++i){
 				(*labels)[i] = treePointer->predict(*m_storage[i]);
@@ -158,8 +150,7 @@ void OnlineRandomForest::train(){
 		m_generators[i]->update(this, OnlineStorage<LabeledVectorX*>::Event::APPENDBLOCK); // init training with just one element is not useful
 	}
 	const unsigned int nrOfParallel = ThreadMaster::getAmountOfThreads();
-	const Real trainingsTime = m_ownSamplingTime > 0 ? m_ownSamplingTime : CommandSettings::get_samplingAndTraining();
-	const unsigned int usedAmountOfPackages = std::min(nrOfParallel, trainingsTime > 0 ? nrOfParallel : m_desiredAmountOfTrees);
+	const unsigned int usedAmountOfPackages = std::min(nrOfParallel, m_trainingsConfig.isTreeAmountMode() ? m_trainingsConfig.m_amountOfTrees : nrOfParallel);
 	std::vector<InformationPackage*> packages(usedAmountOfPackages, nullptr);
 	if(m_maxDepth > 7 && m_useBigDynamicDecisionTrees && Settings::getDirectBoolValue("OnlineRandomForest.determineBestLayerAmount")){
 		boost::thread_group layerGroup;
@@ -200,28 +191,42 @@ void OnlineRandomForest::train(){
 	if(Settings::getDirectBoolValue("OnlineRandomForest.printErrorForTraining")){
 		counterForClasses = new std::vector<std::vector<unsigned int> >(m_storage.size(), std::vector<unsigned int>(amountOfClasses(), 0));
 	}
+	const Real trainingsTimeForPackages = m_trainingsConfig.isTimeMode() ? m_trainingsConfig.m_seconds : 0;
+	const unsigned int amountOfTreesForAThread = (unsigned int) (m_trainingsConfig.isTreeAmountMode() ? ceil(m_trainingsConfig.m_amountOfTrees / (double) nrOfParallel) : 0);
 	boost::mutex mutexForCounter;
 	boost::thread_group group;
 	for(unsigned int i = 0; i < packages.size(); ++i){
-		packages[i] = new InformationPackage(m_desiredAmountOfTrees == 0 ? InformationPackage::InfoType::ORF_TRAIN : InformationPackage::InfoType::ORF_TRAIN_FIX, 0, (m_trees.size() / (Real) nrOfParallel));
+		packages[i] = new InformationPackage(m_trainingsConfig.isTreeAmountMode() ?
+											 InformationPackage::InfoType::ORF_TRAIN_FIX :
+											 InformationPackage::InfoType::ORF_TRAIN, 0,
+											 (int) (m_trees.size() / (Real) nrOfParallel));
 		packages[i]->setStandartInformation("Train trees, thread nr: " + StringHelper::number2String(i));
-		packages[i]->setTrainingsTime(trainingsTime);
-		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i], m_desiredAmountOfTrees, counterForClasses, &mutexForCounter)));
+		packages[i]->setTrainingsTime(trainingsTimeForPackages);
+		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i], amountOfTreesForAThread, counterForClasses, &mutexForCounter)));
 	}
 	int stillOneRunning = 1;
-	const unsigned long maxTime = 86400;// more than a day
-	MemoryType maxAmountOfUsedMemory;
-	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
-
-	if(m_desiredAmountOfTrees == 0){
-		if(trainingsTime > maxTime){
-			InLinePercentageFiller::setActMax((long) maxAmountOfUsedMemory);
-		}else{
-			InLinePercentageFiller::setActMaxTime(trainingsTime);
-		}
+	if(m_trainingsConfig.isTimeMode()){
+		InLinePercentageFiller::setActMaxTime(m_trainingsConfig.m_seconds);
+	}else if(m_trainingsConfig.isTreeAmountMode()){
+		InLinePercentageFiller::setActMax(m_trainingsConfig.m_amountOfTrees);
+	}else if(m_trainingsConfig.hasMemoryConstraint()){
+		InLinePercentageFiller::setActMax(m_trainingsConfig.m_memory);
 	}else{
-		InLinePercentageFiller::setActMax(m_desiredAmountOfTrees);
+		printError("The type is not defined here!");
 	}
+//	const unsigned long maxTime = 86400;// more than a day
+//	MemoryType maxAmountOfUsedMemory;
+//	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
+
+//	if(m_desiredAmountOfTrees == 0){
+//		if(trainingsTime > maxTime){
+//			InLinePercentageFiller::setActMax((long) maxAmountOfUsedMemory);
+//		}else{
+//			InLinePercentageFiller::setActMaxTime(trainingsTime);
+//		}
+//	}else{
+//		InLinePercentageFiller::setActMax(m_desiredAmountOfTrees);
+//	}
 //	Real nextCheck = std::min(10.,m_ownSamplingTime / 10.);
 	StopWatch sw;
 	int lastCounter = 0;
@@ -233,14 +238,14 @@ void OnlineRandomForest::train(){
 				++stillOneRunning;
 			}
 		}
-		if(m_desiredAmountOfTrees == 0){
-			if(trainingsTime > maxTime){
-				InLinePercentageFiller::setActValueAndPrintLine((long) std::min(m_usedMemory, maxAmountOfUsedMemory));
-			}else{
-				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size());
-			}
-		}else{
+		if(m_trainingsConfig.isTimeMode()){
+			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size());
+		}else if(m_trainingsConfig.isTreeAmountMode()){
 			InLinePercentageFiller::setActValueAndPrintLine(m_trees.size());
+		}else if(m_trainingsConfig.hasMemoryConstraint()){
+			InLinePercentageFiller::setActValueAndPrintLine((long) std::min(m_usedMemory, m_trainingsConfig.m_memory));
+		}else{
+			printError("The type is not defined here!");
 		}
 		if(counterForClasses != nullptr && m_trees.size() > 0 && m_trees.size() - lastCounter >= 1){
 			lastCounter = m_trees.size();
@@ -264,10 +269,14 @@ void OnlineRandomForest::train(){
 		printOnScreen("Used memory: " << StringHelper::convertMemorySpace(m_usedMemory));
 	}
 	printOnScreen("Calculated " << m_trees.size() << " trees with depth: " << m_maxDepth);
-	if(m_desiredAmountOfTrees == 0){
+	if(m_trainingsConfig.isTimeMode()){
 		InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size(), true);
-	}else{
+	}else if(m_trainingsConfig.isTreeAmountMode()){
 		InLinePercentageFiller::setActValueAndPrintLine(m_trees.size());
+	}else if(m_trainingsConfig.hasMemoryConstraint()){
+		InLinePercentageFiller::setActValueAndPrintLine((long) m_trainingsConfig.m_memory);
+	}else{
+		printError("The type is not defined here!");
 	}
 	for(unsigned int i = 0; i < packages.size(); ++i){
 		ThreadMaster::threadHasFinished(packages[i]);
@@ -1132,5 +1141,57 @@ void OnlineRandomForest::updateMinMaxValues(unsigned int event){
 		printError("This event is not handled here!");
 		break;
 	}
+	}
+}
+
+void OnlineRandomForest::setTrainingsMode(const OnlineRandomForest::TrainingsConfig& config){
+	if(config.m_mode != OnlineRandomForest::TrainingsConfig::TrainingsMode::UNDEFINED){
+		m_trainingsConfig = config;
+	}else{
+		readTrainingsModeFromSetting();
+	}
+}
+
+void OnlineRandomForest::readTrainingsModeFromSetting(){
+	m_trainingsConfig.m_amountOfTrees = 0;
+	m_trainingsConfig.m_memory = 0;
+	m_trainingsConfig.m_seconds = 0;
+	MemoryType maxAmountOfUsedMemory;
+	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
+	unsigned int amountOfTrees;
+	Settings::getValue("OnlineRandomForest.amountOfTrainedTrees", amountOfTrees);
+	const Real trainingsTime = CommandSettings::get_samplingAndTraining();
+	if(amountOfTrees == 0){
+		if(trainingsTime > 0 && maxAmountOfUsedMemory == 0){
+			m_trainingsConfig.m_mode = TrainingsConfig::TrainingsMode::TIME;
+			m_trainingsConfig.m_seconds = trainingsTime;
+		}else if(maxAmountOfUsedMemory > 0){
+			if(trainingsTime > 0){
+				m_trainingsConfig.m_mode = TrainingsConfig::TrainingsMode::TIME_WITH_MEMORY;
+				m_trainingsConfig.m_seconds = trainingsTime;
+				m_trainingsConfig.m_memory = maxAmountOfUsedMemory;
+			}else{
+				m_trainingsConfig.m_mode = TrainingsConfig::TrainingsMode::MEMORY;
+				m_trainingsConfig.m_memory = maxAmountOfUsedMemory;
+			}
+		}
+	}else{
+		if(trainingsTime > 0 && maxAmountOfUsedMemory == 0){ // time overrules tree amount
+			m_trainingsConfig.m_mode = TrainingsConfig::TrainingsMode::TIME;
+			m_trainingsConfig.m_seconds = trainingsTime;
+		}else if(maxAmountOfUsedMemory > 0){
+			if(trainingsTime > 0){ // time overrules tree amount, memory is added constraint
+				m_trainingsConfig.m_mode = TrainingsConfig::TrainingsMode::TIME_WITH_MEMORY;
+				m_trainingsConfig.m_seconds = trainingsTime;
+				m_trainingsConfig.m_memory = maxAmountOfUsedMemory;
+			}else{ // trees are used, memory is added constraint
+				m_trainingsConfig.m_mode = TrainingsConfig::TrainingsMode::TREEAMOUNT_WITH_MEMORY;
+				m_trainingsConfig.m_amountOfTrees = amountOfTrees;
+				m_trainingsConfig.m_memory = maxAmountOfUsedMemory;
+			}
+		}else{ // just amount of trees no memory constraint
+			m_trainingsConfig.m_mode = TrainingsConfig::TrainingsMode::TREEAMOUNT;
+			m_trainingsConfig.m_amountOfTrees = amountOfTrees;
+		}
 	}
 }

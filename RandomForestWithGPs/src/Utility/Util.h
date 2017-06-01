@@ -121,18 +121,21 @@ inline void quitApplication(const bool wait = true){
 #else
 
 #define printError(message) \
-	std::cout << RED << "Error in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << RESET << std::endl; \
+	std::cout << RED << "Error in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message << RESET << std::endl; \
 
 #define printWarning(message) \
-	 std::cout << "Warning in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl;\
+	 std::cout << "Warning in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message << std::endl;\
 
 #define printLine() \
-	 std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << std::endl; \
+	 std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << std::endl; \
 
 #define printDebug(message) \
-	 std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << number2String(__LINE__) << ": " << message << std::endl; \
+	 std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message << std::endl; \
 
 #endif
+
+#define printErrorAndQuit(message) \
+		printError(message); quitApplication()
 
 inline int_fast32_t highEndian2LowEndian(int_fast32_t i) {
     unsigned char c1, c2, c3, c4;
@@ -160,6 +163,22 @@ inline Real sqrtReal(const Real val){
 	return sqrt(val);
 #else
 	return sqrtf(val);
+#endif
+}
+
+inline Real logReal(const Real val){
+#ifdef USE_DOUBLE
+	return log(val);
+#else
+	return logf(val);
+#endif
+}
+
+inline Real expReal(const Real val){
+#ifdef USE_DOUBLE
+	return exp(val);
+#else
+	return expf(val);
 #endif
 }
 

@@ -45,7 +45,7 @@ void getSeKernelFor(const Matrix& xA, const Matrix& xB, Matrix& result,
 		const VectorX xARow = xA.row(i);
 		for(int j = 0; j < xB.rows(); ++j){
 			const VectorX diff = xARow - xB.row(j);
-			result(i, j) = sigmaSquared * exp(expFac * diff.dot(diff));
+			result(i, j) = sigmaSquared * expReal(expFac * diff.dot(diff));
 		}
 	}
 }

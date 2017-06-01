@@ -196,9 +196,6 @@ int main(int ac, char** av){
 		av[i] = const_cast<char*>(input[i].c_str());
 	}
 #endif
-
-	TestManager::init("../Settings/testSettings.init");
- 	exit(0);
 	printOnScreen("Start");
 //	getchar();
 	handleProgrammOptions(ac,av);
@@ -256,6 +253,8 @@ int main(int ac, char** av){
 	ClassKnowledge::init();
 //	std::cout << RESET << "Start" << std::endl;
 
+
+
 	if(CommandSettings::get_onlyDataView()){
 		const int firstPoints = 10000000; // all points
 		TotalStorage::readData(firstPoints);
@@ -300,6 +299,11 @@ int main(int ac, char** av){
 //		}
 //	}
 
+
+
+	TestManager::init("../Settings/testSettings.init");
+	TestManager::run();
+	quitApplication();
 
 	/*
     const int nr = 300;

@@ -64,9 +64,9 @@ void executeForRFGPMultiClass(const std::string& path){
 
 	int height;
 	int amountOfTrees;
-	Settings::getValue("Forest.Trees.height", height, 7);
-	Settings::getValue("Forest.amountOfTrees", amountOfTrees, 1000);
-//#define WRITE
+	Settings::getValue("OnlineRandomForest.Trees.height", height, 7);
+	Settings::getValue("OnlineRandomForest.amountOfTrainedTrees", amountOfTrees, 1000);
+#define WRITE
 #ifdef WRITE
 	RandomForestGaussianProcess rfGp(trainSets, height, amountOfTrees, path);
 	rfGp.train();

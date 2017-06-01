@@ -34,10 +34,10 @@ void GaussianProcess::init(const Matrix& dataMat, const VectorX& y){
 
 void GaussianProcess::updatePis(){
 	for(int i = 0; i < m_dataPoints; ++i){
-		m_pi[i] = 1.0 / (1.0 + exp((Real) - m_y[i] * (Real) m_f[i]));
+		m_pi[i] = 1.0 / (1.0 + expReal(- m_y[i] * m_f[i]));
 		m_dLogPi[i] = m_t[i] - m_pi[i];
-		m_ddLogPi[i] = -(-m_pi[i] * (1 - m_pi[i])); // first minus to get -ddlog(p_i|f_i)
-		m_sqrtDDLogPi[i] = sqrtReal((Real) m_ddLogPi[i]);
+		m_ddLogPi[i] = -(-m_pi[i] * (1 - m_pi[i])); // first minus to get -ddlogReal(p_i|f_i)
+		m_sqrtDDLogPi[i] = sqrtReal(m_ddLogPi[i]);
 	}
 }
 
@@ -79,11 +79,11 @@ GaussianProcess::Status GaussianProcess::trainBayOpt(Real& logZ, const Real lamb
 	const VectorX diag = m_choleskyLLT.matrixL().toDenseMatrix().diagonal(); // TOdo more efficient?
 	Real sum = 0;
 	for(int i = 0; i < diag.rows(); ++i){
-		sum += log((Real)diag[i]);
+		sum += logReal(diag[i]);
 	}
-	const Real prob = (1.0 + exp(-(Real) (m_y.dot(m_f)))); // should be very small!
-	const Real logVal = prob < 1e100 ? -log(prob) : -100;
-	const Real aDotF = -0.5 * (Real) (m_a.dot(m_f));
+	const Real prob = (Real) 1.0 + expReal((-(Real) (m_y.dot(m_f)))); // should be very small!
+	const Real logVal = prob < 1e100 ? -logReal(prob) : (Real) -100.0;
+	const Real aDotF = (Real) -0.5 * (m_a.dot(m_f));
 	//std::cout << "Prob: " << prob << std::endl;
 	//std::cout << "Mean: " << m_f.mean() << std::endl;
 	//std::cout << "a: " << m_a.transpose() << std::endl;
@@ -110,10 +110,10 @@ GaussianProcess::Status GaussianProcess::trainLM(Real& logZ, std::vector<Real>& 
 		printError("calc of cholesky failed!");
 	}
 	for(int i = 0; i < diag.rows(); ++i){
-		sum += log((Real)diag[i]);
+		sum += logReal((Real)diag[i]);
 	}
-	const Real prob = (1.0 + exp(-(Real) (m_y.dot(m_f)))); // should be very small!
-	const Real logVal = prob < 1e100 ? -log(prob) : -100;
+	const Real prob = (1.0 + expReal(-(Real) (m_y.dot(m_f)))); // should be very small!
+	const Real logVal = prob < 1e100 ? -logReal(prob) : -100;
 	//std::cout << "Prob: " << prob << std::endl;
 	//std::cout << "Mean: " << m_f.mean() << std::endl;
 	//std::cout << "a: " << m_a.transpose() << std::endl;
@@ -312,11 +312,11 @@ GaussianProcess::Status GaussianProcess::trainF(const Matrix& K){
 		const VectorX b = m_ddLogPi.cwiseProduct(m_f) + m_dLogPi;
 		m_a = b - m_ddLogPi.cwiseProduct(m_choleskyLLT.solve( m_choleskyLLT.solve(m_ddLogPi.cwiseProduct(K * b)))); // WSqrt * == m_ddLogPi.cwiseProduct(...)
 		const Real firstPart = -0.5 * (Real) (m_a.dot(m_f));
-		const Real prob = 1.0 / (1.0 + exp(-(Real) (m_y.dot(m_f))));
+		const Real prob = 1.0 / (1.0 + expReal(-(m_y.dot(m_f))));
 		const Real tol = 1e-7;
 		const Real offsetVal = prob > tol && prob < 1 - tol ? prob : (prob < tol ? tol : 1 - tol );
-		const Real objective = firstPart + log(offsetVal);
-		//std::cout << "\rError in " << j <<": " << fabs(lastObjective / objective - 1.0) << ", from: " << lastObjective << ", to: " << objective <<  ", log: " << log(offsetVal) << "                    " << std::endl;
+		const Real objective = firstPart + logReal(offsetVal);
+		//std::cout << "\rError in " << j <<": " << fabs(lastObjective / objective - 1.0) << ", from: " << lastObjective << ", to: " << objective <<  ", log: " << logReal(offsetVal) << "                    " << std::endl;
 		if(isnan(objective)){
 			//std::cout << "Objective is nan!" << std::endl;
 			return Status::NANORINFERROR;
@@ -403,7 +403,7 @@ Real GaussianProcess::predict(const VectorX& newPoint, const int sampleSize) con
 		const Real x = rand()/static_cast<Real>(RAND_MAX);
 		const Real y = rand()/static_cast<Real>(RAND_MAX);
 		const Real result = cos(2.0 * M_PI * x)*sqrtReal(-2*log(y)); // random gaussian after box mueller
-		const Real height = 1.0 / (1.0 + exp(-p)) * (result * vFStar + fStar);
+		const Real height = 1.0 / (1.0 + expReal(-p)) * (result * vFStar + fStar);
 		prob += height * stepSize; // gives the integral
 	}
 	/*if(isnan(prob)){

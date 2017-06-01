@@ -28,13 +28,13 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<LabeledVectorX*>& test){
 	AvgNumber oc, uc;
 	AvgNumber ocBVS, ucBVS;
 	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
-	const Real logBase = log(amountOfClasses);
+	const Real logBase = logReal(amountOfClasses);
 	for(unsigned int i = 0; i < labels.size(); ++i){
 		if(labels[i] != UNDEF_CLASS_LABEL){
 			Real entropy = 0;
 			for(unsigned int j = 0; j < amountOfClasses; ++j){
 				if(probs[i][j] > 0){
-					entropy -= probs[i][j] * log(probs[i][j]) / logBase;
+					entropy -= probs[i][j] * logReal(probs[i][j]) / logBase;
 				}
 			}
 			Real max1 = 0, max2 = 0;
@@ -91,7 +91,7 @@ void executeForBinaryClassORF(){
 			//	OnlineStorage<LabeledVectorX*> train;
 			OnlineStorage<LabeledVectorX*> test;
 			int height;
-			Settings::getValue("Forest.Trees.height", height);
+			Settings::getValue("OnlineRandomForest.Trees.height", height);
 			const unsigned int amountOfSplits = 10;
 			std::vector<OnlineStorage<LabeledVectorX*> > trains(amountOfSplits);
 			newOrf = std::make_unique<OnlineRandomForest>(trains[0], (unsigned int) height, TotalStorage::getAmountOfClass());
@@ -170,7 +170,7 @@ void executeForBinaryClassORF(){
 		}else{
 			OnlineStorage<LabeledVectorX*> test;
 			int height;
-			Settings::getValue("Forest.Trees.height", height);
+			Settings::getValue("OnlineRandomForest.Trees.height", height);
 			OnlineStorage<LabeledVectorX*> train;
 			newOrf = std::make_unique<OnlineRandomForest>(train, (unsigned int) height, TotalStorage::getAmountOfClass());
 			auto& orf = *newOrf;
@@ -199,7 +199,7 @@ void executeForBinaryClassORF(){
 		OnlineStorage<LabeledVectorX*> train;
 		OnlineStorage<LabeledVectorX*> test;
 		unsigned int height;
-		Settings::getValue("Forest.Trees.height", height);
+		Settings::getValue("OnlineRandomForest.Trees.height", height);
 		OnlineRandomForest orf(train, height, TotalStorage::getAmountOfClass());
 		TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 		printOnScreen("Training finished");

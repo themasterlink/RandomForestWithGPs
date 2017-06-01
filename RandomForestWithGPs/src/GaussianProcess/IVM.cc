@@ -1219,7 +1219,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				}else{
 					u = label * nuMin / denom + c * m_bias;
 				}
-				const Real dlZ = (Real) (c * exp(cumulativeDerivLog(u) - cumulativeLog(u)));
+				const Real dlZ = (Real) (c * expReal(cumulativeDerivLog(u) - cumulativeLog(u)));
 				const Real d2lZ  = dlZ * (dlZ + u * c);
 
 				const Real oldTauTilde = m_tauTilde.coeff(i);
@@ -1375,7 +1375,7 @@ void IVM::calcLogZ(){
 	const Matrix& llt = m_choleskyLLT.matrixLLT();
 	//printInPackageOnScreen(m_package, "llt: \n" << llt);
 	for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
-		m_logZ -= log((Real) llt.coeff(i,i));
+		m_logZ -= logReal((Real) llt.coeff(i,i));
 	}
 	if(false){
 		const VectorX muTilde = m_nuTilde.cwiseQuotient(m_tauTilde);
@@ -1533,9 +1533,9 @@ Real IVM::calcInnerOfFindPointWhichDecreaseEntropyMost(const unsigned int j, con
 	}else{
 		u = label * nu_kn / denom + c * m_bias;
 	}
-	g_kn = c * exp(cumulativeDerivLog(u) - cumulativeLog(u));
+	g_kn = c * expReal(cumulativeDerivLog(u) - cumulativeLog(u));
 	nu_kn = g_kn * (g_kn + u * c);
-	const Real delta_kn = log(1.0 - nu_kn * (Real) zeta.coeff(j)) / (2.0 * LOG2);
+	const Real delta_kn = logReal(1.0 - nu_kn * (Real) zeta.coeff(j)) / (2.0 * LOG2);
 	//const Real delta_kn = zeta[j] * nu_kn;
 	// pointEntropies.append( (j, delta_ln));
 	if(verboseLevel == 2){

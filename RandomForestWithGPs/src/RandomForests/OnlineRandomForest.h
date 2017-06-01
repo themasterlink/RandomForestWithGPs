@@ -28,11 +28,6 @@ public:
 
 	void train();
 
-	// if amountOfTrees == 0 -> the samplingTime is used
-	void setDesiredAmountOfTrees(const unsigned int desiredAmountOfTrees){
-		m_desiredAmountOfTrees = desiredAmountOfTrees;
-	}
-
 	unsigned int predict(const VectorX& point) const override;
 
 	Real predict(const VectorX& point1, const VectorX& point2, const unsigned int sampleAmount) const;
@@ -67,6 +62,45 @@ public:
 
 	const std::vector<Vector2>& getMinMaxValues(){ return m_minMaxValues;};
 
+	struct TrainingsConfig {
+
+		enum class TrainingsMode{
+			TIME,
+			TIME_WITH_MEMORY,
+			MEMORY,
+			TREEAMOUNT,
+			TREEAMOUNT_WITH_MEMORY,
+			UNDEFINED
+		};
+
+		TrainingsConfig(): m_mode(TrainingsMode::UNDEFINED),
+						   m_seconds(0.0), m_memory(0),
+						   m_amountOfTrees(0){};
+
+		TrainingsMode m_mode;
+		Real m_seconds;
+		MemoryType m_memory;
+		unsigned int m_amountOfTrees;
+
+		bool isTimeMode(){
+			return m_mode == TrainingsMode::TIME || m_mode == TrainingsMode::TIME_WITH_MEMORY;
+		}
+
+		bool isTreeAmountMode(){
+			return m_mode == TrainingsMode::TREEAMOUNT || m_mode == TrainingsMode::TREEAMOUNT_WITH_MEMORY;
+		}
+
+		bool hasMemoryConstraint(){
+			return m_mode == TrainingsMode::TIME_WITH_MEMORY ||
+				   m_mode == TrainingsMode::TREEAMOUNT_WITH_MEMORY ||
+				   m_mode == TrainingsMode::MEMORY;
+		}
+	};
+
+	void setTrainingsMode(const TrainingsConfig& config);
+
+	void readTrainingsModeFromSetting();
+
 private:
 
 	using SortedDecisionTreePair = std::pair<DynamicDecisionTreeInterface*, Real>;
@@ -92,8 +126,8 @@ private:
 	void predictClassDataProbInParallel(const LabeledData& points, std::vector< std::vector<Real> >* probabilities,
 			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
 
-	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package,
-						 const unsigned int amountOfTrees, std::vector<std::vector<unsigned int> >* counterForClasses,
+	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const unsigned int amountOfTrees,
+						 std::vector<std::vector<unsigned int> >* counterForClasses,
 						 boost::mutex* mutexForCounter);
 
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
@@ -151,10 +185,6 @@ private:
 
 	bool m_firstTrainingDone;
 
-	Real m_ownSamplingTime;
-
-	unsigned int m_desiredAmountOfTrees;
-
 	bool m_useBigDynamicDecisionTrees;
 
 	std::pair<unsigned int, unsigned int> m_amountOfUsedLayer;
@@ -168,6 +198,8 @@ private:
 	mutable MemoryType m_usedMemory;
 
 	unsigned int m_amountOfPointsCheckedPerSplit;
+
+	TrainingsConfig m_trainingsConfig;
 };
 
 

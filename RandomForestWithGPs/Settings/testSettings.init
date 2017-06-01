@@ -1,6 +1,15 @@
-load test
-load train
-   define trass llla
-define ass as sll
-
-train a
+# Test order specify here what should be executed
+#
+# load all data sets, else TRAIN_SETTING or TEST_SETTING (files which are written in setting file)
+load all
+define train0 without classes 2 from TRAIN_SETTING
+define train1 as classes 2 from TRAIN_SETTING
+define test0 as classes all from TEST_SETTING
+train train0 until 2000 trees with only 1gb
+test train0
+test train1
+test test0
+train train1
+test train0
+test train1
+test test0

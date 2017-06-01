@@ -79,7 +79,10 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 						Settings::getValue("RandomForestKernel.samplingAmount", samplingAmount);
 						m_orfForKernel = new OnlineRandomForest(m_storage, maxDepth, amountOfClasses());
 						// train the trees before the ivms are used
-						m_orfForKernel->setDesiredAmountOfTrees(samplingAmount);
+						OnlineRandomForest::TrainingsConfig trainingsConfig;
+						trainingsConfig.m_mode = OnlineRandomForest::TrainingsConfig::TrainingsMode::TREEAMOUNT;
+						trainingsConfig.m_amountOfTrees = (unsigned int) (samplingAmount);
+						m_orfForKernel->setTrainingsMode(trainingsConfig);
 						m_orfForKernel->update(&m_storage, OnlineStorage<LabeledVectorX*>::APPENDBLOCK);
 					}
 					for(unsigned int i = 0; i < amountOfClasses(); ++i){

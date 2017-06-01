@@ -42,6 +42,8 @@ public:
 
 	static void getOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& train, OnlineStorage<LabeledVectorX*>& test, const int amountOfPointsForTraining);
 
+	static void getLabeledDataCopyWithTest(LabeledData& train, LabeledData& test, const int amountOfPointsForTraining);
+
 	static void getRemovedOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& train, OnlineStorage<LabeledVectorX*>& test);
 
 	static InternalStorage& getStorage(){ return m_storage; };

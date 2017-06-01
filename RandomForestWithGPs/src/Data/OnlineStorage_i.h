@@ -43,7 +43,25 @@ void OnlineStorage<T>::append(const std::vector<T>& storage){
 	m_lastUpdateIndex = size();
 	m_internal.reserve(m_internal.size() + storage.size());
 	m_internal.insert(m_internal.end(), storage.begin(), storage.end());
-	notify(static_cast<const unsigned int >(Event::APPENDBLOCK));
+	notify(static_cast<const unsigned int>(Event::APPENDBLOCK));
+}
+
+template<typename T>
+void OnlineStorage<T>::appendUnique(const std::vector<T>& data){
+	m_lastUpdateIndex = size();
+	for(const auto& p : data){
+		bool found = false;
+		for(const auto& existingPoint : m_internal){
+			if(existingPoint == p){
+				found = true;
+				break;
+			}
+		}
+		if(!found){
+			m_internal.push_back(p);
+		}
+	}
+	notify(static_cast<const unsigned int>(Event::APPENDBLOCK));
 }
 
 template<typename T>
@@ -127,6 +145,7 @@ template<typename T>
 unsigned int OnlineStorage<T>::getLastUpdateIndex(){
 	return m_lastUpdateIndex;
 }
+
 
 template<typename T>
 ClassTypeSubject OnlineStorage<T>::classType() const{

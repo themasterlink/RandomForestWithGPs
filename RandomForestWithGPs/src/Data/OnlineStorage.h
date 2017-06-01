@@ -33,6 +33,8 @@ public:
 
 	void append(const std::vector<T>& data);
 
+	void appendUnique(const std::vector<T>& data);
+
 	void append(const OnlineStorage& storage);
 
 	void remove(const Iterator& it);

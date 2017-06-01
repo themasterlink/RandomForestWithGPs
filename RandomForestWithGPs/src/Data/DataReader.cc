@@ -212,8 +212,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 	}else if(targetDir.parent_path().filename() == fakeDataLoc.parent_path().filename()){
 		type = 0;
 	}else{
-		printError("This type is not supported here: " << targetDir.parent_path().filename());
-		quitApplication();
+		printErrorAndQuit("This type is not supported here: " << targetDir.parent_path().filename());
 		return;
 	}
 	if(targetDir.parent_path().filename() == "mnist" && type == 0){
@@ -524,8 +523,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 		break;
 	}
 	default:{
-		printError("This type was not defined before!");
-		quitApplication();
+		printErrorAndQuit("This type was not defined before!");
 	}
 	}
 	unsigned int totalSize = 0;

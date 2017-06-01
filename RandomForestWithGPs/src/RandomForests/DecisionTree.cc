@@ -226,10 +226,10 @@ Real DecisionTree::trySplitFor(const int usedNode, const int usedDim,
 		if(normalizer > 0){
 			const Real leftClassProb = leftHisto[i] / normalizer;
 			if(leftClassProb > 0){
-				leftCost -= leftClassProb * log(leftClassProb);
+				leftCost -= leftClassProb * logReal(leftClassProb);
 			}
 			if(leftClassProb < 1.0){
-				rightCost -= (1. - leftClassProb) * log((1. - leftClassProb));
+				rightCost -= (1. - leftClassProb) * logReal((1. - leftClassProb));
 			}
 		}
 		leftHisto[i] = 0;

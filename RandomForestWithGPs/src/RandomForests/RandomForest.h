@@ -41,8 +41,7 @@ public:
 
 	void predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const override{
 		UNUSED(points); UNUSED(labels); UNUSED(probabilities);
-		printError("Not implemented yet!");
-		quitApplication();
+		printErrorAndQuit("Not implemented yet!");
 	}
 
 	int getNrOfTrees() const { return m_trees.size(); };
