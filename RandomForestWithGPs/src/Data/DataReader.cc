@@ -180,10 +180,10 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName,
 //				DataBinaryWriter::toFile(data, inputName + ".binary"); // create binary to avoid rereading .txt
 //			}
 		}else{
-			printError("The file could not be opened: " << inputPath);
+			printErrorAndQuit("The file could not be opened: " << inputPath);
 		}
 	}else{
-		printError("File was not found for .txt or .binary: " << inputName);
+		printErrorAndQuit("File was not found for .txt or .binary: " << inputName);
 	}
 	if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
 		ClassKnowledge::setAmountOfDims((unsigned int) data[0]->rows());

@@ -1,3 +1,6 @@
+cmake-build-debugMac/
+cmake-build-releaseMac/
+washingtonMax/
 /Debug/
 ../.metadata/
 ../RemoteSystemsTempFiles/
@@ -14,3 +17,11 @@
 /cmake-build-release/
 /fakeData/
 /fGprof/
+fakeDataBinary/
+fakeDataCircleForThesis/
+mnist/
+mnistOrg/
+simon/
+uspsOrg/
+washington/
+/../cloc-1.70.pl

@@ -87,7 +87,7 @@ constexpr void overwriteConst(const T& ref, const T& newValue){
 
 template<class T>
 inline void sleepFor(const T seconds){
-	usleep((__useconds_t) seconds * (__useconds_t) 1e6);
+	usleep((unsigned int) seconds * (unsigned int) 1e6);
 }
 
 inline void quitApplication(const bool wait = true){
