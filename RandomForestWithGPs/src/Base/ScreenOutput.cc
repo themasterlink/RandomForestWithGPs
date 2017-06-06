@@ -7,8 +7,6 @@
 
 #include "ScreenOutput.h"
 #include "Settings.h"
-#include "Logger.h"
-#include "../Utility/Util.h"
 
 std::list<std::string> ScreenOutput::m_lines;
 ThreadMaster::PackageList* ScreenOutput::m_runningThreads(nullptr);
@@ -245,7 +243,7 @@ void ScreenOutput::run(){
 //		doupdate();
 		refresh();
 		int ch = getch();
-		if(ch != ERR){
+		if(ch != ERR && ThreadMaster::m_keepRunning){
 			if(ch == KEY_UP){
 				++lineOffset;
 			}else if(ch == KEY_DOWN){
@@ -399,6 +397,7 @@ void ScreenOutput::drawWindow(WINDOW** window, PANEL** panel, int givenHeight, i
 	}else{
 		getmaxyx(*window, height, width);
 		int xPos, yPos;
+		UNUSED(yPos);
 		getbegyx(*window, xPos, yPos);
 		if(height != givenHeight || width != givenWidth || xPos != x){
 			// new draw!

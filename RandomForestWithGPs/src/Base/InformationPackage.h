@@ -126,6 +126,7 @@ private:
 	StopWatch m_sw;
 
 	Real m_maxTrainingsTime;
+
 };
 
 #endif /* BASE_INFORMATIONPACKAGE_H_ */

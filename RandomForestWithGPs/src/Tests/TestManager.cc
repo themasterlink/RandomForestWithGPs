@@ -19,7 +19,7 @@ void TestManager::init(const std::string &filePath){
 	if(file.is_open()){
 		std::string line;
 		while(std::getline(file, line)){
-			StringHelper::removeStartAndEndingWhiteSpaces(line);
+			StringHelper::removeLeadingAndTrailingWhiteSpaces(line);
 			StringHelper::removeCommentFromLine(line);
 			if(line.length() > 2){
 				TestMode mode = findMode(line);
@@ -83,11 +83,14 @@ void TestManager::run(){
 					using Mode = TestInformation::Instruction::ExitMode;
 					config.m_mode = testInfo.m_exitMode;
 					if(config.isTimeMode()){
+						printOnScreen("Time constraint: " << TimeFrame(testInfo.m_seconds));
 						config.m_seconds = testInfo.m_seconds;
 					}else if(config.isTreeAmountMode()){
+						printOnScreen("Amount of tree constraint: " << testInfo.m_amountOfTrees);
 						config.m_amountOfTrees = testInfo.m_amountOfTrees;
 					}
 					if(config.hasMemoryConstraint()){
+						printOnScreen("Memory constraint: " << StringHelper::convertMemorySpace(testInfo.m_amountOfTrees));
 						config.m_memory = testInfo.m_memory;
 					}
 					orf->setTrainingsMode(config);
@@ -202,11 +205,11 @@ void TestManager::performTest(const std::unique_ptr<OnlineRandomForest>& orf, co
 			Real entropyBVS = max2 / max1;
 			if(test[i]->getLabel() == labels[i]){
 				++amountOfCorrect;
-				uc.addNew(entropy);
-				ucBVS.addNew(entropyBVS);
+				uc.addNew((Real) entropy);
+				ucBVS.addNew((Real) entropyBVS);
 			}else{
-				oc.addNew(1.-entropy);
-				ocBVS.addNew(1.-entropyBVS);
+				oc.addNew((Real) (1. - entropy));
+				ocBVS.addNew((Real) (1. - entropyBVS));
 //				printOnScreen("Class: " << ClassKnowledge::getNameFor(test[i]->getLabel()) << ", for 0: " << probs[i][0] << ", for 1: " << probs[i][1]);
 			}
 //			lists[labels[i]].push_back(probs[i][labels[i]]); // adds only the winning label to the list

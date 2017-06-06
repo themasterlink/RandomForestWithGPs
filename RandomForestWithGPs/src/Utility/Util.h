@@ -37,12 +37,12 @@
 #define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
 
 #define SAVE_DELETE(pointer) \
-	delete(pointer); \
-	pointer = nullptr \
+    delete(pointer); \
+    pointer = nullptr \
 
 // for not implemented functions and params which have no use in a function, because for example they are inherited
 #define UNUSED(expr) \
- 	 (void)(expr) \
+     (void)(expr) \
 
 
 inline void openFileInViewer(const std::string& filename){
@@ -51,10 +51,11 @@ inline void openFileInViewer(const std::string& filename){
 		system(("eog " + Logger::getActDirectory() + filename + " &").c_str());
 	}
 }
+
 // much fast than pow(2, exp)
 // template ensures that it can be used with any kind of int, unsigned or not
 template<typename T>
-constexpr inline T pow2(const T exponent) noexcept {
+constexpr inline T pow2(const T exponent) noexcept{
 	return (T(1)) << exponent;
 }
 
@@ -107,16 +108,16 @@ inline void quitApplication(const bool wait = true){
 #ifdef USE_SCREEN_OUPUT
 
 #define printError(message) \
-	do{	std::stringstream str; str << "Error in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message; ScreenOutput::printErrorLine(str.str()); }while(false) \
+    do{    std::stringstream str; str << "Error in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message; ScreenOutput::printErrorLine(str.str()); }while(false) \
 
 #define printWarning(message) \
-	printOnScreen("Warning in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message) \
+    printOnScreen("Warning in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message) \
 
 #define printLine() \
-	printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__)) \
+    printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__)) \
 
 #define printDebug(message) \
-	printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message) \
+    printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message) \
 
 #else
 
@@ -135,17 +136,17 @@ inline void quitApplication(const bool wait = true){
 #endif
 
 #define printErrorAndQuit(message) \
-		printError(message); quitApplication()
+        printError(message); quitApplication()
 
-inline int_fast32_t highEndian2LowEndian(int_fast32_t i) {
-    unsigned char c1, c2, c3, c4;
+inline int_fast32_t highEndian2LowEndian(int_fast32_t i){
+	unsigned char c1, c2, c3, c4;
 
-    c1 = (unsigned char) (i & 255);
-    c2 = (unsigned char) ((i >> 8) & 255);
-    c3 = (unsigned char) ((i >> 16) & 255);
-    c4 = (unsigned char) ((i >> 24) & 255);
+	c1 = (unsigned char) (i & 255);
+	c2 = (unsigned char) ((i >> 8) & 255);
+	c3 = (unsigned char) ((i >> 16) & 255);
+	c4 = (unsigned char) ((i >> 24) & 255);
 
-    return ((int_fast32_t)c1 << 24) + ((int_fast32_t)c2 << 16) + ((int_fast32_t)c3 << 8) + c4;
+	return ((int_fast32_t) c1 << 24) + ((int_fast32_t) c2 << 16) + ((int_fast32_t) c3 << 8) + c4;
 }
 
 //template<typename _Tp>
@@ -182,7 +183,7 @@ inline Real expReal(const Real val){
 #endif
 }
 
-static const auto UNDEF_CLASS_LABEL = pow2(16) - 3;
+static const auto UNDEF_CLASS_LABEL = (unsigned int) pow2(16) - 3;
 
 static const auto EPSILON = Real(1e-15);
 

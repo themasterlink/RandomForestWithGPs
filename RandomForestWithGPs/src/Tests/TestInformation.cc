@@ -153,8 +153,8 @@ bool TestInformation::decipherClasses(const std::vector<std::string> &words, con
 					word = word.substr(1, word.length() - 1);
 				}
 				while(word.length() > 0){
-					StringHelper::removeTrailingWhiteSpaces(word);
-					std::string::size_type pos = word.find(',');
+					StringHelper::removeLeadingWhiteSpaces(word);
+					StringHelper::sizeType pos = word.find(',');
 					if(pos != word.npos && pos != 0){
 						numbers.emplace_back(word.substr(0,pos));
 						word = word.substr(pos + 1, word.length() - pos);
@@ -250,26 +250,28 @@ void TestInformation::Instruction::addType(const std::string& preposition, const
 	if(preposition == "for"){
 		// time
 		std::string cpyNrType(nrType);
-		StringHelper::removeStartAndEndingWhiteSpaces(cpyNrType);
+		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyNrType);
+		double fac = 1.0;
+		if(StringHelper::endsWith(cpyNrType, 'm')){
+			fac = 60;
+		}else if(StringHelper::endsWith(cpyNrType, 'h')){
+			fac = 60 * 60;
+		}else if(StringHelper::endsWith(cpyNrType, 'd')){
+			fac = 60 * 60 * 24;
+		}
 		if(StringHelper::endsWith(cpyNrType, 's')
 		   || StringHelper::endsWith(cpyNrType, 'm')
 			  || StringHelper::endsWith(cpyNrType, 'h')
 				 || StringHelper::endsWith(cpyNrType, 'd')){
 			cpyNrType = cpyNrType.substr(0, cpyNrType.size() - 1);
 		}// else assume seconds
-		StringHelper::removeStartAndEndingWhiteSpaces(cpyNrType);
+		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyNrType);
 		try{
 			m_seconds = std::stof(cpyNrType);
 		}catch(std::exception &e){
 			printErrorAndQuit("The time: " << cpyNrType << " is no real value!");
 		}
-		if(StringHelper::endsWith(cpyNrType, 'm')){
-			m_seconds = TimeFrame(m_seconds * 60).getSeconds();
-		}else if(StringHelper::endsWith(cpyNrType, 'h')){
-			m_seconds = TimeFrame(m_seconds * 60 * 60).getSeconds();
-		}else if(StringHelper::endsWith(cpyNrType, 'd')){
-			m_seconds = TimeFrame(m_seconds * 60 * 60 * 24).getSeconds();
-		}
+		m_seconds *= fac; // add factor for minute, hour and day
 		if(m_exitMode == Instruction::ExitMode::UNDEFINED){
 			m_exitMode = Instruction::ExitMode::TIME;
 		}else if(m_exitMode == Instruction::ExitMode::MEMORY){
@@ -280,16 +282,25 @@ void TestInformation::Instruction::addType(const std::string& preposition, const
 	}else if(preposition == "with" || preposition == "withonly"){
 		// memory space
 		std::string cpyNrType(nrType);
-		StringHelper::removeStartAndEndingWhiteSpaces(cpyNrType);
+		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyNrType);
+		MemoryType fac = 1;
 		if(StringHelper::endsWith(cpyNrType, "gb")){
+			fac = 1000000000;
+			cpyNrType = cpyNrType.substr(0, cpyNrType.length() - 2);
+		}else if(StringHelper::endsWith(cpyNrType, "mb")){
+			fac = 1000000;
+			cpyNrType = cpyNrType.substr(0, cpyNrType.length() - 2);
+		}else if(StringHelper::endsWith(cpyNrType, "kb")){
+			fac = 1000;
 			cpyNrType = cpyNrType.substr(0, cpyNrType.length() - 2);
 		}// else assume gb
-		StringHelper::removeStartAndEndingWhiteSpaces(cpyNrType);
+		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyNrType);
 		try{
-			m_memory = (unsigned int) std::stoi(cpyNrType);
+			m_memory = (MemoryType) std::stof(cpyNrType);
 		}catch(std::exception &e){
 			printErrorAndQuit("The memory value: " << cpyNrType << " is not a number!");
 		}
+		m_memory *= fac;
 		if(m_exitMode == Instruction::ExitMode::UNDEFINED){
 			m_exitMode = Instruction::ExitMode::MEMORY;
 		}else if(m_exitMode == Instruction::ExitMode::TIME){
@@ -302,7 +313,7 @@ void TestInformation::Instruction::addType(const std::string& preposition, const
 	}else if(preposition == "until"){ // tree amount
 		// memory space
 		std::string cpyNrType(nrType);
-		StringHelper::removeStartAndEndingWhiteSpaces(cpyNrType);
+		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyNrType);
 		if(StringHelper::endsWith(cpyNrType, "trees")){
 			cpyNrType = cpyNrType.substr(0, cpyNrType.length() - 5);
 		}
@@ -310,7 +321,7 @@ void TestInformation::Instruction::addType(const std::string& preposition, const
 			cpyNrType = cpyNrType.substr(0, cpyNrType.length() - 4);
 		}
 		// else assume trees
-		StringHelper::removeStartAndEndingWhiteSpaces(cpyNrType);
+		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyNrType);
 		try{
 			m_amountOfTrees = (unsigned int) std::stoi(cpyNrType);
 		}catch(std::exception &e){
@@ -332,11 +343,11 @@ void TestInformation::Instruction::processLine(const std::vector<std::string>& w
 	m_exitMode = Instruction::ExitMode::UNDEFINED;
 	for(unsigned int i = 1; i < words.size() - 1; ++i){
 		std::string cpyWord(words[i]);
-		StringHelper::removeStartAndEndingWhiteSpaces(cpyWord);
+		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyWord);
 		if(cpyWord == "for"){
 			for(unsigned int j = 1; j < words.size() - 1; ++j){
 				std::string cpyWord2(words[j]);
-				StringHelper::removeStartAndEndingWhiteSpaces(cpyWord2);
+				StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyWord2);
 				if(cpyWord2 == "until"){
 					printErrorAndQuit("The amount of tree condition can not be used with a time condition in the same line!");
 				}
@@ -346,13 +357,13 @@ void TestInformation::Instruction::processLine(const std::vector<std::string>& w
 	// first word is name, start with 1
 	for(unsigned int i = 1; i < words.size() - 1; ++i){
 		std::string cpyWord(words[i]);
-		StringHelper::removeStartAndEndingWhiteSpaces(cpyWord);
+		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyWord);
 		if(cpyWord == "for" || cpyWord == "until"){
 			// find ending of for:
 			int breakValue = -1;
 			for(unsigned int j = 1; j < words.size() - 1; ++j){
 				std::string cpyWord2(words[j]);
-				StringHelper::removeStartAndEndingWhiteSpaces(cpyWord2);
+				StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyWord2);
 				if(cpyWord2 == "with" || cpyWord2 == "withonly"){
 					breakValue = j;
 				}
@@ -370,7 +381,7 @@ void TestInformation::Instruction::processLine(const std::vector<std::string>& w
 	// search for memory constraint
 	for(unsigned int i = 1; i < words.size() - 1; ++i){
 		std::string cpyWord(words[i]);
-		StringHelper::removeStartAndEndingWhiteSpaces(cpyWord);
+		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyWord);
 		if(cpyWord == "with" || cpyWord == "withonly"){
 			unsigned int start = i;
 			if(words[i + 1] == "only"){
@@ -380,7 +391,7 @@ void TestInformation::Instruction::processLine(const std::vector<std::string>& w
 			int breakValue = -1;
 			for(unsigned int j = start; j < words.size() - 1; ++j){
 				std::string cpyWord2(words[j]);
-				StringHelper::removeStartAndEndingWhiteSpaces(cpyWord2);
+				StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyWord2);
 				if(cpyWord2 == "for" || cpyWord2 == "until"){
 					breakValue = j;
 				}

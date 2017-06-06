@@ -45,7 +45,7 @@ public:
 		ExitMode m_exitMode;
 		Real m_seconds;
 		unsigned int m_amountOfTrees;
-		unsigned int m_memory;
+		MemoryType m_memory;
 	};
 
 	struct TestDefineName {

@@ -7,9 +7,6 @@
 
 #include "InformationPackage.h"
 #include "../Utility/Util.h"
-#include "Logger.h"
-#include "Settings.h"
-#include "CommandSettings.h"
 
 InformationPackage::InformationPackage(InfoType type,
 		Real correctlyClassified,
@@ -27,10 +24,10 @@ InformationPackage::InformationPackage(InfoType type,
 
 
 Real InformationPackage::calcAttractionLevel(const int minAmountOfPoints, const int maxAmountOfPoints){
-	Real partAmount = 100.; // if all have the same size, just ignore this value and go after the correct classified amount
+	Real partAmount = (Real) 100.; // if all have the same size, just ignore this value and go after the correct classified amount
 	if(maxAmountOfPoints != minAmountOfPoints){
 		partAmount = (((Real) m_amountOfAffectedPoints - minAmountOfPoints)
-				/ (Real)(maxAmountOfPoints - minAmountOfPoints)) * 100.;
+				/ (Real)(maxAmountOfPoints - minAmountOfPoints)) * (Real) 100.;
 	}
 	return partAmount + (100 - m_correctlyClassified);
 }
@@ -38,10 +35,12 @@ Real InformationPackage::calcAttractionLevel(const int minAmountOfPoints, const 
 void InformationPackage::wait(){
 	if(!m_abortTraining){ // only wait if the training is not aborted
 		m_shouldTrainingBeHold = false; // could be called, because the training should be hold
-		m_isWaiting = true;
 		m_workedTime += m_sw.elapsedSeconds();
+		m_isWaiting = true;
 		boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(m_mutex);
-		m_condition.wait(lock);
+		if(m_isWaiting){ // if not true the notify was already called
+			m_condition.wait(lock);
+		}
 	}
 };
 

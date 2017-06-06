@@ -14,6 +14,8 @@
 
 namespace StringHelper {
 
+	using sizeType = std::string::size_type;
+
 	template<typename T>
 	inline std::string number2String(const T& in){
 		std::stringstream ss;
@@ -33,11 +35,11 @@ namespace StringHelper {
 
 	bool endsWith(const std::string& word, const char cmp);
 
+	void removeLeadingWhiteSpaces(std::string& line);
+
 	void removeTrailingWhiteSpaces(std::string& line);
 
-	void removeEndingWhiteSpaces(std::string& line);
-
-	void removeStartAndEndingWhiteSpaces(std::string& line);
+	void removeLeadingAndTrailingWhiteSpaces(std::string& line);
 
 	std::string getFirstWord(std::string& line);
 

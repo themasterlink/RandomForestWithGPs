@@ -8,7 +8,7 @@
 namespace StringHelper{
 
 	std::string getFirstWord(std::string &line){
-		std::string::size_type pos = line.find(' ');
+		sizeType pos = line.find(' ');
 		if(pos != line.npos){
 			const std::string firstWord(std::move(line.substr(0, pos)));
 			line = line.substr(pos + 1, line.length() - pos);
@@ -26,7 +26,7 @@ namespace StringHelper{
 		std::string copyLine(line);
 		while(copyLine.length() > 0){
 			std::string firstWord = getFirstWord(copyLine);
-			removeStartAndEndingWhiteSpaces(firstWord);
+			removeLeadingAndTrailingWhiteSpaces(firstWord);
 			if(firstWord.length() > 0){
 				words.emplace_back(firstWord);
 			}else{
@@ -36,37 +36,37 @@ namespace StringHelper{
 	}
 
 	void removeCommentFromLine(std::string &line, const char commentSymbol){
-		std::string::size_type pos = line.find(commentSymbol);
+		sizeType pos = line.find(commentSymbol);
 		if(pos != line.npos){
 			line = line.substr(0, pos);
 			// remove whitespaces between commentsymbol and message
-			removeEndingWhiteSpaces(line);
+			removeTrailingWhiteSpaces(line);
 		}
 	}
 
-	void removeStartAndEndingWhiteSpaces(std::string &line){
+	void removeLeadingAndTrailingWhiteSpaces(std::string& line){
+		removeLeadingWhiteSpaces(line);
 		removeTrailingWhiteSpaces(line);
-		removeEndingWhiteSpaces(line);
 	}
 
-	void removeEndingWhiteSpaces(std::string &line){
-		int i = (int) (line.length() - 1);
+	void removeTrailingWhiteSpaces(std::string& line){
+		long i = (long) (line.length() - 1);
 		for(; i >= 0; --i){
 			if(line[i] != ' ' && line[i] != '\t'){
-				break;
+				line = line.substr(0, (unsigned long) (i + 1));
+				return;
 			}
 		}
-		line = line.substr(0, i + 1);
 	}
 
-	void removeTrailingWhiteSpaces(std::string &line){
-		unsigned int i = 0;
+	void removeLeadingWhiteSpaces(std::string& line){
+		sizeType i = 0;
 		for(; i < line.length(); ++i){
 			if(line[i] != ' ' && line[i] != '\t'){
-				break;
+				line = line.substr(i, line.length() - i);
+				return;
 			}
 		}
-		line = line.substr(i, line.length() - i);
 	}
 
 	bool startsWith(const std::string &word, const std::string &cmp){
