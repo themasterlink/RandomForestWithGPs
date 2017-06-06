@@ -66,7 +66,7 @@ int TestManager::readAll(){
 void TestManager::run(){
 	OnlineStorage<LabeledVectorX*> train;
 	unsigned int height;
-	Settings::getValue("OnlineRandomForest.Trees.height", height);
+	Settings::getValue("OnlineRandomForest.Tree.height", height);
 	std::unique_ptr<OnlineRandomForest> orf;
 	unsigned int i = 0;
 	while(true){
@@ -122,7 +122,7 @@ LabeledData TestManager::getAllPointsFor(const std::string& defName){
 		LabeledData dummy; // is necessary for interface consistency
 		if(usedDefinition.m_varName == TestInformation::trainSettingName){
 			TotalStorage::getLabeledDataCopyWithTest(res, dummy, firstPoints);
-		}else if(usedDefinition.m_varName == TestInformation::trainSettingName){
+		}else if(usedDefinition.m_varName == TestInformation::testSettingName){
 			TotalStorage::getLabeledDataCopyWithTest(dummy, res, firstPoints);
 		}
 	}else{
@@ -169,6 +169,7 @@ void TestManager::removeClassesFrom(LabeledData& data, const TestInformation::Te
 
 void TestManager::performTest(const std::unique_ptr<OnlineRandomForest>& orf, const LabeledData& test){
 	if(test.size() == 0){
+		printOnScreen("Test size is zero!");
 		return;
 	}
 	int amountOfCorrect = 0;

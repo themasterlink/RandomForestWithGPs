@@ -133,7 +133,7 @@ void executeForRFBinaryClass(const std::string& path){
 	}
 	int amountOfTrees, height;
 	Settings::getValue("OnlineRandomForest.amountOfTrainedTrees", amountOfTrees);
-	Settings::getValue("OnlineRandomForest.Trees.height", height);
+	Settings::getValue("OnlineRandomForest.Tree.height", height);
 	std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
 
 	RandomForest forest(height, amountOfTrees, dim);

@@ -91,7 +91,7 @@ void executeForBinaryClassORF(){
 			//	OnlineStorage<LabeledVectorX*> train;
 			OnlineStorage<LabeledVectorX*> test;
 			int height;
-			Settings::getValue("OnlineRandomForest.Trees.height", height);
+			Settings::getValue("OnlineRandomForest.Tree.height", height);
 			const unsigned int amountOfSplits = 10;
 			std::vector<OnlineStorage<LabeledVectorX*> > trains(amountOfSplits);
 			newOrf = std::make_unique<OnlineRandomForest>(trains[0], (unsigned int) height, TotalStorage::getAmountOfClass());
@@ -170,7 +170,7 @@ void executeForBinaryClassORF(){
 		}else{
 			OnlineStorage<LabeledVectorX*> test;
 			int height;
-			Settings::getValue("OnlineRandomForest.Trees.height", height);
+			Settings::getValue("OnlineRandomForest.Tree.height", height);
 			OnlineStorage<LabeledVectorX*> train;
 			newOrf = std::make_unique<OnlineRandomForest>(train, (unsigned int) height, TotalStorage::getAmountOfClass());
 			auto& orf = *newOrf;
@@ -199,7 +199,7 @@ void executeForBinaryClassORF(){
 		OnlineStorage<LabeledVectorX*> train;
 		OnlineStorage<LabeledVectorX*> test;
 		unsigned int height;
-		Settings::getValue("OnlineRandomForest.Trees.height", height);
+		Settings::getValue("OnlineRandomForest.Tree.height", height);
 		OnlineRandomForest orf(train, height, TotalStorage::getAmountOfClass());
 		TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
 		printOnScreen("Training finished");

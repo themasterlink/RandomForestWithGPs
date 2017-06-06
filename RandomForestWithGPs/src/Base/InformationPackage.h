@@ -11,6 +11,7 @@
 #include <boost/thread.hpp>
 #include <boost/interprocess/sync/interprocess_condition.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
+#include <atomic>
 #include "../Utility/StopWatch.h"
 
 class ScreenOutput;
@@ -98,13 +99,13 @@ private:
 
 	boost::interprocess::interprocess_mutex m_mutex;
 
-	bool m_performTask;
+	std::atomic<bool> m_performTask;
 
-	bool m_abortTraining;
+	std::atomic<bool> m_abortTraining;
 
-	bool m_isWaiting;
+	std::atomic<bool> m_isWaiting;
 
-	bool m_shouldTrainingBeHold;
+	std::atomic<bool> m_shouldTrainingBeHold;
 
 	Real m_correctlyClassified;
 

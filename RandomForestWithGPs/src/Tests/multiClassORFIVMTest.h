@@ -50,7 +50,7 @@ void executeForBinaryClassORFIVM(){
 		//	OnlineStorage<LabeledVectorX*> train;
 		OnlineStorage<LabeledVectorX*> test;
 		int height;
-		Settings::getValue("OnlineRandomForest.Trees.height", height);
+		Settings::getValue("OnlineRandomForest.Tree.height", height);
 		const unsigned int amountOfSplits = 5;
 		std::vector<OnlineStorage<LabeledVectorX*> > trains(amountOfSplits);
 		OnlineRandomForestIVMs orf(trains[0], height, TotalStorage::getAmountOfClass());
@@ -102,7 +102,7 @@ void executeForBinaryClassORFIVM(){
 		OnlineStorage<LabeledVectorX*> train;
 		OnlineStorage<LabeledVectorX*> test;
 		int height;
-		Settings::getValue("OnlineRandomForest.Trees.height", height);
+		Settings::getValue("OnlineRandomForest.Tree.height", height);
 		OnlineRandomForestIVMs orf(train, height, TotalStorage::getAmountOfClass());
 		// starts the training by its own
 

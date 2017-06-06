@@ -42,14 +42,14 @@
 		"stepOverTrainingData": 20
 	},
 	"OnlineRandomForest": {
-		"Trees": {
-			"height": 45
+		"Tree": {
+			"height": 45,
+			"stepSizeOverData": 10
 		},
 		"amountOfTrainedTrees": 0,
 		"ownSamplingTime": 0,
 		"maxAmountOfUsedMemory": 1100000000,
 		"amountOfPointsUntilRetrain": 200,
-		"stepSizeOverData": 0,
 		"factorAmountOfUsedDims": 1.0,
 		"useBigDynamicDecisionTrees": "true",
 		"layerAmountOfBigDDT": 14,

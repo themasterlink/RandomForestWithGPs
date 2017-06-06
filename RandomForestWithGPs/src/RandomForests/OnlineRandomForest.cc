@@ -54,7 +54,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 	while(true){ // the thread master will eventually kill this training
 		m_treesMutex.lock();
 		if(amountOfTrees > 0 && (unsigned int) m_trees.size() >= amountOfTrees){
-			printOnScreen("Abort because to many trees");
+			printOnScreen("Abort because amount of desired trees reached!");
 			m_treesMutex.unlock();
 			break;
 		}
@@ -142,7 +142,7 @@ void OnlineRandomForest::train(){
 	const unsigned int amountOfThreads = ThreadMaster::getAmountOfThreads();
 	m_generators.resize(amountOfThreads);
 	int stepSizeOverData = 0;
-	Settings::getValue("OnlineRandomForest.stepSizeOverData", stepSizeOverData);
+	Settings::getValue("OnlineRandomForest.Tree.stepSizeOverData", stepSizeOverData);
 	for(unsigned int i = 0; i < amountOfThreads; ++i){
 		m_generators[i] = new RandomNumberGeneratorForDT(m_storage.dim(), minMaxUsedSplits[0],
 														 minMaxUsedSplits[1], m_storage.size(), (i + 1) * 827537, stepSizeOverData);
@@ -192,7 +192,6 @@ void OnlineRandomForest::train(){
 		counterForClasses = new std::vector<std::vector<unsigned int> >(m_storage.size(), std::vector<unsigned int>(amountOfClasses(), 0));
 	}
 	const Real trainingsTimeForPackages = m_trainingsConfig.isTimeMode() ? m_trainingsConfig.m_seconds : 0;
-	const unsigned int amountOfTreesForAThread = (unsigned int) (m_trainingsConfig.isTreeAmountMode() ? ceil(m_trainingsConfig.m_amountOfTrees / (double) nrOfParallel) : 0);
 	boost::mutex mutexForCounter;
 	boost::thread_group group;
 	for(unsigned int i = 0; i < packages.size(); ++i){
@@ -202,7 +201,7 @@ void OnlineRandomForest::train(){
 											 (int) (m_trees.size() / (Real) nrOfParallel));
 		packages[i]->setStandartInformation("Train trees, thread nr: " + StringHelper::number2String(i));
 		packages[i]->setTrainingsTime(trainingsTimeForPackages);
-		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i], amountOfTreesForAThread, counterForClasses, &mutexForCounter)));
+		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i], m_trainingsConfig.m_amountOfTrees, counterForClasses, &mutexForCounter)));
 	}
 	int stillOneRunning = 1;
 	if(m_trainingsConfig.isTimeMode()){

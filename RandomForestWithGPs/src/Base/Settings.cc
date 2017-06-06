@@ -109,7 +109,7 @@ Real Settings::getDirectRealValue(const std::string &nameOfValue){
 void Settings::writeDefaultFile(const std::string& settingsfile){
 	boost::property_tree::ptree root;
 	root.put("OnlineRandomForest.amountOfTrainedTrees", 200);
-	root.put("OnlineRandomForest.Trees.height", 6);
+	root.put("OnlineRandomForest.Tree.height", 6);
 
 	root.put("Training.path", "../testData/testInput2.txt");
 	root.put("Test.path", "../testData/testInput3.txt");
