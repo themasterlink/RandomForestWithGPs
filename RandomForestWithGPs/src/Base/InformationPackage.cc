@@ -11,6 +11,7 @@
 InformationPackage::InformationPackage(InfoType type,
 		Real correctlyClassified,
 		int amountOfPoints): m_type(type),
+							 m_semaphoreForWaiting(0),
 		m_performTask(false),
 		m_abortTraining(false),
 		m_isWaiting(false),
@@ -37,17 +38,16 @@ void InformationPackage::wait(){
 		m_shouldTrainingBeHold = false; // could be called, because the training should be hold
 		m_workedTime += m_sw.elapsedSeconds();
 		m_isWaiting = true;
-		boost::interprocess::scoped_lock<boost::interprocess::interprocess_mutex> lock(m_mutex);
-		if(m_isWaiting){ // if not true the notify was already called
-			m_condition.wait(lock);
-		}
+		m_semaphoreForWaiting.wait();
 	}
 };
 
 void InformationPackage::notify(){
-	m_condition.notify_all();
-	m_sw.startTime();
-	m_isWaiting = false;
+	if(m_isWaiting) {
+		m_isWaiting = false;
+		m_semaphoreForWaiting.post();
+		m_sw.startTime();
+	}
 };
 
 Real InformationPackage::getWorkedAmountOfSeconds(){

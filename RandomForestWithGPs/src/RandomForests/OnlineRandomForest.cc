@@ -7,7 +7,6 @@
 
 #include "OnlineRandomForest.h"
 #include "../Base/Settings.h"
-#include "../Base/CommandSettings.h"
 #include "../Data/DataWriterForVisu.h"
 
 OnlineRandomForest::OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
@@ -45,6 +44,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 		std::vector<std::vector<unsigned int> >* counterForClasses, boost::mutex* mutexForCounter){
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
+	printInPackageOnScreen(package, "Started training!");
 	int counter = 0;
 	const bool printErrorGraph = counterForClasses != nullptr;
 	Labels* labels = nullptr;
@@ -75,7 +75,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 		}else{
 			treePointer = new DynamicDecisionTree<unsigned int>(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 		}
-		treePointer->train(m_amountOfUsedDims, *generator);
+		treePointer->train((unsigned int) m_amountOfUsedDims, *generator);
 		const MemoryType memForTree = treePointer->getMemSize();
 		printInPackageOnScreen(package, "Number " << counter++ << " was calculated, total memory usage: " << StringHelper::convertMemorySpace(m_usedMemory + memForTree));
 		if(printErrorGraph){
@@ -139,7 +139,7 @@ void OnlineRandomForest::train(){
 		Settings::getValue("MinMaxUsedSplits.maxValueFractionDependsOnDataSize", maxVal);
 		minMaxUsedSplits << (int) (minVal * m_storage.size()),  (int) (maxVal * m_storage.size());
 	}
-	const unsigned int amountOfThreads = ThreadMaster::getAmountOfThreads();
+	const unsigned int amountOfThreads = 12; //ThreadMaster::getAmountOfThreads();
 	m_generators.resize(amountOfThreads);
 	int stepSizeOverData = 0;
 	Settings::getValue("OnlineRandomForest.Tree.stepSizeOverData", stepSizeOverData);
@@ -149,8 +149,7 @@ void OnlineRandomForest::train(){
 		attach(m_generators[i]);
 		m_generators[i]->update(this, OnlineStorage<LabeledVectorX*>::Event::APPENDBLOCK); // init training with just one element is not useful
 	}
-	const unsigned int nrOfParallel = ThreadMaster::getAmountOfThreads();
-	const unsigned int usedAmountOfPackages = std::min(nrOfParallel, m_trainingsConfig.isTreeAmountMode() ? m_trainingsConfig.m_amountOfTrees : nrOfParallel);
+	const unsigned int usedAmountOfPackages = std::min(amountOfThreads, m_trainingsConfig.isTreeAmountMode() ? m_trainingsConfig.m_amountOfTrees : amountOfThreads);
 	std::vector<InformationPackage*> packages(usedAmountOfPackages, nullptr);
 	if(m_maxDepth > 7 && m_useBigDynamicDecisionTrees && Settings::getDirectBoolValue("OnlineRandomForest.determineBestLayerAmount")){
 		boost::thread_group layerGroup;
@@ -167,7 +166,7 @@ void OnlineRandomForest::train(){
 		boost::mutex layerMutex;
 		std::pair<int, int> bestLayerSplit(-1, -1);
 		Real bestCorrectness = 0;
-		for(unsigned int i = 0; i < std::min(nrOfParallel, (unsigned int) layerValues.size()); ++i){
+		for(unsigned int i = 0; i < std::min(amountOfThreads, (unsigned int) layerValues.size()); ++i){
 			layerGroup.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::tryAmountForLayers, this, m_generators[i], secondsSpendPerSplit, &layerValues, &layerMutex, &bestLayerSplit, &bestCorrectness)));
 		}
 		layerGroup.join_all();
@@ -198,7 +197,7 @@ void OnlineRandomForest::train(){
 		packages[i] = new InformationPackage(m_trainingsConfig.isTreeAmountMode() ?
 											 InformationPackage::InfoType::ORF_TRAIN_FIX :
 											 InformationPackage::InfoType::ORF_TRAIN, 0,
-											 (int) (m_trees.size() / (Real) nrOfParallel));
+											 (int) (m_trees.size() / (Real) amountOfThreads));
 		packages[i]->setStandartInformation("Train trees, thread nr: " + StringHelper::number2String(i));
 		packages[i]->setTrainingsTime(trainingsTimeForPackages);
 		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i], m_trainingsConfig.m_amountOfTrees, counterForClasses, &mutexForCounter)));

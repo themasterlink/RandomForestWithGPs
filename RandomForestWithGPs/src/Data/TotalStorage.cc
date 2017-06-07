@@ -9,9 +9,7 @@
 #include "ClassKnowledge.h"
 #include "DataReader.h"
 #include "../Base/Settings.h"
-#include "../Base/ScreenOutput.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
-#include "../Base/CommandSettings.h"
 #include "../Data/DataConverter.h"
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -108,7 +106,7 @@ void TotalStorage::readData(const int amountOfData){
 		}else if(folderLocation == "../mnistOrg/" || folderLocation == "../uspsOrg/"){
 			m_mode = Mode::SEPERATE; // seperate train und test set
 			DataSets train, test;
-			DataReader::readFromFiles(train, folderLocation + "training/", amountOfData, readTxt, didNormalizeStep);
+			DataReader::readFromFiles(train, folderLocation + "training/", (unsigned int) amountOfData, readTxt, didNormalizeStep);
 			unsigned int totalSize = 0;
 			for(DataSetsConstIterator it = train.begin(); it != train.end(); ++it){
 				totalSize += it->second.size();
@@ -119,7 +117,7 @@ void TotalStorage::readData(const int amountOfData){
 					m_trainSet.push_back(it->second[i]);
 				}
 			}
-			DataReader::readFromFiles(test, folderLocation + "test/", amountOfData, readTxt, didNormalizeStep);
+			DataReader::readFromFiles(test, folderLocation + "test/", (unsigned int) amountOfData, readTxt, didNormalizeStep);
 			unsigned int totalSizeTest = 0;
 			for(DataSetsConstIterator it = test.begin(); it != test.end(); ++it){
 				totalSizeTest += it->second.size();
@@ -130,7 +128,7 @@ void TotalStorage::readData(const int amountOfData){
 					m_testSet.push_back(it->second[i]);
 				}
 			}
-		}else if(StringHelper::endsWith(folderLocation, "/washingtonData") || StringHelper::endsWith(folderLocation, "/washingtonData/")){
+		}else if(StringHelper::endsWith(folderLocation, "/washingtonData") || StringHelper::endsWith(folderLocation, "/washingtonMax")){
 			m_mode = Mode::SEPERATE; // seperate train und test set
 			boost::filesystem::path targetDir(folderLocation);
 			boost::filesystem::directory_iterator end_itr;
@@ -149,11 +147,11 @@ void TotalStorage::readData(const int amountOfData){
 			}
 			m_trainSet = wholeTrainingSet;
 		}else{
-			DataReader::readFromFiles(m_storage, folderLocation, amountOfData, readTxt, didNormalizeStep);
+			DataReader::readFromFiles(m_storage, folderLocation, (unsigned int) amountOfData, readTxt, didNormalizeStep);
 		}
 	}else{
 		LabeledData data;
-		DataReader::readFromBinaryFile(data, "../binary/dataFor_0.binary", amountOfData);
+		DataReader::readFromBinaryFile(data, "../binary/dataFor_0.binary", (unsigned int) amountOfData);
 		for(unsigned int i = 0; i < data.size(); ++i){
 			DataSetsIterator it = m_storage.find(ClassKnowledge::getNameFor(data[i]->getLabel()));
 			if(it != m_storage.end()){
@@ -357,10 +355,10 @@ void TotalStorage::readData(const int amountOfData){
 		int amountOfSizeStep = 0;
 		Settings::getValue("TotalStorage.stepOverTrainingData", amountOfSizeStep);
 		if(amountOfSizeStep > 1){
-			std::string type = "";
-			Settings::getValue("main.type", type);
+			std::string mainType;
+			Settings::getValue("main.type", mainType);
 			std::list<LabeledVectorX*> trainList;
-			const bool useWholeClass = !type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView();
+			const bool useWholeClass = !mainType.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView();
 			printOnScreen("Usewholeclass: " << useWholeClass);
 			if(useWholeClass){
 				for(unsigned int i = 0; i < m_trainSet.size(); ++i){
@@ -393,7 +391,7 @@ void TotalStorage::readData(const int amountOfData){
 				m_trainSet.push_back(*it);
 			}
 		}
-		m_totalSize = m_trainSet.size() + m_testSet.size();
+		m_totalSize = (unsigned int) (m_trainSet.size() + m_testSet.size());
 		if(Settings::getDirectBoolValue("TotalStorage.normalizeData") && !didNormalizeStep){
 			DataConverter::centerAndNormalizeData(m_trainSet, m_center, m_var); // first calc on training set
 			DataConverter::centerAndNormalizeData(m_testSet, m_center, m_var);  // apply to test set
@@ -411,7 +409,7 @@ unsigned int TotalStorage::getTotalSize(){
 
 unsigned int TotalStorage::getAmountOfClass(){
 	if(m_mode == Mode::WHOLE){
-		return m_storage.size();
+		return (unsigned int) m_storage.size();
 	}else{
 		return ClassKnowledge::amountOfClasses();
 	}

@@ -7,8 +7,6 @@
 
 #include "ThreadMaster.h"
 #include "Settings.h"
-#include "ScreenOutput.h"
-#include "CommandSettings.h"
 
 int ThreadMaster::m_counter = 0;
 unsigned int ThreadMaster::m_maxCounter = 0;
@@ -82,14 +80,13 @@ void ThreadMaster::run(){
 		while(m_counter < m_maxCounter && m_waitingList.size() > 0){
 			auto selectedValue = m_waitingList.begin();
 			if(selectedValue != m_waitingList.end()){
-//				std::cout << "A thread was added to running!" << std::endl;
 				m_runningList.push_back(*selectedValue); // first add to the running list
 				++m_counter; // increase the counter of running threads
 				while(!(*selectedValue)->isWaiting()){ // if the thread is not waiting wait until it waits for reactivation -> should happen fast
 					sleepFor(0.05);
 				}
 				(*selectedValue)->notify(); // start running of the thread
-				printInPackageOnScreen(*selectedValue, "This thread was selected in the beginning!");
+				printInPackageOnScreen(*selectedValue, "This thread was started in the ThreadMaster!");
 				m_waitingList.erase(selectedValue); // remove the selected value out of the waiting thread list
 				selectedValue = m_waitingList.end();
 			}
@@ -115,7 +112,6 @@ void ThreadMaster::run(){
 				}
 				if((*it)->isWaiting()){
 					// there is a running thread which waits -> put him back in the waiting list
-//					std::cout << "A thread was moved from waiting to paused!" << std::endl;
 					auto copyIt = it;
 					m_waitingList.push_back(*it); // append at the waiting list
 					--it; // go one back, in the end of the loop the next element will be taken
@@ -124,7 +120,6 @@ void ThreadMaster::run(){
 					continue; // without continue the first element could be made to the "zero" element, which does not exists -> seg fault
 				}
 				if((*it)->isTaskFinished()){
-//					std::cout << "A thread is finished!" << std::endl;
 					auto copyIt = it; // perform copy
 					--it; // go one back, in the end of the loop the next element will be taken
 					m_runningList.erase(copyIt); // erase the copied element

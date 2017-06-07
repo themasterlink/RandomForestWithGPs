@@ -7,12 +7,8 @@
 
 #include "DataReader.h"
 #include "DataBinaryWriter.h"
-#include <iostream>
 #include "../Utility/ReadWriterHelper.h"
-#include "../Utility/Util.h"
 #include "../Base/Settings.h"
-#include "ClassKnowledge.h"
-#include "DataConverter.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
@@ -48,7 +44,7 @@ void DataReader::readFromBinaryFile(LabeledData& data, const std::string& inputN
 		}
 		input.close();
 	}else{
-		printError("File was not found: " << inputName);
+		printErrorAndQuit("File was not found: " << inputName);
 	}
 }
 
@@ -78,7 +74,7 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName, c
 		}
 		input.close();
 	}else{
-		printError("File was not found: " << inputName);
+		printErrorAndQuit("File was not found: " << inputName);
 	}
 }
 
@@ -100,7 +96,7 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName,
 				data[i]->setLabel(classNr);
 			}
 		}else{
-			printError("The file could not be opened: " << inputPath);
+			printErrorAndQuit("The file could not be opened: " << inputPath);
 		}
 		input.close();
 	}else if(boost::filesystem::exists(inputName + ".txt")){
@@ -128,7 +124,7 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName,
 			input.close();
 			DataBinaryWriter::toFile(data, inputName + ".binary"); // create binary to avoid rereading .txt
 		}else{
-			printError("The file could not be opened: " << inputPath);
+			printErrorAndQuit("The file could not be opened: " << inputPath);
 		}
 	}else if(boost::filesystem::exists(inputName + ".csv")){
 		inputPath += ".csv";
@@ -140,7 +136,7 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName,
 			auto size = 100;
 			while(std::getline(input, line)){
 				std::vector<std::string> elements;
-				elements.reserve(size);
+				elements.reserve((unsigned long) size);
 				std::stringstream ss(line);
 				std::string item;
 				while(std::getline(ss, item, ',')){
@@ -287,12 +283,12 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 				input.close();
 			}
 		}else{
-			printError("There is no data.mnist and labels.mnist file in this folder: " + inputPath);
+			printErrorAndQuit("There is no data.mnist and labels.mnist file in this folder: " + inputPath);
 		}
 
 
 		if(data[0].size() == 0){
-			printError("No data was read!");
+			printErrorAndQuit("No data was read!");
 			return;
 		}
 		const bool createNewClasses = ClassKnowledge::amountOfClasses() == 0;

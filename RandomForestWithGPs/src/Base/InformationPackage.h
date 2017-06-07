@@ -9,8 +9,7 @@
 #define BASE_INFORMATIONPACKAGE_H_
 
 #include <boost/thread.hpp>
-#include <boost/interprocess/sync/interprocess_condition.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <atomic>
 #include "../Utility/StopWatch.h"
 
@@ -95,9 +94,11 @@ private:
 
 	const InfoType m_type;
 
-	boost::interprocess::interprocess_condition m_condition;
+	//boost::interprocess::interprocess_condition m_condition;
 
-	boost::interprocess::interprocess_mutex m_mutex;
+	//boost::interprocess::interprocess_mutex m_mutexForCondition;
+
+	boost::interprocess::interprocess_semaphore m_semaphoreForWaiting;
 
 	std::atomic<bool> m_performTask;
 
