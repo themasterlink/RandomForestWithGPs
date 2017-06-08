@@ -14,17 +14,8 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="049817e5-95a7-4829-9b2c-4499a747c94c" name="Default" comment="Bug fixes (no dead lock in waiting, better exit for screenouput, memory usage in testmanager corrected, renaming of StringHelper functions)">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/RandomForestWithGPs.iml" afterPath="$PROJECT_DIR$/.idea/RandomForestWithGPs.iml" />
+    <list default="true" id="049817e5-95a7-4829-9b2c-4499a747c94c" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Base/InformationPackage.cc" afterPath="$PROJECT_DIR$/src/Base/InformationPackage.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Base/InformationPackage.h" afterPath="$PROJECT_DIR$/src/Base/InformationPackage.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/DataWriterForVisu.cc" afterPath="$PROJECT_DIR$/src/Data/DataWriterForVisu.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/IVM.cc" afterPath="$PROJECT_DIR$/src/GaussianProcess/IVM.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/IVMMultiBinary.cc" afterPath="$PROJECT_DIR$/src/GaussianProcess/IVMMultiBinary.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" afterPath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" afterPath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main.cc" afterPath="$PROJECT_DIR$/src/main.cc" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/CMakeFiles/" />
@@ -692,7 +683,7 @@
       <workItem from="1496902670532" duration="17000" />
       <workItem from="1496903096556" duration="13189000" />
       <workItem from="1496918623459" duration="3629000" />
-      <workItem from="1496922667727" duration="2605000" />
+      <workItem from="1496922667727" duration="2675000" />
     </task>
     <task id="LOCAL-00001" summary="Bug fixes (no dead lock in waiting, better exit for screenouput, memory usage in testmanager corrected, renaming of StringHelper functions)">
       <created>1496756074975</created>
@@ -715,11 +706,18 @@
       <option name="project" value="LOCAL" />
       <updated>1496926003516</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="ORF update now compatible with TestManager, added ScreenOuput for ORF predict">
+      <created>1496926071532</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1496926071532</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="252137000" />
+    <option name="totallyTimeSpent" value="252207000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -765,7 +763,8 @@
     <MESSAGE value="Bug fixes (no dead lock in waiting, better exit for screenouput, memory usage in testmanager corrected, renaming of StringHelper functions)" />
     <MESSAGE value="added real online mode for DDTs" />
     <MESSAGE value="added splitting to the TestManager, now a dataset can be a split of many sets" />
-    <option name="LAST_COMMIT_MESSAGE" value="added splitting to the TestManager, now a dataset can be a split of many sets" />
+    <MESSAGE value="ORF update now compatible with TestManager, added ScreenOuput for ORF predict" />
+    <option name="LAST_COMMIT_MESSAGE" value="ORF update now compatible with TestManager, added ScreenOuput for ORF predict" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
