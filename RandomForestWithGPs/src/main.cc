@@ -301,7 +301,7 @@ int main(int ac, char** av){
 
 
 
-	TestManager::init("../Settings/testSettings.init");
+	TestManager::init("../Settings/testSettingsPy.init");
 	TestManager::run();
 	quitApplication();
 

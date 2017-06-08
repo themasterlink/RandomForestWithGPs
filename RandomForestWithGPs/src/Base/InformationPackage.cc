@@ -12,10 +12,10 @@ InformationPackage::InformationPackage(InfoType type,
 		Real correctlyClassified,
 		int amountOfPoints): m_type(type),
 							 m_semaphoreForWaiting(0),
-		m_performTask(false),
-		m_abortTraining(false),
+		m_isTaskPerformed(false),
+		m_shouldThreadBeAborted(false),
 		m_isWaiting(false),
-		m_shouldTrainingBeHold(false),
+		m_shouldThreadPause(false),
 		m_correctlyClassified(correctlyClassified),
 		m_amountOfAffectedPoints(amountOfPoints),
 		m_amountOfTrainingsSteps(0),
@@ -34,8 +34,8 @@ Real InformationPackage::calcAttractionLevel(const int minAmountOfPoints, const 
 }
 
 void InformationPackage::wait(){
-	if(!m_abortTraining){ // only wait if the training is not aborted
-		m_shouldTrainingBeHold = false; // could be called, because the training should be hold
+	if(!m_shouldThreadBeAborted){ // only wait if the training is not aborted
+		m_shouldThreadPause = false; // could be called, because the training should be hold
 		m_workedTime += m_sw.elapsedSeconds();
 		m_isWaiting = true;
 		m_semaphoreForWaiting.wait();
@@ -89,6 +89,8 @@ bool InformationPackage::canBeAbortedInGeneral(){
 		return true;
 	case IVM_PREDICT:
 		return false;
+	case ORF_PREDICT:
+		return false;
 	case IVM_RETRAIN:
 		return true; // can not be aborted, will be aborted if all IVM_TRAIN are finished, or if the general abort signal is sended
 	case IVM_MULTI_UPDATE:
@@ -118,6 +120,8 @@ bool InformationPackage::canBeAbortedAfterCertainTime(){
 		return true;
 	case IVM_INIT_DIFFERENCE_MATRIX:
 		return false;
+	case ORF_PREDICT:
+		return false;
 	default:
 		printError("This type is unknown!");
 		return false;
@@ -134,6 +138,8 @@ int InformationPackage::getPriority(){
 		return 5;
 	case IVM_TRAIN:
 		return 4;
+	case ORF_PREDICT:
+		return 3; // higher than IVM predict
 	case IVM_PREDICT:
 		return 2;
 	case IVM_RETRAIN:

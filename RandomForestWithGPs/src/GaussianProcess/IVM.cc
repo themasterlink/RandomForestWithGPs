@@ -452,7 +452,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 											printInPackageOnScreen(m_package, "New best params: " << bestParams << ", with correctness of: " << correctness);
 											//											}
 											if(correctness > trainingAbortValue){
-												m_package->abortTraing();
+												m_package->abortThread();
 												iLambda = sampleLambda;
 											}
 										}
@@ -477,17 +477,17 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 										<< " needed time: " << sw.elapsedAsTimeFrame() << " , c: " << iCounter);
 							}
 							m_package->performedOneTrainingStep(); // adds a one to the counter
-							if(m_package->shouldTrainingBeAborted()){
+							if(m_package->shouldThreadBeAborted()){
 								break;
-							}else if(m_package->shouldTrainingBePaused()){
+							}else if(m_package->shouldThreadBePaused()){
 								printInPackageOnScreen(m_package, "Training has to wait!");
 								m_package->wait(); // will hold this process
 							}else if(m_package->correctlyClassified() > trainingAbortValue && iCounter > cmaes::cmaes_Get(&m_evo, "lambda") * 2.0){
-								m_package->abortTraing();
+								m_package->abortThread();
 							}
 							++iCounter;
 						}
-						if(m_package->shouldTrainingBeAborted()){
+						if(m_package->shouldThreadBeAborted()){
 							printInPackageOnScreen(m_package, "Training should be aborted!");
 							break;
 						}
@@ -568,7 +568,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 									amountOfMinusOneChecks, amountOfMinusOnesCorrect,
 									correctness, probDiff, onlyUseOnes, true, testPoints); // false -> only testPoints
 							if(correctness > 95){
-								m_package->abortTraing();
+								m_package->abortThread();
 							}
 						}
 						if(didCompleteCheck){
@@ -624,10 +624,10 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					}
 					swAvg.recordActTime();
 					m_package->performedOneTrainingStep(); // adds a one to the counter
-					if(m_package->shouldTrainingBeAborted()){
+					if(m_package->shouldThreadBeAborted()){
 						printInPackageOnScreen(m_package, "Training should be aborted!");
 						break;
-					}else if(m_package->shouldTrainingBePaused()){
+					}else if(m_package->shouldThreadBePaused()){
 						printInPackageOnScreen(m_package, "Training has to wait!");
 						m_package->wait(); // will hold this process
 					}

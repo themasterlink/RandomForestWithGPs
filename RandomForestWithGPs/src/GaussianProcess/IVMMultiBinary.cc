@@ -148,7 +148,7 @@ void IVMMultiBinary::train(){
 		if(m_packages.size() > 0 ){
 			// abort all running ivm retrainings
 			for(auto& package : m_packages){
-				package->abortTraing();
+				package->abortThread();
 			}
 			// wait until all old runnings ivm retrainings are finished
 			bool taskFinish = true;
@@ -270,7 +270,7 @@ void IVMMultiBinary::train(){
 		}
 		group.join_all();
 		for(auto it = packagesForRetrain.cbegin(); it != packagesForRetrain.cend(); ++it){
-			(*it)->abortTraing(); // aborts training otherwise it will go on forever
+			(*it)->abortThread(); // aborts training otherwise it will go on forever
 		}
 		for(unsigned int i = 0; i < amountOfClasses(); ++i){
 			if(m_isClassUsed[i]){
@@ -560,9 +560,9 @@ void IVMMultiBinary::predictDataInParallel(IVM* ivm, const Data& points, const i
 			printInPackageOnScreen(package, i / (Real) percent10 * 10 << " %% points done");
 		}
 		package->performedOneTrainingStep();
-		if(package->shouldTrainingBePaused()){
+		if(package->shouldThreadBePaused()){
 			package->wait();
-		}else if(package->shouldTrainingBeAborted()){
+		}else if(package->shouldThreadBeAborted()){
 			printError("The prediciton can not be aborted!");
 		}
 	}
@@ -581,9 +581,9 @@ void IVMMultiBinary::predictClassDataInParallel(IVM* ivm, const LabeledData& poi
 			printInPackageOnScreen(package, i / (Real) percent10 * 10 << " %% points done");
 		}
 		package->performedOneTrainingStep();
-		if(package->shouldTrainingBePaused()){
+		if(package->shouldThreadBePaused()){
 			package->wait();
-		}else if(package->shouldTrainingBeAborted()){
+		}else if(package->shouldThreadBeAborted()){
 			printError("The prediciton can not be aborted!");
 		}
 	}

@@ -106,17 +106,17 @@ private:
 	using SortedDecisionTreePair = std::pair<DynamicDecisionTreeInterface*, Real>;
 	using SortedDecisionTreeList = std::list<SortedDecisionTreePair>;
 
-	void predictDataInParallel(const Data& points, Labels* labels,
+	void predictDataInParallel(const Data& points, Labels* labels, InformationPackage* package,
 							   const unsigned int start, const unsigned int end) const;
 
-	void predictClassDataInParallel(const LabeledData& points, Labels* labels,
+	void predictClassDataInParallel(const LabeledData& points, Labels* labels, InformationPackage* package,
 									const unsigned int start, const unsigned int end) const;
 
 	void predictDataProbInParallelStartEnd(const Data& points, Labels* labels,
-										   std::vector< std::vector<Real> >* probabilities, const unsigned int start,
-										   const unsigned int end) const;
+										   std::vector< std::vector<Real> >* probabilities, InformationPackage* package,
+										   const unsigned int start, const unsigned int end) const;
 
-	void predictClassDataProbInParallelStartEnd(const LabeledData& points, Labels* labels,
+	void predictClassDataProbInParallelStartEnd(const LabeledData& points, Labels* labels, InformationPackage* package,
 												std::vector< std::vector<Real> >* probabilities,
 												const unsigned int start, const unsigned int end) const;
 
@@ -153,6 +153,9 @@ private:
 	void writeTreesToDisk(const unsigned int amountOfTrees) const;
 
 	void loadBatchOfTreesFromDisk(const unsigned int batchNr) const;
+
+	void packageUpdateForPrediction(InformationPackage* package, const unsigned int i, const unsigned int start,
+									const unsigned int end) const;
 
 	const unsigned int m_maxDepth;
 
@@ -200,6 +203,7 @@ private:
 	unsigned int m_amountOfPointsCheckedPerSplit;
 
 	TrainingsConfig m_trainingsConfig;
+
 };
 
 

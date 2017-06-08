@@ -686,7 +686,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorBin
 		if(modeLab){
 			ColorConverter::LAB2RGB(colors[label][0], colors[label][1], colors[label][2], r, g, b);
 		}else{
-			ColorConverter::getProbColorForBinaryRGB(label == 1 ? 0.0 : 1.0, r, g, b);
+			ColorConverter::getProbColorForBinaryRGB((Real) (label == 1 ? 0.0 : 1.0), r, g, b);
 		}
 		cv::Scalar actColor(b * 255,g * 255,r * 255);// from rgb to bgr
 		cv::circle(img, cv::Point(dx, dy), (Real) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
@@ -880,7 +880,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	const bool justTwoClasses = classAmount == 2;
 	if(!justTwoClasses){
 		for(unsigned int i = 0; i < classAmount; ++i){ // save all colors
-			ColorConverter::HSV2LAB((i + 1) / (Real) (classAmount) * 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
+			ColorConverter::HSV2LAB((i + 1) / (Real) (classAmount) * (Real) 360., 1.0, 1.0, colors[i][0], colors[i][1], colors[i][2]);
 		}
 	}
 	const unsigned int fac = 32;
@@ -931,9 +931,9 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 			for(unsigned int t = 0; t < fac; ++t){
 				for(unsigned int l = 0; l < fac; ++l){
 					cv::Vec3b& color = img.at<cv::Vec3b>((elementInY - iY - 1) * fac + t,iX * fac + l);
-					color[0] = b_ * 255;
-					color[1] = g * 255;
-					color[2] = r * 255;
+					color[0] = (uchar) (b_ * 255);
+					color[1] = (uchar) (g * 255);
+					color[2] = (uchar) (r * 255);
 				}
 			}
 			++counter;

@@ -23,11 +23,12 @@ public:
 	enum InfoType { // low is more important, class can not be used ordering and values are important
 		ORF_TRAIN = 0,
 		ORF_TRAIN_FIX = 1, // can not be aborted
-		IVM_TRAIN = 2,
-		IVM_PREDICT = 3,
-		IVM_RETRAIN = 4,
-		IVM_MULTI_UPDATE = 5,
-		IVM_INIT_DIFFERENCE_MATRIX = 6
+		IVM_TRAIN = 3,
+		ORF_PREDICT = 4,
+		IVM_PREDICT = 5,
+		IVM_RETRAIN = 6,
+		IVM_MULTI_UPDATE = 7,
+		IVM_INIT_DIFFERENCE_MATRIX = 8
 	};
 
 	InformationPackage(InfoType type, Real correctlyClassified, int amountOfPoints);
@@ -44,17 +45,17 @@ public:
 
 	int amountOfTrainingStepsPerformed() const { return m_amountOfTrainingsSteps; };
 
-	void finishedTask(){ m_performTask = true; };
+	void finishedTask(){ m_isTaskPerformed = true; };
 
-	bool isTaskFinished(){ return m_performTask; };
+	bool isTaskFinished(){ return m_isTaskPerformed; };
 
-	bool shouldTrainingBeAborted(){ return m_abortTraining; };
+	bool shouldThreadBeAborted(){ return m_shouldThreadBeAborted; };
 
-	void abortTraing(){ m_abortTraining = true; };
+	void abortThread(){ m_shouldThreadBeAborted = true; };
 
-	void pauseTheTraining(){ m_shouldTrainingBeHold = true; };
+	void pauseTheThread(){ m_shouldThreadPause = true; };
 
-	bool shouldTrainingBePaused(){ return m_shouldTrainingBeHold; }
+	bool shouldThreadBePaused(){ return m_shouldThreadPause; }
 
 	Real calcAttractionLevel(const int minAmountOfPoints, const int maxAmountOfPoints);
 
@@ -100,13 +101,13 @@ private:
 
 	boost::interprocess::interprocess_semaphore m_semaphoreForWaiting;
 
-	std::atomic<bool> m_performTask;
+	std::atomic<bool> m_isTaskPerformed;
 
-	std::atomic<bool> m_abortTraining;
+	std::atomic<bool> m_shouldThreadBeAborted;
 
 	std::atomic<bool> m_isWaiting;
 
-	std::atomic<bool> m_shouldTrainingBeHold;
+	std::atomic<bool> m_shouldThreadPause;
 
 	Real m_correctlyClassified;
 
