@@ -143,18 +143,34 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 	//  1
 	// 2 3
 	if(m_useOnlyThisDataPositions == nullptr){
+		auto& dataPos = dataPosition[1];
+#ifdef USE_REAL_ONLINE_DDT
 		if(generator.useWholeDataSet()){
-			dataPosition[1].resize(m_storage.size());
-			std::iota(dataPosition[1].begin(), dataPosition[1].end(), 0);
+			dataPos.resize(m_storage.getAmountOfNew());
+			std::iota(dataPos.begin(), dataPos.end(), m_storage.getAmountOfNew());
+		}else{
+			const auto amountOfPoints = (unsigned int) (m_storage.getAmountOfNew() / (generator.getStepSize() * 0.375));
+			dataPos.reserve(amountOfPoints);
+			// -1 that the first value in the storage is used too
+			for(unsigned int i = m_storage.getLastUpdateIndex() + generator.getRandStepOverStorage() - 1;
+				i < m_storage.size(); i += generator.getRandStepOverStorage()){
+				dataPos.push_back(i);
+			}
+		}
+#else // USE_REAL_ONLINE_DDT
+		if(generator.useWholeDataSet()){
+			dataPos.resize(m_storage.size());
+			std::iota(dataPos.begin(), dataPos.end(), 0);
 		}else{
 			const auto amountOfPoints = (unsigned int) (m_storage.size() / (generator.getStepSize() * 0.375));
-			dataPosition[1].reserve(amountOfPoints);
+			dataPos.reserve(amountOfPoints);
 			// -1 that the first value in the storage is used too
 			for(unsigned int i = generator.getRandStepOverStorage() - 1;
 				i < m_storage.size(); i += generator.getRandStepOverStorage()){
-				dataPosition[1].push_back(i);
+				dataPos.push_back(i);
 			}
 		}
+#endif // USE_REAL_ONLINE_DDT
 	}
 //	else{ // no need take ref to
 //		dataPosition[1].insert(dataPosition[1].end(), m_useOnlyThisDataPositions->begin(), m_useOnlyThisDataPositions->end());

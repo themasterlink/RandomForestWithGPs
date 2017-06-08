@@ -142,10 +142,14 @@ const typename OnlineStorage<T>::InternalStorage& OnlineStorage<T>::storage() co
 }
 
 template<typename T>
-unsigned int OnlineStorage<T>::getLastUpdateIndex(){
+unsigned int OnlineStorage<T>::getLastUpdateIndex() const{
 	return m_lastUpdateIndex;
 }
 
+template<typename T>
+unsigned int OnlineStorage<T>::getAmountOfNew() const{
+	return size() - m_lastUpdateIndex;
+}
 
 template<typename T>
 ClassTypeSubject OnlineStorage<T>::classType() const{

@@ -6,6 +6,9 @@
 #define RANDOMFORESTWITHGPS_REALTYPE_H
 
 //#define USE_DOUBLE
+
+//#define USE_REAL_ONLINE_DDT
+
 //#define USE_UNIT_TYPE
 
 #ifdef USE_DOUBLE

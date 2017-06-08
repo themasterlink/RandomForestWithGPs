@@ -69,7 +69,9 @@ public:
 
 	unsigned int dim() const;
 
-	unsigned int getLastUpdateIndex();
+	unsigned int getLastUpdateIndex() const;
+
+	unsigned int getAmountOfNew() const;
 
 	ClassTypeSubject classType() const override;
 
