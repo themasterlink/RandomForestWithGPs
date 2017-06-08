@@ -7,21 +7,21 @@
 
 TestInformation::TestInformation(){
 	TestDefineName trainSetting;
-	trainSetting.m_varName = trainSettingName;
+	trainSetting.setVarName(trainSettingName);
 	trainSetting.m_firstFromVariable = trainSettingName;
 	trainSetting.useAllClasses();
 	TestDefineName testSetting;
-	testSetting.m_varName = testSettingName;
+	testSetting.setVarName(testSettingName);
 	testSetting.m_firstFromVariable = testSettingName;
 	testSetting.useAllClasses();
 	TestDefineName allSetting;
-	allSetting.m_varName = "all";
+	allSetting.setVarName("all");
 	allSetting.m_firstFromVariable = trainSettingName;
 	allSetting.m_secondFromVariable = testSettingName;
 	allSetting.useAllClasses();
-	m_definitions.emplace(trainSetting.m_varName, trainSetting);
-	m_definitions.emplace(testSetting.m_varName, testSetting);
-	m_definitions.emplace(allSetting.m_varName, allSetting);
+	m_definitions.emplace(trainSetting.getVarName(), trainSetting);
+	m_definitions.emplace(testSetting.getVarName(), testSetting);
+	m_definitions.emplace(allSetting.getVarName(), allSetting);
 }
 
 
@@ -39,7 +39,7 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 		}
 		case TestMode::DEFINE:{
 			TestDefineName defineName;
-			defineName.m_varName = words[0];
+			defineName.setVarName(words[0]);
 			bool foundFrom = false, foundClasses = false;
 			for(unsigned int i = 0; i < words.size() - 1; ++i){
 				if(words[i] == "from"){
@@ -72,7 +72,7 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 			if(!(foundClasses && foundFrom)){
 				printErrorAndQuit("This definition is not valid: " << def);
 			}
-			m_definitions.emplace(defineName.m_varName, defineName);
+			m_definitions.emplace(defineName.getVarName(), defineName);
 			break;
 		}
 		case TestMode::REMOVE: {
@@ -84,11 +84,11 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 				if(m_definitions.find(words[0]) != m_definitions.end()){
 					if(m_definitions.find(words[2]) != m_definitions.end()){
 						TestDefineName defineName;
-						defineName.m_varName = words[4];
+						defineName.setVarName(words[4]);
 						defineName.m_firstFromVariable = words[0];
 						defineName.m_secondFromVariable= words[2];
 						defineName.m_withClasses = false;
-						m_definitions.emplace(defineName.m_varName, defineName);
+						m_definitions.emplace(defineName.getVarName(), defineName);
 					}else{
 						printErrorAndQuit("This type was not defined before: " << words[2] << ", used in: " << def);
 					}
@@ -101,10 +101,10 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 			break;
 		}
 		case TestMode::TRAIN:
-
 		case TestMode::UPDATE:{
 			if(words.size() > 0){
-				if(m_definitions.find(words[0]) != m_definitions.end()){
+				const std::string name = getDefinition(words[0]).getVarName();
+				if(m_definitions.find(name) != m_definitions.end()){
 					m_instructions.emplace_back(mode, words[0]);
 					m_instructions.back().processLine(words);
 				}else{
@@ -118,13 +118,37 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 		case TestMode::TEST:
 		{
 			if(words.size() == 1){
-				if(m_definitions.find(words[0]) != m_definitions.end()){
+				const std::string name = getDefinition(words[0]).getVarName();
+				if(m_definitions.find(name) != m_definitions.end()){
 					m_instructions.emplace_back(mode, words[0]);
 				}else{
 					printErrorAndQuit("This type was not defined before: " << words[0] << ", used in: " << def);
 				}
 			}else{
 				printErrorAndQuit("Loading is only possible for defined or predefined sets: " << def);
+			}
+			break;
+		}
+		case TestMode::SPLIT:
+		{
+			if(words.size() > 0){
+				TestDefineName defineName;
+				defineName.setVarName(words[0]);
+				if(m_definitions.find(words.back()) != m_definitions.end()){
+					defineName.m_firstFromVariable = words.back();
+					defineName.m_withClasses = false;
+					try{
+						defineName.m_splitAmount = std::stoi(words[2]);
+					}catch(std::exception &e){
+						printErrorAndQuit("The split number: " << words[2] << " is no number!");
+					}
+					m_definitions.emplace(defineName.getVarName(), defineName);
+					m_instructions.emplace_back(mode, words[0]);
+				}else{
+					printErrorAndQuit("The used dataset in this split has to be defined before: " << def);
+				}
+			}else{
+				printErrorAndQuit("Splitting needs a new name for the definition: " << def);
 			}
 			break;
 		}
@@ -226,6 +250,15 @@ TestInformation::TestDefineName TestInformation::getDefinition(const std::string
 	if(it != m_definitions.end()){
 		return it->second;
 	}
+	// search for split value
+	auto pos = name.find('[');
+	if(pos != name.npos){
+		it = m_definitions.find(name.substr(0, pos));
+		if(it != m_definitions.end()){
+			return it->second;
+		}
+	}
+	printErrorAndQuit("This data set does not exist: " << name);
 	return TestDefineName();
 }
 
@@ -236,7 +269,22 @@ TestInformation::Instruction TestInformation::getInstruction(const unsigned int 
 	return Instruction(TestMode::UNDEFINED, "");
 }
 
-bool TestInformation::TestDefineName::isTrainOrTestSetting(){
+int TestInformation::getSplitNumber(const std::string& name){
+	auto start = name.find('[');
+	auto end = name.find(']');
+	if(start != name.npos && end != name.npos){
+		++start;
+		try{
+			return std::stoi(name.substr(start, end - start));
+		}catch(std::exception& e){
+			printErrorAndQuit("The name: " << name << " does not contain a split number!");
+		}
+	}
+	return -1;
+}
+
+
+bool TestInformation::TestDefineName::isTrainOrTestSetting() const{
 	return m_varName == TestInformation::trainSettingName || m_varName == TestInformation::testSettingName;
 }
 
@@ -244,6 +292,18 @@ void TestInformation::TestDefineName::useAllClasses(){
 	m_classes.clear();
 	m_classes.push_back((unsigned int) UNDEF_CLASS_LABEL);
 	m_withClasses = true;
+}
+
+std::string TestInformation::TestDefineName::getVarName() const{
+	auto start = m_varName.find('[');
+	if(start != m_varName.npos){
+		return m_varName.substr(0, start);
+	}
+	return m_varName;
+}
+
+void TestInformation::TestDefineName::setVarName(std::string name){
+	m_varName = std::move(name); // only one copy necessary
 }
 
 void TestInformation::Instruction::addType(const std::string& preposition, const std::string& nrType){

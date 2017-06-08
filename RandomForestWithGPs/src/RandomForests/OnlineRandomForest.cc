@@ -139,7 +139,7 @@ void OnlineRandomForest::train(){
 		Settings::getValue("MinMaxUsedSplits.maxValueFractionDependsOnDataSize", maxVal);
 		minMaxUsedSplits << (int) (minVal * m_storage.size()),  (int) (maxVal * m_storage.size());
 	}
-	const unsigned int amountOfThreads = 12; //ThreadMaster::getAmountOfThreads();
+	const unsigned int amountOfThreads = ThreadMaster::getAmountOfThreads();
 	m_generators.resize(amountOfThreads);
 	int stepSizeOverData = 0;
 	Settings::getValue("OnlineRandomForest.Tree.stepSizeOverData", stepSizeOverData);

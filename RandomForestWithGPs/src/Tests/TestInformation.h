@@ -18,6 +18,7 @@ enum class TestMode {
 	UPDATE,
 	TEST,
 	COMBINE,
+	SPLIT,
 	UNDEFINED
 };
 
@@ -48,16 +49,26 @@ public:
 		MemoryType m_memory;
 	};
 
-	struct TestDefineName {
-		std::string m_varName;
+	class TestDefineName {
+	public:
+		TestDefineName(): m_splitAmount(-1){};
+
+		std::string getVarName() const;
+
+		bool isTrainOrTestSetting() const;
+
+		void useAllClasses();
+
+		void setVarName(std::string name);
+
 		bool m_withClasses; // is true if classes are used, false if they are not used
 		std::string m_firstFromVariable;
 		std::string m_secondFromVariable;
 		std::vector<unsigned int> m_classes;
+		int m_splitAmount;
 
-		bool isTrainOrTestSetting();
-
-		void useAllClasses();
+	private: // avoid direct access to var name
+		std::string m_varName;
 	};
 
 	TestInformation();
@@ -71,6 +82,8 @@ public:
 	bool decipherClasses(const std::vector<std::string>& words, const unsigned int start,
 						 const unsigned int end, std::vector<unsigned int>& usedClasses);
 
+	int getSplitNumber(const std::string& name);
+
 private:
 
 	std::map<std::string, TestDefineName> m_definitions;
@@ -81,7 +94,7 @@ private:
 
 inline
 std::ostream& operator<<(std::ostream& stream, const TestInformation::TestDefineName& testDef){
-	stream << testDef.m_varName << ", " << testDef.m_withClasses << ": (" << testDef.m_firstFromVariable << ", " << testDef.m_secondFromVariable << ")";
+	stream << testDef.getVarName() << ", " << testDef.m_withClasses << ": (" << testDef.m_firstFromVariable << ", " << testDef.m_secondFromVariable << ")";
 	return stream;
 }
 

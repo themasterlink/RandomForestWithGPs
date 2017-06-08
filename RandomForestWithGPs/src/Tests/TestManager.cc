@@ -39,6 +39,15 @@ TestMode TestManager::findMode(std::string &line){
 		}else if(firstWord == "test"){
 			return TestMode::TEST;
 		}else if(firstWord == "define"){
+			std::vector<std::string> words;
+			StringHelper::getWords(line, words);
+			for(unsigned int i = 0; i < words.size(); ++i){
+				StringHelper::removeLeadingAndTrailingWhiteSpaces(words[i]);
+				if(words[i] == "split" || words[i] == "splits"){
+					return TestMode::SPLIT;
+				}
+			}
+			// no split found is just a usual define
 			return TestMode::DEFINE;
 		}else if(firstWord == "remove"){
 			return TestMode::REMOVE;
@@ -73,7 +82,7 @@ void TestManager::run(){
 		auto testInfo = m_testInformation.getInstruction(i);
 		if(testInfo.m_mode != TestMode::UNDEFINED){
 			auto usedDefinition = m_testInformation.getDefinition(testInfo.m_varName);
-			if(usedDefinition.m_varName != ""){
+			if(usedDefinition.getVarName() != ""){
 				if(testInfo.m_mode == TestMode::LOAD){
 					readAll(); // TODO read TRAIN or TEST not both
 					orf = std::make_unique<OnlineRandomForest>(train, height, (int) TotalStorage::getAmountOfClass());
@@ -115,7 +124,7 @@ void TestManager::run(){
 	}
 }
 
-LabeledData TestManager::getAllPointsFor(const std::string& defName){
+LabeledData TestManager::getAllPointsFor(const std::string& defName, const unsigned int start){
 	LabeledData res;
 	auto usedDefinition = m_testInformation.getDefinition(defName);
 	if(usedDefinition.isTrainOrTestSetting()){ // stops recursion
@@ -123,20 +132,41 @@ LabeledData TestManager::getAllPointsFor(const std::string& defName){
 		int firstPoints; // all points
 		Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
 		LabeledData dummy; // is necessary for interface consistency
-		if(usedDefinition.m_varName == TestInformation::trainSettingName){
+		if(usedDefinition.getVarName() == TestInformation::trainSettingName){
 			TotalStorage::getLabeledDataCopyWithTest(res, dummy, firstPoints);
-		}else if(usedDefinition.m_varName == TestInformation::testSettingName){
+		}else if(usedDefinition.getVarName() == TestInformation::testSettingName){
 			TotalStorage::getLabeledDataCopyWithTest(dummy, res, firstPoints);
 		}
 	}else{
-		if(usedDefinition.m_firstFromVariable.length() > 0){
-			res = getAllPointsFor(usedDefinition.m_firstFromVariable);
-			if(usedDefinition.m_secondFromVariable.length() > 0){ // combine action
-				auto res2 = getAllPointsFor(usedDefinition.m_secondFromVariable);
-				res.insert(res.end(), res2.begin(), res2.end()); // combine both
+		if(usedDefinition.m_splitAmount < 1){
+			if(usedDefinition.m_firstFromVariable.length() > 0){
+				res = getAllPointsFor(usedDefinition.m_firstFromVariable);
+				if(usedDefinition.m_secondFromVariable.length() > 0){ // combine action
+					auto res2 = getAllPointsFor(usedDefinition.m_secondFromVariable);
+					res.insert(res.end(), res2.begin(), res2.end()); // combine both
+				}
+			}else{
+				printErrorAndQuit("This can not happen the definition is wrong: " << usedDefinition);
 			}
 		}else{
-			printErrorAndQuit("This can not happen the definition is wrong: " << usedDefinition);
+			if(usedDefinition.m_firstFromVariable.length() > 0){
+				if(usedDefinition.m_secondFromVariable.length() > 0){
+					printErrorAndQuit("A combine and a split can not be performed in the same define use two defines for that");
+				}
+				int splitNr = m_testInformation.getSplitNumber(defName);
+				if(splitNr < 0){
+					printErrorAndQuit("This split number is not supported here: " << usedDefinition.m_firstFromVariable << ", " << usedDefinition.getVarName());
+				}
+				LabeledData temp = getAllPointsFor(usedDefinition.m_firstFromVariable, (unsigned int) splitNr);
+				const auto jumper = (unsigned int) usedDefinition.m_splitAmount;
+				res.reserve(temp.size() / usedDefinition.m_splitAmount + usedDefinition.m_splitAmount);
+				for(unsigned int i = start; i < temp.size(); i += jumper){
+					res.emplace_back(temp[i]);
+				}
+
+			}else{
+				printErrorAndQuit("This can not happen the definition is wrong: " << usedDefinition);
+			}
 		}
 	}
 	removeClassesFrom(res, usedDefinition);
