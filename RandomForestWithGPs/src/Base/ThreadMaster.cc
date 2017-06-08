@@ -85,8 +85,8 @@ void ThreadMaster::run(){
 				while(!(*selectedValue)->isWaiting()){ // if the thread is not waiting wait until it waits for reactivation -> should happen fast
 					sleepFor(0.05);
 				}
-				(*selectedValue)->notify(); // start running of the thread
 				printInPackageOnScreen(*selectedValue, "This thread was started in the ThreadMaster!");
+				(*selectedValue)->notify(); // start running of the thread
 				m_waitingList.erase(selectedValue); // remove the selected value out of the waiting thread list
 				selectedValue = m_waitingList.end();
 			}
@@ -96,16 +96,16 @@ void ThreadMaster::run(){
 			// for each running element check if execution is finished
 			const int maxTrainingsTime = (int) ((*it)->getMaxTrainingsTime() > 0 ? (*it)->getMaxTrainingsTime() : CommandSettings::get_samplingAndTraining());
 			if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime * 0.05 || (*it)->isTaskFinished()){ // each training have to take at least 5 seconds!
-				if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime && !(*it)->shouldTrainingBeAborted() && (*it)->canBeAbortedAfterCertainTime()){
+				if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime && !(*it)->shouldThreadBeAborted() && (*it)->canBeAbortedAfterCertainTime()){
 //					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
 					printInPackageOnScreen(*it, "Abort training in thread master");
-					(*it)->abortTraing(); // break the training
+					(*it)->abortThread(); // break the training
 				}
 				if(selectedValue != m_waitingList.end()){
-					if(!(*it)->shouldTrainingBePaused() && !(*it)->isWaiting() && (*it)->runningTimeSinceLastWait() > 2.0){ // only change thread if it is running more than 2 seconds
+					if(!(*it)->shouldThreadBePaused() && !(*it)->isWaiting() && (*it)->runningTimeSinceLastWait() > 2.0){ // only change thread if it is running more than 2 seconds
 						if((int) bestAttractionLevel > (int) (*it)->calcAttractionLevel(minAmountOfPoints, maxAmountOfPoints) || (*selectedValue)->getPriority() > (*it)->getPriority()){ // must be at least 1. point be better
 							// hold this training and start the other one
-							(*it)->pauseTheTraining(); // pause the actual training
+							(*it)->pauseTheThread(); // pause the actual training
 							++selectedValue; // take the next one and compare that to the rest
 						}
 					}
@@ -161,7 +161,8 @@ void ThreadMaster::sortWaitingList(const int minAmountOfPoints, const int maxAmo
 							swap = true;
 						}
 						break;
-					case InfoType::IVM_PREDICT:{
+					case InfoType::IVM_PREDICT:
+					case InfoType::ORF_PREDICT:{
 						const int diff = (*itPrev)->amountOfTrainingStepsPerformed() - (*it)->amountOfTrainingStepsPerformed();
 						const int amountOfPoints = (int) (
 								((*it)->amountOfAffectedPoints() + (*itPrev)->amountOfAffectedPoints()) * 0.5);
@@ -201,12 +202,12 @@ void ThreadMaster::abortAllThreads(){
 	m_mutex.lock();
 	for(auto& waitingPackage : m_waitingList){
 		if(waitingPackage->canBeAbortedInGeneral()){
-			waitingPackage->abortTraing();
+			waitingPackage->abortThread();
 		}
 	}
 	for(auto& runningPackage : m_runningList){
 		if(runningPackage->canBeAbortedInGeneral()){
-			runningPackage->abortTraing();
+			runningPackage->abortThread();
 		}
 	}
 	m_mutex.unlock();
