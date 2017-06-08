@@ -15,7 +15,7 @@ public:
 
 	static TestMode findMode(std::string& line);
 
-	static LabeledData getAllPointsFor(const std::string& defName, const unsigned int startForSplit = 0);
+	static LabeledData getAllPointsFor(const std::string& defName);
 
 	static void removeClassesFrom(LabeledData& data, const TestInformation::TestDefineName& info);
 

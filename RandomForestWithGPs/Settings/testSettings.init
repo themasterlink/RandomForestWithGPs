@@ -1,11 +1,34 @@
 # Test order specify here what should be executed
 #
 # load all data sets, else TRAIN_SETTING or TEST_SETTING (files which are written in setting file)
+# load all
+# define newTrainSet as classes all from TRAIN_SETTING
+# define newTestSet as classes all from TEST_SETTING
+# combine newTrainSet with newTestSet in both
+# define newTrainSetSplit as 10 splits from newTrainSet
+# train newTrainSetSplit[0]
+# test newTrainSetSplit[0]
 load all
 define trainSet as classes all from TRAIN_SETTING
-#define train0 without classes 2 from TRAIN_SETTING
-#define train1 as classes 2 from TRAIN_SETTING
-define test0 as classes all from TEST_SETTING
-train trainSet for 30 m with only 10 mb
+define trainSplit as 10 splits from trainSet
+combine trainSplit[0] with trainSplit[1] in trainSplit2
+train trainSplit2 for 5 s with only 10 gb
 test trainSet
-test test0
+#test trainSplit[0]
+#test trainSplit[6]
+#test trainSplit[9]
+define testSet as classes all from TEST_SETTING
+test testSet
+
+#define train0 without classes {0,...,4} from TRAIN_SETTING
+#define train1 as classes {0,...,4} from TRAIN_SETTING
+#define train1 as classes 2 from TRAIN_SETTING
+#define test0 as classes all from TEST_SETTING
+#train train0 for 3 m with only 3 gb
+#test train0
+#test train1
+#test test0
+#train train1 for 3 m
+#test train0
+#test train1
+#test test0

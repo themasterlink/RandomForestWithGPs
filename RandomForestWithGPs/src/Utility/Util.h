@@ -48,7 +48,7 @@
 inline void openFileInViewer(const std::string& filename){
 	if(boost::filesystem::exists(Logger::getActDirectory() + filename)){
 		Logger::addSpecialLineToFile("eog " + filename + " &", "System");
-		system(("eog " + Logger::getActDirectory() + filename + " &").c_str());
+		system(("eog " + Logger::getActDirectory() + filename + " &> /dev/null &").c_str());
 	}
 }
 

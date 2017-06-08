@@ -61,7 +61,7 @@ public:
 
 		void setVarName(std::string name);
 
-		bool m_withClasses; // is true if classes are used, false if they are not used
+		bool m_includeClasses; // is true if classes are included, false if they are excluded
 		std::string m_firstFromVariable;
 		std::string m_secondFromVariable;
 		std::vector<unsigned int> m_classes;
@@ -94,7 +94,7 @@ private:
 
 inline
 std::ostream& operator<<(std::ostream& stream, const TestInformation::TestDefineName& testDef){
-	stream << testDef.getVarName() << ", " << testDef.m_withClasses << ": (" << testDef.m_firstFromVariable << ", " << testDef.m_secondFromVariable << ")";
+	stream << testDef.getVarName() << ", " << testDef.m_includeClasses << ": (" << testDef.m_firstFromVariable << ", " << testDef.m_secondFromVariable << ")";
 	return stream;
 }
 

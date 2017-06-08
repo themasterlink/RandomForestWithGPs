@@ -52,10 +52,10 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 					foundFrom = true;
 				}else if(words[i + 1] == "classes"){
 					// classes -> check with or without
-					if(words[i] == "as"){
-						defineName.m_withClasses = true;
+					if(words[i] == "as" || words[i] == "with"){
+						defineName.m_includeClasses = true;
 					}else if(words[i] == "without"){
-						defineName.m_withClasses = false;
+						defineName.m_includeClasses = false;
 					}else{
 						printErrorAndQuit("The definition before classes must be \"as\" or \"without\", "
 										   << "this is not valid" << words[i]);
@@ -67,10 +67,13 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 							break;
 						}
 					}
+					if(!foundClasses){
+						printErrorAndQuit("The classes were incorrect: " << def);
+					}
 				}
 			}
-			if(!(foundClasses && foundFrom)){
-				printErrorAndQuit("This definition is not valid: " << def);
+			if(!foundFrom){
+				printErrorAndQuit("From must be defined in the def: " << def);
 			}
 			m_definitions.emplace(defineName.getVarName(), defineName);
 			break;
@@ -81,13 +84,16 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 		}
 		case TestMode::COMBINE: {
 			if(words.size() == 5 && words[1] == "with" && words[3] == "in"){
-				if(m_definitions.find(words[0]) != m_definitions.end()){
-					if(m_definitions.find(words[2]) != m_definitions.end()){
+				const std::string name = getDefinition(words[0]).getVarName();
+				if(m_definitions.find(name) != m_definitions.end()){
+					const std::string name2 = getDefinition(words[2]).getVarName();
+					if(m_definitions.find(name2) != m_definitions.end()){
 						TestDefineName defineName;
 						defineName.setVarName(words[4]);
 						defineName.m_firstFromVariable = words[0];
 						defineName.m_secondFromVariable= words[2];
-						defineName.m_withClasses = false;
+						defineName.m_includeClasses = false;
+						const std::string name = getDefinition(words[0]).getVarName();
 						m_definitions.emplace(defineName.getVarName(), defineName);
 					}else{
 						printErrorAndQuit("This type was not defined before: " << words[2] << ", used in: " << def);
@@ -136,7 +142,7 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 				defineName.setVarName(words[0]);
 				if(m_definitions.find(words.back()) != m_definitions.end()){
 					defineName.m_firstFromVariable = words.back();
-					defineName.m_withClasses = false;
+					defineName.m_includeClasses = false;
 					try{
 						defineName.m_splitAmount = std::stoi(words[2]);
 					}catch(std::exception &e){
@@ -291,7 +297,7 @@ bool TestInformation::TestDefineName::isTrainOrTestSetting() const{
 void TestInformation::TestDefineName::useAllClasses(){
 	m_classes.clear();
 	m_classes.push_back((unsigned int) UNDEF_CLASS_LABEL);
-	m_withClasses = true;
+	m_includeClasses = true;
 }
 
 std::string TestInformation::TestDefineName::getVarName() const{

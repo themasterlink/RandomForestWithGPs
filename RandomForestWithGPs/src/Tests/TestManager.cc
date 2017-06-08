@@ -26,6 +26,8 @@ void TestManager::init(const std::string &filePath){
 				m_testInformation.addDefinitionOrInstruction(mode, line);
 			}
 		}
+	}else{
+		printErrorAndQuit("The test settings file is not there: " << filePath);
 	}
 }
 
@@ -99,7 +101,7 @@ void TestManager::run(){
 						config.m_amountOfTrees = testInfo.m_amountOfTrees;
 					}
 					if(config.hasMemoryConstraint()){
-						printOnScreen("Memory constraint: " << StringHelper::convertMemorySpace(testInfo.m_amountOfTrees));
+						printOnScreen("Memory constraint: " << StringHelper::convertMemorySpace(testInfo.m_memory));
 						config.m_memory = testInfo.m_memory;
 					}
 					orf->setTrainingsMode(config);
@@ -124,7 +126,7 @@ void TestManager::run(){
 	}
 }
 
-LabeledData TestManager::getAllPointsFor(const std::string& defName, const unsigned int start){
+LabeledData TestManager::getAllPointsFor(const std::string& defName){
 	LabeledData res;
 	auto usedDefinition = m_testInformation.getDefinition(defName);
 	if(usedDefinition.isTrainOrTestSetting()){ // stops recursion
@@ -157,13 +159,12 @@ LabeledData TestManager::getAllPointsFor(const std::string& defName, const unsig
 				if(splitNr < 0){
 					printErrorAndQuit("This split number is not supported here: " << usedDefinition.m_firstFromVariable << ", " << usedDefinition.getVarName());
 				}
-				LabeledData temp = getAllPointsFor(usedDefinition.m_firstFromVariable, (unsigned int) splitNr);
+				LabeledData temp = getAllPointsFor(usedDefinition.m_firstFromVariable);
 				const auto jumper = (unsigned int) usedDefinition.m_splitAmount;
 				res.reserve(temp.size() / usedDefinition.m_splitAmount + usedDefinition.m_splitAmount);
-				for(unsigned int i = start; i < temp.size(); i += jumper){
+				for(unsigned int i = splitNr; i < temp.size(); i += jumper){
 					res.emplace_back(temp[i]);
 				}
-
 			}else{
 				printErrorAndQuit("This can not happen the definition is wrong: " << usedDefinition);
 			}
@@ -175,7 +176,7 @@ LabeledData TestManager::getAllPointsFor(const std::string& defName, const unsig
 
 void TestManager::removeClassesFrom(LabeledData& data, const TestInformation::TestDefineName& info){
 	if(info.m_classes.size() == 1 && info.m_classes[0] == UNDEF_CLASS_LABEL){ // == "all"
-		if(info.m_withClasses){
+		if(info.m_includeClasses){
 			return; // no change necessary
 		}else{
 			data.resize(0); // remove all points (not really useful action)
@@ -184,11 +185,11 @@ void TestManager::removeClassesFrom(LabeledData& data, const TestInformation::Te
 	}
 	unsigned int lastUsed = 0;
 	for(unsigned int i = 0; i < data.size(); ++i){
-		bool keepIt = !info.m_withClasses;
+		bool keepIt = !info.m_includeClasses;
 		const unsigned int currectLabel = data[i]->getLabel();
 		for(const auto& classNr : info.m_classes){
 			if(currectLabel == classNr){
-				keepIt = info.m_withClasses;
+				keepIt = info.m_includeClasses;
 				break;
 			}
 		}

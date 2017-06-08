@@ -1,0 +1,65 @@
+# in python generated test settings file 
+load all 
+define trainSet from TRAIN_SETTING 
+define testSet from TEST_SETTING 
+define splitTrainSet as 30 splits from trainSet 
+train splitTrainSet[0] until 1000 trees with only 3 gb
+test testSet 
+train splitTrainSet[1] with only 3 gb
+test testSet 
+train splitTrainSet[2] with only 3 gb
+test testSet 
+train splitTrainSet[3] with only 3 gb
+test testSet 
+train splitTrainSet[4] with only 3 gb
+test testSet 
+train splitTrainSet[5] with only 3 gb
+test testSet 
+train splitTrainSet[6] with only 3 gb
+test testSet 
+train splitTrainSet[7] with only 3 gb
+test testSet 
+train splitTrainSet[8] with only 3 gb
+test testSet 
+train splitTrainSet[9] with only 3 gb
+test testSet 
+train splitTrainSet[10] with only 3 gb
+test testSet 
+train splitTrainSet[11] with only 3 gb
+test testSet 
+train splitTrainSet[12] with only 3 gb
+test testSet 
+train splitTrainSet[13] with only 3 gb
+test testSet 
+train splitTrainSet[14] with only 3 gb
+test testSet 
+train splitTrainSet[15] with only 3 gb
+test testSet 
+train splitTrainSet[16] with only 3 gb
+test testSet 
+train splitTrainSet[17] with only 3 gb
+test testSet 
+train splitTrainSet[18] with only 3 gb
+test testSet 
+train splitTrainSet[19] with only 3 gb
+test testSet 
+train splitTrainSet[20] with only 3 gb
+test testSet 
+train splitTrainSet[21] with only 3 gb
+test testSet 
+train splitTrainSet[22] with only 3 gb
+test testSet 
+train splitTrainSet[23] with only 3 gb
+test testSet 
+train splitTrainSet[24] with only 3 gb
+test testSet 
+train splitTrainSet[25] with only 3 gb
+test testSet 
+train splitTrainSet[26] with only 3 gb
+test testSet 
+train splitTrainSet[27] with only 3 gb
+test testSet 
+train splitTrainSet[28] with only 3 gb
+test testSet 
+train splitTrainSet[29] with only 3 gb
+test testSet 

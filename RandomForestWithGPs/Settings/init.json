@@ -32,19 +32,19 @@
 	"TotalStorage": {
 		"amountOfPointsUsedForTraining": 4000,
 		"shareForTraining": 0.9,
-		"folderLocReal": "/home_local/denn_ma/washingtonData",
+		"folderLocReal": "../washingtonMax",
 		"folderLocFake": "../fakeData/",
 		"folderTestNr": 4,
 		"excludeClass": 1000,
 		"normalizeData": "false",
 		"removeUselessDimensions": "true",
 		"readFromFolder": "true",
-		"stepOverTrainingData": 20
+		"stepOverTrainingData": 0
 	},
 	"OnlineRandomForest": {
 		"Tree": {
-			"height": 45,
-			"stepSizeOverData": 10
+			"height": 25,
+			"stepSizeOverData": 20
 		},
 		"amountOfTrainedTrees": 0,
 		"ownSamplingTime": 0,
@@ -52,10 +52,10 @@
 		"amountOfPointsUntilRetrain": 200,
 		"factorAmountOfUsedDims": 1.0,
 		"useBigDynamicDecisionTrees": "true",
-		"layerAmountOfBigDDT": 14,
+		"layerAmountOfBigDDT": 8,
 		"layerFastAmountOfBigDDT": 2,
 		"determineBestLayerAmount": "false",
-		"amountOfPointsCheckedPerSplit": 150,
+		"amountOfPointsCheckedPerSplit": 100,
 		"printErrorForTraining": "false"
 	},
 	"Kernel": {
