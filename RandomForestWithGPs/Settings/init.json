@@ -39,13 +39,14 @@
 		"normalizeData": "false",
 		"removeUselessDimensions": "true",
 		"readFromFolder": "true",
+		"useValidationForTraining": "true",
 		"stepOverTrainingData": 0
 	},
 	"OnlineRandomForest": {
 		"Tree": {
-			"height": 25,
+			"height": 35,
 			"performRealOnlineUpdate": "true",
-			"stepSizeOverData": 10
+			"stepSizeOverData": 3
 		},
 		"amountOfTrainedTrees": 0,
 		"ownSamplingTime": 0,
@@ -53,7 +54,7 @@
 		"amountOfPointsUntilRetrain": 200,
 		"factorAmountOfUsedDims": 1.0,
 		"useBigDynamicDecisionTrees": "true",
-		"layerAmountOfBigDDT": 8,
+		"layerAmountOfBigDDT": 11,
 		"layerFastAmountOfBigDDT": 2,
 		"determineBestLayerAmount": "false",
 		"amountOfPointsCheckedPerSplit": 100,

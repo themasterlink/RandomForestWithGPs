@@ -17,6 +17,7 @@
 TotalStorage::InternalStorage TotalStorage::m_storage;
 LabeledData TotalStorage::m_trainSet;
 LabeledData TotalStorage::m_testSet;
+LabeledData TotalStorage::m_validationSet;
 LabeledData TotalStorage::m_removeFromTrainSet;
 LabeledData TotalStorage::m_removeFromTestSet;
 LabeledVectorX TotalStorage::m_defaultEle;
@@ -136,16 +137,27 @@ void TotalStorage::readData(const int amountOfData){
 			for(boost::filesystem::directory_iterator itr(targetDir); itr != end_itr; ++itr){
 				if(boost::filesystem::is_regular_file(itr->path()) && boost::filesystem::extension(itr->path()) == ".binary"){
 					const std::string inputPath(itr->path().c_str());
-					if(!StringHelper::endsWith(inputPath, "eval_flatten_complete.binary")){
+					if(StringHelper::endsWith(inputPath, "trn_flatten_complete.binary")){
 						printOnScreen("As training:");
-						DataReader::readFromBinaryFile(wholeTrainingSet, inputPath, INT_MAX);
-					}else{
+						DataReader::readFromBinaryFile(m_trainSet, inputPath, INT_MAX);
+					}else if(StringHelper::endsWith(inputPath, "vld_flatten_complete.binary")){
+						if(Settings::getDirectBoolValue("TotalStorage.useValidationForTraining")){
+							printOnScreen("As validation:");
+						}else{
+							printOnScreen("As additional training:");
+						}
+						DataReader::readFromBinaryFile(m_validationSet, inputPath, INT_MAX);
+					}else if(StringHelper::endsWith(inputPath, "eval_flatten_complete.binary")){
 						printOnScreen("As test:");
 						DataReader::readFromBinaryFile(m_testSet, inputPath, INT_MAX);
 					}
 				}
 			}
-			m_trainSet = wholeTrainingSet;
+			if(Settings::getDirectBoolValue("TotalStorage.useValidationForTraining")){
+				m_trainSet.reserve(m_trainSet.size() + m_validationSet.size());
+				m_trainSet.insert(m_trainSet.end(), m_validationSet.begin(), m_validationSet.end());
+				m_validationSet.clear();
+			}
 		}else{
 			DataReader::readFromFiles(m_storage, folderLocation, (unsigned int) amountOfData, readTxt, didNormalizeStep);
 		}
@@ -528,4 +540,12 @@ unsigned int TotalStorage::getSmallestClassSize(){
 		}
 	}
 	return 0;
+}
+
+LabeledData* TotalStorage::getValidationSet(){
+	if(m_validationSet.size() > 0){
+		return &m_validationSet;
+	}else{
+		return nullptr;
+	}
 }

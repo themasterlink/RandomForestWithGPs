@@ -75,7 +75,7 @@ int TestManager::readAll(){
 }
 
 void TestManager::run(){
-	OnlineStorage<LabeledVectorX*> train;
+	OnlineStorage<LabeledVectorX* > train;
 	unsigned int height;
 	Settings::getValue("OnlineRandomForest.Tree.height", height);
 	std::unique_ptr<OnlineRandomForest> orf;
@@ -88,6 +88,7 @@ void TestManager::run(){
 				if(testInfo.m_mode == TestMode::LOAD){
 					readAll(); // TODO read TRAIN or TEST not both
 					orf = std::make_unique<OnlineRandomForest>(train, height, (int) TotalStorage::getAmountOfClass());
+					orf->setValidationSet(TotalStorage::getValidationSet());
 				}else if(testInfo.m_mode == TestMode::TRAIN){
 					auto data = getAllPointsFor(testInfo.m_varName);
 					OnlineRandomForest::TrainingsConfig config;

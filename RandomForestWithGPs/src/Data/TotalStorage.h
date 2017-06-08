@@ -50,6 +50,8 @@ public:
 
 	static void getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<LabeledVectorX*> >& trains, OnlineStorage<LabeledVectorX*>& test);
 
+	static LabeledData* getValidationSet();
+
 	static Mode getMode(){ return m_mode; };
 
 private:
@@ -63,6 +65,8 @@ private:
 	static LabeledData m_trainSet;
 
 	static LabeledData m_testSet;
+
+	static LabeledData m_validationSet;
 
 	static LabeledData m_removeFromTrainSet;
 

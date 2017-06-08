@@ -16,15 +16,14 @@
   <component name="ChangeListManager">
     <list default="true" id="049817e5-95a7-4829-9b2c-4499a747c94c" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" afterPath="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Settings/init.json" afterPath="$PROJECT_DIR$/Settings/init.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Base/BaseType.h" afterPath="$PROJECT_DIR$/src/Base/BaseType.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.cc" afterPath="$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.h" afterPath="$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree.h" afterPath="$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/DynamicDecisionTreeInterface.h" afterPath="$PROJECT_DIR$/src/RandomForests/DynamicDecisionTreeInterface.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree_i.h" afterPath="$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree_i.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Settings/testSettingsPy.init" afterPath="$PROJECT_DIR$/Settings/testSettingsPy.init" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/TotalStorage.cc" afterPath="$PROJECT_DIR$/src/Data/TotalStorage.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/TotalStorage.h" afterPath="$PROJECT_DIR$/src/Data/TotalStorage.h" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" afterPath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" afterPath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Tests/TestManager.cc" afterPath="$PROJECT_DIR$/src/Tests/TestManager.cc" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/CMakeFiles/" />
@@ -44,91 +43,28 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="OnlineRandomForest.cc" pinned="false" current-in-tab="true">
+      <file leaf-file-name="OnlineRandomForest.cc" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="350">
-              <caret line="567" column="52" lean-forward="true" selection-start-line="567" selection-start-column="52" selection-end-line="567" selection-end-column="52" />
+            <state relative-caret-position="356">
+              <caret line="606" column="46" lean-forward="true" selection-start-line="606" selection-start-column="46" selection-end-line="606" selection-end-column="46" />
               <folding>
-                <element signature="e#4521#13238#0" expanded="false" />
-                <element signature="e#13240#14900#0" expanded="false" />
-                <element signature="e#14902#16156#0" expanded="false" />
-                <element signature="e#16158#17765#0" expanded="false" />
-                <element signature="e#17767#18563#0" expanded="false" />
-                <element signature="e#29648#30059#0" expanded="false" />
-                <element signature="e#30061#30919#0" expanded="false" />
-                <element signature="e#30921#31320#0" expanded="false" />
-                <element signature="e#31322#32126#0" expanded="false" />
-                <element signature="e#32128#33148#0" expanded="false" />
+                <element signature="e#4549#13266#0" expanded="false" />
+                <element signature="e#13268#14928#0" expanded="false" />
+                <element signature="e#14930#16184#0" expanded="false" />
+                <element signature="e#16186#17793#0" expanded="false" />
+                <element signature="e#17795#18591#0" expanded="false" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="BaseType.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Base/BaseType.h">
+      <file leaf-file-name="TestManager.cc" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Tests/TestManager.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="340">
-              <caret line="20" column="0" lean-forward="true" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
-              <folding>
-                <element signature="e#0#2#0" expanded="true" />
-                <element signature="e#120#140#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="OnlineRandomForest.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="331">
-              <caret line="54" column="28" lean-forward="false" selection-start-line="54" selection-start-column="26" selection-end-line="54" selection-end-column="28" />
-              <folding>
-                <element signature="e#171#206#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="DynamicDecisionTreeInterface.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTreeInterface.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="187">
-              <caret line="16" column="17" lean-forward="false" selection-start-line="16" selection-start-column="17" selection-end-line="16" selection-end-column="17" />
+            <state relative-caret-position="339">
+              <caret line="90" column="36" lean-forward="true" selection-start-line="90" selection-start-column="36" selection-end-line="90" selection-end-column="36" />
               <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="BigDynamicDecisionTree.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="289">
-              <caret line="31" column="11" lean-forward="false" selection-start-line="31" selection-start-column="11" selection-end-line="31" selection-end-column="11" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="BigDynamicDecisionTree.cc" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.cc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-35">
-              <caret line="248" column="51" lean-forward="false" selection-start-line="248" selection-start-column="51" selection-end-line="248" selection-end-column="51" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="DynamicDecisionTree_i.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree_i.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="262">
-              <caret line="148" column="94" lean-forward="false" selection-start-line="148" selection-start-column="94" selection-end-line="148" selection-end-column="94" />
-              <folding>
-                <element signature="e#1982#2000#0" expanded="true" />
-                <element signature="e#2198#2216#0" expanded="true" />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -136,31 +72,71 @@
       <file leaf-file-name="ThreadMaster.cc" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Base/ThreadMaster.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="646">
+            <state relative-caret-position="799">
               <caret line="100" column="83" lean-forward="false" selection-start-line="100" selection-start-column="83" selection-end-line="100" selection-end-column="83" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="init.json" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Settings/init.json">
+      <file leaf-file-name="OnlineRandomForest.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="391">
-              <caret line="59" column="39" lean-forward="false" selection-start-line="59" selection-start-column="39" selection-end-line="59" selection-end-column="39" />
+            <state relative-caret-position="322">
+              <caret line="103" column="9" lean-forward="false" selection-start-line="103" selection-start-column="9" selection-end-line="103" selection-end-column="9" />
+              <folding>
+                <element signature="e#171#206#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TotalStorage.cc" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Data/TotalStorage.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="286">
+              <caret line="544" column="27" lean-forward="false" selection-start-line="544" selection-start-column="27" selection-end-line="544" selection-end-column="27" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DynamicDecisionTree.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree.h">
+      <file leaf-file-name="init.json" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Settings/init.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="253">
+              <caret line="41" column="41" lean-forward="false" selection-start-line="41" selection-start-column="37" selection-end-line="41" selection-end-column="41" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="generateTestSettings.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/PythonScripts/generateTestSettings.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="204">
-              <caret line="41" column="35" lean-forward="true" selection-start-line="41" selection-start-column="35" selection-end-line="41" selection-end-column="35" />
-              <folding>
-                <element signature="e#174#208#0" expanded="true" />
-              </folding>
+              <caret line="12" column="60" lean-forward="false" selection-start-line="12" selection-start-column="60" selection-end-line="12" selection-end-column="60" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="testSettings.init" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Settings/testSettings.init">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="255">
+              <caret line="15" column="13" lean-forward="false" selection-start-line="15" selection-start-column="13" selection-end-line="15" selection-end-column="13" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="testSettingsPy.init" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Settings/testSettingsPy.init">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="85">
+              <caret line="5" column="31" lean-forward="false" selection-start-line="5" selection-start-column="31" selection-end-line="5" selection-end-column="31" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -176,9 +152,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>memorz c</find>
-      <find>memorz</find>
-      <find>memor</find>
       <find>M</find>
       <find>Me</find>
       <find>Mempr</find>
@@ -206,6 +179,9 @@
       <find>Last upa</find>
       <find>Last up</find>
       <find>Last upd</find>
+      <find>startPos</find>
+      <find>startP</find>
+      <find>m_val</find>
     </findStrings>
     <replaceStrings>
       <replace>REAL_</replace>
@@ -259,7 +235,6 @@
         <option value="$PROJECT_DIR$/src/RandomForestGaussianProcess/OnlineRandomForestIVMs.cc" />
         <option value="$PROJECT_DIR$/src/RandomForestGaussianProcess/RandomForestGaussianProcess.cc" />
         <option value="$PROJECT_DIR$/src/Tests/multiClassIVMTest.h" />
-        <option value="$PROJECT_DIR$/src/Data/TotalStorage.h" />
         <option value="$PROJECT_DIR$/src/Tests/binaryClassRFTest.h" />
         <option value="$PROJECT_DIR$/src/Base/Settings.cc" />
         <option value="$PROJECT_DIR$/src/Tests/binaryClassORFTest.h" />
@@ -275,7 +250,6 @@
         <option value="$PROJECT_DIR$/src/Utility/StringHelper.h" />
         <option value="$PROJECT_DIR$/src/Utility/StringHelper.cc" />
         <option value="$PROJECT_DIR$/src/Base/ScreenOutput.cc" />
-        <option value="$PROJECT_DIR$/src/Data/TotalStorage.cc" />
         <option value="$PROJECT_DIR$/src/Data/DataReader.cc" />
         <option value="$PROJECT_DIR$/src/Base/InformationPackage.cc" />
         <option value="$PROJECT_DIR$/src/Base/InformationPackage.h" />
@@ -286,9 +260,6 @@
         <option value="$PROJECT_DIR$/src/main.cc" />
         <option value="$PROJECT_DIR$/src/Tests/TestInformation.h" />
         <option value="$PROJECT_DIR$/src/Tests/TestInformation.cc" />
-        <option value="$PROJECT_DIR$/src/Tests/TestManager.cc" />
-        <option value="$PROJECT_DIR$/Settings/testSettingsPy.init" />
-        <option value="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" />
         <option value="$PROJECT_DIR$/src/Data/OnlineStorage.h" />
         <option value="$PROJECT_DIR$/src/Data/OnlineStorage_i.h" />
         <option value="$PROJECT_DIR$/src/Base/Types.h" />
@@ -296,12 +267,17 @@
         <option value="$PROJECT_DIR$/src/RandomForests/DynamicDecisionTreeInterface.h" />
         <option value="$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree.h" />
         <option value="$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.h" />
-        <option value="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" />
         <option value="$PROJECT_DIR$/src/Base/BaseType.h" />
         <option value="$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.cc" />
         <option value="$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree_i.h" />
-        <option value="$PROJECT_DIR$/Settings/init.json" />
+        <option value="$PROJECT_DIR$/src/Data/TotalStorage.h" />
+        <option value="$PROJECT_DIR$/src/Tests/TestManager.cc" />
+        <option value="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" />
+        <option value="$PROJECT_DIR$/src/Data/TotalStorage.cc" />
         <option value="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" />
+        <option value="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" />
+        <option value="$PROJECT_DIR$/Settings/testSettingsPy.init" />
+        <option value="$PROJECT_DIR$/Settings/init.json" />
       </list>
     </option>
   </component>
@@ -313,7 +289,7 @@
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
-    <option name="width" value="1680" />
+    <option name="width" value="1678" />
     <option name="height" value="1024" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
@@ -660,7 +636,8 @@
       <workItem from="1496902670532" duration="17000" />
       <workItem from="1496903096556" duration="13189000" />
       <workItem from="1496918623459" duration="3629000" />
-      <workItem from="1496922667727" duration="6681000" />
+      <workItem from="1496922667727" duration="6940000" />
+      <workItem from="1496930944728" duration="4881000" />
     </task>
     <task id="LOCAL-00001" summary="Bug fixes (no dead lock in waiting, better exit for screenouput, memory usage in testmanager corrected, renaming of StringHelper functions)">
       <created>1496756074975</created>
@@ -697,11 +674,18 @@
       <option name="project" value="LOCAL" />
       <updated>1496926106110</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="added real online learning for ORFs">
+      <created>1496930363821</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1496930363821</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="256213000" />
+    <option name="totallyTimeSpent" value="261353000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -713,20 +697,18 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1680" height="1024" extended-state="4" />
+    <frame x="0" y="0" width="1678" height="1024" extended-state="4" />
     <editor active="true" />
     <layout>
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32969433" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.41703057" sideWeight="0.49761903" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.41703057" sideWeight="0.49520957" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32881" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.40938863" sideWeight="0.50238097" order="8" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.41703057" sideWeight="0.5047904" order="8" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922733" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4279476" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3209607" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32881" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24940334" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3209607" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39847162" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -734,6 +716,8 @@
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32881" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -750,7 +734,8 @@
     <MESSAGE value="added splitting to the TestManager, now a dataset can be a split of many sets" />
     <MESSAGE value="ORF update now compatible with TestManager, added ScreenOuput for ORF predict" />
     <MESSAGE value="workspace.xml for clion" />
-    <option name="LAST_COMMIT_MESSAGE" value="workspace.xml for clion" />
+    <MESSAGE value="added real online learning for ORFs" />
+    <option name="LAST_COMMIT_MESSAGE" value="added real online learning for ORFs" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -783,13 +768,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/Data/TotalStorage.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="14" column="6" lean-forward="false" selection-start-line="14" selection-start-column="6" selection-end-line="14" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/include/c++/5/bits/basic_string.h" />
     <entry file="file://$USER_HOME$/f_soft/foreign_packages/Eigen/3.3.2/include/Eigen/src/Core/util/Constants.h" />
     <entry file="file://$PROJECT_DIR$/src/Utility/StringHelper.h">
@@ -843,14 +821,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/TotalStorage.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2380">
-          <caret line="140" column="93" lean-forward="false" selection-start-line="140" selection-start-column="93" selection-end-line="140" selection-end-column="93" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -981,10 +951,168 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Settings/testSettingsPy.init">
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/IVMMultiBinary.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="5" column="23" lean-forward="false" selection-start-line="5" selection-start-column="23" selection-end-line="5" selection-end-column="23" />
+        <state relative-caret-position="296">
+          <caret line="38" column="59" lean-forward="false" selection-start-line="38" selection-start-column="59" selection-end-line="38" selection-end-column="59" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/include/c++/5/bits/stl_numeric.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="296">
+          <caret line="81" column="4" lean-forward="false" selection-start-line="81" selection-start-column="4" selection-end-line="81" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/Types.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-320">
+          <caret line="8" column="16" lean-forward="false" selection-start-line="8" selection-start-column="16" selection-end-line="8" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/InformationPackage.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="169">
+          <caret line="44" column="25" lean-forward="false" selection-start-line="44" selection-start-column="25" selection-end-line="44" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="697">
+          <caret line="41" column="35" lean-forward="false" selection-start-line="41" selection-start-column="35" selection-end-line="41" selection-end-column="35" />
+          <folding>
+            <element signature="e#174#208#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="527">
+          <caret line="31" column="11" lean-forward="false" selection-start-line="31" selection-start-column="11" selection-end-line="31" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/BaseType.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="20" column="0" lean-forward="false" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#2#0" expanded="true" />
+            <element signature="e#120#140#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4216">
+          <caret line="248" column="51" lean-forward="false" selection-start-line="248" selection-start-column="51" selection-end-line="248" selection-end-column="51" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTreeInterface.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="272">
+          <caret line="16" column="17" lean-forward="false" selection-start-line="16" selection-start-column="17" selection-end-line="16" selection-end-column="17" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree_i.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2516">
+          <caret line="148" column="94" lean-forward="false" selection-start-line="148" selection-start-column="94" selection-end-line="148" selection-end-column="94" />
+          <folding>
+            <element signature="e#1982#2000#0" expanded="true" />
+            <element signature="e#2198#2216#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Data/TotalStorage.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="169">
+          <caret line="68" column="23" lean-forward="false" selection-start-line="68" selection-start-column="23" selection-end-line="68" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="322">
+          <caret line="103" column="9" lean-forward="false" selection-start-line="103" selection-start-column="9" selection-end-line="103" selection-end-column="9" />
+          <folding>
+            <element signature="e#171#206#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Tests/TestManager.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="339">
+          <caret line="90" column="36" lean-forward="true" selection-start-line="90" selection-start-column="36" selection-end-line="90" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/ThreadMaster.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="799">
+          <caret line="100" column="83" lean-forward="false" selection-start-line="100" selection-start-column="83" selection-end-line="100" selection-end-column="83" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="141">
+          <caret line="51" column="21" lean-forward="true" selection-start-line="51" selection-start-column="21" selection-end-line="51" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage_i.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="277">
+          <caret line="42" column="31" lean-forward="true" selection-start-line="42" selection-start-column="31" selection-end-line="44" selection-end-column="72" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Data/TotalStorage.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="286">
+          <caret line="544" column="27" lean-forward="false" selection-start-line="544" selection-start-column="27" selection-end-line="544" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="356">
+          <caret line="606" column="46" lean-forward="true" selection-start-line="606" selection-start-column="46" selection-end-line="606" selection-end-column="46" />
+          <folding>
+            <element signature="e#4549#13266#0" expanded="false" />
+            <element signature="e#13268#14928#0" expanded="false" />
+            <element signature="e#14930#16184#0" expanded="false" />
+            <element signature="e#16186#17793#0" expanded="false" />
+            <element signature="e#17795#18591#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PythonScripts/generateTestSettings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="12" column="60" lean-forward="false" selection-start-line="12" selection-start-column="60" selection-end-line="12" selection-end-column="60" />
           <folding />
         </state>
       </provider>
@@ -997,171 +1125,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PythonScripts/generateTestSettings.py">
+    <entry file="file://$PROJECT_DIR$/Settings/testSettingsPy.init">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="9" column="55" lean-forward="false" selection-start-line="9" selection-start-column="55" selection-end-line="9" selection-end-column="55" />
+        <state relative-caret-position="85">
+          <caret line="5" column="31" lean-forward="false" selection-start-line="5" selection-start-column="31" selection-end-line="5" selection-end-column="31" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/TestManager.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="25" column="46" lean-forward="false" selection-start-line="25" selection-start-column="46" selection-end-line="25" selection-end-column="46" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/IVMMultiBinary.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="296">
-          <caret line="38" column="59" lean-forward="false" selection-start-line="38" selection-start-column="59" selection-end-line="38" selection-end-column="59" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="719">
-          <caret line="88" column="18" lean-forward="false" selection-start-line="88" selection-start-column="18" selection-end-line="88" selection-end-column="18" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage_i.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="719">
-          <caret line="149" column="1" lean-forward="false" selection-start-line="149" selection-start-column="1" selection-end-line="149" selection-end-column="1" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/c++/5/bits/stl_numeric.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="296">
-          <caret line="81" column="4" lean-forward="false" selection-start-line="81" selection-start-column="4" selection-end-line="81" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/Types.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-320">
-          <caret line="8" column="16" lean-forward="false" selection-start-line="8" selection-start-column="16" selection-end-line="8" selection-end-column="16" />
-          <folding>
-            <element signature="e#0#2#0" expanded="false" />
-            <element signature="e#320#503#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/InformationPackage.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="169">
-          <caret line="44" column="25" lean-forward="false" selection-start-line="44" selection-start-column="25" selection-end-line="44" selection-end-column="25" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/ThreadMaster.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="646">
-          <caret line="100" column="83" lean-forward="false" selection-start-line="100" selection-start-column="83" selection-end-line="100" selection-end-column="83" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="41" column="35" lean-forward="true" selection-start-line="41" selection-start-column="35" selection-end-line="41" selection-end-column="35" />
-          <folding>
-            <element signature="e#174#208#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="31" column="11" lean-forward="false" selection-start-line="31" selection-start-column="11" selection-end-line="31" selection-end-column="11" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/BaseType.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="20" column="0" lean-forward="true" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#2#0" expanded="true" />
-            <element signature="e#120#140#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-35">
-          <caret line="248" column="51" lean-forward="false" selection-start-line="248" selection-start-column="51" selection-end-line="248" selection-end-column="51" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTreeInterface.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="16" column="17" lean-forward="false" selection-start-line="16" selection-start-column="17" selection-end-line="16" selection-end-column="17" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="331">
-          <caret line="54" column="28" lean-forward="false" selection-start-line="54" selection-start-column="26" selection-end-line="54" selection-end-column="28" />
-          <folding>
-            <element signature="e#171#206#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree_i.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="262">
-          <caret line="148" column="94" lean-forward="false" selection-start-line="148" selection-start-column="94" selection-end-line="148" selection-end-column="94" />
-          <folding>
-            <element signature="e#1982#2000#0" expanded="true" />
-            <element signature="e#2198#2216#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Settings/init.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="391">
-          <caret line="59" column="39" lean-forward="false" selection-start-line="59" selection-start-column="39" selection-end-line="59" selection-end-column="39" />
+        <state relative-caret-position="253">
+          <caret line="41" column="41" lean-forward="false" selection-start-line="41" selection-start-column="37" selection-end-line="41" selection-end-column="41" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="350">
-          <caret line="567" column="52" lean-forward="true" selection-start-line="567" selection-start-column="52" selection-end-line="567" selection-end-column="52" />
-          <folding>
-            <element signature="e#4521#13238#0" expanded="false" />
-            <element signature="e#13240#14900#0" expanded="false" />
-            <element signature="e#14902#16156#0" expanded="false" />
-            <element signature="e#16158#17765#0" expanded="false" />
-            <element signature="e#17767#18563#0" expanded="false" />
-            <element signature="e#29648#30059#0" expanded="false" />
-            <element signature="e#30061#30919#0" expanded="false" />
-            <element signature="e#30921#31320#0" expanded="false" />
-            <element signature="e#31322#32126#0" expanded="false" />
-            <element signature="e#32128#33148#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>

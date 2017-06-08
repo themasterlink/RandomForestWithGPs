@@ -101,6 +101,8 @@ public:
 
 	void readTrainingsModeFromSetting();
 
+	void setValidationSet(LabeledData* pValidation){ m_validationSet = pValidation; }
+
 private:
 
 	using SortedDecisionTreePair = std::pair<DynamicDecisionTreeInterface*, Real>;
@@ -175,6 +177,8 @@ private:
 	std::vector<Vector2 > m_minMaxValues;
 
 	OnlineStorage<LabeledVectorX*>& m_storage;
+
+	LabeledData* m_validationSet;
 
 	mutable DecisionTreesContainer m_trees;
 

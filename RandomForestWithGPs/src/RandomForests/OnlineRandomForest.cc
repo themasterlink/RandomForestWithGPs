@@ -19,6 +19,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
 		m_amountOfUsedDims(0),
 		m_factorForUsedDims((Real) 0.),
 		m_storage(storage),
+		m_validationSet(nullptr),
 		m_firstTrainingDone(false),
 		m_useBigDynamicDecisionTrees(false),
 		m_amountOfUsedLayer(0,0),
@@ -549,13 +550,24 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 	package->setStandartInformation("Sort trees after performance");
 	if(m_trees.size() == 1){
 		auto correct = 0u;
-		const auto startPos = m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
-		for(int i = startPos; i < m_storage.size(); ++i){
-			if(m_storage[i]->getLabel() == (*m_trees.begin())->predict(*m_storage[i])){
-				++correct;
+		unsigned int size = 0;
+		if(m_validationSet != nullptr){
+			for(auto& point : *m_validationSet){
+				if(point->getLabel() == (*m_trees.begin())->predict(*point)){
+					++correct;
+				}
 			}
+			size = (unsigned int) m_validationSet->size();
+		}else{
+			const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+			for(int i = startPos; i < m_storage.size(); ++i){
+				if(m_storage[i]->getLabel() == (*m_trees.begin())->predict(*m_storage[i])){
+					++correct;
+				}
+			}
+			size = m_storage.size() - startPos;
 		}
-		list->push_back(SortedDecisionTreePair(*m_trees.begin(), correct / (Real) (m_storage.size()) * 100));
+		list->push_back(SortedDecisionTreePair(*m_trees.begin(), correct / (Real) size * (Real) 100.0));
 		return;
 	}
 	ThreadMaster::appendThreadToList(package);
@@ -577,16 +589,24 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 		for(auto it = ownList.begin(); it != ownList.end(); ++it){
 			int correct = 0;
 			DynamicDecisionTreeInterface* tree = it->first;
-//			for(unsigned int k = m_storage.getLastUpdateIndex(); k < m_storage.size(); ++k){
-//				const LabeledVectorX& point = *(m_storage[k]);
-
-			const auto startPos = m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
-			for(int i = startPos; i < m_storage.size(); ++i){
-				if(m_storage[i]->getLabel() == tree->predict(*m_storage[i])){
-					++correct;
+			unsigned int size = 0;
+			if(m_validationSet != nullptr){
+				for(auto& point : *m_validationSet){
+					if(point->getLabel() == (*m_trees.begin())->predict(*point)){
+						++correct;
+					}
 				}
+				size = (unsigned int) m_validationSet->size();
+			}else{
+				const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+				for(int i = startPos; i < m_storage.size(); ++i){
+					if(m_storage[i]->getLabel() == tree->predict(*m_storage[i])){
+						++correct;
+					}
+				}
+				size = m_storage.size() - startPos;
 			}
-			it->second = correct / (Real) (m_storage.size()) * (Real) 100.;
+			it->second = correct / (Real) size * (Real) 100.;
 		}
 		SortedDecisionTreeList sortedList;
 		for(auto it = ownList.begin(); it != ownList.end(); ++it){
@@ -636,16 +656,27 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 		switcher = new DynamicDecisionTree<unsigned int>(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 	}
 	Real correctValOfSwitcher = pair.second;
-	const auto startPos = m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+	const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
 	for(unsigned int i = 0; i < amountOfSteps - 1; ++i){
 		switcher->train((unsigned int) m_amountOfUsedDims, *m_generators[threadNr], m_useRealOnlineUpdate); // retrain worst tree
 		int correct = 0;
-		for(unsigned int j = startPos; j < m_storage.size(); ++j){
-			if(m_storage[j]->getLabel() == switcher->predict(*m_storage[j])){
-				++correct;
+		unsigned int size = 0;
+		if(m_validationSet != nullptr){
+			for(auto& point : *m_validationSet){
+				if(point->getLabel() == (*m_trees.begin())->predict(*point)){
+					++correct;
+				}
 			}
+			size = (unsigned int) m_validationSet->size();
+		}else{
+			for(unsigned int j = startPos; j < m_storage.size(); ++j){
+				if(m_storage[j]->getLabel() == switcher->predict(*m_storage[j])){
+					++correct;
+				}
+			}
+			size = m_storage.size() - startPos;
 		}
-		const auto correctVal = correct / (Real) m_storage.size() * (Real) 100.;
+		const auto correctVal = correct / (Real) size * (Real) 100.;
 		mutex->lock();
 		pair = std::move(*list->begin()); // get new element
 		list->pop_front(); // remove it
