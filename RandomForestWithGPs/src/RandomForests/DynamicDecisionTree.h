@@ -43,12 +43,12 @@ public:
 
 	virtual ~DynamicDecisionTree();
 
-	void train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT &generator){
-		train(amountOfUsedDims, generator, 0, false);
+	void train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT &generator, const bool useRealOnlineUpdate) override {
+		train(amountOfUsedDims, generator, 0, false, useRealOnlineUpdate);
 	}
 
 	bool train(dimType amountOfUsedDims, RandomNumberGeneratorForDT &generator, const dimType tryCounter,
-			   const bool saveDataPosition);
+			   const bool saveDataPosition, const bool useRealOnlineUpdate);
 
 	Real trySplitFor(const Real usedSplitValue, const unsigned int usedDim,
 					 const std::vector<unsigned int> &dataInNode, std::vector<unsigned int> &leftHisto,
@@ -60,8 +60,8 @@ public:
 
 	unsigned int predict(const VectorX &point, int &winningLeafNode) const;
 
-	bool
-	predictIfPointsShareSameLeaveWithHeight(const VectorX &point1, const VectorX &point2, const int usedHeight) const;
+	bool predictIfPointsShareSameLeaveWithHeight(const VectorX& point1, const VectorX& point2,
+											const int usedHeight) const override;
 
 	void predictData(const Data &data, Labels &labels) const{
 		UNUSED(data);
@@ -87,7 +87,7 @@ public:
 	void setUsedDataPositions(
 			std::vector<unsigned int> *usedDataPositions){ m_useOnlyThisDataPositions = usedDataPositions; };
 
-	MemoryType getMemSize() const;
+	MemoryType getMemSize() const override;
 
 //	void printStream(std::ostream &output, const Real precision = 3);
 

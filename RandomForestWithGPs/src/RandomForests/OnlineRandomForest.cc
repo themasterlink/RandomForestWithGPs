@@ -25,7 +25,8 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
 		m_folderForSavedTrees("./"),
 		m_savedAnyTreesToDisk(false),
 		m_amountOfTrainedTrees(0),
-		m_usedMemory(0){
+		m_usedMemory(0),
+		m_useRealOnlineUpdate(Settings::getDirectBoolValue("OnlineRandomForest.Tree.performRealOnlineUpdate")){
 	storage.attach(this);
 	Settings::getValue("OnlineRandomForest.factorAmountOfUsedDims", m_factorForUsedDims);
 	Settings::getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
@@ -75,7 +76,7 @@ void OnlineRandomForest::trainInParallel(RandomNumberGeneratorForDT* generator, 
 		}else{
 			treePointer = new DynamicDecisionTree<unsigned int>(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 		}
-		treePointer->train((unsigned int) m_amountOfUsedDims, *generator);
+		treePointer->train((unsigned int) m_amountOfUsedDims, *generator, m_useRealOnlineUpdate);
 		const MemoryType memForTree = treePointer->getMemSize();
 		printInPackageOnScreen(package, "Number " << counter++ << " was calculated, total memory usage: " << StringHelper::convertMemorySpace(m_usedMemory + memForTree));
 		if(printErrorGraph){
@@ -231,8 +232,8 @@ void OnlineRandomForest::train(){
 	std::list<Real> points;
 	while(stillOneRunning != 0){
 		stillOneRunning = 0;
-		for(unsigned int i = 0; i < packages.size(); ++i){
-			if(!packages[i]->isTaskFinished()){
+		for(auto& package : packages){
+			if(!package->isTaskFinished()){
 				++stillOneRunning;
 			}
 		}
@@ -276,9 +277,9 @@ void OnlineRandomForest::train(){
 	}else{
 		printError("The type is not defined here!");
 	}
-	for(unsigned int i = 0; i < packages.size(); ++i){
-		ThreadMaster::threadHasFinished(packages[i]);
-		SAVE_DELETE(packages[i]);
+	for(auto& package : packages){
+		ThreadMaster::threadHasFinished(package);
+		SAVE_DELETE(package);
 	}
 	if(counterForClasses != nullptr && points.size() > 0){
 		DataWriterForVisu::writeSvg("correct.svg", points, true);
@@ -382,7 +383,7 @@ void OnlineRandomForest::tryAmountForLayers(RandomNumberGeneratorForDT* generato
 				auto tree = std::make_unique<BigDynamicDecisionTree>(m_storage, m_maxDepth, m_amountOfClasses,
 																	 layerAmount, amountOfFastLayers,
 																	 m_amountOfPointsCheckedPerSplit);
-				tree->train((unsigned int) m_amountOfUsedDims, *generator);
+				tree->train((unsigned int) m_amountOfUsedDims, *generator, m_useRealOnlineUpdate);
 				++counter;
 			}
 			const Real corr = counter; //correctAmount / (Real) m_storage.size() * 100. ;
@@ -548,8 +549,9 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 	package->setStandartInformation("Sort trees after performance");
 	if(m_trees.size() == 1){
 		auto correct = 0u;
-		for(auto& point : m_storage){
-			if(point->getLabel() == (*m_trees.begin())->predict(*point)){
+		const auto startPos = m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+		for(int i = startPos; i < m_storage.size(); ++i){
+			if(m_storage[i]->getLabel() == (*m_trees.begin())->predict(*m_storage[i])){
 				++correct;
 			}
 		}
@@ -577,9 +579,10 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 			DynamicDecisionTreeInterface* tree = it->first;
 //			for(unsigned int k = m_storage.getLastUpdateIndex(); k < m_storage.size(); ++k){
 //				const LabeledVectorX& point = *(m_storage[k]);
-			for(OnlineStorage<LabeledVectorX*>::ConstIterator itPoint = m_storage.begin(); itPoint != m_storage.end(); ++itPoint){
-				LabeledVectorX& point = **itPoint;
-				if(point.getLabel() == tree->predict(point)){
+
+			const auto startPos = m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+			for(int i = startPos; i < m_storage.size(); ++i){
+				if(m_storage[i]->getLabel() == tree->predict(*m_storage[i])){
 					++correct;
 				}
 			}
@@ -633,11 +636,12 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 		switcher = new DynamicDecisionTree<unsigned int>(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 	}
 	Real correctValOfSwitcher = pair.second;
+	const auto startPos = m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
 	for(unsigned int i = 0; i < amountOfSteps - 1; ++i){
-		switcher->train((unsigned int) m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
+		switcher->train((unsigned int) m_amountOfUsedDims, *m_generators[threadNr], m_useRealOnlineUpdate); // retrain worst tree
 		int correct = 0;
-		for(const auto& point : m_storage){
-			if(point->getLabel() == switcher->predict(*point)){
+		for(unsigned int j = startPos; j < m_storage.size(); ++j){
+			if(m_storage[j]->getLabel() == switcher->predict(*m_storage[j])){
 				++correct;
 			}
 		}

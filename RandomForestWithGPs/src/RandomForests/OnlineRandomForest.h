@@ -204,6 +204,8 @@ private:
 
 	TrainingsConfig m_trainingsConfig;
 
+	const bool m_useRealOnlineUpdate;
+
 };
 
 

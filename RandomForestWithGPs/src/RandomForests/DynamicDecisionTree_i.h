@@ -91,7 +91,8 @@ DynamicDecisionTree<dimType>::~DynamicDecisionTree(){
 
 template<typename dimType>
 bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberGeneratorForDT &generator,
-										 const dimType tryCounter, const bool saveDataPosition){
+										 const dimType tryCounter, const bool saveDataPosition,
+										 const bool useRealOnlineUpdate){
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED || m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		// reset training
 		std::fill(m_splitDim.begin(), m_splitDim.end(), NodeType::NODE_IS_NOT_USED);
@@ -144,33 +145,20 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 	// 2 3
 	if(m_useOnlyThisDataPositions == nullptr){
 		auto& dataPos = dataPosition[1];
-#ifdef USE_REAL_ONLINE_DDT
+		const auto startPos = useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+		const auto size = useRealOnlineUpdate ? m_storage.getAmountOfNew() : m_storage.size();
 		if(generator.useWholeDataSet()){
-			dataPos.resize(m_storage.getAmountOfNew());
-			std::iota(dataPos.begin(), dataPos.end(), m_storage.getAmountOfNew());
+			dataPos.resize(size);
+			std::iota(dataPos.begin(), dataPos.end(), startPos);
 		}else{
-			const auto amountOfPoints = (unsigned int) (m_storage.getAmountOfNew() / (generator.getStepSize() * 0.375));
+			const auto amountOfPoints = (unsigned int) (size / (generator.getStepSize() * 0.375));
 			dataPos.reserve(amountOfPoints);
 			// -1 that the first value in the storage is used too
-			for(unsigned int i = m_storage.getLastUpdateIndex() + generator.getRandStepOverStorage() - 1;
+			for(unsigned int i = startPos + generator.getRandStepOverStorage() - 1;
 				i < m_storage.size(); i += generator.getRandStepOverStorage()){
 				dataPos.push_back(i);
 			}
 		}
-#else // USE_REAL_ONLINE_DDT
-		if(generator.useWholeDataSet()){
-			dataPos.resize(m_storage.size());
-			std::iota(dataPos.begin(), dataPos.end(), 0);
-		}else{
-			const auto amountOfPoints = (unsigned int) (m_storage.size() / (generator.getStepSize() * 0.375));
-			dataPos.reserve(amountOfPoints);
-			// -1 that the first value in the storage is used too
-			for(unsigned int i = generator.getRandStepOverStorage() - 1;
-				i < m_storage.size(); i += generator.getRandStepOverStorage()){
-				dataPos.push_back(i);
-			}
-		}
-#endif // USE_REAL_ONLINE_DDT
 	}
 //	else{ // no need take ref to
 //		dataPosition[1].insert(dataPosition[1].end(), m_useOnlyThisDataPositions->begin(), m_useOnlyThisDataPositions->end());
@@ -302,7 +290,7 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 	}
 	if(m_splitDim[1] == NodeType::NODE_CAN_BE_USED && tryCounter < 5){ // five splits are enough to try
 		// try again!
-		return train(amountOfUsedDims,generator, tryCounter + 1, saveDataPosition);
+		return train(amountOfUsedDims,generator, tryCounter + 1, saveDataPosition, useRealOnlineUpdate);
 	}else if(tryCounter >= 5){
 		return false;
 	}
