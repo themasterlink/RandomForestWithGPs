@@ -446,8 +446,11 @@ bool OnlineRandomForest::update(){
 		auto list = std::make_unique<SortedDecisionTreeList>(); // new SortedDecisionTreeList());
 		printOnScreen("Predict all trees on all data points and sort them");
 		sortTreesAfterPerformance(*list);
-		printOnScreen("Finished sorting, worst tree has: " << list->begin()->second);
-
+		auto it = list->begin();
+		for(unsigned int i = 0; i < list->size() / 2;++i){ ++it; }
+		AvgNumber avg;
+		for(auto& val : *list){ avg.addNew(val.second); }
+		printOnScreen("Finished sorting, worst tree has: " << list->begin()->second << ", best tree has: " << list->rbegin()->second << ", median: " << it->second << ", avg: " << avg.mean());
 		if(list->size() != m_trees.size()){
 			printError("The sorting process failed, list size is: " << list->size() << ", should be: " << m_trees.size());
 			return false;
@@ -592,7 +595,7 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 			unsigned int size = 0;
 			if(m_validationSet != nullptr){
 				for(auto& point : *m_validationSet){
-					if(point->getLabel() == (*m_trees.begin())->predict(*point)){
+					if(point->getLabel() == tree->predict(*point)){
 						++correct;
 					}
 				}
@@ -663,7 +666,7 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 		unsigned int size = 0;
 		if(m_validationSet != nullptr){
 			for(auto& point : *m_validationSet){
-				if(point->getLabel() == (*m_trees.begin())->predict(*point)){
+				if(point->getLabel() == switcher->predict(*point)){
 					++correct;
 				}
 			}

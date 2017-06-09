@@ -37,9 +37,9 @@
 		"folderTestNr": 4,
 		"excludeClass": 1000,
 		"normalizeData": "false",
-		"removeUselessDimensions": "true",
+		"removeUselessDimensions": "false",
 		"readFromFolder": "true",
-		"useValidationForTraining": "true",
+		"useValidationForTraining": "false",
 		"stepOverTrainingData": 0
 	},
 	"OnlineRandomForest": {

@@ -51,7 +51,7 @@ public:
 
 	class TestDefineName {
 	public:
-		TestDefineName(): m_splitAmount(-1){};
+		TestDefineName(): m_includeClasses(true), m_splitAmount(-1){};
 
 		std::string getVarName() const;
 

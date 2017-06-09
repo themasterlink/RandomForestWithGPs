@@ -25,7 +25,7 @@ DynamicDecisionTree<dimType>::DynamicDecisionTree(OnlineStorage<LabeledVectorX *
 		m_amountOfPointsCheckedPerSplit((decltype(m_amountOfPointsCheckedPerSplit)) amountOfPointsPerSplit),
 		m_splitValues(m_maxInternalNodeNr + 1), // + 1 -> no use of the first element
 		m_splitDim(m_maxInternalNodeNr + 1, (dimType) NodeType::NODE_IS_NOT_USED),
-		m_labelsOfWinningClassesInLeaves(pow2(maxDepth), (dimType) UNDEF_CLASS_LABEL),
+		m_labelsOfWinningClassesInLeaves(m_maxInternalNodeNr + 1, (dimType) UNDEF_CLASS_LABEL),
 		m_dataPositions(nullptr),
 		m_useOnlyThisDataPositions(nullptr){
 	static_assert(m_maxAmountOfElements > UNDEF_CLASS_LABEL, "The undef class label is higher than the highest value allowed in the DDT!");
@@ -123,8 +123,8 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 				for(unsigned int j = 0; j < i; ++j){
 					if(randNr == usedDims[j]){
 						doAgain = true;
-						break;
 					}
+					break;
 				}
 				if(!doAgain){
 					usedDims[i] = randNr;
@@ -489,6 +489,9 @@ unsigned int DynamicDecisionTree<dimType>::amountOfClasses() const{
 
 template<typename dimType>
 void DynamicDecisionTree<dimType>::deleteDataPositions(){
+	if(m_useOnlyThisDataPositions != nullptr){
+		printError("This should always be zero if the other one is deleted");
+	}
 	SAVE_DELETE(m_dataPositions);
 }
 

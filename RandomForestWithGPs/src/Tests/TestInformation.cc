@@ -43,7 +43,7 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 			bool foundFrom = false, foundClasses = false;
 			for(unsigned int i = 0; i < words.size() - 1; ++i){
 				if(words[i] == "from"){
-					if(m_definitions.find(words[i + 1]) != m_definitions.end()){
+					if(m_definitions.find(getDefinition(words[i + 1]).getVarName()) != m_definitions.end()){
 						defineName.m_firstFromVariable = words[i + 1];
 					}else{
 						printErrorAndQuit("A type definition can only refer to the basic types " << trainSettingName << " or "
@@ -75,6 +75,11 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 			if(!foundFrom){
 				printErrorAndQuit("From must be defined in the def: " << def);
 			}
+			if(!foundClasses){
+				// default is use all classes
+				defineName.m_includeClasses = true;
+				defineName.m_classes.push_back(UNDEF_CLASS_LABEL);
+			}
 			m_definitions.emplace(defineName.getVarName(), defineName);
 			break;
 		}
@@ -93,7 +98,6 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 						defineName.m_firstFromVariable = words[0];
 						defineName.m_secondFromVariable= words[2];
 						defineName.m_includeClasses = false;
-						const std::string name = getDefinition(words[0]).getVarName();
 						m_definitions.emplace(defineName.getVarName(), defineName);
 					}else{
 						printErrorAndQuit("This type was not defined before: " << words[2] << ", used in: " << def);
@@ -169,7 +173,7 @@ bool TestInformation::decipherClasses(const std::vector<std::string> &words, con
 									  const unsigned int end, std::vector<unsigned int> &usedClasses){
 	usedClasses.clear();
 	if(words[start] == "all"){
-		usedClasses.push_back((unsigned int) UNDEF_CLASS_LABEL);
+		usedClasses.push_back(UNDEF_CLASS_LABEL);
 		return true;
 	}
 	if(StringHelper::startsWith(words[start],'{') && StringHelper::endsWith(words[end], '}')){

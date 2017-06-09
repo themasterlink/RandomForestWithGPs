@@ -1,65 +1,399 @@
 # in python generated test settings file 
 load all 
-define trainSet from TRAIN_SETTING 
+define trainSet without classes {0,...,4,12,...,15,53,...,60,266,...,273,72,...,76,152,...,156} from TRAIN_SETTING 
+define testSetExclude without classes {0,...,4,12,...,15,53,...,60,266,...,273,72,...,76,152,...,156} from TEST_SETTING 
 define testSet from TEST_SETTING 
-define splitTrainSet as 30 splits from trainSet 
-train splitTrainSet[0] until 1000 trees with only 3 gb
+define appleSet as classes {0,...,4} from TRAIN_SETTING 
+define appleSplitSet as 10 splits from appleSet 
+define bananaSet as classes {12,...,15} from TRAIN_SETTING 
+define bananaSplitSet as 10 splits from bananaSet 
+define coffeemugSet as classes {53,...,60} from TRAIN_SETTING 
+define coffeemugSplitSet as 10 splits from coffeemugSet 
+define staplerSet as classes {266,...,273} from TRAIN_SETTING 
+define staplerSplitSet as 10 splits from staplerSet 
+define flashlightSet as classes {72,...,76} from TRAIN_SETTING 
+define flashlightSplitSet as 10 splits from flashlightSet 
+define keyboardSet as classes {152,...,156} from TRAIN_SETTING 
+define keyboardSplitSet as 10 splits from keyboardSet 
+define splitTrainSet as 80 splits from trainSet 
+
+
+train splitTrainSet[0] for 1 m with only 6 gb
+test testSetExclude
 test testSet 
-train splitTrainSet[1] with only 3 gb
-test testSet 
-train splitTrainSet[2] with only 3 gb
-test testSet 
-train splitTrainSet[3] with only 3 gb
-test testSet 
-train splitTrainSet[4] with only 3 gb
-test testSet 
-train splitTrainSet[5] with only 3 gb
-test testSet 
-train splitTrainSet[6] with only 3 gb
-test testSet 
-train splitTrainSet[7] with only 3 gb
-test testSet 
-train splitTrainSet[8] with only 3 gb
-test testSet 
-train splitTrainSet[9] with only 3 gb
-test testSet 
-train splitTrainSet[10] with only 3 gb
-test testSet 
-train splitTrainSet[11] with only 3 gb
-test testSet 
-train splitTrainSet[12] with only 3 gb
-test testSet 
-train splitTrainSet[13] with only 3 gb
-test testSet 
-train splitTrainSet[14] with only 3 gb
-test testSet 
-train splitTrainSet[15] with only 3 gb
-test testSet 
-train splitTrainSet[16] with only 3 gb
-test testSet 
-train splitTrainSet[17] with only 3 gb
-test testSet 
-train splitTrainSet[18] with only 3 gb
-test testSet 
-train splitTrainSet[19] with only 3 gb
-test testSet 
-train splitTrainSet[20] with only 3 gb
-test testSet 
-train splitTrainSet[21] with only 3 gb
-test testSet 
-train splitTrainSet[22] with only 3 gb
-test testSet 
-train splitTrainSet[23] with only 3 gb
-test testSet 
-train splitTrainSet[24] with only 3 gb
-test testSet 
-train splitTrainSet[25] with only 3 gb
-test testSet 
-train splitTrainSet[26] with only 3 gb
-test testSet 
-train splitTrainSet[27] with only 3 gb
-test testSet 
-train splitTrainSet[28] with only 3 gb
-test testSet 
-train splitTrainSet[29] with only 3 gb
-test testSet 
+define actualSet1 from splitTrainSet[1]
+train actualSet1 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet2 from splitTrainSet[2]
+train actualSet2 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet3 from splitTrainSet[3]
+train actualSet3 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet4 from splitTrainSet[4]
+train actualSet4 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet5 from splitTrainSet[5]
+train actualSet5 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet6 from splitTrainSet[6]
+train actualSet6 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet7 from splitTrainSet[7]
+train actualSet7 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet8 from splitTrainSet[8]
+train actualSet8 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet9 from splitTrainSet[9]
+train actualSet9 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet10 from splitTrainSet[10]
+train actualSet10 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet11 from splitTrainSet[11]
+train actualSet11 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet12 from splitTrainSet[12]
+train actualSet12 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet13 from splitTrainSet[13]
+train actualSet13 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet14 from splitTrainSet[14]
+train actualSet14 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet15 from splitTrainSet[15]
+train actualSet15 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet16 from splitTrainSet[16]
+train actualSet16 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet17 from splitTrainSet[17]
+train actualSet17 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet18 from splitTrainSet[18]
+train actualSet18 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+define actualSet19 from splitTrainSet[19]
+train actualSet19 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+combine appleSplitSet[0] with splitTrainSet[20] in actualSet20
+train actualSet20 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test appleSet 
+combine appleSplitSet[1] with splitTrainSet[21] in actualSet21
+train actualSet21 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test appleSet 
+combine appleSplitSet[2] with splitTrainSet[22] in actualSet22
+train actualSet22 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test appleSet 
+combine appleSplitSet[3] with splitTrainSet[23] in actualSet23
+train actualSet23 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test appleSet 
+combine appleSplitSet[4] with splitTrainSet[24] in actualSet24
+train actualSet24 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test appleSet 
+combine appleSplitSet[5] with splitTrainSet[25] in actualSet25
+train actualSet25 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test appleSet 
+combine appleSplitSet[6] with splitTrainSet[26] in actualSet26
+train actualSet26 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test appleSet 
+combine appleSplitSet[7] with splitTrainSet[27] in actualSet27
+train actualSet27 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test appleSet 
+combine appleSplitSet[8] with splitTrainSet[28] in actualSet28
+train actualSet28 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test appleSet 
+combine appleSplitSet[9] with splitTrainSet[29] in actualSet29
+train actualSet29 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test appleSet 
+combine bananaSplitSet[10] with splitTrainSet[30] in actualSet30
+train actualSet30 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test bananaSet 
+combine bananaSplitSet[11] with splitTrainSet[31] in actualSet31
+train actualSet31 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test bananaSet 
+combine bananaSplitSet[12] with splitTrainSet[32] in actualSet32
+train actualSet32 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test bananaSet 
+combine bananaSplitSet[13] with splitTrainSet[33] in actualSet33
+train actualSet33 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test bananaSet 
+combine bananaSplitSet[14] with splitTrainSet[34] in actualSet34
+train actualSet34 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test bananaSet 
+combine bananaSplitSet[15] with splitTrainSet[35] in actualSet35
+train actualSet35 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test bananaSet 
+combine bananaSplitSet[16] with splitTrainSet[36] in actualSet36
+train actualSet36 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test bananaSet 
+combine bananaSplitSet[17] with splitTrainSet[37] in actualSet37
+train actualSet37 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test bananaSet 
+combine bananaSplitSet[18] with splitTrainSet[38] in actualSet38
+train actualSet38 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test bananaSet 
+combine bananaSplitSet[19] with splitTrainSet[39] in actualSet39
+train actualSet39 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test bananaSet 
+combine coffeemugSplitSet[0] with splitTrainSet[40] in actualSet40
+train actualSet40 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test coffeemugSet 
+combine coffeemugSplitSet[1] with splitTrainSet[41] in actualSet41
+train actualSet41 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test coffeemugSet 
+combine coffeemugSplitSet[2] with splitTrainSet[42] in actualSet42
+train actualSet42 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test coffeemugSet 
+combine coffeemugSplitSet[3] with splitTrainSet[43] in actualSet43
+train actualSet43 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test coffeemugSet 
+combine coffeemugSplitSet[4] with splitTrainSet[44] in actualSet44
+train actualSet44 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test coffeemugSet 
+combine coffeemugSplitSet[5] with splitTrainSet[45] in actualSet45
+train actualSet45 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test coffeemugSet 
+combine coffeemugSplitSet[6] with splitTrainSet[46] in actualSet46
+train actualSet46 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test coffeemugSet 
+combine coffeemugSplitSet[7] with splitTrainSet[47] in actualSet47
+train actualSet47 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test coffeemugSet 
+combine coffeemugSplitSet[8] with splitTrainSet[48] in actualSet48
+train actualSet48 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test coffeemugSet 
+combine coffeemugSplitSet[9] with splitTrainSet[49] in actualSet49
+train actualSet49 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test coffeemugSet 
+combine staplerSplitSet[10] with splitTrainSet[50] in actualSet50
+train actualSet50 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test staplerSet 
+combine staplerSplitSet[11] with splitTrainSet[51] in actualSet51
+train actualSet51 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test staplerSet 
+combine staplerSplitSet[12] with splitTrainSet[52] in actualSet52
+train actualSet52 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test staplerSet 
+combine staplerSplitSet[13] with splitTrainSet[53] in actualSet53
+train actualSet53 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test staplerSet 
+combine staplerSplitSet[14] with splitTrainSet[54] in actualSet54
+train actualSet54 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test staplerSet 
+combine staplerSplitSet[15] with splitTrainSet[55] in actualSet55
+train actualSet55 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test staplerSet 
+combine staplerSplitSet[16] with splitTrainSet[56] in actualSet56
+train actualSet56 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test staplerSet 
+combine staplerSplitSet[17] with splitTrainSet[57] in actualSet57
+train actualSet57 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test staplerSet 
+combine staplerSplitSet[18] with splitTrainSet[58] in actualSet58
+train actualSet58 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test staplerSet 
+combine staplerSplitSet[19] with splitTrainSet[59] in actualSet59
+train actualSet59 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test staplerSet 
+combine flashlightSplitSet[0] with splitTrainSet[60] in actualSet60
+train actualSet60 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test flashlightSet 
+combine flashlightSplitSet[1] with splitTrainSet[61] in actualSet61
+train actualSet61 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test flashlightSet 
+combine flashlightSplitSet[2] with splitTrainSet[62] in actualSet62
+train actualSet62 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test flashlightSet 
+combine flashlightSplitSet[3] with splitTrainSet[63] in actualSet63
+train actualSet63 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test flashlightSet 
+combine flashlightSplitSet[4] with splitTrainSet[64] in actualSet64
+train actualSet64 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test flashlightSet 
+combine flashlightSplitSet[5] with splitTrainSet[65] in actualSet65
+train actualSet65 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test flashlightSet 
+combine flashlightSplitSet[6] with splitTrainSet[66] in actualSet66
+train actualSet66 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test flashlightSet 
+combine flashlightSplitSet[7] with splitTrainSet[67] in actualSet67
+train actualSet67 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test flashlightSet 
+combine flashlightSplitSet[8] with splitTrainSet[68] in actualSet68
+train actualSet68 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test flashlightSet 
+combine flashlightSplitSet[9] with splitTrainSet[69] in actualSet69
+train actualSet69 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test flashlightSet 
+combine keyboardSplitSet[10] with splitTrainSet[70] in actualSet70
+train actualSet70 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test keyboardSet 
+combine keyboardSplitSet[11] with splitTrainSet[71] in actualSet71
+train actualSet71 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test keyboardSet 
+combine keyboardSplitSet[12] with splitTrainSet[72] in actualSet72
+train actualSet72 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test keyboardSet 
+combine keyboardSplitSet[13] with splitTrainSet[73] in actualSet73
+train actualSet73 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test keyboardSet 
+combine keyboardSplitSet[14] with splitTrainSet[74] in actualSet74
+train actualSet74 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test keyboardSet 
+combine keyboardSplitSet[15] with splitTrainSet[75] in actualSet75
+train actualSet75 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test keyboardSet 
+combine keyboardSplitSet[16] with splitTrainSet[76] in actualSet76
+train actualSet76 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test keyboardSet 
+combine keyboardSplitSet[17] with splitTrainSet[77] in actualSet77
+train actualSet77 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test keyboardSet 
+combine keyboardSplitSet[18] with splitTrainSet[78] in actualSet78
+train actualSet78 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test keyboardSet 
+combine keyboardSplitSet[19] with splitTrainSet[79] in actualSet79
+train actualSet79 for 40 s with only 6 gb
+test testSetExclude
+test testSet
+test keyboardSet 

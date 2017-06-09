@@ -84,8 +84,7 @@ public:
 
 	void deleteDataPositions();
 
-	void setUsedDataPositions(
-			std::vector<unsigned int> *usedDataPositions){ m_useOnlyThisDataPositions = usedDataPositions; };
+	void setUsedDataPositions(std::vector<unsigned int> *usedDataPositions){ m_useOnlyThisDataPositions = usedDataPositions; };
 
 	MemoryType getMemSize() const override;
 

@@ -89,6 +89,11 @@ void TestManager::run(){
 					readAll(); // TODO read TRAIN or TEST not both
 					orf = std::make_unique<OnlineRandomForest>(train, height, (int) TotalStorage::getAmountOfClass());
 					orf->setValidationSet(TotalStorage::getValidationSet());
+					if(TotalStorage::getValidationSet()){
+						OnlineStorage<LabeledVectorX*> test;
+						test.appendUnique(*TotalStorage::getValidationSet());
+						printOnScreen("Unique elements in validation set are: " << test.size());
+					}
 				}else if(testInfo.m_mode == TestMode::TRAIN){
 					auto data = getAllPointsFor(testInfo.m_varName);
 					OnlineRandomForest::TrainingsConfig config;
@@ -111,6 +116,7 @@ void TestManager::run(){
 					}
 				}else if(testInfo.m_mode == TestMode::TEST){
 					auto data = getAllPointsFor(testInfo.m_varName);
+					printOnScreen("Perform test for: " << testInfo.m_varName);
 					performTest(orf, data);
 				}
 			}
