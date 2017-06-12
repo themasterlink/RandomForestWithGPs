@@ -443,6 +443,21 @@ bool OnlineRandomForest::update(){
 		train();
 		printOnScreen("Needed for training: " << sw.elapsedAsTimeFrame());
 	}else{
+		if(m_validationSet != nullptr){
+			m_amountOfCorrectlyClassifiedOnValidation = 0;
+			m_classCounterForValidationSet.clear();
+			m_classCounterForValidationSet.resize(m_validationSet->size());
+			for(unsigned int i = 0; i < m_validationSet->size(); ++i){
+				const auto& point = *(*m_validationSet)[i];
+				for(auto& tree : m_trees){
+					const auto predict = tree->predict(point);
+					m_classCounterForValidationSet[i].increment(predict);
+				}
+				if(point.getLabel() == m_classCounterForValidationSet[i].argMax()){
+					++m_amountOfCorrectlyClassifiedOnValidation;
+				}
+			}
+		}
 		auto list = std::make_unique<SortedDecisionTreeList>(); // new SortedDecisionTreeList());
 		printOnScreen("Predict all trees on all data points and sort them");
 		sortTreesAfterPerformance(*list);
@@ -463,6 +478,7 @@ bool OnlineRandomForest::update(){
 		boost::mutex mutexForCounter;
 		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 		boost::thread_group group;
+		SortWatcher sortWatcher(m_trees.size());
 		const auto infoType = m_trainingsConfig.isTimeMode() ? InformationPackage::InfoType::ORF_TRAIN : InformationPackage::InfoType::ORF_TRAIN_FIX;
 		for(unsigned int i = 0; i < packages.size(); ++i){
 			packages[i] = new InformationPackage(infoType, 0,
@@ -471,7 +487,7 @@ bool OnlineRandomForest::update(){
 			packages[i]->setTrainingsTime(trainingsTimeForPackages);
 			group.add_thread(new boost::thread(
 					boost::bind(&OnlineRandomForest::updateInParallel, this, list.get(),
-								amountOfElements, &mutexForCounter, i, packages[i], &counter)));
+								amountOfElements, &mutexForCounter, i, packages[i], &counter, &sortWatcher)));
 		}
 		int stillOneRunning = 1;
 		if(m_trainingsConfig.isTimeMode()){
@@ -551,30 +567,14 @@ void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list)
 void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeList* list, DecisionTreesContainer* trees,
 		boost::mutex* readMutex, boost::mutex* appendMutex, InformationPackage* package){
 	package->setStandartInformation("Sort trees after performance");
-	if(m_trees.size() == 1){
-		auto correct = 0u;
-		unsigned int size = 0;
-		if(m_validationSet != nullptr){
-			for(auto& point : *m_validationSet){
-				if(point->getLabel() == (*m_trees.begin())->predict(*point)){
-					++correct;
-				}
-			}
-			size = (unsigned int) m_validationSet->size();
-		}else{
-			const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
-			for(int i = startPos; i < m_storage.size(); ++i){
-				if(m_storage[i]->getLabel() == (*m_trees.begin())->predict(*m_storage[i])){
-					++correct;
-				}
-			}
-			size = m_storage.size() - startPos;
-		}
-		list->push_back(SortedDecisionTreePair(*m_trees.begin(), correct / (Real) size * (Real) 100.0));
-		return;
-	}
 	ThreadMaster::appendThreadToList(package);
 	package->wait();
+	if(m_trees.size() == 1){
+		Labels labels;
+		auto correct = testTree(*m_trees.begin(), labels);
+		list->emplace_back(*m_trees.begin(), correct);
+		return;
+	}
 	SortedDecisionTreeList ownList;
 	auto usedTrees = (unsigned int) (trees->size() / 16);
 	while(trees->size() > 0){
@@ -582,34 +582,17 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 		readMutex->lock();
 		for(unsigned int i = 0; i < usedTrees; ++i){
 			if(trees->size() > 0){
-				ownList.push_back(SortedDecisionTreePair(trees->back(), 0));
+				ownList.emplace_back(trees->back(), 0);
 				trees->pop_back();
 			}
 		}
 		const auto treeAmount = (unsigned int) trees->size();
 		readMutex->unlock();
 		printInPackageOnScreen(package, "Predict new tree, rest amount is: " << treeAmount);
+		Labels labels;
 		for(auto it = ownList.begin(); it != ownList.end(); ++it){
-			int correct = 0;
 			DynamicDecisionTreeInterface* tree = it->first;
-			unsigned int size = 0;
-			if(m_validationSet != nullptr){
-				for(auto& point : *m_validationSet){
-					if(point->getLabel() == tree->predict(*point)){
-						++correct;
-					}
-				}
-				size = (unsigned int) m_validationSet->size();
-			}else{
-				const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
-				for(int i = startPos; i < m_storage.size(); ++i){
-					if(m_storage[i]->getLabel() == tree->predict(*m_storage[i])){
-						++correct;
-					}
-				}
-				size = m_storage.size() - startPos;
-			}
-			it->second = correct / (Real) size * (Real) 100.;
+			it->second = testTree(tree, labels);
 		}
 		SortedDecisionTreeList sortedList;
 		for(auto it = ownList.begin(); it != ownList.end(); ++it){
@@ -640,7 +623,9 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 	package->finishedTask();
 }
 
-void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps, boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, unsigned int* counter){
+void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps,
+										  boost::mutex* mutex, unsigned int threadNr, InformationPackage* package,
+										  unsigned int* counter, SortWatcher* sortWatcher){
 	if(package == nullptr){
 		printError("This thread has no valid information package: " + StringHelper::number2String(threadNr));
 		return;
@@ -659,28 +644,22 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 		switcher = new DynamicDecisionTree<unsigned int>(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 	}
 	Real correctValOfSwitcher = pair.second;
-	const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
 	for(unsigned int i = 0; i < amountOfSteps - 1; ++i){
 		switcher->train((unsigned int) m_amountOfUsedDims, *m_generators[threadNr], m_useRealOnlineUpdate); // retrain worst tree
-		int correct = 0;
+//		int correct = 0;
 		unsigned int size = 0;
-		if(m_validationSet != nullptr){
-			for(auto& point : *m_validationSet){
-				if(point->getLabel() == switcher->predict(*point)){
-					++correct;
-				}
-			}
-			size = (unsigned int) m_validationSet->size();
-		}else{
-			for(unsigned int j = startPos; j < m_storage.size(); ++j){
-				if(m_storage[j]->getLabel() == switcher->predict(*m_storage[j])){
-					++correct;
-				}
-			}
-			size = m_storage.size() - startPos;
-		}
-		const auto correctVal = correct / (Real) size * (Real) 100.;
+		Labels labels;
+		const auto correctVal = testTree(switcher, labels);
 		mutex->lock();
+		if(sortWatcher->m_shouldSort){
+			package->pauseTheThread();
+			sortWatcher->m_mutex.lock();
+			if(sortWatcher->m_shouldSort){
+				sortWatcher->m_shouldSort = false;
+				sortTreesAfterPerformance(*list);
+			}
+			sortWatcher->m_mutex.unlock();
+		}
 		pair = std::move(*list->begin()); // get new element
 		list->pop_front(); // remove it
 		mutex->unlock();
@@ -693,16 +672,38 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 			switcher = pair.first;
 			usedCorrectVal = correctVal;
 			correctValOfSwitcher = pair.second; // value of the switcher
+			m_mutexForClassCounterUpdate.lock();
+			unsigned int changes = 0;
+			for(unsigned int j = 0; j < m_classCounterForValidationSet.size(); ++j){
+				unsigned int oldMaxClass;
+				const auto newClass = m_classCounterForValidationSet[j].incrementWithChange(labels[j], oldMaxClass);
+				if(newClass != oldMaxClass){ // something has changed
+					if(oldMaxClass == (*m_validationSet)[j]->getLabel()){
+						--changes; // got worse
+					}else if(newClass == (*m_validationSet)[j]->getLabel()){
+						++changes; // got better
+					}
+				}
+			}
+			m_amountOfCorrectlyClassifiedOnValidation += changes;
+			m_mutexForClassCounterUpdate.unlock();
+			testTree(switcher, labels); // test old tree to remove it properly
+			m_mutexForClassCounterUpdate.lock();
+			for(unsigned int j = 0; j < m_classCounterForValidationSet.size(); ++j){
+				m_classCounterForValidationSet[j].decrement(labels[j]);
+			}
+			m_mutexForClassCounterUpdate.unlock();
 			// add to list again!
 			printInPackageOnScreen(package, "Performed new step with better correctness of: " << StringHelper::number2String(correctVal, 2) << " %%, worst had: " << pair.second);
 		}else{
 			addToList = pair.first;
 			usedCorrectVal = pair.second;
 			correctValOfSwitcher = correctVal;
-			// no switch -> the switcher is trys to improve itself
+			// no switch -> the switcher trys to improve itself again
 			printInPackageOnScreen(package, "Performed new step with worse correctness of " << StringHelper::number2String(correctVal, 2) << " %% not used, worst had: " << pair.second);
 		}
 		mutex->lock();
+		// the change of the overall result is only performed if the switcher is used
 		*counter += 1; // is already protected in mutex lock
 		internalAppendToSortedList(list, addToList, usedCorrectVal); // insert decision tree again in the list
 		mutex->unlock();
@@ -757,7 +758,85 @@ void OnlineRandomForest::mergeSortedLists(SortedDecisionTreeList* aimList, Sorte
 	}
 }
 
+Real OnlineRandomForest::testTree(DynamicDecisionTreeInterface* tree, Labels& labels){
+	if(m_validationSet != nullptr){
+		labels.resize(m_validationSet->size());
+		for(unsigned int i = 0; i < m_validationSet->size(); ++i){
+			labels[i] = tree->predict(*(*m_validationSet)[i]);
+		}
+		return calculateNewCorrectnessFor(labels);
+	}else{
+		const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+		unsigned int correct = 0;
+		for(unsigned int j = startPos; j < m_storage.size(); ++j){
+			if(m_storage[j]->getLabel() == tree->predict(*m_storage[j])){
+				++correct;
+			}
+		}
+		return correct / (Real) (m_storage.size() - startPos) * (Real) 100.0;
+	}
+}
+
+Real OnlineRandomForest::calculateNewCorrectnessFor(Labels & labels){
+	m_mutexForClassCounterUpdate.lock();
+	unsigned int changes = 0;
+	for(unsigned int i = 0; i < m_validationSet->size(); ++i){
+		const auto currentNewLabel = labels[i];
+		const auto shouldBeLabel = (*m_validationSet)[i]->getLabel();
+		unsigned int oldMax = m_classCounterForValidationSet[i].argMax();
+		if(oldMax != currentNewLabel){ // is not the same as the forest says
+			m_classCounterForValidationSet[i].increment(currentNewLabel);
+			const auto newMax = m_classCounterForValidationSet[i].argMax();
+			if(newMax == shouldBeLabel && oldMax != shouldBeLabel){
+				// is now correct, wasn't correct before
+				++changes;
+			}else if(newMax != shouldBeLabel && oldMax == shouldBeLabel){
+				// was correct before is now incorrect
+				--changes;
+			}
+			m_classCounterForValidationSet[i].decrement(currentNewLabel);
+		}
+	}
+	const auto amount = m_amountOfCorrectlyClassifiedOnValidation;
+	m_mutexForClassCounterUpdate.unlock();
+	return (amount + changes) / (Real) m_validationSet->size() * (Real) 100.;
+};
+
+Real OnlineRandomForest::performanceWithoutTree(SortedDecisionTreePair& pair){
+	if(m_validationSet != nullptr){
+		Labels labels(m_validationSet->size());
+		for(unsigned int i = 0; i < m_validationSet->size(); ++i){
+			labels[i] = pair.first->predict(*(*m_validationSet)[i]);
+		}
+		m_mutexForClassCounterUpdate.lock();
+		unsigned int changes = 0;
+		for(unsigned int i = 0; i < m_validationSet->size(); ++i){
+			const auto currentNewLabel = labels[i];
+			const auto shouldBeLabel = (*m_validationSet)[i]->getLabel();
+			unsigned int oldMax = m_classCounterForValidationSet[i].argMax(); // label when tree was still in
+			if(oldMax != currentNewLabel){ // is not the same as the forest says
+				m_classCounterForValidationSet[i].decrement(currentNewLabel);
+				const auto newMax = m_classCounterForValidationSet[i].argMax();
+				if(newMax == shouldBeLabel && oldMax != shouldBeLabel){
+					// is now correct, wasn't correct before -> forest gets better
+					++changes;
+				}else if(newMax != shouldBeLabel && oldMax == shouldBeLabel){
+					// was correct before is now incorrect -> forest gets worse
+					--changes;
+				}
+				m_classCounterForValidationSet[i].increment(currentNewLabel);
+			}
+		}
+		const auto amount = m_amountOfCorrectlyClassifiedOnValidation;
+		m_mutexForClassCounterUpdate.unlock();
+		return (amount + changes) / (Real) m_validationSet->size() * (Real) 100.;
+	}else{
+		return pair.second;
+	}
+}
+
 OnlineRandomForest::DecisionTreeIterator OnlineRandomForest::findWorstPerformingTree(Real& correctAmount){
+	printErrorAndQuit("This function needs to be updated");
 	if(m_savedAnyTreesToDisk){
 		printError("Not all trees used!");
 		return m_trees.end();

@@ -13,6 +13,7 @@
 #include "../Data/LabeledVectorX.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
 #include "TreeCounter.h"
+#include "ClassCounter.h"
 
 class OnlineRandomForest : public Observer, public PredictorMultiClass, public Subject {
 public:
@@ -21,7 +22,7 @@ public:
 	using DecisionTreeIterator = DecisionTreesContainer::iterator;
 	using DecisionTreeConstIterator = DecisionTreesContainer::const_iterator;
 
-	OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
+	OnlineRandomForest(OnlineStorage<LabeledVectorX*>& storage,
 					   const unsigned int maxDepth, const int amountOfUsedClasses);
 
 	virtual ~OnlineRandomForest();
@@ -33,20 +34,20 @@ public:
 	Real predict(const VectorX& point1, const VectorX& point2, const unsigned int sampleAmount) const;
 
 	Real predictPartitionEquality(const VectorX& point1, const VectorX& point2,
-									RandomUniformNr& uniformNr, unsigned int amountOfSamples) const;
+								  RandomUniformNr& uniformNr, unsigned int amountOfSamples) const;
 
 	void predictData(const Data& points, Labels& labels) const override;
 
 	void predictData(const Data& points, Labels& labels,
-					 std::vector< std::vector<Real> >& probabilities) const override;
+					 std::vector<std::vector<Real> >& probabilities) const override;
 
 	void predictData(const LabeledData& points, Labels& labels) const;
 
-	void predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const;
+	void predictData(const LabeledData& points, Labels& labels, std::vector<std::vector<Real> >& probabilities) const;
 
 	void getLeafNrFor(std::vector<int>& leafNrs);
 
-	int getNrOfTrees() const { return m_amountOfTrainedTrees; };
+	int getNrOfTrees() const{ return m_amountOfTrainedTrees; };
 
 	void update(Subject* caller, unsigned int event) override;
 
@@ -60,11 +61,11 @@ public:
 
 	ClassTypeSubject classType() const override;
 
-	const std::vector<Vector2>& getMinMaxValues(){ return m_minMaxValues;};
+	const std::vector<Vector2>& getMinMaxValues(){ return m_minMaxValues; };
 
 	struct TrainingsConfig {
 
-		enum class TrainingsMode{
+		enum class TrainingsMode {
 			TIME,
 			TIME_WITH_MEMORY,
 			MEMORY,
@@ -73,9 +74,9 @@ public:
 			UNDEFINED
 		};
 
-		TrainingsConfig(): m_mode(TrainingsMode::UNDEFINED),
-						   m_seconds(0.0), m_memory(0),
-						   m_amountOfTrees(0){};
+		TrainingsConfig() : m_mode(TrainingsMode::UNDEFINED),
+							m_seconds(0.0), m_memory(0),
+							m_amountOfTrees(0){};
 
 		TrainingsMode m_mode;
 		Real m_seconds;
@@ -105,6 +106,26 @@ public:
 
 private:
 
+	class SortWatcher {
+	public:
+		SortWatcher(unsigned int totalAmountOfChanges) : m_shouldSort(false), m_changedTrees(0), m_totalAmountOfChanges(totalAmountOfChanges){};
+
+		void increment(){
+			m_mutex.lock();
+			++m_changedTrees;
+			if(m_changedTrees > 0.25 * m_totalAmountOfChanges && m_changedTrees > 16){
+				m_shouldSort = true;
+			}
+			m_mutex.unlock();
+		}
+
+		std::atomic<bool> m_shouldSort;
+		boost::mutex m_mutex;
+	private:
+		unsigned int m_changedTrees;
+		unsigned int m_totalAmountOfChanges;
+	};
+
 	using SortedDecisionTreePair = std::pair<DynamicDecisionTreeInterface*, Real>;
 	using SortedDecisionTreeList = std::list<SortedDecisionTreePair>;
 
@@ -115,20 +136,23 @@ private:
 									const unsigned int start, const unsigned int end) const;
 
 	void predictDataProbInParallelStartEnd(const Data& points, Labels* labels,
-										   std::vector< std::vector<Real> >* probabilities, InformationPackage* package,
+										   std::vector<std::vector<Real> >* probabilities, InformationPackage* package,
 										   const unsigned int start, const unsigned int end) const;
 
 	void predictClassDataProbInParallelStartEnd(const LabeledData& points, Labels* labels, InformationPackage* package,
-												std::vector< std::vector<Real> >* probabilities,
+												std::vector<std::vector<Real> >* probabilities,
 												const unsigned int start, const unsigned int end) const;
 
-	void predictDataProbInParallel(const Data& points, std::vector< std::vector<Real> >* probabilities,
-			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
+	void predictDataProbInParallel(const Data& points, std::vector<std::vector<Real> >* probabilities,
+								   unsigned int* iBatchNr, boost::mutex* mutex,
+								   DecisionTreeIterator* itOfActElement) const;
 
-	void predictClassDataProbInParallel(const LabeledData& points, std::vector< std::vector<Real> >* probabilities,
-			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
+	void predictClassDataProbInParallel(const LabeledData& points, std::vector<std::vector<Real> >* probabilities,
+										unsigned int* iBatchNr, boost::mutex* mutex,
+										DecisionTreeIterator* itOfActElement) const;
 
-	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const unsigned int amountOfTrees,
+	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package,
+						 const unsigned int amountOfTrees,
 						 std::vector<std::vector<unsigned int> >* counterForClasses,
 						 boost::mutex* mutexForCounter);
 
@@ -144,7 +168,8 @@ private:
 											 InformationPackage* package);
 
 	void updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps,
-			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, unsigned int* counter);
+						  boost::mutex* mutex, unsigned int threadNr, InformationPackage* package,
+						  unsigned int* counter, SortWatcher* sortWatcher);
 
 	void updateMinMaxValues(unsigned int event);
 
@@ -158,6 +183,8 @@ private:
 
 	void packageUpdateForPrediction(InformationPackage* package, const unsigned int i, const unsigned int start,
 									const unsigned int end) const;
+
+	Real calculateNewCorrectnessFor(Labels& label);
 
 	const unsigned int m_maxDepth;
 
@@ -174,7 +201,7 @@ private:
 	Vector2 m_minMaxUsedDataFactor;
 
 	// used in all decision trees -> no copies needed!
-	std::vector<Vector2 > m_minMaxValues;
+	std::vector<Vector2> m_minMaxValues;
 
 	OnlineStorage<LabeledVectorX*>& m_storage;
 
@@ -210,6 +237,15 @@ private:
 
 	const bool m_useRealOnlineUpdate;
 
+	Real testTree(DynamicDecisionTreeInterface* tree, Labels& labels);
+
+	boost::mutex m_mutexForClassCounterUpdate;
+
+	std::vector<ClassCounter> m_classCounterForValidationSet;
+
+	unsigned int m_amountOfCorrectlyClassifiedOnValidation;
+
+	Real performanceWithoutTree(SortedDecisionTreePair& pair);
 };
 
 
