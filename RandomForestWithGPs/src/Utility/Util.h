@@ -92,12 +92,12 @@ inline void sleepFor(const T seconds){
 
 inline void quitApplication(const bool wait = true){
 	Logger::forcedWrite();
-	if(wait){
-		if(CommandSettings::get_settingsFile() == CommandSettings::defaultvalue_settingsFile()){
-			printOnScreen("Press any key to quit application");
-			getchar();
-		}
-	}
+//	if(wait){
+//		if(CommandSettings::get_settingsFile() == CommandSettings::defaultvalue_settingsFile()){
+//			printOnScreen("Press any key to quit application");
+//			getchar();
+//		}
+//	}
 	ThreadMaster::stopExecution();
 	ThreadMaster::blockUntilFinished();
 	sleepFor(0.5);
