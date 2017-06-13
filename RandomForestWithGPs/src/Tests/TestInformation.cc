@@ -265,6 +265,10 @@ TestInformation::TestDefineName TestInformation::getDefinition(const std::string
 	if(pos != name.npos){
 		it = m_definitions.find(name.substr(0, pos));
 		if(it != m_definitions.end()){
+			auto splitNr = getSplitNumber(name);
+			if(splitNr >= it->second.m_splitAmount){
+				printErrorAndQuit("This split number is not allowed for this name: " << name);
+			}
 			return it->second;
 		}
 	}

@@ -183,6 +183,14 @@ inline Real expReal(const Real val){
 #endif
 }
 
+inline Real absReal(const Real val){
+#ifdef USE_DOUBLE
+	return fabs(val);
+#else
+	return fabsf(val);
+#endif
+}
+
 static const auto UNDEF_CLASS_LABEL = (unsigned int) pow2(16) - 3;
 
 static const auto EPSILON = Real(1e-15);

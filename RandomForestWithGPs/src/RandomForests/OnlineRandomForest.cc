@@ -660,6 +660,7 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 	}
 	Real correctValOfSwitcher = pair.second;
 	const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+	RandomGaussianNr randomNr(0, 0.4, (threadNr + 13) * 12337);
 	for(unsigned int i = 0; i < amountOfSteps - 1; ++i){
 		switcher->train((unsigned int) m_amountOfUsedDims, *m_generators[threadNr], m_useRealOnlineUpdate); // retrain worst tree
 		int correct = 0;
@@ -679,7 +680,7 @@ void OnlineRandomForest::updateInParallel(SortedDecisionTreeList* list, const un
 			}
 			size = m_storage.size() - startPos;
 		}
-		const auto correctVal = correct / (Real) size * (Real) 100.;
+		const auto correctVal = correct / (Real) size * (Real) 100. + absReal(randomNr()); // adding some noise to the change
 		mutex->lock();
 		pair = std::move(*list->begin()); // get new element
 		list->pop_front(); // remove it

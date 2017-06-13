@@ -112,7 +112,7 @@ void TestManager::run(){
 					}
 					orf->setTrainingsMode(config);
 					if(orf){
-						train.appendUnique(data);
+						train.append(data);
 					}
 				}else if(testInfo.m_mode == TestMode::TEST){
 					auto data = getAllPointsFor(testInfo.m_varName);
@@ -163,11 +163,13 @@ LabeledData TestManager::getAllPointsFor(const std::string& defName){
 					printErrorAndQuit("A combine and a split can not be performed in the same define use two defines for that");
 				}
 				int splitNr = m_testInformation.getSplitNumber(defName);
+				const auto jumper = (unsigned int) usedDefinition.m_splitAmount;
 				if(splitNr < 0){
 					printErrorAndQuit("This split number is not supported here: " << usedDefinition.m_firstFromVariable << ", " << usedDefinition.getVarName());
+				}else if(splitNr >= jumper){
+					printErrorAndQuit("Accessing an split element, which is not available!");
 				}
 				LabeledData temp = getAllPointsFor(usedDefinition.m_firstFromVariable);
-				const auto jumper = (unsigned int) usedDefinition.m_splitAmount;
 				res.reserve(temp.size() / usedDefinition.m_splitAmount + usedDefinition.m_splitAmount);
 				for(unsigned int i = splitNr; i < temp.size(); i += jumper){
 					res.emplace_back(temp[i]);
