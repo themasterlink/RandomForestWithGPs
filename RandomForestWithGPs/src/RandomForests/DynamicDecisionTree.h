@@ -56,20 +56,20 @@ public:
 
 	void adjustToNewData();
 
-	unsigned int predict(const VectorX &point) const;
+	unsigned int predict(const VectorX &point) const override;
 
 	unsigned int predict(const VectorX &point, int &winningLeafNode) const;
 
 	bool predictIfPointsShareSameLeaveWithHeight(const VectorX& point1, const VectorX& point2,
 											const int usedHeight) const override;
 
-	void predictData(const Data &data, Labels &labels) const{
+	void predictData(const Data &data, Labels &labels) const override{
 		UNUSED(data);
 		UNUSED(labels);
 		printErrorAndQuit("This function is not implemented!");
 	}
 
-	void predictData(const Data &points, Labels &labels, std::vector<std::vector<Real> > &probabilities) const{
+	void predictData(const Data &points, Labels &labels, std::vector<std::vector<Real> > &probabilities) const override{
 		UNUSED(points);
 		UNUSED(labels);
 		UNUSED(probabilities);
@@ -78,7 +78,7 @@ public:
 
 	unsigned int getNrOfLeaves();
 
-	unsigned int amountOfClasses() const;
+	unsigned int amountOfClasses() const override;
 
 	std::vector<std::vector<unsigned int> > *getDataPositions(){ return m_dataPositions; };
 

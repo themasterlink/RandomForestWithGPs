@@ -66,7 +66,9 @@ void InformationPackage::setAdditionalInfo(const std::string& line){
 void InformationPackage::printLineToScreenForThisThread(const std::string& line) {
 	m_lineMutex.lock();
 	m_lines.push_back(line);
-	Logger::addSpecialLineToFile(line, m_standartInfo);
+	if(m_type == InfoType::ORF_TRAIN || m_type == InfoType::ORF_TRAIN_FIX) {
+		Logger::addSpecialLineToFile(line, m_standartInfo);
+	}
 	m_lineMutex.unlock();
 }
 
