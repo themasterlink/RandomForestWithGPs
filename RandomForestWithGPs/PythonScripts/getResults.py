@@ -87,7 +87,7 @@ for fileN in logFiles[-amount:]:
 			if name in sets:
 				usedIndex = 20 + sets.index(name) * 10
 			else:
-				print(name)
+				#print(name)
 				continue
 			x3 = [e for e in range(usedIndex, usedIndex + len(point))]
 			fig.plot(x3, point)

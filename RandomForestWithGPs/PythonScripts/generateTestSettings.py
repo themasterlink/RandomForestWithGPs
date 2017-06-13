@@ -13,8 +13,8 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
     text = "# in python generated test settings file \n"
     text += "load all \n" # load all the information
     exclude = ",".join([apple,banana,coffeemug,stapler,flashlight,keyboard])
-    text += "define trainSet2 without classes {" + exclude + "} from TRAIN_SETTING \n"  # redefine for shorted name
-    text += "define trainSet without classes {0,...,150} from trainSet2 \n"
+    text += "define trainSet without classes {" + exclude + "} from TRAIN_SETTING \n"  # redefine for shorted name
+    #text += "define trainSet without classes {0,...,150} from trainSet2 \n"
     text += "define testSetExclude without classes {" + exclude + "} from TEST_SETTING \n"  # redefine for shorted name
     text += "define testSet from TEST_SETTING \n"  # redefine for shorted name
     for set1 in sets:
@@ -28,15 +28,19 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
     text += "test testSetExclude\n"
     text += "test testSet \n"
     tempSetNr = 0
+    startPhase = 20
+    widthOfUpdate = 10
     for i in range(1, amountOfSplits):
-        if i >= 20:
-            nr = int((i - 20) / 10)
+        if i >= startPhase:
+            nr = int((i - startPhase) / widthOfUpdate)
             tempSetNr += 1
-            text += "combine " + sets[nr][0] + "SplitSet[" + str(i % 20) + "] with splitTrainSet[" + str(i) + "] in tempSet" + str(tempSetNr) + "\n"
+            text += "combine " + sets[nr][0] + "SplitSet[" + str(i % widthOfUpdate) + "] with splitTrainSet[" + str(i) \
+                    + "] in tempSet" + str(tempSetNr) + "\n"
             if nr > 0:
                 for t in range(0, nr):
                     tempSetNr += 1
-                    text += "combine " + sets[t][0] + "SplitSet[" + str(i % 20) + "] with tempSet" + str(tempSetNr - 1) + " in tempSet" + str(tempSetNr) + "\n"
+                    text += "combine " + sets[t][0] + "SplitSet[" + str(i % widthOfUpdate) + "] with tempSet" + str(tempSetNr - 1) \
+                            + " in tempSet" + str(tempSetNr) + "\n"
 
             text += "define actualSet" + str(i) + " from tempSet" + str(tempSetNr) + "\n"
         else:
@@ -45,8 +49,8 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
         text += "train actualSet" + str(i) + " for " + str(timeFrameUpdate) + " s with only 6 gb\n"
         text += "test testSetExclude\n"
         text += "test testSet\n"
-        if i >= 20:
-            nr = int((i - 20) / 10)
+        if i >= startPhase:
+            nr = int((i - startPhase) / widthOfUpdate)
             for k in range(0, nr + 1):
                 text += "test " + sets[k][0] + "TestSet\n"
 
@@ -56,4 +60,4 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
 
 
 amountOfSplits = 80
-generateTestSettings(amountOfSplits, "for 20 s", 4)
+generateTestSettings(amountOfSplits, "for 1 m", 40)
