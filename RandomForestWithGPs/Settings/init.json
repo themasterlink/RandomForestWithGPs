@@ -45,7 +45,7 @@
 	"OnlineRandomForest": {
 		"Tree": {
 			"height": 35,
-			"performRealOnlineUpdate": "true",
+			"performRealOnlineUpdate": "false",
 			"stepSizeOverData": 3
 		},
 		"amountOfTrainedTrees": 0,

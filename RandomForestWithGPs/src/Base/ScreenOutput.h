@@ -8,6 +8,8 @@
 #ifndef BASE_SCREENOUTPUT_H_
 #define BASE_SCREENOUTPUT_H_
 
+//#define NO_OUTPUT
+
 #include <curses.h>
 #include <panel.h>
 #undef OK
@@ -70,13 +72,13 @@ private:
 #define printInPackageOnScreen(package, message) \
 		do{std::stringstream str; str << message; (package)->printLineToScreenForThisThread(str.str()); }while(false) \
 
-#else
+#else // USE_SCREEN_OUPUT
 #define printOnScreen(message) \
 	std::cout << message << std::endl \
 
 #define printInPackageOnScreen(package, message) \
 	std::cout << (package)->getStandartInformation() << "\n\t" << message << std::endl \
 
-#endif
+#endif // USE_SCREEN_OUPUT
 
 #endif /* BASE_SCREENOUTPUT_H_ */

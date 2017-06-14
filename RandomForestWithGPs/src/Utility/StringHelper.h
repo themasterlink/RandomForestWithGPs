@@ -47,6 +47,8 @@ namespace StringHelper {
 
 	void removeCommentFromLine(std::string& line, const char commentSymbol = '#');
 
+	std::string getActualTimeOfDayAsString();
+
 };
 
 #endif //RANDOMFORESTWITHGPS_STRINGHELPER_H

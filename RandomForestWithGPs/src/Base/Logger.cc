@@ -7,8 +7,6 @@
 
 #include "Logger.h"
 #include "Settings.h"
-#include "boost/date_time/posix_time/posix_time.hpp"
-#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time.hpp>
 
 boost::mutex Logger::m_mutex;
@@ -21,6 +19,8 @@ std::map<std::string, std::string> Logger::m_specialLines;
 std::string Logger::m_actualDirectory = "./"; // default
 boost::thread* Logger::m_ownThread(nullptr);
 
+namespace bfs = boost::filesystem;
+
 Logger::Logger() {
 }
 
@@ -30,34 +30,35 @@ Logger::~Logger() {
 void Logger::start(){
 	m_init = Settings::getDirectBoolValue("Logger.useLogger");
 
-	m_actualDirectory = "./"; // default
+	auto createFolder = [](const std::string& dir){
+		if(!bfs::exists(dir)){
+			bfs::create_directory(dir);
+		}
+	};
+#ifdef BUILD_SYSTEM_LINUX
+	// "Linux"
+	m_actualDirectory = "/home_local/denn_ma"; // default
+	createFolder(m_actualDirectory);
+	m_actualDirectory += "/log";
+	createFolder(m_actualDirectory);
+	m_actualDirectory += "/";
+#else // Something else
+	m_actualDirectory = "./"
+#endif
 	if(m_init){
 		Settings::getValue("Logger.fileName", m_fileName);
-
 		boost::gregorian::date dayte(boost::gregorian::day_clock::local_day());
-		boost::posix_time::ptime midnight(dayte);
-		boost::posix_time::ptime now(boost::posix_time::microsec_clock::local_time());
-		boost::posix_time::time_duration td = now - midnight;
-		std::stringstream clockTime;
-		if(td.fractional_seconds() > 0){
-			const char cFracSec = StringHelper::number2String(td.fractional_seconds())[0];
-			clockTime << td.hours() << ":" << td.minutes() << ":" << td.seconds() << "." << cFracSec;
-		}else{
-			clockTime << td.hours() << ":" << td.minutes() << ":" << td.seconds() << "." << 0;
-		}
 		for(auto&& folder : {StringHelper::number2String(dayte.year()),
 			StringHelper::number2String(dayte.month().as_number()),
 			StringHelper::number2String(dayte.day()),
-			clockTime.str()} ){
+			StringHelper::getActualTimeOfDayAsString()} ){
 			m_actualDirectory += folder + "/";
-			if(!boost::filesystem::exists(m_actualDirectory)){
-				system(std::string("mkdir " + m_actualDirectory).c_str());
-			}
+			createFolder(m_actualDirectory);
 		}
-		if(boost::filesystem::exists("./latest")){
-			system("rm latest");
-		}
-		system(std::string("ln -s " + m_actualDirectory + " latest").c_str());
+//		if(bfs::exists("./latest")){
+//			system("rm latest");
+//		}
+//		system(std::string("ln -s " + m_actualDirectory + " latest").c_str());
 		printOnScreen("The folder is: " << m_actualDirectory);
 		system(std::string("cp " + Settings::getFilePath() + " " + m_actualDirectory + "usedInit.json").c_str());
 		std::string mode;
@@ -78,23 +79,59 @@ void Logger::forcedWrite(){
 
 void Logger::write(){
 	// not locked!
-	std::fstream file;
-	file.open(getActDirectory() + m_fileName, std::fstream::out | std::fstream::trunc);
-	file.write(m_text.c_str(), m_text.length());
+	std::string out;
+//	file.write(m_text.c_str(), m_text.length());
+	out += "This file was written at: " + StringHelper::getActualTimeOfDayAsString() + "\n";
 	for(const auto& line : m_specialLines){
 		if(!(line.first == "Error" || line.first == "Warning")){
-			file << line.first << "\n";
-			file.write(line.second.c_str(), line.second.length());
+			out += line.first + "\n" + line.second;
+//			file << line.first << "\n";
+//			file.write(line.second.c_str(), line.second.length());
 		}
 	}
 	for(auto&& name : {"Warning", "Error"}){
 		auto itOther = m_specialLines.find(name);
 		if(itOther != m_specialLines.end()){
-			file << itOther->first << "\n";
-			file.write(itOther->second.c_str(), itOther->second.length());
+			out += itOther->first + "\n" + itOther->second;
+//			file << itOther->first << "\n";
+//			file.write(itOther->second.c_str(), itOther->second.length());
 		}
 	}
-	file.close();
+	const std::string oldFileName = m_fileName;
+	m_fileName = "log" + StringHelper::getActualTimeOfDayAsString() + ".txt";
+	const auto fileLoc = getActDirectory() + m_fileName;
+	const auto fileLocOld = getActDirectory() + oldFileName;
+//	if(bfs::exists(fileLoc)){
+//		std::rename(fileLoc.c_str(), fileLocOld.c_str());
+//	}
+	std::fstream file;
+	//prepare f to throw if failbit gets set
+	const auto exceptionMask = file.exceptions() | std::ios::failbit;
+	file.exceptions(exceptionMask);
+	try{
+		file.open(fileLoc, std::fstream::out | std::fstream::trunc);
+	}catch(std::fstream::failure& e){
+		m_mutex.unlock();
+		printError("The log file opening failed with: " << e.what());
+		m_mutex.lock();
+	}
+	if(file.is_open()){
+		file.write(out.c_str(), out.length());
+		file.close();
+		std::string latestFile = getActDirectory() + "log.txt";
+		if(bfs::exists(latestFile)){
+			bfs::remove(latestFile);
+		}
+		bfs::create_symlink(fileLoc, latestFile);
+		system(std::string("zip " + getActDirectory() + "log.zip " + fileLoc + " &>/dev/null 2>&1").c_str());
+		if(bfs::exists(fileLocOld)){
+			bfs::remove(fileLocOld);
+		}
+	}else{
+		m_mutex.unlock();
+		printError("The log file could not be opened!");
+		m_mutex.lock();
+	}
 	m_needToWrite = false;
 }
 

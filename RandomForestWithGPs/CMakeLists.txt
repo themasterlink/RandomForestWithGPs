@@ -3,6 +3,7 @@ project(RandomForestWithGPs)
 
 set(CMAKE_CXX_STANDARD 14)
 
+
 # add this for terminal execution
 if(CMAKE_BUILD_TYPE MATCHES Release)
     add_definitions(-DUSE_SCREEN_OUPUT)
@@ -19,6 +20,7 @@ find_package(Boost COMPONENTS system filesystem program_options random date_time
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    set(BUILD_SYSTEM_CMAKE 1)
     #Eigen include:
     include_directories(/home/f_soft/foreign_packages/Eigen/3.3.2/include/)
 

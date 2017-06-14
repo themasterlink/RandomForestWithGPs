@@ -46,7 +46,7 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
         else:
             text += "define actualSet" + str(i) + " from splitTrainSet[" + str(i) + "]\n"
 
-        text += "train actualSet" + str(i) + " for " + str(timeFrameUpdate) + " s with only 6 gb\n"
+        text += "train actualSet" + str(i) + " " + timeFrameUpdate + " with only 6 gb\n"
         text += "test testSetExclude\n"
         text += "test testSet\n"
         if i >= startPhase:
@@ -60,4 +60,4 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
 
 
 amountOfSplits = 80
-generateTestSettings(amountOfSplits, "for 1 m", 40)
+generateTestSettings(amountOfSplits, "until 200 trees", "until 20 trees")

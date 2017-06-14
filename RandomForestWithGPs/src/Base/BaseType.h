@@ -33,4 +33,6 @@ using dimTypeForDDT = unsigned short;
 
 using MemoryType = unsigned long;
 
+#define BUILD_SYSTEM_LINUX @BUILD_SYSTEM_CMAKE@
+
 #endif //RANDOMFORESTWITHGPS_REALTYPE_H

@@ -112,7 +112,7 @@ void TestManager::run(){
 					}
 					orf->setTrainingsMode(config);
 					if(orf){
-						train.append(data);
+						train.appendUnique(data);
 					}
 				}else if(testInfo.m_mode == TestMode::TEST){
 					auto data = getAllPointsFor(testInfo.m_varName);

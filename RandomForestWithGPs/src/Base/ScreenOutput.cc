@@ -18,14 +18,17 @@ std::list<int> ScreenOutput::m_errorCounters;
 std::string ScreenOutput::m_progressLine;
 
 void ScreenOutput::quitForScreenMode(){
+#ifndef NO_OUTPUT
 #ifdef USE_SCREEN_OUPUT
 //	clear();
 	endwin();
-#endif
+#endif // USE_SCREEN_OUTPUT
+#endif // NO_OUTPUT
 }
 
 void ScreenOutput::start(){
 	m_runningThreads = &ThreadMaster::m_runningList;
+#ifndef NO_OUTPUT
 #ifdef USE_SCREEN_OUPUT
 	initscr();
 	start_color();
@@ -34,8 +37,9 @@ void ScreenOutput::start(){
 	init_pair(6, COLOR_CYAN, COLOR_BLACK);
 	attron(COLOR_PAIR(1));
 	atexit(ScreenOutput::quitForScreenMode);
-#endif
+#endif // USE_SCREEN_OUTPUT
 	m_mainThread = new boost::thread(&ScreenOutput::run);
+#endif // NO_OUTPUT
 }
 
 void ScreenOutput::run(){
@@ -494,6 +498,7 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 }
 
 void ScreenOutput::print(const std::string& line){
+#ifndef NO_OUTPUT
 	m_lineMutex.lock();
 	if(m_lines.size() >= MAX_HEIGHT){
 		m_lines.pop_front();
@@ -508,10 +513,12 @@ void ScreenOutput::print(const std::string& line){
 		m_lines.push_back(line);
 	}
 	m_lineMutex.unlock();
+#endif // NO_OUTPUT
 	Logger::addNormalLineToFile(line);
 }
 
 void ScreenOutput::printErrorLine(const std::string& line){
+#ifndef NO_OUTPUT
 	m_lineMutex.lock();
 	if(m_errorLines.size() >= MAX_HEIGHT){
 		m_errorLines.pop_front();
@@ -530,12 +537,15 @@ void ScreenOutput::printErrorLine(const std::string& line){
 		m_errorCounters.push_back(1);
 	}
 	m_lineMutex.unlock();
+#endif // NO_OUTPUT
 	Logger::addSpecialLineToFile(line, "Error");
 }
 
 
 void ScreenOutput::printInProgressLine(const std::string& line){
+#ifndef NO_OUTPUT
 	m_lineMutex.lock();
 	m_progressLine = line;
 	m_lineMutex.unlock();
+#endif // NO_OUTPUT
 }

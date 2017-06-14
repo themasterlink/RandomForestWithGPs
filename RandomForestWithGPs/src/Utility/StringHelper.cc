@@ -3,7 +3,7 @@
 //
 
 #include "StringHelper.h"
-
+#include <boost/date_time.hpp>
 
 namespace StringHelper{
 
@@ -154,6 +154,21 @@ namespace StringHelper{
 			++i;
 		}
 		return ss.str();
+	}
+
+	std::string getActualTimeOfDayAsString(){
+		boost::gregorian::date dayte(boost::gregorian::day_clock::local_day());
+		boost::posix_time::ptime midnight(dayte);
+		boost::posix_time::ptime now(boost::posix_time::microsec_clock::local_time());
+		boost::posix_time::time_duration td = now - midnight;
+		std::stringstream clockTime;
+		if(td.fractional_seconds() > 0){
+			const char cFracSec = StringHelper::number2String(td.fractional_seconds())[0];
+			clockTime << td.hours() << ":" << td.minutes() << ":" << td.seconds() << "." << cFracSec;
+		}else{
+			clockTime << td.hours() << ":" << td.minutes() << ":" << td.seconds() << "." << 0;
+		}
+		return clockTime.str();
 	}
 
 } // close namespace
