@@ -27,7 +27,11 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
 		m_savedAnyTreesToDisk(false),
 		m_amountOfTrainedTrees(0),
 		m_usedMemory(0),
-		m_useRealOnlineUpdate(Settings::getDirectBoolValue("OnlineRandomForest.Tree.performRealOnlineUpdate")){
+		m_useRealOnlineUpdate(Settings::getDirectBoolValue("OnlineRandomForest.Tree.performRealOnlineUpdate")),
+		m_read(std::make_unique<boost::mutex>()),
+		m_append(std::make_unique<boost::mutex>()),
+		m_mutexForCounter(std::make_unique<boost::mutex>()),
+		m_mutexForTrees(std::make_unique<boost::mutex>()){
 	storage.attach(this);
 	Settings::getValue("OnlineRandomForest.factorAmountOfUsedDims", m_factorForUsedDims);
 	Settings::getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
@@ -165,11 +169,10 @@ void OnlineRandomForest::train(){
 		}
 //		layerValues.push_back(4);
 		const Real secondsSpendPerSplit = 180;
-		boost::mutex layerMutex;
 		std::pair<int, int> bestLayerSplit(-1, -1);
 		Real bestCorrectness = 0;
 		for(unsigned int i = 0; i < std::min(amountOfThreads, (unsigned int) layerValues.size()); ++i){
-			layerGroup.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::tryAmountForLayers, this, m_generators[i], secondsSpendPerSplit, &layerValues, &layerMutex, &bestLayerSplit, &bestCorrectness)));
+			layerGroup.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::tryAmountForLayers, this, m_generators[i], secondsSpendPerSplit, &layerValues, m_mutexForTrees.get(), &bestLayerSplit, &bestCorrectness)));
 		}
 		layerGroup.join_all();
 		if(bestLayerSplit.first != -1){
@@ -193,7 +196,6 @@ void OnlineRandomForest::train(){
 		counterForClasses = new std::vector<std::vector<unsigned int> >(m_storage.size(), std::vector<unsigned int>(amountOfClasses(), 0));
 	}
 	const Real trainingsTimeForPackages = m_trainingsConfig.isTimeMode() ? m_trainingsConfig.m_seconds : 0;
-	boost::mutex mutexForCounter;
 	boost::thread_group group;
 	for(unsigned int i = 0; i < packages.size(); ++i){
 		const auto infoType = m_trainingsConfig.isTreeAmountMode() ? InformationPackage::InfoType::ORF_TRAIN_FIX :
@@ -202,7 +204,9 @@ void OnlineRandomForest::train(){
 											 (int) (m_trees.size() / (Real) amountOfThreads));
 		packages[i]->setStandartInformation("Train trees, thread nr: " + StringHelper::number2String(i));
 		packages[i]->setTrainingsTime(trainingsTimeForPackages);
-		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i], m_trainingsConfig.m_amountOfTrees, counterForClasses, &mutexForCounter)));
+		group.add_thread(new boost::thread(
+				boost::bind(&OnlineRandomForest::trainInParallel, this, m_generators[i], packages[i],
+							m_trainingsConfig.m_amountOfTrees, counterForClasses, m_mutexForCounter.get())));
 	}
 	int stillOneRunning = 1;
 	if(m_trainingsConfig.isTimeMode()){
@@ -250,13 +254,13 @@ void OnlineRandomForest::train(){
 		if(counterForClasses != nullptr && m_trees.size() > 0 && m_trees.size() - lastCounter >= 1){
 			lastCounter = (int) m_trees.size();
 			int correct = 0;
-			mutexForCounter.lock();
+			m_mutexForCounter->lock();
 			for(unsigned int i = 0; i < m_storage.size(); ++i){
 				if(m_storage[i]->getLabel() == argMax((*counterForClasses)[i].cbegin(), (*counterForClasses)[i].cend())){
 					++correct;
 				}
 			}
-			mutexForCounter.unlock();
+			m_mutexForCounter->unlock();
 			points.push_back(correct / (Real) m_storage.size() * (Real) 100.);
 		}
 		sleepFor(0.05);
@@ -291,6 +295,8 @@ void OnlineRandomForest::train(){
 }
 
 void OnlineRandomForest::writeTreesToDisk(const unsigned int amountOfTrees) const{
+	printError("This function should not be used!");
+	return;
 	if(amountOfTrees > 1){
 		m_treesMutex.lock();
 		// two different files are needed
@@ -333,6 +339,8 @@ void OnlineRandomForest::writeTreesToDisk(const unsigned int amountOfTrees) cons
 }
 
 void OnlineRandomForest::loadBatchOfTreesFromDisk(const unsigned int batchNr) const{
+	printError("This function should not be used!");
+	return;
 	if(m_trees.size() == 0){
 		if(batchNr < m_savedToDiskTreesFilePaths.size()){
 			m_treesMutex.lock();
@@ -460,7 +468,6 @@ bool OnlineRandomForest::update(){
 		const Real trainingsTimeForPackages = m_trainingsConfig.isTimeMode() ? m_trainingsConfig.m_seconds : 0;
 		auto counter = 0u;
 		const auto amountOfElements = (unsigned int) m_trees.size() / nrOfParallel;
-		boost::mutex mutexForCounter;
 		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 		boost::thread_group group;
 		const auto infoType = m_trainingsConfig.isTimeMode() ? InformationPackage::InfoType::ORF_TRAIN : InformationPackage::InfoType::ORF_TRAIN_FIX;
@@ -471,7 +478,7 @@ bool OnlineRandomForest::update(){
 			packages[i]->setTrainingsTime(trainingsTimeForPackages);
 			group.add_thread(new boost::thread(
 					boost::bind(&OnlineRandomForest::updateInParallel, this, list.get(),
-								amountOfElements, &mutexForCounter, i, packages[i], &counter)));
+								amountOfElements, m_mutexForCounter.get(), i, packages[i], &counter)));
 		}
 		int stillOneRunning = 1;
 		if(m_trainingsConfig.isTimeMode()){
@@ -493,7 +500,7 @@ bool OnlineRandomForest::update(){
 					++stillOneRunning;
 				}
 			}
-			mutexForCounter.lock();
+			m_mutexForCounter->lock();
 			if(m_trainingsConfig.isTimeMode()){
 				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter);
 			}else if(m_trainingsConfig.isTreeAmountMode()){
@@ -503,7 +510,7 @@ bool OnlineRandomForest::update(){
 			}else{
 				printError("The type is not defined here!");
 			}
-			mutexForCounter.unlock();
+			m_mutexForCounter->unlock();
 			sleepFor(0.05);
 		}
 		group.join_all();
@@ -532,14 +539,13 @@ bool OnlineRandomForest::update(){
 
 void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list){
 	const unsigned int nrOfParallel = std::min(ThreadMaster::getAmountOfThreads(), (unsigned int) m_trees.size());
-	boost::mutex read, append;
 	boost::thread_group group;
 	DecisionTreesContainer copyOfTrees;
 	std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 	copyOfTrees.insert(copyOfTrees.begin(), m_trees.begin(), m_trees.end());
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
 		packages[i] = new InformationPackage(InformationPackage::InfoType::ORF_TRAIN, (Real) 0., (int) (m_trees.size() / 8));
-		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::sortTreesAfterPerformanceInParallel, this, &list, &copyOfTrees, &read, &append, packages[i])));
+		group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::sortTreesAfterPerformanceInParallel, this, &list, &copyOfTrees, m_read.get(), m_append.get(), packages[i])));
 	}
 	group.join_all();
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
@@ -927,7 +933,6 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::ve
 			loadBatchOfTreesFromDisk(batchNr);
 			++batchNr;
 		} // else means the save mode is not used
-		boost::mutex mutexForTrees;
 		DecisionTreeIterator it = m_trees.begin();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			std::vector<std::vector<Real> >* actProb = &((*probsForThreads)[i]);
@@ -935,7 +940,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::ve
 			for(unsigned int j = 0; j < points.size(); ++j){
 				(*actProb)[j].resize(m_amountOfClasses);
 			}
-			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictDataProbInParallel, this, points, actProb, &batchNr, &mutexForTrees, &it)));
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictDataProbInParallel, this, points, actProb, &batchNr, m_mutexForTrees.get(), &it)));
 		}
 		group.join_all();
 		for(unsigned int i = 0; i < points.size(); ++i){
@@ -998,7 +1003,6 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, 
 			loadBatchOfTreesFromDisk(batchNr);
 			++batchNr;
 		} // else means the save mode is not used
-		boost::mutex mutexForTrees;
 		auto it = m_trees.begin();
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			std::vector<std::vector<Real> >* actProb = &((*probsForThreads)[i]);
@@ -1006,7 +1010,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, 
 			for(unsigned int j = 0; j < points.size(); ++j){
 				(*actProb)[j].resize(m_amountOfClasses);
 			}
-			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictClassDataProbInParallel, this, points, actProb, &batchNr, &mutexForTrees, &it)));
+			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictClassDataProbInParallel, this, points, actProb, &batchNr, m_mutexForTrees.get(), &it)));
 		}
 		group.join_all();
 		for(unsigned int i = 0; i < points.size(); ++i){

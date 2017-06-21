@@ -31,6 +31,7 @@ void DataReader::readFromBinaryFile(LabeledData& data, const std::string& inputN
 		if(amountOfData > size && amountOfData != (unsigned int) INT_MAX){
 			printWarning("The amount of data provided is smaller than the desired amount!");
 		}
+		std::set<unsigned int> classes;
 		for(unsigned long i = lastSize; i < size + lastSize; ++i){
 			LabeledVectorX* p = new LabeledVectorX();
 			ReadWriterHelper::readPoint(input, *p);
@@ -38,10 +39,12 @@ void DataReader::readFromBinaryFile(LabeledData& data, const std::string& inputN
 				ClassKnowledge::setNameFor(StringHelper::number2String(p->getLabel()), p->getLabel());
 			}
 			data.push_back(p);
+			classes.emplace(p->getLabel());
 		}
 		if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
 			ClassKnowledge::setAmountOfDims((unsigned int) data[0]->rows());
 		}
+		printOnScreen("Amount of Classes for file: " << inputName << ": " << classes.size());
 		input.close();
 	}else{
 		printErrorAndQuit("File was not found: " << inputName);

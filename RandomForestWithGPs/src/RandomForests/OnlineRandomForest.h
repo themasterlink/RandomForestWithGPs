@@ -210,6 +210,11 @@ private:
 
 	const bool m_useRealOnlineUpdate;
 
+	mutable std::unique_ptr<boost::mutex> m_read;
+	mutable std::unique_ptr<boost::mutex> m_append;
+	mutable std::unique_ptr<boost::mutex> m_mutexForCounter;
+	mutable std::unique_ptr<boost::mutex> m_mutexForTrees;
+
 };
 
 

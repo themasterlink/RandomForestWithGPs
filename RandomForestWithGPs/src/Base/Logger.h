@@ -22,8 +22,6 @@ public:
 
 	static void addSpecialLineToFile(const std::string& line, const std::string& identifier);
 
-	static void setTimeBetweenWritingIntervals(const Real timeToSleep){ m_timeToSleep = timeToSleep; };
-
 	static void forcedWrite();
 
 	static std::string nameOfLogFile(){ return m_fileName; };
@@ -50,7 +48,7 @@ private:
 
 	static std::string m_fileName;
 
-	static Real m_timeToSleep;
+	static const Real m_timeToSleep;
 
 	static std::map<std::string, std::string> m_specialLines;
 
@@ -58,6 +56,10 @@ private:
 	virtual ~Logger();
 
 	static boost::thread *m_ownThread;
+
+	static std::atomic<bool> m_writeByForceWrite;
+
+	static std::unique_ptr<std::ofstream> m_file;
 };
 
 #endif /* BASE_LOGGER_H_ */

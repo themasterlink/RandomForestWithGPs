@@ -267,7 +267,7 @@ void BigDynamicDecisionTree::trainChildrenForRoot(PtrDynamicDecisionTree root, S
 				if(it != actSmallInnerTreeStructure.end()){
 					it->second->setUsedDataPositions(&dataPositions[leavesForTreesInTheFatherLayer + iChild]);
 					// set the values of the storage which should be used in this tree
-					const bool trained = it->second->train((unsigned int) amountOfUsedDims, generator, 0,
+					const bool trained = it->second->train((dimTypeForDDT) amountOfUsedDims, generator, 0,
 														   saveDataPositions, useRealOnlineUpdate);
 					it->second->setUsedDataPositions(nullptr);
 					if(!trained){

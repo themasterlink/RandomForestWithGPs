@@ -24,13 +24,13 @@ path = "../cmake-build-release/2017/"
 logFiles = []
 for month in os.listdir(path):
 	for day in os.listdir(path + month):
-		if "14" in day:
-			newPath = path + month + "/" + day
-			for hour in os.listdir(newPath):
-				if os.path.isfile(newPath + "/" + hour + "/" + "log.txt"):
-					hourC = hourConvert(hour)
-					t = (newPath + "/" + hour + "/" + "log.txt", convert(month, day, hour), (month, day, str(hourC[0]), str(hourC[1]), str(hourC[2])))
-					logFiles.append(t)
+		#if "14" in day:
+		newPath = path + month + "/" + day
+		for hour in os.listdir(newPath):
+			if os.path.isfile(newPath + "/" + hour + "/" + "log.txt"):
+				hourC = hourConvert(hour)
+				t = (newPath + "/" + hour + "/" + "log.txt", convert(month, day, hour), (month, day, str(hourC[0]), str(hourC[1]), str(hourC[2])))
+				logFiles.append(t)
 
 logFiles.sort(key=lambda tup: tup[1])
 amount = int(raw_input("Nr of last log files: "))

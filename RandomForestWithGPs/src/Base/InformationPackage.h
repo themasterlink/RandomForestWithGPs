@@ -101,13 +101,13 @@ private:
 
 	boost::interprocess::interprocess_semaphore m_semaphoreForWaiting;
 
-	std::atomic<bool> m_isTaskPerformed;
+	bool m_isTaskPerformed;
 
-	std::atomic<bool> m_shouldThreadBeAborted;
+	bool m_shouldThreadBeAborted;
 
-	std::atomic<bool> m_isWaiting;
+	bool m_isWaiting;
 
-	std::atomic<bool> m_shouldThreadPause;
+	bool m_shouldThreadPause;
 
 	Real m_correctlyClassified;
 

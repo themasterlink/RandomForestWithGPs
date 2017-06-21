@@ -1106,7 +1106,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<Ve
 	if(vecs.size() == 0){
 		return;
 	}
-	const int size = vecs.begin()->rows();
+	const auto size = vecs.begin()->rows();
 	for(auto it = vecs.cbegin(); it != vecs.cend(); ++it){
 		if(size != it->rows()){
 			return;

@@ -6,6 +6,7 @@
  */
 
 #include "Logger.h"
+#include <errno.h>
 #include "Settings.h"
 #include <boost/date_time.hpp>
 
@@ -14,11 +15,12 @@ bool Logger::m_init(false);
 bool Logger::m_needToWrite(false);
 std::string Logger::m_text("");
 std::string Logger::m_fileName("");
-Real Logger::m_timeToSleep((Real) 2.);
+const Real Logger::m_timeToSleep((Real) (1.2/*5 * 60.0*/));
 std::map<std::string, std::string> Logger::m_specialLines;
 std::string Logger::m_actualDirectory = "./"; // default
 boost::thread* Logger::m_ownThread(nullptr);
-
+std::atomic<bool> Logger::m_writeByForceWrite(true);
+std::unique_ptr<std::ofstream> Logger::m_file(nullptr);
 namespace bfs = boost::filesystem;
 
 Logger::Logger() {
@@ -28,30 +30,31 @@ Logger::~Logger() {
 }
 
 void Logger::start(){
+	systemCall("ulimit -Sf 2>&1 >0"); 	// sets the soft limit for the file handles to unlimited,
+										// so no problems for the logging arise
 	m_init = Settings::getDirectBoolValue("Logger.useLogger");
-
-	auto createFolder = [](const std::string& dir){
-		if(!bfs::exists(dir)){
-			bfs::create_directory(dir);
-		}
-	};
-#ifdef BUILD_SYSTEM_LINUX
-	// "Linux"
-	m_actualDirectory = "/home_local/denn_ma"; // default
-	createFolder(m_actualDirectory);
-	m_actualDirectory += "/log";
-	createFolder(m_actualDirectory);
-	m_actualDirectory += "/";
-#else // Something else
-	m_actualDirectory = "./"
-#endif
 	if(m_init){
+		auto createFolder = [](const std::string& dir){
+			if(!bfs::exists(dir)){
+				bfs::create_directory(dir);
+			}
+		};
+#ifdef BUILD_SYSTEM_LINUX
+		// "Linux"
+		m_actualDirectory = "/home_local/denn_ma"; // default
+		createFolder(m_actualDirectory);
+		m_actualDirectory += "/log";
+		createFolder(m_actualDirectory);
+		m_actualDirectory += "/";
+#else // Something else
+		m_actualDirectory = "./";
+#endif
 		Settings::getValue("Logger.fileName", m_fileName);
 		boost::gregorian::date dayte(boost::gregorian::day_clock::local_day());
 		for(auto&& folder : {StringHelper::number2String(dayte.year()),
-			StringHelper::number2String(dayte.month().as_number()),
-			StringHelper::number2String(dayte.day()),
-			StringHelper::getActualTimeOfDayAsString()} ){
+							 StringHelper::number2String(dayte.month().as_number()),
+							 StringHelper::number2String(dayte.day()),
+							 StringHelper::getActualTimeOfDayAsString()} ){
 			m_actualDirectory += folder + "/";
 			createFolder(m_actualDirectory);
 		}
@@ -60,6 +63,7 @@ void Logger::start(){
 //		}
 //		system(std::string("ln -s " + m_actualDirectory + " latest").c_str());
 		printOnScreen("The folder is: " << m_actualDirectory);
+//		bfs::copy_file(Settings::getFilePath(), m_actualDirectory + "usedInit.json");
 		system(std::string("cp " + Settings::getFilePath() + " " + m_actualDirectory + "usedInit.json").c_str());
 		std::string mode;
 		Settings::getValue("main.type", mode);
@@ -70,7 +74,7 @@ void Logger::start(){
 }
 
 void Logger::forcedWrite(){
-	if(m_init){
+	if(m_init && m_writeByForceWrite){
 		m_mutex.lock();
 		write();
 		m_mutex.unlock();
@@ -80,21 +84,22 @@ void Logger::forcedWrite(){
 void Logger::write(){
 	// not locked!
 	std::string out;
-//	file.write(m_text.c_str(), m_text.length());
-	out += "This file was written at: " + StringHelper::getActualTimeOfDayAsString() + "\n";
+//	m_file.write(m_text.c_str(), m_text.length());
+	out += "This m_file was written at: " + StringHelper::getActualTimeOfDayAsString() + "\n";
+	out += m_text;
 	for(const auto& line : m_specialLines){
 		if(!(line.first == "Error" || line.first == "Warning")){
 			out += line.first + "\n" + line.second;
-//			file << line.first << "\n";
-//			file.write(line.second.c_str(), line.second.length());
+//			m_file << line.first << "\n";
+//			m_file.write(line.second.c_str(), line.second.length());
 		}
 	}
 	for(auto&& name : {"Warning", "Error"}){
 		auto itOther = m_specialLines.find(name);
 		if(itOther != m_specialLines.end()){
 			out += itOther->first + "\n" + itOther->second;
-//			file << itOther->first << "\n";
-//			file.write(itOther->second.c_str(), itOther->second.length());
+//			m_file << itOther->first << "\n";
+//			m_file.write(itOther->second.c_str(), itOther->second.length());
 		}
 	}
 	const std::string oldFileName = m_fileName;
@@ -104,32 +109,39 @@ void Logger::write(){
 //	if(bfs::exists(fileLoc)){
 //		std::rename(fileLoc.c_str(), fileLocOld.c_str());
 //	}
-	std::fstream file;
+	m_file = std::make_unique<std::ofstream>();
 	//prepare f to throw if failbit gets set
-	const auto exceptionMask = file.exceptions() | std::ios::failbit;
-	file.exceptions(exceptionMask);
+	const auto exceptionMask = m_file->exceptions() | std::ios::failbit;
+	m_file->exceptions(exceptionMask);
 	try{
-		file.open(fileLoc, std::fstream::out | std::fstream::trunc);
-	}catch(std::fstream::failure& e){
+		m_file->open(fileLoc, std::ofstream::out | std::ofstream::trunc);
+	}catch(std::ofstream::failure& e){
 		m_mutex.unlock();
-		printError("The log file opening failed with: " << e.what());
+		printErrorAndQuit("The log m_file opening failed with: " << e.what() << ", errno: " << strerror(errno));
 		m_mutex.lock();
 	}
-	if(file.is_open()){
-		file.write(out.c_str(), out.length());
-		file.close();
+	if(m_file->is_open()){
+		m_file->write(out.c_str(), out.length());
+		m_file.reset(nullptr); // destroys the ofstream object -> closes the m_file handle?
 		std::string latestFile = getActDirectory() + "log.txt";
 		if(bfs::exists(latestFile)){
 			bfs::remove(latestFile);
 		}
-		bfs::create_symlink(fileLoc, latestFile);
-		system(std::string("zip " + getActDirectory() + "log.zip " + fileLoc + " &>/dev/null 2>&1").c_str());
+		try{
+			bfs::create_symlink(fileLoc, latestFile);
+		}catch(bfs::filesystem_error& e){
+			m_mutex.unlock();
+			printError("The create symlink failed: " << e.what());
+			m_mutex.lock();
+		}
+//		system(std::string("zip " + getActDirectory() + "log.zip " + fileLoc + " &>/dev/null 2>&1").c_str());
 		if(bfs::exists(fileLocOld)){
 			bfs::remove(fileLocOld);
 		}
 	}else{
 		m_mutex.unlock();
-		printError("The log file could not be opened!");
+		m_writeByForceWrite = false; // to avoid that the quit of the program calls the force write method
+		printErrorAndQuit("The log m_file is closed, errno: " << strerror(errno));
 		m_mutex.lock();
 	}
 	m_needToWrite = false;
