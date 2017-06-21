@@ -27,6 +27,9 @@ public:
 	template<typename T>
 	static void getValue(const std::string& nameOfValue, T& value);
 
+	template<typename T>
+	static T getDirectValue(const std::string& nameOfValue);
+
 	static void getValue(const std::string& nameOfValue, bool& value,
 			const bool& defaultValue);
 
@@ -79,6 +82,13 @@ void Settings::getValue(const std::string& nameOfValue, T& value){
 		}
 		m_mutex.unlock();
 	}
+}
+
+template<typename T>
+T Settings::getDirectValue(const std::string& nameOfValue){
+	T value;
+	getValue(nameOfValue, value);
+	return value;
 }
 
 #endif /* BASE_SETTINGS_H_ */

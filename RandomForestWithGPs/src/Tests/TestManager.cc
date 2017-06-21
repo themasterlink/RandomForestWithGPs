@@ -11,11 +11,12 @@
 // have to be defined before the test Information is defined
 const std::string TestInformation::trainSettingName("TRAIN_SETTING");
 const std::string TestInformation::testSettingName("TEST_SETTING");
+std::string TestManager::m_filePath("");
 
 TestInformation TestManager::m_testInformation;
 
-void TestManager::init(const std::string &filePath){
-	std::fstream file(filePath,std::ios::in);
+void TestManager::init(){;
+	std::fstream file(m_filePath,std::ios::in);
 	if(file.is_open()){
 		std::string line;
 		while(std::getline(file, line)){
@@ -27,7 +28,7 @@ void TestManager::init(const std::string &filePath){
 			}
 		}
 	}else{
-		printErrorAndQuit("The test settings file is not there: " << filePath);
+		printErrorAndQuit("The test settings file is not there: " << m_filePath);
 	}
 }
 

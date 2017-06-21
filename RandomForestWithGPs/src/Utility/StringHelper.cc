@@ -171,4 +171,12 @@ namespace StringHelper{
 		return clockTime.str();
 	}
 
+	bool isEqualTrue(const std::string& string){
+		return string == "true" || string == "1" || string == "True";
+	}
+
+	bool isEqualFalse(const std::string& string){
+		return string == "false" || string == "0" || string == "false";
+	}
+
 } // close namespace

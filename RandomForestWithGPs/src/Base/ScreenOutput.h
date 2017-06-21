@@ -8,7 +8,7 @@
 #ifndef BASE_SCREENOUTPUT_H_
 #define BASE_SCREENOUTPUT_H_
 
-//#define NO_OUTPUT
+#define NO_OUTPUT
 
 #include <curses.h>
 #include <panel.h>
@@ -32,6 +32,12 @@ public:
 
 	// is interally called by the curses library
 	static void quitForScreenMode();
+
+	// just function to make a connection to Logger
+	static void printToLog(const std::string& message);
+
+	// just function to make a connection to Logger
+	static void printToLogSpecial(const std::string& message, const std::string& special);
 
 private:
 
@@ -74,10 +80,13 @@ private:
 
 #else // USE_SCREEN_OUPUT
 #define printOnScreen(message) \
-	std::cout << message << std::endl \
+	do{	std::stringstream str100; str100 << message; std::cout << str100.str() << std::endl; \
+		ScreenOutput::printToLog(str100.str()); }while(false) \
 
 #define printInPackageOnScreen(package, message) \
-	std::cout << (package)->getStandartInformation() << "\n\t" << message << std::endl \
+	do{std::stringstream str100; str100 << message; \
+		std::cout << (package)->getStandartInformation() << "\n\t" << str100.str() << std::endl; \
+		ScreenOutput::printToLogSpecial(str100.str(), (package)->getStandartInformation()); }while(false) \
 
 #endif // USE_SCREEN_OUPUT
 

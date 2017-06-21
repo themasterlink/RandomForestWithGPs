@@ -9,6 +9,7 @@
 #include <errno.h>
 #include "Settings.h"
 #include <boost/date_time.hpp>
+#include "../Tests/TestManager.h"
 
 boost::mutex Logger::m_mutex;
 bool Logger::m_init(false);
@@ -65,6 +66,7 @@ void Logger::start(){
 		printOnScreen("The folder is: " << m_actualDirectory);
 //		bfs::copy_file(Settings::getFilePath(), m_actualDirectory + "usedInit.json");
 		system(std::string("cp " + Settings::getFilePath() + " " + m_actualDirectory + "usedInit.json").c_str());
+		system(std::string("cp " + TestManager::getFilePath() + " " + m_actualDirectory + "testSettings.txt").c_str());
 		std::string mode;
 		Settings::getValue("main.type", mode);
 		m_text = "Online Random Forest with IVMs, mode: " + mode + "\n"; // Standart Information

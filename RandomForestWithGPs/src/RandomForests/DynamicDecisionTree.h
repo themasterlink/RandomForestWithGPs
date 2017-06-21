@@ -43,12 +43,12 @@ public:
 
 	virtual ~DynamicDecisionTree();
 
-	void train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT &generator, const bool useRealOnlineUpdate) override {
-		train(amountOfUsedDims, generator, 0, false, useRealOnlineUpdate);
+	void train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT &generator) override {
+		train(amountOfUsedDims, generator, 0, false);
 	}
 
 	bool train(dimType amountOfUsedDims, RandomNumberGeneratorForDT &generator, const dimType tryCounter,
-			   const bool saveDataPosition, const bool useRealOnlineUpdate);
+			   const bool saveDataPosition);
 
 	Real trySplitFor(const Real usedSplitValue, const unsigned int usedDim,
 					 const std::vector<unsigned int> &dataInNode, std::vector<unsigned int> &leftHisto,

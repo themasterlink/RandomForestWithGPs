@@ -51,11 +51,11 @@ void RandomForest::train(const LabeledData& data, const int amountOfUsedDims,
 	TreeCounter counter;
 	m_counterIncreaseValue = std::min(std::max(2, static_cast<int>(m_amountOfTrees / nrOfParallel / 100)), 100);
 	std::vector<RandomNumberGeneratorForDT*> generators;
+	RandomNumberGeneratorForDT::BaggingInformation baggingInformation; // gets all info in constructor
 	for(int i = 0; i < nrOfParallel; ++i){
 		const int seed = i;
-		const int useWholeDataSet = 0; // means that the whole set is used
 		generators.push_back(new RandomNumberGeneratorForDT((int) data[0]->rows(), minMaxUsedData[0], minMaxUsedData[1],
-															(int) data.size(), seed, useWholeDataSet));
+															(int) data.size(), seed, baggingInformation, false));
 		const int start = static_cast<const int>(i / static_cast<Real>(nrOfParallel) * m_amountOfTrees);
 		const int end =   static_cast<const int>((i + 1) / static_cast<Real>(nrOfParallel) * m_amountOfTrees);
 		group.add_thread(new boost::thread(boost::bind(&RandomForest::trainInParallel, this, data, amountOfUsedDims, generators[i], start, end, &counter)));

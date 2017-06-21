@@ -24,149 +24,149 @@ define keyboardSplitSet as 10 splits from keyboardSet
 define splitTrainSet as 80 splits from trainSet 
 
 
-train splitTrainSet[0] until 200 trees with only 6 gb
+train splitTrainSet[0] until 10000 trees with only 6 gb
 test testSetExclude
 test testSet 
 define actualSet1 from splitTrainSet[1]
-train actualSet1 until 20 trees with only 6 gb
+train actualSet1 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet2 from splitTrainSet[2]
-train actualSet2 until 20 trees with only 6 gb
+train actualSet2 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet3 from splitTrainSet[3]
-train actualSet3 until 20 trees with only 6 gb
+train actualSet3 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet4 from splitTrainSet[4]
-train actualSet4 until 20 trees with only 6 gb
+train actualSet4 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet5 from splitTrainSet[5]
-train actualSet5 until 20 trees with only 6 gb
+train actualSet5 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet6 from splitTrainSet[6]
-train actualSet6 until 20 trees with only 6 gb
+train actualSet6 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet7 from splitTrainSet[7]
-train actualSet7 until 20 trees with only 6 gb
+train actualSet7 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet8 from splitTrainSet[8]
-train actualSet8 until 20 trees with only 6 gb
+train actualSet8 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet9 from splitTrainSet[9]
-train actualSet9 until 20 trees with only 6 gb
+train actualSet9 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet10 from splitTrainSet[10]
-train actualSet10 until 20 trees with only 6 gb
+train actualSet10 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet11 from splitTrainSet[11]
-train actualSet11 until 20 trees with only 6 gb
+train actualSet11 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet12 from splitTrainSet[12]
-train actualSet12 until 20 trees with only 6 gb
+train actualSet12 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet13 from splitTrainSet[13]
-train actualSet13 until 20 trees with only 6 gb
+train actualSet13 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet14 from splitTrainSet[14]
-train actualSet14 until 20 trees with only 6 gb
+train actualSet14 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet15 from splitTrainSet[15]
-train actualSet15 until 20 trees with only 6 gb
+train actualSet15 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet16 from splitTrainSet[16]
-train actualSet16 until 20 trees with only 6 gb
+train actualSet16 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet17 from splitTrainSet[17]
-train actualSet17 until 20 trees with only 6 gb
+train actualSet17 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet18 from splitTrainSet[18]
-train actualSet18 until 20 trees with only 6 gb
+train actualSet18 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 define actualSet19 from splitTrainSet[19]
-train actualSet19 until 20 trees with only 6 gb
+train actualSet19 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 combine appleSplitSet[0] with splitTrainSet[20] in tempSet1
 define actualSet20 from tempSet1
-train actualSet20 until 20 trees with only 6 gb
+train actualSet20 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
 combine appleSplitSet[1] with splitTrainSet[21] in tempSet2
 define actualSet21 from tempSet2
-train actualSet21 until 20 trees with only 6 gb
+train actualSet21 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
 combine appleSplitSet[2] with splitTrainSet[22] in tempSet3
 define actualSet22 from tempSet3
-train actualSet22 until 20 trees with only 6 gb
+train actualSet22 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
 combine appleSplitSet[3] with splitTrainSet[23] in tempSet4
 define actualSet23 from tempSet4
-train actualSet23 until 20 trees with only 6 gb
+train actualSet23 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
 combine appleSplitSet[4] with splitTrainSet[24] in tempSet5
 define actualSet24 from tempSet5
-train actualSet24 until 20 trees with only 6 gb
+train actualSet24 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
 combine appleSplitSet[5] with splitTrainSet[25] in tempSet6
 define actualSet25 from tempSet6
-train actualSet25 until 20 trees with only 6 gb
+train actualSet25 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
 combine appleSplitSet[6] with splitTrainSet[26] in tempSet7
 define actualSet26 from tempSet7
-train actualSet26 until 20 trees with only 6 gb
+train actualSet26 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
 combine appleSplitSet[7] with splitTrainSet[27] in tempSet8
 define actualSet27 from tempSet8
-train actualSet27 until 20 trees with only 6 gb
+train actualSet27 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
 combine appleSplitSet[8] with splitTrainSet[28] in tempSet9
 define actualSet28 from tempSet9
-train actualSet28 until 20 trees with only 6 gb
+train actualSet28 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
 combine appleSplitSet[9] with splitTrainSet[29] in tempSet10
 define actualSet29 from tempSet10
-train actualSet29 until 20 trees with only 6 gb
+train actualSet29 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
 combine bananaSplitSet[0] with splitTrainSet[30] in tempSet11
 combine appleSplitSet[0] with tempSet11 in tempSet12
 define actualSet30 from tempSet12
-train actualSet30 until 20 trees with only 6 gb
+train actualSet30 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -174,7 +174,7 @@ test bananaTestSet
 combine bananaSplitSet[1] with splitTrainSet[31] in tempSet13
 combine appleSplitSet[1] with tempSet13 in tempSet14
 define actualSet31 from tempSet14
-train actualSet31 until 20 trees with only 6 gb
+train actualSet31 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -182,7 +182,7 @@ test bananaTestSet
 combine bananaSplitSet[2] with splitTrainSet[32] in tempSet15
 combine appleSplitSet[2] with tempSet15 in tempSet16
 define actualSet32 from tempSet16
-train actualSet32 until 20 trees with only 6 gb
+train actualSet32 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -190,7 +190,7 @@ test bananaTestSet
 combine bananaSplitSet[3] with splitTrainSet[33] in tempSet17
 combine appleSplitSet[3] with tempSet17 in tempSet18
 define actualSet33 from tempSet18
-train actualSet33 until 20 trees with only 6 gb
+train actualSet33 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -198,7 +198,7 @@ test bananaTestSet
 combine bananaSplitSet[4] with splitTrainSet[34] in tempSet19
 combine appleSplitSet[4] with tempSet19 in tempSet20
 define actualSet34 from tempSet20
-train actualSet34 until 20 trees with only 6 gb
+train actualSet34 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -206,7 +206,7 @@ test bananaTestSet
 combine bananaSplitSet[5] with splitTrainSet[35] in tempSet21
 combine appleSplitSet[5] with tempSet21 in tempSet22
 define actualSet35 from tempSet22
-train actualSet35 until 20 trees with only 6 gb
+train actualSet35 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -214,7 +214,7 @@ test bananaTestSet
 combine bananaSplitSet[6] with splitTrainSet[36] in tempSet23
 combine appleSplitSet[6] with tempSet23 in tempSet24
 define actualSet36 from tempSet24
-train actualSet36 until 20 trees with only 6 gb
+train actualSet36 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -222,7 +222,7 @@ test bananaTestSet
 combine bananaSplitSet[7] with splitTrainSet[37] in tempSet25
 combine appleSplitSet[7] with tempSet25 in tempSet26
 define actualSet37 from tempSet26
-train actualSet37 until 20 trees with only 6 gb
+train actualSet37 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -230,7 +230,7 @@ test bananaTestSet
 combine bananaSplitSet[8] with splitTrainSet[38] in tempSet27
 combine appleSplitSet[8] with tempSet27 in tempSet28
 define actualSet38 from tempSet28
-train actualSet38 until 20 trees with only 6 gb
+train actualSet38 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -238,7 +238,7 @@ test bananaTestSet
 combine bananaSplitSet[9] with splitTrainSet[39] in tempSet29
 combine appleSplitSet[9] with tempSet29 in tempSet30
 define actualSet39 from tempSet30
-train actualSet39 until 20 trees with only 6 gb
+train actualSet39 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -247,7 +247,7 @@ combine coffeemugSplitSet[0] with splitTrainSet[40] in tempSet31
 combine appleSplitSet[0] with tempSet31 in tempSet32
 combine bananaSplitSet[0] with tempSet32 in tempSet33
 define actualSet40 from tempSet33
-train actualSet40 until 20 trees with only 6 gb
+train actualSet40 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -257,7 +257,7 @@ combine coffeemugSplitSet[1] with splitTrainSet[41] in tempSet34
 combine appleSplitSet[1] with tempSet34 in tempSet35
 combine bananaSplitSet[1] with tempSet35 in tempSet36
 define actualSet41 from tempSet36
-train actualSet41 until 20 trees with only 6 gb
+train actualSet41 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -267,7 +267,7 @@ combine coffeemugSplitSet[2] with splitTrainSet[42] in tempSet37
 combine appleSplitSet[2] with tempSet37 in tempSet38
 combine bananaSplitSet[2] with tempSet38 in tempSet39
 define actualSet42 from tempSet39
-train actualSet42 until 20 trees with only 6 gb
+train actualSet42 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -277,7 +277,7 @@ combine coffeemugSplitSet[3] with splitTrainSet[43] in tempSet40
 combine appleSplitSet[3] with tempSet40 in tempSet41
 combine bananaSplitSet[3] with tempSet41 in tempSet42
 define actualSet43 from tempSet42
-train actualSet43 until 20 trees with only 6 gb
+train actualSet43 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -287,7 +287,7 @@ combine coffeemugSplitSet[4] with splitTrainSet[44] in tempSet43
 combine appleSplitSet[4] with tempSet43 in tempSet44
 combine bananaSplitSet[4] with tempSet44 in tempSet45
 define actualSet44 from tempSet45
-train actualSet44 until 20 trees with only 6 gb
+train actualSet44 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -297,7 +297,7 @@ combine coffeemugSplitSet[5] with splitTrainSet[45] in tempSet46
 combine appleSplitSet[5] with tempSet46 in tempSet47
 combine bananaSplitSet[5] with tempSet47 in tempSet48
 define actualSet45 from tempSet48
-train actualSet45 until 20 trees with only 6 gb
+train actualSet45 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -307,7 +307,7 @@ combine coffeemugSplitSet[6] with splitTrainSet[46] in tempSet49
 combine appleSplitSet[6] with tempSet49 in tempSet50
 combine bananaSplitSet[6] with tempSet50 in tempSet51
 define actualSet46 from tempSet51
-train actualSet46 until 20 trees with only 6 gb
+train actualSet46 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -317,7 +317,7 @@ combine coffeemugSplitSet[7] with splitTrainSet[47] in tempSet52
 combine appleSplitSet[7] with tempSet52 in tempSet53
 combine bananaSplitSet[7] with tempSet53 in tempSet54
 define actualSet47 from tempSet54
-train actualSet47 until 20 trees with only 6 gb
+train actualSet47 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -327,7 +327,7 @@ combine coffeemugSplitSet[8] with splitTrainSet[48] in tempSet55
 combine appleSplitSet[8] with tempSet55 in tempSet56
 combine bananaSplitSet[8] with tempSet56 in tempSet57
 define actualSet48 from tempSet57
-train actualSet48 until 20 trees with only 6 gb
+train actualSet48 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -337,7 +337,7 @@ combine coffeemugSplitSet[9] with splitTrainSet[49] in tempSet58
 combine appleSplitSet[9] with tempSet58 in tempSet59
 combine bananaSplitSet[9] with tempSet59 in tempSet60
 define actualSet49 from tempSet60
-train actualSet49 until 20 trees with only 6 gb
+train actualSet49 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -348,7 +348,7 @@ combine appleSplitSet[0] with tempSet61 in tempSet62
 combine bananaSplitSet[0] with tempSet62 in tempSet63
 combine coffeemugSplitSet[0] with tempSet63 in tempSet64
 define actualSet50 from tempSet64
-train actualSet50 until 20 trees with only 6 gb
+train actualSet50 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -360,7 +360,7 @@ combine appleSplitSet[1] with tempSet65 in tempSet66
 combine bananaSplitSet[1] with tempSet66 in tempSet67
 combine coffeemugSplitSet[1] with tempSet67 in tempSet68
 define actualSet51 from tempSet68
-train actualSet51 until 20 trees with only 6 gb
+train actualSet51 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -372,7 +372,7 @@ combine appleSplitSet[2] with tempSet69 in tempSet70
 combine bananaSplitSet[2] with tempSet70 in tempSet71
 combine coffeemugSplitSet[2] with tempSet71 in tempSet72
 define actualSet52 from tempSet72
-train actualSet52 until 20 trees with only 6 gb
+train actualSet52 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -384,7 +384,7 @@ combine appleSplitSet[3] with tempSet73 in tempSet74
 combine bananaSplitSet[3] with tempSet74 in tempSet75
 combine coffeemugSplitSet[3] with tempSet75 in tempSet76
 define actualSet53 from tempSet76
-train actualSet53 until 20 trees with only 6 gb
+train actualSet53 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -396,7 +396,7 @@ combine appleSplitSet[4] with tempSet77 in tempSet78
 combine bananaSplitSet[4] with tempSet78 in tempSet79
 combine coffeemugSplitSet[4] with tempSet79 in tempSet80
 define actualSet54 from tempSet80
-train actualSet54 until 20 trees with only 6 gb
+train actualSet54 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -408,7 +408,7 @@ combine appleSplitSet[5] with tempSet81 in tempSet82
 combine bananaSplitSet[5] with tempSet82 in tempSet83
 combine coffeemugSplitSet[5] with tempSet83 in tempSet84
 define actualSet55 from tempSet84
-train actualSet55 until 20 trees with only 6 gb
+train actualSet55 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -420,7 +420,7 @@ combine appleSplitSet[6] with tempSet85 in tempSet86
 combine bananaSplitSet[6] with tempSet86 in tempSet87
 combine coffeemugSplitSet[6] with tempSet87 in tempSet88
 define actualSet56 from tempSet88
-train actualSet56 until 20 trees with only 6 gb
+train actualSet56 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -432,7 +432,7 @@ combine appleSplitSet[7] with tempSet89 in tempSet90
 combine bananaSplitSet[7] with tempSet90 in tempSet91
 combine coffeemugSplitSet[7] with tempSet91 in tempSet92
 define actualSet57 from tempSet92
-train actualSet57 until 20 trees with only 6 gb
+train actualSet57 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -444,7 +444,7 @@ combine appleSplitSet[8] with tempSet93 in tempSet94
 combine bananaSplitSet[8] with tempSet94 in tempSet95
 combine coffeemugSplitSet[8] with tempSet95 in tempSet96
 define actualSet58 from tempSet96
-train actualSet58 until 20 trees with only 6 gb
+train actualSet58 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -456,7 +456,7 @@ combine appleSplitSet[9] with tempSet97 in tempSet98
 combine bananaSplitSet[9] with tempSet98 in tempSet99
 combine coffeemugSplitSet[9] with tempSet99 in tempSet100
 define actualSet59 from tempSet100
-train actualSet59 until 20 trees with only 6 gb
+train actualSet59 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -469,7 +469,7 @@ combine bananaSplitSet[0] with tempSet102 in tempSet103
 combine coffeemugSplitSet[0] with tempSet103 in tempSet104
 combine staplerSplitSet[0] with tempSet104 in tempSet105
 define actualSet60 from tempSet105
-train actualSet60 until 20 trees with only 6 gb
+train actualSet60 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -483,7 +483,7 @@ combine bananaSplitSet[1] with tempSet107 in tempSet108
 combine coffeemugSplitSet[1] with tempSet108 in tempSet109
 combine staplerSplitSet[1] with tempSet109 in tempSet110
 define actualSet61 from tempSet110
-train actualSet61 until 20 trees with only 6 gb
+train actualSet61 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -497,7 +497,7 @@ combine bananaSplitSet[2] with tempSet112 in tempSet113
 combine coffeemugSplitSet[2] with tempSet113 in tempSet114
 combine staplerSplitSet[2] with tempSet114 in tempSet115
 define actualSet62 from tempSet115
-train actualSet62 until 20 trees with only 6 gb
+train actualSet62 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -511,7 +511,7 @@ combine bananaSplitSet[3] with tempSet117 in tempSet118
 combine coffeemugSplitSet[3] with tempSet118 in tempSet119
 combine staplerSplitSet[3] with tempSet119 in tempSet120
 define actualSet63 from tempSet120
-train actualSet63 until 20 trees with only 6 gb
+train actualSet63 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -525,7 +525,7 @@ combine bananaSplitSet[4] with tempSet122 in tempSet123
 combine coffeemugSplitSet[4] with tempSet123 in tempSet124
 combine staplerSplitSet[4] with tempSet124 in tempSet125
 define actualSet64 from tempSet125
-train actualSet64 until 20 trees with only 6 gb
+train actualSet64 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -539,7 +539,7 @@ combine bananaSplitSet[5] with tempSet127 in tempSet128
 combine coffeemugSplitSet[5] with tempSet128 in tempSet129
 combine staplerSplitSet[5] with tempSet129 in tempSet130
 define actualSet65 from tempSet130
-train actualSet65 until 20 trees with only 6 gb
+train actualSet65 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -553,7 +553,7 @@ combine bananaSplitSet[6] with tempSet132 in tempSet133
 combine coffeemugSplitSet[6] with tempSet133 in tempSet134
 combine staplerSplitSet[6] with tempSet134 in tempSet135
 define actualSet66 from tempSet135
-train actualSet66 until 20 trees with only 6 gb
+train actualSet66 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -567,7 +567,7 @@ combine bananaSplitSet[7] with tempSet137 in tempSet138
 combine coffeemugSplitSet[7] with tempSet138 in tempSet139
 combine staplerSplitSet[7] with tempSet139 in tempSet140
 define actualSet67 from tempSet140
-train actualSet67 until 20 trees with only 6 gb
+train actualSet67 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -581,7 +581,7 @@ combine bananaSplitSet[8] with tempSet142 in tempSet143
 combine coffeemugSplitSet[8] with tempSet143 in tempSet144
 combine staplerSplitSet[8] with tempSet144 in tempSet145
 define actualSet68 from tempSet145
-train actualSet68 until 20 trees with only 6 gb
+train actualSet68 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -595,7 +595,7 @@ combine bananaSplitSet[9] with tempSet147 in tempSet148
 combine coffeemugSplitSet[9] with tempSet148 in tempSet149
 combine staplerSplitSet[9] with tempSet149 in tempSet150
 define actualSet69 from tempSet150
-train actualSet69 until 20 trees with only 6 gb
+train actualSet69 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -610,7 +610,7 @@ combine coffeemugSplitSet[0] with tempSet153 in tempSet154
 combine staplerSplitSet[0] with tempSet154 in tempSet155
 combine flashlightSplitSet[0] with tempSet155 in tempSet156
 define actualSet70 from tempSet156
-train actualSet70 until 20 trees with only 6 gb
+train actualSet70 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -626,7 +626,7 @@ combine coffeemugSplitSet[1] with tempSet159 in tempSet160
 combine staplerSplitSet[1] with tempSet160 in tempSet161
 combine flashlightSplitSet[1] with tempSet161 in tempSet162
 define actualSet71 from tempSet162
-train actualSet71 until 20 trees with only 6 gb
+train actualSet71 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -642,7 +642,7 @@ combine coffeemugSplitSet[2] with tempSet165 in tempSet166
 combine staplerSplitSet[2] with tempSet166 in tempSet167
 combine flashlightSplitSet[2] with tempSet167 in tempSet168
 define actualSet72 from tempSet168
-train actualSet72 until 20 trees with only 6 gb
+train actualSet72 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -658,7 +658,7 @@ combine coffeemugSplitSet[3] with tempSet171 in tempSet172
 combine staplerSplitSet[3] with tempSet172 in tempSet173
 combine flashlightSplitSet[3] with tempSet173 in tempSet174
 define actualSet73 from tempSet174
-train actualSet73 until 20 trees with only 6 gb
+train actualSet73 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -674,7 +674,7 @@ combine coffeemugSplitSet[4] with tempSet177 in tempSet178
 combine staplerSplitSet[4] with tempSet178 in tempSet179
 combine flashlightSplitSet[4] with tempSet179 in tempSet180
 define actualSet74 from tempSet180
-train actualSet74 until 20 trees with only 6 gb
+train actualSet74 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -690,7 +690,7 @@ combine coffeemugSplitSet[5] with tempSet183 in tempSet184
 combine staplerSplitSet[5] with tempSet184 in tempSet185
 combine flashlightSplitSet[5] with tempSet185 in tempSet186
 define actualSet75 from tempSet186
-train actualSet75 until 20 trees with only 6 gb
+train actualSet75 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -706,7 +706,7 @@ combine coffeemugSplitSet[6] with tempSet189 in tempSet190
 combine staplerSplitSet[6] with tempSet190 in tempSet191
 combine flashlightSplitSet[6] with tempSet191 in tempSet192
 define actualSet76 from tempSet192
-train actualSet76 until 20 trees with only 6 gb
+train actualSet76 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -722,7 +722,7 @@ combine coffeemugSplitSet[7] with tempSet195 in tempSet196
 combine staplerSplitSet[7] with tempSet196 in tempSet197
 combine flashlightSplitSet[7] with tempSet197 in tempSet198
 define actualSet77 from tempSet198
-train actualSet77 until 20 trees with only 6 gb
+train actualSet77 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -738,7 +738,7 @@ combine coffeemugSplitSet[8] with tempSet201 in tempSet202
 combine staplerSplitSet[8] with tempSet202 in tempSet203
 combine flashlightSplitSet[8] with tempSet203 in tempSet204
 define actualSet78 from tempSet204
-train actualSet78 until 20 trees with only 6 gb
+train actualSet78 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet
@@ -754,7 +754,7 @@ combine coffeemugSplitSet[9] with tempSet207 in tempSet208
 combine staplerSplitSet[9] with tempSet208 in tempSet209
 combine flashlightSplitSet[9] with tempSet209 in tempSet210
 define actualSet79 from tempSet210
-train actualSet79 until 20 trees with only 6 gb
+train actualSet79 until 1200 trees with only 6 gb
 test testSetExclude
 test testSet
 test appleTestSet

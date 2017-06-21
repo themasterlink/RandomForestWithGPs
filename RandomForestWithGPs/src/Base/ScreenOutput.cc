@@ -514,7 +514,7 @@ void ScreenOutput::print(const std::string& line){
 	}
 	m_lineMutex.unlock();
 #endif // NO_OUTPUT
-	Logger::addNormalLineToFile(line);
+	printToLog(line);
 }
 
 void ScreenOutput::printErrorLine(const std::string& line){
@@ -538,7 +538,7 @@ void ScreenOutput::printErrorLine(const std::string& line){
 	}
 	m_lineMutex.unlock();
 #endif // NO_OUTPUT
-	Logger::addSpecialLineToFile(line, "Error");
+	printToLogSpecial(line, "Error");
 }
 
 
@@ -548,4 +548,12 @@ void ScreenOutput::printInProgressLine(const std::string& line){
 	m_progressLine = line;
 	m_lineMutex.unlock();
 #endif // NO_OUTPUT
+}
+
+void ScreenOutput::printToLog(const std::string& message){
+	Logger::addNormalLineToFile(message);
+}
+
+void ScreenOutput::printToLogSpecial(const std::string& message, const std::string& special){
+	Logger::addSpecialLineToFile(message, special);
 }

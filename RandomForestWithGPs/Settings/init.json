@@ -46,7 +46,11 @@
 		"Tree": {
 			"height": 35,
 			"performRealOnlineUpdate": "false",
-			"stepSizeOverData": 3
+			"Bagging": {
+				"mode": "use total amount",
+				"totalAmountOfDataUsedPerTree": 5000,
+				"stepSizeOverData": 3
+			}
 		},
 		"amountOfTrainedTrees": 0,
 		"ownSamplingTime": 0,

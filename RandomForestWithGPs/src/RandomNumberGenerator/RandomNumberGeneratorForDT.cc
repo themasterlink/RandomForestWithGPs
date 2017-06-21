@@ -5,22 +5,26 @@
  *      Author: Max
  */
 
+#include <boost/regex.hpp>
 #include "RandomNumberGeneratorForDT.h"
 #include "../RandomForests/OnlineRandomForest.h"
+#include "../Base/Settings.h"
 
 RandomNumberGeneratorForDT::RandomNumberGeneratorForDT(const int dim, const int minUsedData,
-	const int maxUsedData, const int amountOfData, const int seed, const int amountOfDataUsedPerTree)
-	:	m_stepSize(std::max(1,std::min(amountOfDataUsedPerTree, amountOfData))),
+	const int maxUsedData, const int amountOfData, const int seed, const BaggingInformation& baggingInformation, const bool useRealOnlineUpdate)
+	:	m_baggingInformation(baggingInformation),
+		m_currentStepSize(2),
 		m_generator((unsigned int) seed),
 		m_uniformDistDimension(0, dim - 1), // 0 ... (dimension of data - 1)
 		m_uniformDistUsedData(minUsedData, maxUsedData),
 		m_uniformDistData(0, amountOfData - 1),
-		m_uniformStepOverStorage(1, m_stepSize),
+		m_uniformStepOverStorage(1, amountOfData - 1),
 		m_varGenDimension(m_generator, m_uniformDistDimension),
 		m_varGenUsedData(m_generator, m_uniformDistUsedData),
 		m_varGenData(m_generator, m_uniformDistData),
 		m_varGenStepOverStorage(m_generator, m_uniformStepOverStorage),
-		m_useDim((unsigned long) dim, false){
+		m_useDim((unsigned long) dim, false),
+		m_useRealOnlineUpdate(useRealOnlineUpdate){
 }
 
 RandomNumberGeneratorForDT::~RandomNumberGeneratorForDT(){
@@ -40,8 +44,17 @@ void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 		OnlineStorage<LabeledVectorX*>& storage = forest->getStorageRef();
 		const unsigned int dim = storage.dim();
 		if(!useWholeDataSet()){
-			m_stepSize = (std::max(1,std::min(m_stepSize, (int) storage.size())));
-			m_varGenStepOverStorage.distribution().param(uniform_distribution_int::param_type(1, m_stepSize));
+			const auto size = m_useRealOnlineUpdate ? storage.getAmountOfNew() : storage.size();
+			m_currentStepSize = m_baggingInformation.m_stepSizeOverData;
+			if(m_baggingInformation.useStepSize()){
+				m_currentStepSize = m_baggingInformation.m_stepSizeOverData;
+			}else if(m_baggingInformation.useTotalAmountOfPoints()){
+				m_currentStepSize = (size / m_baggingInformation.m_totalUseOfData) * 2;
+			}else{
+				printError("This type is unknown here!");
+			}
+			m_currentStepSize = std::max((unsigned int) 1, std::min(m_currentStepSize, size));
+			m_varGenStepOverStorage.distribution().param(uniform_distribution_int::param_type(1, m_currentStepSize));
 		}
 		if(m_uniformSplitValues.size() != dim){
 			m_uniformSplitValues.resize(dim);
@@ -62,3 +75,33 @@ void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 		printError("This subject type is unknown!");
 	}
 }
+
+RandomNumberGeneratorForDT::BaggingInformation::BaggingInformation():
+		m_stepSizeOverData(Settings::getDirectValue<unsigned int>("OnlineRandomForest.Tree.Bagging.stepSizeOverData")),
+		m_totalUseOfData(Settings::getDirectValue<unsigned int>("OnlineRandomForest.Tree.Bagging.totalAmountOfDataUsedPerTree")),
+		m_mode(BaggingInformation::getMode(Settings::getDirectValue<std::string>("OnlineRandomForest.Tree.Bagging.mode"))){}
+
+RandomNumberGeneratorForDT::BaggingInformation::BaggingMode
+RandomNumberGeneratorForDT::BaggingInformation::getMode(const std::string& settingsField){
+	try{
+		boost::regex stepSize("(\\h)*(use|Use)?(\\h)*(step|Step)(\\h)*(size|Size)(\\h)*"); // step size| stepsize
+		boost::regex totalUseOfData(
+				"(\\h)*(use|Use)?(\\h)*(total|Total)(\\h)*(use|Use|amount|Amount)(\\h)*((of|Of)(\\h)*(data|Data)(\\h)*)?");
+		boost::regex useWholeDataSet(
+				"(\\h)*(use|Use)?(\\h)*(all|All|whole|Whole)(\\h)*(data|Data)(\\h)*((set|Set|point|Point)(s)?)?(\\h)*");
+		if(boost::regex_match(settingsField, stepSize)){
+			return BaggingMode::STEPSIZE;
+		}else if(boost::regex_match(settingsField,totalUseOfData)){
+			return BaggingMode::TOTALUSEOFDATA;
+		}else if(boost::regex_match(settingsField, useWholeDataSet)){
+			return BaggingMode::USEWHOLEDATASET;
+		}else{
+			printErrorAndQuit("This type is not supported here: " << settingsField);
+			return BaggingMode::STEPSIZE;
+		}
+	}catch(std::exception& e){
+		printErrorAndQuit("Regex was not correct: " << e.what());
+	}
+	return BaggingMode::STEPSIZE; // will never be executed
+};
+

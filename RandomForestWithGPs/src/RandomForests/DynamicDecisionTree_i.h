@@ -91,8 +91,7 @@ DynamicDecisionTree<dimType>::~DynamicDecisionTree(){
 
 template<typename dimType>
 bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberGeneratorForDT &generator,
-										 const dimType tryCounter, const bool saveDataPosition,
-										 const bool useRealOnlineUpdate){
+										 const dimType tryCounter, const bool saveDataPosition){
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED || m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		// reset training
 		std::fill(m_splitDim.begin(), m_splitDim.end(), NodeType::NODE_IS_NOT_USED);
@@ -145,19 +144,37 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 	// 2 3
 	if(m_useOnlyThisDataPositions == nullptr){
 		auto& dataPos = dataPosition[1];
-		const auto startPos = useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
-		const auto size = useRealOnlineUpdate ? m_storage.getAmountOfNew() : m_storage.size();
+		const auto startPos = generator.useRealOnlineUpdate() ? m_storage.getLastUpdateIndex() : 0;
+		const auto size = generator.useRealOnlineUpdate() ? m_storage.getAmountOfNew() : m_storage.size();
+		bool useWholeDataSet = false;
 		if(generator.useWholeDataSet()){
+			useWholeDataSet = true;
+		}else{
+			const auto& baggingInfo = generator.getBaggingInfo();
+			if(baggingInfo.useStepSize()){
+				const auto amountOfPoints = (unsigned int) (size / (baggingInfo.m_stepSizeOverData * 0.375));
+				dataPos.reserve(amountOfPoints);
+			}else if(baggingInfo.useTotalAmountOfPoints()){
+				if(size > baggingInfo.m_totalUseOfData){
+					const auto steps = (size / baggingInfo.m_totalUseOfData) * 2;
+					dataPos.reserve(baggingInfo.m_totalUseOfData * 2);
+				}else{
+					useWholeDataSet = true;
+				}
+			}else{
+				printError("This type is unknown here!");
+			}
+			if(!useWholeDataSet){
+				// -1 that the first value in the storage is used too
+				for(unsigned int i = startPos + generator.getRandStepOverStorage() - 1;
+					i < m_storage.size(); i += generator.getRandStepOverStorage()){
+					dataPos.push_back(i);
+				}
+			}
+		}
+		if(useWholeDataSet){
 			dataPos.resize(size);
 			std::iota(dataPos.begin(), dataPos.end(), startPos);
-		}else{
-			const auto amountOfPoints = (unsigned int) (size / (generator.getStepSize() * 0.375));
-			dataPos.reserve(amountOfPoints);
-			// -1 that the first value in the storage is used too
-			for(unsigned int i = startPos + generator.getRandStepOverStorage() - 1;
-				i < m_storage.size(); i += generator.getRandStepOverStorage()){
-				dataPos.push_back(i);
-			}
 		}
 	}
 //	else{ // no need take ref to
@@ -290,7 +307,7 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 	}
 	if(m_splitDim[1] == NodeType::NODE_CAN_BE_USED && tryCounter < 5){ // five splits are enough to try
 		// try again!
-		return train(amountOfUsedDims,generator, tryCounter + 1, saveDataPosition, useRealOnlineUpdate);
+		return train(amountOfUsedDims,generator, tryCounter + 1, saveDataPosition);
 	}else if(tryCounter >= 5){
 		return false;
 	}

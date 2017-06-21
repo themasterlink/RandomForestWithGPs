@@ -188,6 +188,8 @@ private:
 
 	std::vector<RandomNumberGeneratorForDT*> m_generators;
 
+	std::unique_ptr<RandomNumberGeneratorForDT::BaggingInformation> m_baggingInformation;
+
 	mutable boost::mutex m_treesMutex;
 
 	bool m_firstTrainingDone;

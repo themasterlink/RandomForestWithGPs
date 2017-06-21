@@ -246,6 +246,7 @@ int main(int ac, char** av){
 //		socketsTest();
 //	}
 //	return 0;
+	TestManager::setFilePath("../Settings/testSettingsPy.init"); // must be called before the logger
 	const std::string settingsFile = CommandSettings::get_settingsFile();
 	Settings::init(settingsFile);
 	ThreadMaster::start(); // must be performed after Settings init!
@@ -301,7 +302,7 @@ int main(int ac, char** av){
 
 
 
-	TestManager::init("../Settings/testSettingsPy.init");
+	TestManager::init();
 	TestManager::run();
 	quitApplication();
 

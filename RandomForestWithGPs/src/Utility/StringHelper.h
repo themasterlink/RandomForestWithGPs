@@ -49,6 +49,9 @@ namespace StringHelper {
 
 	std::string getActualTimeOfDayAsString();
 
+	bool isEqualTrue(const std::string& string);
+
+	bool isEqualFalse(const std::string& string);
 };
 
 #endif //RANDOMFORESTWITHGPS_STRINGHELPER_H

@@ -29,7 +29,7 @@ public:
 
 	virtual ~BigDynamicDecisionTree();
 
-	void train(const unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator, const bool useRealOnlineUpdate) override;
+	void train(const unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator) override;
 
 	unsigned int predict(const VectorX& point) const override;
 
@@ -71,7 +71,7 @@ private:
 							  const unsigned int depthInThisLayer, const unsigned int iRootId,
 							  const unsigned int leavesForTreesInTheFatherLayer, const int amountOfUsedDims,
 							  RandomNumberGeneratorForDT& generator, const bool saveDataPositions,
-							  bool& foundAtLeastOneChild, const bool useRealOnlineUpdate);
+							  bool& foundAtLeastOneChild);
 
 	OnlineStorage<LabeledVectorX*>& m_storage;
 	// max depth allowed in this tree

@@ -40,9 +40,9 @@ void Settings::getValue(const std::string& nameOfValue, bool& value,
 	if(m_init){
 		m_mutex.lock();
 		if(boost::optional<std::string> ret = m_root.get_optional<std::string>(nameOfValue)){
-			if(*ret == "true" || *ret == "1"){
+			if(StringHelper::isEqualTrue(*ret)){
 				value = true;
-			}else if(*ret == "false" || *ret == "0"){
+			}else if(StringHelper::isEqualFalse(*ret)){
 				value = false;
 			}else{
 				printWarning("This bool was wrong formatted: " << nameOfValue << ", this formatting is not supported: " << *ret);
@@ -62,9 +62,9 @@ void Settings::getValue(const std::string& nameOfValue, bool& value){
 	if(m_init){
 		m_mutex.lock();
 		if(boost::optional<std::string> ret = m_root.get_optional<std::string>(nameOfValue)){
-			if(*ret == "true" || *ret == "1"){
+			if(StringHelper::isEqualTrue(*ret)){
 				value = true;
-			}else if(*ret == "false" || *ret == "0"){
+			}else if(StringHelper::isEqualFalse(*ret)){
 				value = false;
 			}else{
 				printWarning("This bool was wrong formatted: " << nameOfValue << ", this formatting is not supported: " << *ret << ", value is now false!");
@@ -82,9 +82,9 @@ bool Settings::getDirectBoolValue(const std::string& nameOfValue){
 	if(m_init){
 		m_mutex.lock();
 		if(boost::optional<std::string> ret = m_root.get_optional<std::string>(nameOfValue)){
-			if(*ret == "true" || *ret == "1"){
+			if(StringHelper::isEqualTrue(*ret)){
 				value = true;
-			}else if(*ret == "false" || *ret == "0"){
+			}else if(StringHelper::isEqualFalse(*ret)){
 				value = false;
 			}else{
 				printWarning("This bool was wrong formatted: " << nameOfValue << ", this formatting is not supported: " << *ret << ", value is now false!");

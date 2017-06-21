@@ -126,16 +126,16 @@ inline void quitApplication(const bool wait = true){
 #else
 
 #define printError(message) \
-	std::cout << RED << "Error in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message << RESET << std::endl; \
+	printOnScreen(RED << "Error in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message << RESET) \
 
 #define printWarning(message) \
-	 std::cout << "Warning in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message << std::endl;\
+	 printOnScreen("Warning in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message) \
 
 #define printLine() \
-	 std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << std::endl; \
+	 printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__)) \
 
 #define printDebug(message) \
-	 std::cout << "Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message << std::endl; \
+	 printOnScreen("Debug in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message) \
 
 #endif
 

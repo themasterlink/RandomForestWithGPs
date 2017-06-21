@@ -11,7 +11,7 @@
 class TestManager {
 public:
 
-	static void init(const std::string& filePath);
+	static void init();
 
 	static TestMode findMode(std::string& line);
 
@@ -23,6 +23,10 @@ public:
 
 	static int readAll();
 
+	static void setFilePath(const std::string& filePath){ m_filePath = filePath; };
+
+	static std::string getFilePath(){ return m_filePath; };
+
 private:
 	TestManager() = delete;
 	~TestManager() = delete;
@@ -30,6 +34,8 @@ private:
 	static TestInformation m_testInformation;
 
 	static void performTest(const std::unique_ptr<OnlineRandomForest>& orf, const LabeledData& data);
+
+	static std::string m_filePath;
 };
 
 

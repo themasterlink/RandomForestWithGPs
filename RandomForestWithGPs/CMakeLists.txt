@@ -16,7 +16,7 @@ find_package(Threads REQUIRED)
 INCLUDE_DIRECTORIES(/usr/include/ncurses/)
 
 #Boost include:
-find_package(Boost COMPONENTS system filesystem program_options random date_time thread REQUIRED)
+find_package(Boost COMPONENTS system filesystem program_options random regex date_time thread REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
