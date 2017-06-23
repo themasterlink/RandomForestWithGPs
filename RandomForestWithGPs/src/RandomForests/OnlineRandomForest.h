@@ -144,7 +144,8 @@ private:
 											 InformationPackage* package);
 
 	void updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps,
-			boost::mutex* mutex, unsigned int threadNr, InformationPackage* package, unsigned int* counter);
+						  boost::mutex* mutex, unsigned int threadNr, InformationPackage* package,
+						  unsigned int* counter, const Real standartDeviation);
 
 	void updateMinMaxValues(unsigned int event);
 

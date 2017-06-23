@@ -8,7 +8,7 @@
 #ifndef BASE_SCREENOUTPUT_H_
 #define BASE_SCREENOUTPUT_H_
 
-#define NO_OUTPUT
+//#define NO_OUTPUT
 
 #include <curses.h>
 #include <panel.h>

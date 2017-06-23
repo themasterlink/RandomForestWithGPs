@@ -15,22 +15,20 @@ from pprint import pprint
 with open("../Settings/init.json") as data_file:
     data = json.load(data_file)
 
-def doRFGP(data, time):
+def doRFGP(data):
     file = "actSettings.json"
     if os.path.exists(file):
         os.remove(file)
     with open(file, 'w') as outfile:
         json.dump(data, outfile)
-    subprocess.check_call("./RandomForestWithGPs --settingsFile " + file + " --samplingAndTraining " + str(time), shell=True)
+    subprocess.check_call("./RandomForestWithGPs --settingsFile " + file, shell=True)
 
 os.chdir("../cmake-build-release/")
 #data["TotalStorage"]["folderLocReal"] = "../mnistOrg/"
 
-for t in [100, 30, 10, 7, 5, 3]:
-    #data["Forest"]["Trees"]["height"] = t
-    #data["TotalStorage"]["folderTestNr"] = t	
-    data["TotalStorage"]["stepOverTrainingData"] = t
-    time = 60 * 60 * 100
-    doRFGP(data, time)
-    #for i in range(0,10):
-    
+for x1 in [2000,3000,4000,5000,6000]:
+    for t in ["false", "true"]:
+        data["OnlineRandomForest"]["Tree"]["performRealOnlineUpdate"] = t
+        data["OnlineRandomForest"]["Tree"]["Bagging"]["totalAmountOfDataUsedPerTree"] = x1
+        doRFGP(data)
+

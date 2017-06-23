@@ -41,12 +41,17 @@ counterFig = 0
 files = []
 
 for fileN in logFiles[-len(logFiles) + 1:]:
+	counter2 = 0
 	for line in open(fileN[0]).read().split("\n"):
 		if "Result:" in line:
+			counter2 += 1
+		if counter2 > 90:
 			files.append(fileN)
 			break
 
-for fileN in files[-amount:]:
+minA = min(amount, len(files) - 1)
+
+for fileN in files[-minA:]:
 	points = {}
 	found = False
 	fakeData = False
@@ -81,6 +86,7 @@ for fileN in files[-amount:]:
 				points[currentTestSet] = [float(line.split(" ")[-2])]
 	sets = ["apple","banana","coffeemug","stapler","flashlight","keyboard"]
 	#print(points)
+	newLines = [] 
 	if "testSet" in points and "testSetExclude" in points and len(points["testSetExclude"]) > 1:
 		figure = plt.figure()
 		fig = figure.add_subplot(1, 1, 1)
@@ -90,17 +96,33 @@ for fileN in files[-amount:]:
 		x2 = [e for e in range(0, len(points["testSetExclude"]))]		
 		fig.plot(x, points["testSet"])
 		fig.plot(x2, points["testSetExclude"])
+		newLines.append("index")
+		for i in x:
+			newLines.append(str(i))
+		newLines[0] += ",testSet,testSetExclude"
+		for i in range(0, len(x2)):
+			newLines[i+1] += "," + str(points["testSet"][i]) + "," + str(points["testSetExclude"][i])
 		for key, point in points.iteritems():
 			name = key
 			name = name.replace("TestSet", "")
 			usedIndex = 0
 			if name in sets:
-				usedIndex = 20 + sets.index(name) * 10
+				usedIndex = 15 + sets.index(name) * 10
 			else:
 				#print(name)
 				continue
+			newLines[0] += "," + name
 			x3 = [e for e in range(usedIndex, usedIndex + len(point))]
+			for i in x:
+				if usedIndex <= i < usedIndex + len(point) :
+					newLines[i+1] += "," + str(point[i - usedIndex]) 
+				else:
+					newLines[i+1] += ",0"
 			fig.plot(x3, point)
+
+	file = open("../cmake-build-release/result.txt", "w")
+	file.write("\n".join(newLines))
+	file.close()
 	if found:
 		print("------------")	
 
