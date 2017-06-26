@@ -35,7 +35,7 @@ private:
 	static int counter;
 
 	base_generator_type m_generator;
-	std::unique_ptr<variante_generator> m_normalGenerator;
+	UniquePtr<variante_generator> m_normalGenerator;
 	Real m_mean;
 	Real m_sd;
 };

@@ -5,6 +5,8 @@
 #ifndef RANDOMFORESTWITHGPS_REALTYPE_H
 #define RANDOMFORESTWITHGPS_REALTYPE_H
 
+#include <memory>
+
 //#define USE_DOUBLE
 
 //#define USE_UNIT_TYPE
@@ -32,6 +34,12 @@ using dimTypeForDDT = unsigned short;
 #endif
 
 using MemoryType = unsigned long;
+
+template<typename T>
+using SharedPtr = std::shared_ptr<T>;
+
+template<typename T>
+using UniquePtr = std::unique_ptr<T>;
 
 #define BUILD_SYSTEM_LINUX @BUILD_SYSTEM_CMAKE@
 

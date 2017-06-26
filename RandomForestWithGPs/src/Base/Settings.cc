@@ -8,7 +8,7 @@
 #include "../Base/Settings.h"
 
 boost::property_tree::ptree Settings::m_root;
-boost::mutex Settings::m_mutex;
+Mutex Settings::m_mutex;
 bool Settings::m_init = false;
 std::string Settings::m_filePath = "";
 

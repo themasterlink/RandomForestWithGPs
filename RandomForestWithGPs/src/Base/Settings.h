@@ -47,7 +47,7 @@ private:
 
 	static boost::property_tree::ptree m_root;
 
-	static boost::mutex m_mutex;
+	static Mutex m_mutex;
 
 	static bool m_init;
 

@@ -86,7 +86,7 @@ void performTest(OnlineRandomForest& orf, OnlineStorage<LabeledVectorX*>& test){
 void executeForBinaryClassORF(){
 	const int trainAmount = readAllData();
 	if(TotalStorage::getMode() == TotalStorage::Mode::SEPERATE){
-		std::unique_ptr<OnlineRandomForest> newOrf;
+		UniquePtr<OnlineRandomForest> newOrf;
 		if(false){
 			//	OnlineStorage<LabeledVectorX*> train;
 			OnlineStorage<LabeledVectorX*> test;

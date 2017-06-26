@@ -33,7 +33,7 @@ private:
 
 	static TestInformation m_testInformation;
 
-	static void performTest(const std::unique_ptr<OnlineRandomForest>& orf, const LabeledData& data);
+	static void performTest(const UniquePtr<OnlineRandomForest>& orf, const LabeledData& data);
 
 	static std::string m_filePath;
 };

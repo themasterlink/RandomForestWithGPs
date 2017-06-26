@@ -10,7 +10,7 @@
 
 ClassKnowledge::LabelNameMap ClassKnowledge::m_names;
 unsigned int ClassKnowledge::m_amountOfDims(0);
-boost::mutex ClassKnowledge::m_mutex;
+Mutex ClassKnowledge::m_mutex;
 
 ClassKnowledge::ClassKnowledge() {
 }

@@ -30,7 +30,7 @@ public:
 		return counter;
 	}
 private:
-	boost::mutex mutex;
+	Mutex mutex;
 	int counter;
 };
 

@@ -8,7 +8,7 @@
 #ifndef UTILITY_THREADSAFETHREADCOUNTER_H_
 #define UTILITY_THREADSAFETHREADCOUNTER_H_
 
-#include <boost/thread.hpp> // Boost threads
+#include "../Base/Types.h"
 
 class ThreadSafeThreadCounter {
 public:
@@ -29,7 +29,7 @@ public:
 private:
 	const unsigned int m_maxNr;
 	int m_counter;
-	boost::mutex m_mutex;
+	Mutex m_mutex;
 };
 
 #endif /* UTILITY_THREADSAFETHREADCOUNTER_H_ */

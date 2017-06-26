@@ -2,6 +2,7 @@
 // Created by denn_ma on 5/31/17.
 //
 
+#include <regex>
 #include "TestInformation.h"
 
 
@@ -39,6 +40,19 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 		}
 		case TestMode::DEFINE:{
 			TestDefineName defineName;
+			std::string classesString = ""; //"((as|without)(\\s)+classes(\\s)+(\\{(.*?)\\}))?";
+			std::regex ex("(\\s)*(\\b)+?(\\s)+"+classesString+"(from(\\s)+(\\b)+)(\\s)*");
+			if(std::regex_match(def, ex)){
+				printOnScreen("Matches: " << def);
+			}else{
+				printOnScreen("No Match: " << def);
+			}
+			unsigned int c = 0;
+			for(std::sregex_iterator it(def.begin(), def.end(), ex), it_end; it != it_end; ++it){
+				++c;
+				printOnScreen((*it)[0]);
+			}
+			printOnScreen("This: " << c);
 			defineName.setVarName(words[0]);
 			bool foundFrom = false, foundClasses = false;
 			for(unsigned int i = 0; i < words.size() - 1; ++i){

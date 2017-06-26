@@ -11,6 +11,7 @@
 #include <boost/thread.hpp>
 #include <map>
 #include "BaseType.h"
+#include "Types.h"
 
 class Logger {
 public:
@@ -38,7 +39,7 @@ private:
 
 	static std::string m_actualDirectory;
 
-	static boost::mutex m_mutex;
+	static Mutex m_mutex;
 
 	static bool m_init;
 
@@ -59,7 +60,7 @@ private:
 
 	static std::atomic<bool> m_writeByForceWrite;
 
-	static std::unique_ptr<std::ofstream> m_file;
+	static UniquePtr<std::ofstream> m_file;
 };
 
 #endif /* BASE_LOGGER_H_ */

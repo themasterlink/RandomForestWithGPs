@@ -11,6 +11,7 @@
 #include <string>
 #include <map>
 #include <boost/thread.hpp>
+#include "../Base/Types.h"
 
 class ClassKnowledge {
 public:
@@ -41,7 +42,7 @@ private:
 
 	static unsigned int m_amountOfDims;
 
-	static boost::mutex m_mutex;
+	static Mutex m_mutex;
 
 	ClassKnowledge();
 	virtual ~ClassKnowledge();

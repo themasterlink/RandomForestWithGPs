@@ -157,7 +157,7 @@ private:
 	// double because for cmaes compatible
 	double *m_arFunvals, *m_hyperParamsValues;
 
-	static boost::mutex m_listMutex;
+	static Mutex m_listMutex;
 };
 
 #endif /* GAUSSIANPROCESS_IVM_H_ */

@@ -99,7 +99,7 @@ void testIvm(IVM& ivm, const OnlineStorage<LabeledVectorX*>& data){
 	printOnScreen("Amount of 1 in total: " << (Real) amountPerClass[0] / amountOfTestPoints * 100.0 << " %%");
 }
 
-void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, Real* bestLogZ, boost::mutex* mutex, const Real durationOfTraining, int* counter){
+void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, Real* bestLogZ, Mutex* mutex, const Real durationOfTraining, int* counter){
 	StopWatch sw;
 	while(sw.elapsedSeconds() < durationOfTraining && ivm->getGaussianKernel() != nullptr){
 		ivm->getGaussianKernel()->newRandHyperParams();
@@ -117,7 +117,7 @@ void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, Real* bestLogZ
 GaussianKernelParams sampleParams(OnlineStorage<LabeledVectorX*>& storage, int number, const Vector2i& usedClasses, bool doEpUpdate,
 		const std::vector<Real>& means, const std::vector<Real>& sds){
 	boost::thread_group group;
-	boost::mutex mutex;
+	Mutex mutex;
 	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
 	Real bestLogZ = NEG_REAL_MAX;
 	const Real durationOfTraining = CommandSettings::get_samplingAndTraining();

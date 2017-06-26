@@ -12,7 +12,7 @@ std::list<std::string> ScreenOutput::m_lines;
 ThreadMaster::PackageList* ScreenOutput::m_runningThreads(nullptr);
 boost::thread* ScreenOutput::m_mainThread(nullptr);
 Real ScreenOutput::m_timeToSleep(0.06);
-boost::mutex ScreenOutput::m_lineMutex;
+Mutex ScreenOutput::m_lineMutex;
 std::list<std::string> ScreenOutput::m_errorLines;
 std::list<int> ScreenOutput::m_errorCounters;
 std::string ScreenOutput::m_progressLine;

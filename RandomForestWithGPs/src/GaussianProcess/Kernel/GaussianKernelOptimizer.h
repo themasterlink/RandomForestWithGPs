@@ -81,7 +81,7 @@ private:
 
 	std::vector<unsigned int> m_trialCounter; // has the dimension of the amount of used classes
 
-	boost::mutex m_mutex;
+	Mutex m_mutex;
 };
 
 #endif /* GAUSSIANPROCESS_KERNEL_GAUSSIANKERNELOPTIMIZER_H_ */

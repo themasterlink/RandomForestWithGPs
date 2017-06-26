@@ -12,6 +12,8 @@
 #include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <atomic>
 #include "../Utility/StopWatch.h"
+#include "BaseType.h"
+#include "Types.h"
 
 class ScreenOutput;
 class ThreadMaster;
@@ -123,7 +125,7 @@ private:
 
 	std::string m_additionalInformation;
 
-	boost::mutex m_lineMutex;
+	Mutex m_lineMutex;
 
 	StopWatch m_sw;
 

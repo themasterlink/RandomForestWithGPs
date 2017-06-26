@@ -13,6 +13,7 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include "../Utility/StopWatch.h"
 #include "InformationPackage.h"
+#include "Types.h"
 #include <atomic>
 
 class ThreadMaster {
@@ -61,13 +62,13 @@ private:
 
 	static boost::thread* m_mainThread;
 
-	static boost::mutex m_mutex;
+	static Mutex m_mutex;
 
 	static unsigned int m_maxCounter;
 
 	static std::atomic<bool> m_keepRunning;
 
-	static boost::mutex m_isFinished;
+	static Mutex m_isFinished;
 
 };
 

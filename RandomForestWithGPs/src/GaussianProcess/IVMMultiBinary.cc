@@ -416,7 +416,7 @@ void IVMMultiBinary::trainInParallel(IVM* ivm, const int usedIvm, InformationPac
 			printError("The ivm: " << ivm->getClassName() << ", could not be trained!");
 		}
 	}
-//	static boost::mutex mutex;
+//	static Mutex mutex;
 //	mutex.lock();
 //	DataPoint p(2);
 //	p << 0,0;

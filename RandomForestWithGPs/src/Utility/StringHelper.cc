@@ -39,7 +39,7 @@ namespace StringHelper{
 		sizeType pos = line.find(commentSymbol);
 		if(pos != line.npos){
 			line = line.substr(0, pos);
-			// remove whitespaces between commentsymbol and message
+			// remove whitespaces between comment symbol and message
 			removeTrailingWhiteSpaces(line);
 		}
 	}

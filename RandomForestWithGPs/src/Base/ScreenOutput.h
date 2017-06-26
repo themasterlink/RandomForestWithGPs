@@ -15,6 +15,7 @@
 #undef OK
 #include "ThreadMaster.h"
 #include "../Utility/StopWatch.h"
+#include "Types.h"
 
 #define MAX_HEIGHT 120
 
@@ -50,7 +51,7 @@ private:
 	static void updateRunningPackage(ThreadMaster::PackageListConstIterator& it, const int rowCounter, const int row, const bool isLeft, const int colWidth,
 			const int amountOfLinesPerThread, int& actLine, int startOfRight, std::vector<WINDOW*>& windows, std::vector<PANEL*>& panels);
 
-	static boost::mutex m_lineMutex;
+	static Mutex m_lineMutex;
 
 	static std::list<std::string> m_lines;
 

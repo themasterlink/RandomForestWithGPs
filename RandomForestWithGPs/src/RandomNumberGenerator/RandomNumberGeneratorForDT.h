@@ -102,7 +102,7 @@ private:
 	variante_generator m_varGenData;
 	variante_generator m_varGenStepOverStorage;
 
-	boost::mutex m_mutex;
+	Mutex m_mutex;
 
 	std::vector<bool> m_useDim;
 

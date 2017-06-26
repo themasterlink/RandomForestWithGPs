@@ -10,6 +10,7 @@
 
 #include <boost/thread.hpp> // Boost threads
 #include "../Base/BaseType.h"
+#include "../Base/Types.h"
 
 class BestHyperParams {
 public:
@@ -44,7 +45,7 @@ private:
 	int m_noChangeCounter;
 	bool m_isFinish;
 	bool m_shutDown;
-	boost::mutex m_mutex;
+	Mutex m_mutex;
 };
 
 #endif /* GAUSSIANPROCESS_BESTHYPERPARAMS_H_ */

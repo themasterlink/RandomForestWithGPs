@@ -102,8 +102,8 @@ void KernelElement::addToFirstValue(const Real value){
 }
 
 
-std::unique_ptr<KernelElement> KernelTypeGenerator::createKernelFor(unsigned int kernelNr){
-	std::unique_ptr<KernelElement> ret;
+UniquePtr<KernelElement> KernelTypeGenerator::createKernelFor(unsigned int kernelNr){
+	UniquePtr<KernelElement> ret;
 	ret.reset(nullptr);
 	switch(kernelNr){
 	case LengthParam:

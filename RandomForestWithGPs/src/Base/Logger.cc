@@ -11,7 +11,7 @@
 #include <boost/date_time.hpp>
 #include "../Tests/TestManager.h"
 
-boost::mutex Logger::m_mutex;
+Mutex Logger::m_mutex;
 bool Logger::m_init(false);
 bool Logger::m_needToWrite(false);
 std::string Logger::m_text("");
@@ -21,7 +21,7 @@ std::map<std::string, std::string> Logger::m_specialLines;
 std::string Logger::m_actualDirectory = "./"; // default
 boost::thread* Logger::m_ownThread(nullptr);
 std::atomic<bool> Logger::m_writeByForceWrite(true);
-std::unique_ptr<std::ofstream> Logger::m_file(nullptr);
+UniquePtr<std::ofstream> Logger::m_file(nullptr);
 namespace bfs = boost::filesystem;
 
 Logger::Logger() {

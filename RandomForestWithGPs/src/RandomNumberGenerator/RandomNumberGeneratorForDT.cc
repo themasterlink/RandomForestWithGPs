@@ -5,7 +5,7 @@
  *      Author: Max
  */
 
-#include <boost/regex.hpp>
+#include <regex>
 #include "RandomNumberGeneratorForDT.h"
 #include "../RandomForests/OnlineRandomForest.h"
 #include "../Base/Settings.h"
@@ -84,16 +84,16 @@ RandomNumberGeneratorForDT::BaggingInformation::BaggingInformation():
 RandomNumberGeneratorForDT::BaggingInformation::BaggingMode
 RandomNumberGeneratorForDT::BaggingInformation::getMode(const std::string& settingsField){
 	try{
-		boost::regex stepSize("(\\h)*(use|Use)?(\\h)*(step|Step)(\\h)*(size|Size)(\\h)*"); // step size| stepsize
-		boost::regex totalUseOfData(
-				"(\\h)*(use|Use)?(\\h)*(total|Total)(\\h)*(use|Use|amount|Amount)(\\h)*((of|Of)(\\h)*(data|Data)(\\h)*)?");
-		boost::regex useWholeDataSet(
-				"(\\h)*(use|Use)?(\\h)*(all|All|whole|Whole)(\\h)*(data|Data)(\\h)*((set|Set|point|Point)(s)?)?(\\h)*");
-		if(boost::regex_match(settingsField, stepSize)){
+		std::regex stepSize("(\\s)*(use|Use)?(\\s)*(step|Step)(\\s)*(size|Size)(\\s)*"); // step size| stepsize
+		std::regex totalUseOfData(
+				"(\\s)*(use|Use)?(\\s)*(total|Total)(\\s)*(use|Use|amount|Amount)(\\s)*((of|Of)(\\s)*(data|Data)(\\s)*)?");
+		std::regex useWholeDataSet(
+				"(\\s)*(use|Use)?(\\s)*(all|All|whole|Whole)(\\s)*(data|Data)(\\s)*((set|Set|point|Point)(s)?)?(\\s)*");
+		if(std::regex_match(settingsField, stepSize)){
 			return BaggingMode::STEPSIZE;
-		}else if(boost::regex_match(settingsField,totalUseOfData)){
+		}else if(std::regex_match(settingsField,totalUseOfData)){
 			return BaggingMode::TOTALUSEOFDATA;
-		}else if(boost::regex_match(settingsField, useWholeDataSet)){
+		}else if(std::regex_match(settingsField, useWholeDataSet)){
 			return BaggingMode::USEWHOLEDATASET;
 		}else{
 			printErrorAndQuit("This type is not supported here: " << settingsField);

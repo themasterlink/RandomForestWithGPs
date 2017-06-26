@@ -161,7 +161,7 @@ inline int_fast32_t highEndian2LowEndian(int_fast32_t i){
 //template<typename _Tp, typename... _Args>
 //inline typename
 //__MakeUniq<_Tp>::__single_object makeUnique(_Args&&... __args)
-//{ return std::unique_ptr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
+//{ return UniquePtr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
 
 inline Real sqrtReal(const Real val){
 #ifdef USE_DOUBLE

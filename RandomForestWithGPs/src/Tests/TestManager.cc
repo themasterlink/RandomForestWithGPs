@@ -79,7 +79,7 @@ void TestManager::run(){
 	OnlineStorage<LabeledVectorX* > train;
 	unsigned int height;
 	Settings::getValue("OnlineRandomForest.Tree.height", height);
-	std::unique_ptr<OnlineRandomForest> orf;
+	UniquePtr<OnlineRandomForest> orf;
 	unsigned int i = 0;
 	while(true){
 		auto testInfo = m_testInformation.getInstruction(i);
@@ -211,7 +211,7 @@ void TestManager::removeClassesFrom(LabeledData& data, const TestInformation::Te
 	data.resize(lastUsed); // remove all the empty pointers at the end
 }
 
-void TestManager::performTest(const std::unique_ptr<OnlineRandomForest>& orf, const LabeledData& test){
+void TestManager::performTest(const UniquePtr<OnlineRandomForest>& orf, const LabeledData& test){
 	if(test.size() == 0){
 		printOnScreen("Test size is zero!");
 		return;

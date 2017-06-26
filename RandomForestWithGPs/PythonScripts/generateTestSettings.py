@@ -6,16 +6,21 @@ coffeemug = "53,...,60"
 stapler = "266,...,273"
 flashlight = "72,...,76"
 #keyboard = "152,...,156"
-sets = [("apple", apple),("banana",banana),("coffeemug",coffeemug),
-        ("stapler",stapler),("flashlight",flashlight)]
+sets = [] #[("apple", apple),("banana",banana),("coffeemug",coffeemug), ("stapler",stapler),("flashlight",flashlight)]
 
 def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
     text = "# in python generated test settings file \n"
     text += "load all \n" # load all the information
-    exclude = ",".join([apple,banana,coffeemug,stapler,flashlight])
-    text += "define trainSet without classes {" + exclude + "} from TRAIN_SETTING \n"  # redefine for shorted name
-    #text += "define trainSet without classes {0,...,150} from trainSet2 \n"
-    text += "define testSetExclude without classes {" + exclude + "} from TEST_SETTING \n"  # redefine for shorted name
+    e = [e[1] for e in sets]
+    exclude = ",".join(e)
+    if len(exclude) > 0:
+        text += "define trainSet without classes {" + exclude + "} from TRAIN_SETTING \n"  # redefine for shorted name
+        #text += "define trainSet without classes {0,...,150} from trainSet2 \n"
+        text += "define testSetExclude without classes {" + exclude + "} from TEST_SETTING \n"  # redefine for shorted name
+    else:
+        text += "define trainSet from TRAIN_SETTING \n"  # redefine for shorted name
+        #text += "define trainSet without classes {0,...,150} from trainSet2 \n"
+        text += "define testSetExclude from TEST_SETTING \n"  # redefine for shorted name
     text += "define testSet from TEST_SETTING \n"  # redefine for shorted name
 
     widthOfUpdate = 10
@@ -60,5 +65,5 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
     f.close()
 
 
-amountOfSplits = 80
-generateTestSettings(amountOfSplits, "for 2 m", "for 42 s")
+amountOfSplits = 3 #80
+generateTestSettings(amountOfSplits, "until 20 trees", "until 20 trees")

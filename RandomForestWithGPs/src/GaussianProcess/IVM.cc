@@ -14,7 +14,7 @@
 #include "../Data/DataConverter.h"
 #include "../Data/DataBinaryWriter.h"
 
-boost::mutex IVM::m_listMutex;
+Mutex IVM::m_listMutex;
 #define LOG2   0.69314718055994528623
 #define LOG2PI 1.8378770664093453391
 #define SQRT2  1.4142135623730951455

@@ -9,7 +9,6 @@
 #define UTILITY_THREADSAFEOUTPUT_H_
 
 #include "Util.h"
-#include <boost/thread.hpp> // Boost threads
 
 class ThreadSafeOutput {
 public:
@@ -23,7 +22,7 @@ public:
 	void printSwitchingColor(const std::string& text);
 
 private:
-	boost::mutex m_mutex;
+	Mutex m_mutex;
 	std::ostream& m_stream;
 	bool m_change;
 };

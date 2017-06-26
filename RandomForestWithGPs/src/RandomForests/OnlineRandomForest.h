@@ -17,7 +17,8 @@
 class OnlineRandomForest : public Observer, public PredictorMultiClass, public Subject {
 public:
 
-	using DecisionTreesContainer = std::list<DynamicDecisionTreeInterface*>;
+	using DecisionTreePointer = SharedPtr<DynamicDecisionTreeInterface>;
+	using DecisionTreesContainer = std::list<DecisionTreePointer>;
 	using DecisionTreeIterator = DecisionTreesContainer::iterator;
 	using DecisionTreeConstIterator = DecisionTreesContainer::const_iterator;
 
@@ -105,7 +106,7 @@ public:
 
 private:
 
-	using SortedDecisionTreePair = std::pair<DynamicDecisionTreeInterface*, Real>;
+	using SortedDecisionTreePair = std::pair<DecisionTreePointer, Real>;
 	using SortedDecisionTreeList = std::list<SortedDecisionTreePair>;
 
 	void predictDataInParallel(const Data& points, Labels* labels, InformationPackage* package,
@@ -123,35 +124,36 @@ private:
 												const unsigned int start, const unsigned int end) const;
 
 	void predictDataProbInParallel(const Data& points, std::vector< std::vector<Real> >* probabilities,
-			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
+			unsigned int* iBatchNr, Mutex* mutex, DecisionTreeIterator* itOfActElement) const;
 
 	void predictClassDataProbInParallel(const LabeledData& points, std::vector< std::vector<Real> >* probabilities,
-			unsigned int* iBatchNr, boost::mutex* mutex, DecisionTreeIterator* itOfActElement) const;
+			unsigned int* iBatchNr, Mutex* mutex, DecisionTreeIterator* itOfActElement) const;
 
-	void trainInParallel(RandomNumberGeneratorForDT* generator, InformationPackage* package, const unsigned int amountOfTrees,
-						 std::vector<std::vector<unsigned int> >* counterForClasses,
-						 boost::mutex* mutexForCounter);
+	void trainInParallel(SharedPtr<RandomNumberGeneratorForDT> generator, SharedPtr<InformationPackage> package,
+						 const unsigned int amountOfTrees,
+						 SharedPtr<std::vector<std::vector<unsigned int> > > counterForClasses,
+						 SharedPtr<Mutex> mutexForCounter);
 
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
 	void internalAppendToSortedList(SortedDecisionTreeList* list,
-									DynamicDecisionTreeInterface* pTree, Real correctVal);
+									DecisionTreePointer&& pTree, Real correctVal);
 
 	void mergeSortedLists(SortedDecisionTreeList* aimList, SortedDecisionTreeList* other);
 
 	void sortTreesAfterPerformanceInParallel(SortedDecisionTreeList* list, DecisionTreesContainer* trees,
-											 boost::mutex* readMutex, boost::mutex* appendMutex,
-											 InformationPackage* package);
+											 SharedPtr<Mutex> readMutex, SharedPtr<Mutex> appendMutex,
+											 SharedPtr<InformationPackage> package);
 
-	void updateInParallel(SortedDecisionTreeList* list, const unsigned int amountOfSteps,
-						  boost::mutex* mutex, unsigned int threadNr, InformationPackage* package,
-						  unsigned int* counter, const Real standartDeviation);
+	void updateInParallel(SharedPtr<SortedDecisionTreeList> list, const unsigned int amountOfSteps,
+						  SharedPtr<Mutex> mutex, unsigned int threadNr, SharedPtr<InformationPackage> package,
+						  SharedPtr<unsigned int> counter, const Real standartDeviation);
 
 	void updateMinMaxValues(unsigned int event);
 
-	void tryAmountForLayers(RandomNumberGeneratorForDT* generator, const Real secondsPerSplit,
-							std::list<std::pair<unsigned int, unsigned int> >* layerValues,
-							boost::mutex* mutex, std::pair<int, int>* bestLayerSplit, Real* bestCorrectness);
+	void tryAmountForLayers(SharedPtr<RandomNumberGeneratorForDT> generator, const Real secondsPerSplit,
+							SharedPtr<std::list<std::pair<unsigned int, unsigned int> > > layerValues,
+							SharedPtr<Mutex> mutex, SharedPtr<std::pair<int, int> > bestLayerSplit, SharedPtr<Real> bestCorrectness);
 
 	void writeTreesToDisk(const unsigned int amountOfTrees) const;
 
@@ -187,11 +189,11 @@ private:
 
 	DecisionTreeIterator findWorstPerformingTree(Real& correctAmount);
 
-	std::vector<RandomNumberGeneratorForDT*> m_generators;
+	std::vector<SharedPtr<RandomNumberGeneratorForDT> > m_generators;
 
-	std::unique_ptr<RandomNumberGeneratorForDT::BaggingInformation> m_baggingInformation;
+	UniquePtr<RandomNumberGeneratorForDT::BaggingInformation> m_baggingInformation;
 
-	mutable boost::mutex m_treesMutex;
+	mutable Mutex m_treesMutex;
 
 	bool m_firstTrainingDone;
 
@@ -213,10 +215,11 @@ private:
 
 	const bool m_useRealOnlineUpdate;
 
-	mutable std::unique_ptr<boost::mutex> m_read;
-	mutable std::unique_ptr<boost::mutex> m_append;
-	mutable std::unique_ptr<boost::mutex> m_mutexForCounter;
-	mutable std::unique_ptr<boost::mutex> m_mutexForTrees;
+	// are copied to the threads (automatic reference counting for them)
+	mutable SharedPtr<Mutex> m_read;
+	mutable SharedPtr<Mutex> m_append;
+	mutable SharedPtr<Mutex> m_mutexForCounter;
+	mutable SharedPtr<Mutex> m_mutexForTrees;
 
 };
 

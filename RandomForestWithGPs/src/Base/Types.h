@@ -6,6 +6,7 @@
 #define RANDOMFORESTWITHGPS_TYPES_H
 
 #include <boost/random.hpp>
+#include <boost/thread/mutex.hpp>
 #include "BaseType.h"
 #include <Eigen/Dense>
 #include <vector>
@@ -55,5 +56,7 @@ using Labels = std::vector<unsigned int>;
 
 template <typename T>
 using List = std::list<T>;
+
+using Mutex = boost::mutex;
 
 #endif //RANDOMFORESTWITHGPS_TYPES_H

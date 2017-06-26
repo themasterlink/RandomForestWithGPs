@@ -14,9 +14,9 @@ Real ThreadMaster::m_timeToSleep = 0.1;
 ThreadMaster::PackageList ThreadMaster::m_waitingList;
 ThreadMaster::PackageList ThreadMaster::m_runningList;
 boost::thread* ThreadMaster::m_mainThread(nullptr);
-boost::mutex ThreadMaster::m_mutex;
+Mutex ThreadMaster::m_mutex;
 std::atomic<bool> ThreadMaster::m_keepRunning(true);
-boost::mutex ThreadMaster::m_isFinished;
+Mutex ThreadMaster::m_isFinished;
 
 void ThreadMaster::start(){
 	if(m_mainThread == nullptr){
