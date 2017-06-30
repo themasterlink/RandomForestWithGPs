@@ -20,13 +20,8 @@ SingeltonMacro(GlobalStopWatch);
 
 public:
 
-	void startTime(){
-		lockStatementWith(m_sw.startTime(), m_mutex);
-	}
-
-	Real recordActTime(){
-		lockStatementWithSave(m_sw.recordActTime(), Real var, m_mutex);
-		return var;
+	void recordActTime(const Real seconds){
+		lockStatementWith(m_sw.addNewAvgTime(seconds), m_mutex);
 	}
 
 	TimeFrame elapsedAvgAsTimeFrame(){

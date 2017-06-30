@@ -195,6 +195,14 @@ inline Real absReal(const Real val){
 #endif
 }
 
+inline Real modReal(const Real val, const Real mod){
+#ifdef USE_DOUBLE
+	return fmod(val, mod);
+#else
+	return fmodf(val, mod);
+#endif
+}
+
 #define lockStatementWith(statement, mutex) \
     mutex.lock(); statement; mutex.unlock() \
 

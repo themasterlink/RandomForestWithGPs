@@ -93,7 +93,7 @@ DynamicDecisionTree<dimType>::~DynamicDecisionTree(){
 template<typename dimType>
 bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberGeneratorForDT &generator,
 										 const dimType tryCounter, const bool saveDataPosition){
-	GlobalStopWatch<DynamicDecisionTreeTrain>::instance().startTime();
+	StopWatch dyTrain;
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED || m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		// reset training
 		std::fill(m_splitDim.begin(), m_splitDim.end(), NodeType::NODE_IS_NOT_USED);
@@ -318,7 +318,7 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 	}
 //	printStream(std::cout);
 	// just in the positive case record Time
-	GlobalStopWatch<DynamicDecisionTreeTrain>::instance().recordActTime();
+	GlobalStopWatch<DynamicDecisionTreeTrain>::instance().recordActTime(dyTrain.elapsedSeconds());
 	return true;
 }
 

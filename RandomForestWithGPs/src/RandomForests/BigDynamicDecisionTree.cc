@@ -88,7 +88,7 @@ void BigDynamicDecisionTree::prepareForSetting(const unsigned int maxDepth, cons
 
 void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 								   RandomNumberGeneratorForDT& generator){
-	GlobalStopWatch<BigDecisionTreeTrain>::instance().startTime();
+	StopWatch bigDTTrain;
 	// unsigned ints, the Memory Type and the two vectors and the size for the layers
 	m_usedMemory = sizeof(unsigned int) * 4 + sizeof(MemoryType) + sizeof(FastTreeStructure) * 2
 				   + m_fastInnerTrees.size() * sizeof(FastTreeInnerStructure)
@@ -237,7 +237,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 			}
 		}
 	}
-	GlobalStopWatch<BigDecisionTreeTrain>::instance().recordActTime();
+	GlobalStopWatch<BigDecisionTreeTrain>::instance().recordActTime(bigDTTrain.elapsedSeconds());
 }
 
 void BigDynamicDecisionTree::trainChildrenForRoot(PtrDynamicDecisionTree root, SmallTreeInnerStructureIterator& it,

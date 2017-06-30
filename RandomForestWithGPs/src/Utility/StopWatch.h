@@ -12,14 +12,18 @@
 #include "TimeFrame.h"
 #include "AvgNumber.h"
 
-class StopWatch{
+class StopWatch {
 public:
 	StopWatch();
+
 	virtual ~StopWatch();
 
 	void startTime();
+
 	void stopTime();
+
 	Real elapsedSeconds() const;
+
 	Real elapsedMiliSeconds() const;
 
 	TimeFrame elapsedAsTimeFrame() const;
@@ -34,8 +38,10 @@ public:
 
 	static Real getActTime();
 
+	void addNewAvgTime(const Real seconds);
+
 	// returns the counter from the avg time measurment
-	unsigned int getAvgCounter() const { return (unsigned int) avgTime.counter(); };
+	unsigned int getAvgCounter() const{ return (unsigned int) avgTime.counter(); };
 
 private:
 
@@ -85,8 +91,12 @@ TimeFrame StopWatch::elapsedAvgAsTimeFrame() const{
 
 inline
 Real StopWatch::getActTime(){
-	static Time startOfTime(boost::gregorian::date(1970,1,1));
-	return (boost::posix_time::microsec_clock::local_time() - startOfTime).total_milliseconds() / 1000.0;
+	static Time startOfTime(boost::gregorian::date(1970, 1, 1));
+	return (Real) ((boost::posix_time::microsec_clock::local_time() - startOfTime).total_milliseconds() / 1000.0);
 }
 
+inline
+void StopWatch::addNewAvgTime(const Real seconds){
+	avgTime.addNew(seconds);
+}
 #endif /* UTILITY_STOPWATCH_H_ */
