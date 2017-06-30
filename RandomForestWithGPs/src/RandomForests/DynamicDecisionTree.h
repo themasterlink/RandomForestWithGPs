@@ -26,6 +26,8 @@ class DynamicDecisionTree : public DynamicDecisionTreeInterface{
 	friend ReadWriterHelper;
 
 public:
+	using DataPositions = std::vector<unsigned int>;
+
 
 	enum NodeType : dimType{ // saved in m_splitDim
 		NODE_IS_NOT_USED = m_maxAmountOfElements,
@@ -94,7 +96,7 @@ private:
 	// this function is only called if the empty tree constructor was used!
 	void prepareForSetting(const unsigned int maxDepth, const unsigned int amountOfClasses);
 
-	OnlineStorage<LabeledVectorX *> &m_storage;
+	OnlineStorage<LabeledVectorX*>& m_storage;
 	// max depth allowed in this tree
 	const dimType m_maxDepth;
 	// max number of nodes possible in this tree
@@ -104,7 +106,7 @@ private:
 
 	const dimType m_amountOfClasses;
 
-	const std::vector<unsigned int>::size_type m_amountOfPointsCheckedPerSplit;
+	const DataPositions::size_type m_amountOfPointsCheckedPerSplit;
 	// contains the split values for the nodes:
 	// the order of the nodes is like that:
 	// !!!! first element is not used !!!!
@@ -121,9 +123,9 @@ private:
 	// is used in the BigDynamicDecisionTree
 	// fill contain the data for each node ->
 	// 	in the end only the last pow2(m_maxDepth) will have values, the rest will be empty
-	std::vector<std::vector<unsigned int> > *m_dataPositions;
+	std::vector<DataPositions>* m_dataPositions;
 
-	std::vector<unsigned int> *m_useOnlyThisDataPositions;
+	DataPositions* m_useOnlyThisDataPositions;
 
 };
 

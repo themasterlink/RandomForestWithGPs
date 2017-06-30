@@ -8,20 +8,14 @@
 #include "ClassKnowledge.h"
 #include "../Utility/Util.h"
 
-ClassKnowledge::LabelNameMap ClassKnowledge::m_names;
-unsigned int ClassKnowledge::m_amountOfDims(0);
-Mutex ClassKnowledge::m_mutex;
-
-ClassKnowledge::ClassKnowledge() {
-}
-
-ClassKnowledge::~ClassKnowledge() {
+ClassKnowledge::ClassKnowledge(): m_amountOfDims(0){
 }
 
 void ClassKnowledge::init(){
 	m_names.clear();
 	m_amountOfDims = 0;
 	m_names.emplace(UNDEF_CLASS_LABEL, "undefined");
+	m_caller.notify(Caller::NEW_CLASS);
 }
 
 void ClassKnowledge::setNameFor(const std::string& name, unsigned int nr){
@@ -35,6 +29,7 @@ void ClassKnowledge::setNameFor(const std::string& name, unsigned int nr){
 		}
 	}else{
 		m_names.emplace(nr, name);
+		m_caller.notify(Caller::NEW_CLASS); // ensures that all storages are notified over the change
 	}
 	if(nr >= UNDEF_CLASS_LABEL){
 		m_mutex.unlock();
@@ -59,9 +54,7 @@ std::string ClassKnowledge::getNameFor(unsigned int nr){
 }
 
 unsigned int ClassKnowledge::amountOfClasses(){
-	m_mutex.lock();
-	const auto size = (unsigned int) (m_names.size() - 1);// for default class!
-	m_mutex.unlock();
+	lockStatementWithSave((unsigned int) (m_names.size() - 1), const auto size, m_mutex);
 	return size;
 }
 
@@ -70,14 +63,18 @@ unsigned int ClassKnowledge::amountOfDims(){
 }
 
 void ClassKnowledge::setAmountOfDims(unsigned int value){
-	m_mutex.lock();
-	m_amountOfDims = value;
-	m_mutex.unlock();
+	lockStatementWith(m_amountOfDims = value, m_mutex);
 }
 
 bool ClassKnowledge::hasClassName(const unsigned int nr){
-	m_mutex.lock();
-	const bool exists = m_names.end() != m_names.find(nr);
-	m_mutex.unlock();
+	lockStatementWithSave(m_names.end() != m_names.find(nr), const bool exists, m_mutex);
 	return exists;
+}
+
+void ClassKnowledge::attach(Observer* obj){
+	lockStatementWith(m_caller.attach(obj), m_mutex);
+}
+
+void ClassKnowledge::deattach(Observer* obj){
+	lockStatementWith(m_caller.deattach(obj), m_mutex);
 }

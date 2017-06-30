@@ -7,10 +7,11 @@
 
 #include "ThreadSafeThreadCounter.h"
 #include "../Base/ThreadMaster.h"
+#include "Util.h"
 
 ThreadSafeThreadCounter::ThreadSafeThreadCounter():
-	m_maxNr(ThreadMaster::getAmountOfThreads()),
-	m_counter(0) {
+		m_maxNr(ThreadMaster::instance().getAmountOfThreads()),
+		m_counter(0) {
 }
 
 ThreadSafeThreadCounter::~ThreadSafeThreadCounter() {
@@ -31,14 +32,10 @@ bool ThreadSafeThreadCounter::addNewThread(){
 
 // decrements the counter
 void ThreadSafeThreadCounter::removeThread(){
-	m_mutex.lock();
-	--m_counter;
-	m_mutex.unlock();
+	lockStatementWith(--m_counter, m_mutex);
 }
 
 // call only if you are sure, the number of threads is below the number of possible threads!
 void ThreadSafeThreadCounter::forceAddThread(){
-	m_mutex.lock();
-	++m_counter;
-	m_mutex.unlock();
+	lockStatementWith(++m_counter, m_mutex);
 }

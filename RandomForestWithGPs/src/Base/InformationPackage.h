@@ -15,6 +15,7 @@
 #include "BaseType.h"
 #include "Types.h"
 
+
 class ScreenOutput;
 class ThreadMaster;
 
@@ -75,7 +76,7 @@ public:
 
 	void overwriteLastLineToScreenForThisThread(const std::string& line);
 
-	void setStandartInformation(const std::string& line){ m_lineMutex.lock(); m_standartInfo = line; m_lineMutex.unlock(); };
+	void setStandartInformation(const std::string& line);;
 
 	std::string getStandartInformation(){ return m_standartInfo; };
 

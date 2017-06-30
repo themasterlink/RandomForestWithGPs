@@ -16,35 +16,34 @@
 /** adds a parameter as member with description, default value.*/
 #define ADD_PARAM_INFO(Type, param, defVal, descr) \
 static Type defaultvalue_##param(){return defVal;} \
-static Type get_##param(){return MEMBER_PARAM(param);} const \
-static std::string description_##param(){return std::string( descr );} \
-static std::string basename_##param(){return #param;} const \
-static std::string typename_##param(){return #Type;}
+Type get_##param(){return MEMBER_PARAM(param);} const \
+std::string description_##param(){return std::string( descr );} \
+std::string basename_##param(){return #param;} const \
+std::string typename_##param(){return #Type;}
 
 /** adds a parameter as member with description, default value*/
 #define ADD_PARAM(Type, param, defVal, descr) \
-	static Type MEMBER_PARAM(param);  \
+    Type MEMBER_PARAM(param);  \
 	public: ADD_PARAM_INFO(Type, param, defVal, descr)
 
 #define DEFINE_PARAM(Type, param) \
-	Type CommandSettings::MEMBER_PARAM(param)(CommandSettings::defaultvalue_##param())
+    MEMBER_PARAM(param)(CommandSettings::defaultvalue_##param())
 
 #define INIT_PARAM(Type, param) \
-	m_params.push_back(Param(#param, &typename_##param, (void*) &MEMBER_PARAM(param)))
+    m_params.emplace_back(#param, &CommandSettings::typename_##param, (void*) &MEMBER_PARAM(param))
 
-struct Param {
-	Param(std::string name, const std::string (*type)(), void* ref);
-
-	std::string name;
-	const std::string (*type)();
-	void* ref;
-};
+struct Param;
 
 /* Always ADD, DEFINE and INIT, for adding new params
  */
 
 class CommandSettings {
+
+SingeltonMacro(CommandSettings);
+	
 public:
+
+	typedef const std::string (CommandSettings::*FctPtrForName)();
 
 	ADD_PARAM(bool, useFakeData, false, "Uses fake data for the test");
 	ADD_PARAM(int, visuRes, 0, "If possible visualize the data, zero means no visualization");
@@ -55,17 +54,22 @@ public:
 	ADD_PARAM(std::string, settingsFile, "../Settings/init.json", "location of the settings file");
 	ADD_PARAM(std::string, convertFile, "", "location of the desired file");
 
-	static void init();
+	void init();
 
-	static void setValues(boost::program_options::variables_map& vm);
+	void setValues(boost::program_options::variables_map& vm);
 
-	static void printAllSettingsToLog();
+	void printAllSettingsToLog();
 
 private:
-	static std::list<Param> m_params;
+	std::list<Param> m_params;
+};
 
-	CommandSettings(){};
-	virtual ~CommandSettings(){};
+struct Param {
+	Param(std::string name, CommandSettings::FctPtrForName type, void* ref);
+
+	std::string name;
+	CommandSettings::FctPtrForName type;
+	void* ref;
 };
 
 

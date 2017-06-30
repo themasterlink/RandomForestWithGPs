@@ -11,7 +11,7 @@
 #include "Tests/TestManager.h"
 
 void handleProgrammOptions(int ac, char* av[]){
-	CommandSettings::init();
+	CommandSettings::instance().init();
 	boost::program_options::options_description desc("Allowed options");
 	desc.add_options()
 	        		("help", "produce help message")
@@ -30,7 +30,7 @@ void handleProgrammOptions(int ac, char* av[]){
 	} catch (std::exception& e) {
 		std::cout << "The given program options are wrong: " << e.what() << std::endl;
 	};
-	CommandSettings::setValues(vm);
+	CommandSettings::instance().setValues(vm);
 	boost::program_options::notify(vm);
 	if (vm.count("help")) {
 		std::cout << desc << "\n";
@@ -39,22 +39,22 @@ void handleProgrammOptions(int ac, char* av[]){
 }
 
 void doOnlyDataView(){
-	if(CommandSettings::get_onlyDataView()){
+	if(CommandSettings::instance().get_onlyDataView()){
 		const int firstPoints = 10000000; // all points
-		TotalStorage::readData(firstPoints);
+		TotalStorage::instance().readData(firstPoints);
 		OnlineStorage<LabeledVectorX*> train;
 		OnlineStorage<LabeledVectorX*> test;
 		// starts the training by its own
-		TotalStorage::getOnlineStorageCopyWithTest(train, test, TotalStorage::getTotalSize());
-		printOnScreen("TotalStorage::getTotalSize(): " << TotalStorage::getTotalSize());
+		TotalStorage::instance().getOnlineStorageCopyWithTest(train, test, TotalStorage::instance().getTotalSize());
+		printOnScreen("TotalStorage::instance().getTotalSize(): " << TotalStorage::instance().getTotalSize());
 		DataWriterForVisu::writeSvg("justData.svg", train.storage());
 		openFileInViewer("justData.svg");
 		const bool wait = false;
 		quitApplication(wait);
-	}else if(CommandSettings::get_convertFile().length() > 0){
+	}else if(CommandSettings::instance().get_convertFile().length() > 0){
 		printOnScreen("Convert file mode:");
 		LabeledData data;
-		const std::string inputPath = CommandSettings::get_convertFile();
+		const std::string inputPath = CommandSettings::instance().get_convertFile();
 		const std::string typeLessPath = inputPath.substr(0, inputPath.length() - 4); // for txt and csv
 		if(!boost::filesystem::exists(boost::filesystem::path(typeLessPath + ".binary"))){
 			const auto containDegrees = true;
@@ -73,24 +73,24 @@ void doOnlyDataView(){
 int main(int ac, char** av){
 	printOnScreen("Start");
 	handleProgrammOptions(ac,av);
-	TestManager::setFilePath("../Settings/testSettingsPy.init"); // must be called before the logger
-	const std::string settingsFile = CommandSettings::get_settingsFile();
-	Settings::init(settingsFile);
-	ThreadMaster::start(); // must be performed after Settings init!
-	ScreenOutput::start(); // should be started after ThreadMaster and Settings
-	ClassKnowledge::init();
+	TestManager::instance().setFilePath("../Settings/testSettingsPy.init"); // must be called before the logger
+	const std::string settingsFile = CommandSettings::instance().get_settingsFile();
+	Settings::instance().init(settingsFile);
+	ThreadMaster::instance().start(); // must be performed after Settings init!
+	ScreenOutput::instance().start(); // should be started after ThreadMaster and Settings
+	ClassKnowledge::instance().init();
 
 	doOnlyDataView();
 
-	Logger::start();
+	Logger::instance().start();
 	printOnScreen("Settingsfile: " << settingsFile);
-	CommandSettings::printAllSettingsToLog();
-	if(CommandSettings::get_samplingAndTraining() > 0){
-		printOnScreen("Training time: " << TimeFrame(CommandSettings::get_samplingAndTraining()));
+	CommandSettings::instance().printAllSettingsToLog();
+	if(CommandSettings::instance().get_samplingAndTraining() > 0){
+		printOnScreen("Training time: " << TimeFrame(CommandSettings::instance().get_samplingAndTraining()));
 	}
 
-	TestManager::init();
-	TestManager::run();
+	TestManager::instance().init();
+	TestManager::instance().run();
 	quitApplication();
 	return 0;
 }

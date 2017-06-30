@@ -6,13 +6,7 @@
  */
 
 #include "IVM.h"
-#include <boost/math/special_functions/erf.hpp>
-#include "../Base/CommandSettings.h"
-#include "../Base/Settings.h"
 #include "../Data/DataWriterForVisu.h"
-#include "../Utility/Util.h"
-#include "../Data/DataConverter.h"
-#include "../Data/DataBinaryWriter.h"
 
 Mutex IVM::m_listMutex;
 #define LOG2   0.69314718055994528623
@@ -35,28 +29,29 @@ IVM::IVM(OnlineStorage<LabeledVectorX*>& storage, const bool isPartOfMultiIvm):
 	m_arFunvals(nullptr),
 	m_hyperParamsValues(nullptr){
 	int kernelType = 0;
-	Settings::getValue("IVM.kernelType", kernelType);
+	Settings::instance().getValue("IVM.kernelType", kernelType);
 	if(kernelType == 0){
 		m_kernelType = KernelType::GAUSS;
 		bool hasLengthMoreThanParam;
-		Settings::getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
+		Settings::instance().getValue("IVM.hasLengthMoreThanParam", hasLengthMoreThanParam);
 		m_gaussKernel = new GaussianKernel();
 		m_gaussKernel->changeKernelConfig(hasLengthMoreThanParam);
 		m_gaussKernel->newRandHyperParams();
 	}else if(kernelType == 1){
 		m_kernelType = KernelType::RF;
 		int samplingAmount, maxDepth;
-		Settings::getValue("RandomForestKernel.samplingAmount", samplingAmount);
-		Settings::getValue("RandomForestKernel.maxDepth", maxDepth);
+		Settings::instance().getValue("RandomForestKernel.samplingAmount", samplingAmount);
+		Settings::instance().getValue("RandomForestKernel.maxDepth", maxDepth);
 		const bool createOrf = !isPartOfMultiIvm;
-		m_rfKernel = new RandomForestKernel(m_storage, maxDepth, samplingAmount, ClassKnowledge::amountOfClasses(), createOrf);
+		m_rfKernel = new RandomForestKernel(m_storage, maxDepth, samplingAmount,
+											ClassKnowledge::instance().amountOfClasses(), createOrf);
 	}else{
 		printError("This kernel type is not supported here!");
 	}
 }
 
 IVM::~IVM(){
-	if(Settings::getDirectBoolValue("IVM.useCmaes")){
+	if(Settings::instance().getDirectBoolValue("IVM.useCmaes")){
 		cmaes::cmaes_exit(&m_evo); /* release memory */
 		cmaes::cmaes_boundary_transformation_exit(&m_cmaesBoundaries); /* release memory */
 		free(m_hyperParamsValues);
@@ -83,7 +78,7 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 		printError("No data in init given!"); return;
 	}
 	m_labelsForClasses = labelsForClasses;
-	m_className = ClassKnowledge::getNameFor(getLabelForOne());
+	m_className = ClassKnowledge::instance().getNameFor(getLabelForOne());
 	m_uniformNr.setSeed((int)labelsForClasses.coeff(0) * 74739); // TODO better way if class is used multiple times
 	m_uniformNr.setMinAndMax(1, m_storage.size() / 100);
 	const bool oneVsAllCase = m_labelsForClasses.coeff(1) == UNDEF_CLASS_LABEL;
@@ -130,23 +125,23 @@ void IVM::init(const unsigned int numberOfInducingPoints,
 	//printInPackageOnScreen(m_package, "Frac: " << (Real) amountOfOneClass / (Real) m_dataPoints);
 
 	m_bias = boost::math::cdf(boost::math::complement(m_logisticNormal, (Real) amountOfOneClass / (Real) m_dataPoints));
-	Settings::getValue("IVM.lambda", m_lambda);
-	Settings::getValue("IVM.desiredMargin", m_desiredMargin);
+	Settings::instance().getValue("IVM.lambda", m_lambda);
+	Settings::instance().getValue("IVM.desiredMargin", m_desiredMargin);
 	m_splitOfClassOneInData = (Real) amountOfOneClass / (Real) m_dataPoints;
 	m_desiredPoint = (0.5 + m_splitOfClassOneInData) * 0.5; // middle between 0.5 and real margin
-	Settings::getValue("IVM.useNeighbourComparison", m_useNeighbourComparison);
+	Settings::instance().getValue("IVM.useNeighbourComparison", m_useNeighbourComparison);
 
 	// sampling method:
-	if(Settings::getDirectBoolValue("IVM.useCmaes") && m_kernelType == KernelType::GAUSS){
+	if(Settings::instance().getDirectBoolValue("IVM.useCmaes") && m_kernelType == KernelType::GAUSS){
 
 		double lowerBounds[] = {0.2,5.1, 0.03};
-		lowerBounds[0] = (double) Settings::getDirectRealValue("CMAES.lowerBoundLen");
-		lowerBounds[1] = (double) Settings::getDirectRealValue("CMAES.lowerBoundFNoise");
-		lowerBounds[2] = (double) Settings::getDirectRealValue("CMAES.lowerBoundSNoise");
+		lowerBounds[0] = (double) Settings::instance().getDirectRealValue("CMAES.lowerBoundLen");
+		lowerBounds[1] = (double) Settings::instance().getDirectRealValue("CMAES.lowerBoundFNoise");
+		lowerBounds[2] = (double) Settings::instance().getDirectRealValue("CMAES.lowerBoundSNoise");
 		double upperBounds[] = {9., 24.0, 0.45};
-		upperBounds[0] = (double) Settings::getDirectRealValue("CMAES.upperBoundLen");
-		upperBounds[1] = (double) Settings::getDirectRealValue("CMAES.upperBoundFNoise");
-		upperBounds[2] = (double) Settings::getDirectRealValue("CMAES.upperBoundSNoise");
+		upperBounds[0] = (double) Settings::instance().getDirectRealValue("CMAES.upperBoundLen");
+		upperBounds[1] = (double) Settings::instance().getDirectRealValue("CMAES.upperBoundFNoise");
+		upperBounds[2] = (double) Settings::instance().getDirectRealValue("CMAES.upperBoundSNoise");
 		const unsigned long nb_bounds = 2; /* numbers used from lower and upperBounds */
 		unsigned long dimension;
 
@@ -192,7 +187,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //		return false;
 //	}
 	m_trained = false;
-	const Real trainingAbortValue = Settings::getDirectRealValue("IVM.trainingCanBeAbortedIfErrorIsAboveVal");
+	const Real trainingAbortValue = Settings::instance().getDirectRealValue(
+			"IVM.trainingCanBeAbortedIfErrorIsAboveVal");
 	const Real minCorrectForWholeClassification = 70;
 	if(m_package == nullptr){
 		printError("The IVM has no set package set!");
@@ -206,19 +202,20 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 		return false;
 	}
 	if(m_kernelType == KernelType::GAUSS){
-		const bool simpleLength = !Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
+		const bool simpleLength = !Settings::instance().getDirectBoolValue("IVM.hasLengthMoreThanParam");
 		GaussianKernelParams bestParams(simpleLength);
 		std::string folderLocation;
-		if(CommandSettings::get_useFakeData()){
-			Settings::getValue("TotalStorage.folderLocFake", folderLocation);
+		if(CommandSettings::instance().get_useFakeData()){
+			Settings::instance().getValue("TotalStorage.folderLocFake", folderLocation);
 		}else{
-			Settings::getValue("TotalStorage.folderLocReal", folderLocation);
+			Settings::instance().getValue("TotalStorage.folderLocReal", folderLocation);
 		}
 		const std::string kernelFilePath = folderLocation + "bestKernelParamsForClass" + StringHelper::number2String((int)m_labelsForClasses.coeff(0)) + ".binary";
 		bool loadBestParams = false;
 		Real bestLogZ = NEG_REAL_MAX;
 		Real bestCorrectness = 0;
-		if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
+		if(boost::filesystem::exists(kernelFilePath) &&
+		   Settings::instance().getDirectBoolValue("IVM.Training.useSavedHyperParams")){
 			bestParams.readFromFile(kernelFilePath);
 			loadBestParams = true;
 		}else if(useKernelValuesAsBestParams){
@@ -227,7 +224,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				printError("The logZ was not set correctly!");
 			}
 			bestLogZ = m_logZ; // should be set correctly on the last training with this params
-			if(Settings::getDirectBoolValue("IVM.useCmaes")){
+			if(Settings::instance().getDirectBoolValue("IVM.useCmaes")){
 				std::stringstream str2;
 				str2 << "Best: " << StringHelper::number2String(bestParams.m_length.getValue(),3) << ", "
 						<< StringHelper::number2String(bestParams.m_fNoise.getValue(),4) << ", "
@@ -239,12 +236,12 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				bestCorrectness = m_package->correctlyClassified();
 			}
 		}else{
-			bestParams.m_length.setAllValuesTo(Settings::getDirectRealValue("KernelParam.len"));
+			bestParams.m_length.setAllValuesTo(Settings::instance().getDirectRealValue("KernelParam.len"));
 //			printOnScreen("Set values manually in code!!!!!");
 //			bestParams.m_length.getValues()[0] = 0.6;
 //			bestParams.m_length.getValues()[1] = 0.4;
-			bestParams.m_fNoise.setAllValuesTo(Settings::getDirectRealValue("KernelParam.fNoise"));
-			bestParams.m_sNoise.setAllValuesTo(Settings::getDirectRealValue("KernelParam.sNoise"));
+			bestParams.m_fNoise.setAllValuesTo(Settings::instance().getDirectRealValue("KernelParam.fNoise"));
+			bestParams.m_sNoise.setAllValuesTo(Settings::instance().getDirectRealValue("KernelParam.sNoise"));
 		}
 		bool doSamplingCheck = doSampling;
 //		if(getClassName() == "7"){
@@ -292,14 +289,14 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //		}
 		if(doSamplingCheck){
 			printInPackageOnScreen(m_package, "Start sampling");
-			bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
+			bool hasMoreThanOneLengthValue = Settings::instance().getDirectBoolValue("IVM.hasLengthMoreThanParam");
 			m_gaussKernel->changeKernelConfig(hasMoreThanOneLengthValue);
-			std::vector<Real> means = {Settings::getDirectRealValue("KernelParam.lenMean"),
-									   Settings::getDirectRealValue("KernelParam.fNoiseMean"),
-									   Settings::getDirectRealValue("KernelParam.sNoiseMean")};
-			std::vector<Real> sds = {Settings::getDirectRealValue("KernelParam.lenVar"),
-									 Settings::getDirectRealValue("KernelParam.fNoiseVar"),
-									 Settings::getDirectRealValue("KernelParam.sNoiseVar")};
+			std::vector<Real> means = {Settings::instance().getDirectRealValue("KernelParam.lenMean"),
+									   Settings::instance().getDirectRealValue("KernelParam.fNoiseMean"),
+									   Settings::instance().getDirectRealValue("KernelParam.sNoiseMean")};
+			std::vector<Real> sds = {Settings::instance().getDirectRealValue("KernelParam.lenVar"),
+									 Settings::instance().getDirectRealValue("KernelParam.fNoiseVar"),
+									 Settings::instance().getDirectRealValue("KernelParam.sNoiseVar")};
 			m_gaussKernel->setGaussianRandomVariables(means, sds);
 			setDerivAndLogZFlag(true, false);
 			StopWatch sw;
@@ -335,12 +332,12 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					}
 					if(!alreadUsed){
 						++counter;
-						testPoints.push_back(value);
+						testPoints.emplace_back(value);
 					}
 				}
 				m_uniformNr.setMinAndMax(1, m_dataPoints / 100);
 //				int iCounterSampling = 0;
-				if(Settings::getDirectBoolValue("IVM.useCmaes")){
+				if(Settings::instance().getDirectBoolValue("IVM.useCmaes")){
 					/* Iterate until stop criterion holds */
 					StopWatch sw;
 					int iCounter = 0;
@@ -353,21 +350,21 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					const int sampleLambda = cmaes::cmaes_Get(&m_evo, "lambda");
 					const unsigned long dimension = (unsigned long) cmaes::cmaes_Get(&m_evo, "dimension");
 					const int desiredAmountOfInducingsPoints = m_numberOfInducingPoints;
-					const Real minErrorForCheck = Settings::getDirectRealValue("CMAES.minErrorForCheck");
+					const Real minErrorForCheck = Settings::instance().getDirectRealValue("CMAES.minErrorForCheck");
 					List< List<std::vector<Real> > > sampledValues;
 					while(m_package != nullptr){
 						/* generate lambda new search points, sample population */
 
 						pop = cmaes::cmaes_SamplePopulation(&m_evo); /* do not change content of pop */
 						List<std::vector<Real> > newL;
-						sampledValues.push_back(newL);
+						sampledValues.emplace_back(newL);
 						/* transform into bounds and evaluate the new search points */
 						for(int iLambda = 0; iLambda < sampleLambda; ++iLambda) {
 //							const Real corr = m_package->correctlyClassified();
 //							const Real probDiff = corr < 60. ? 0. : corr < 80 ? 0.1 : corr < 90 ? 0.2 : 0.3;
 							cmaes::cmaes_boundary_transformation(&m_cmaesBoundaries, pop[iLambda], m_hyperParamsValues, dimension);
 							std::vector<Real> t = {(Real) m_hyperParamsValues[0],(Real) m_hyperParamsValues[1]};
-							sampledValues.back().push_back(t);
+							sampledValues.back().emplace_back(t);
 							/* this loop can be omitted if is_feasible is invariably true */
 //							while(!is_feasible(x_in_bounds, dimension)) { /* is_feasible needs to be user-defined, in case, and can change/repair x */
 //								cmaes_ReSampleSingle(&evo, i);
@@ -462,13 +459,13 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 									m_arFunvals[iLambda] = m_numberOfInducingPoints * 200;
 								}
 								const Real arValue = m_arFunvals[iLambda];
-								values.push_back(arValue);
+								values.emplace_back(arValue);
 							}else{
 								m_arFunvals[iLambda] = m_numberOfInducingPoints * 200;
-								values.push_back(NEG_REAL_MAX);
+								values.emplace_back(NEG_REAL_MAX);
 							}
-							points.push_back(Vector2(m_hyperParamsValues[0], m_hyperParamsValues[1]));
-//							values.push_back(m_logZ);
+							points.emplace_back(m_hyperParamsValues[0], m_hyperParamsValues[1]);
+//							values.emplace_back(m_logZ);
 							if(error > NEG_REAL_MAX){
 							printInPackageOnScreen(m_package, "Test len: " << m_hyperParamsValues[0] << ", fNoise: " << m_hyperParamsValues[1] << ", has: " << -m_logZ / (Real) m_numberOfInducingPoints
 									<< ", logZ: " << -m_logZ << ", inducing: " << m_numberOfInducingPoints << " needed time: " << sw.elapsedAsTimeFrame() << ", error: " << error << " , c: " << iCounter);
@@ -514,12 +511,14 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 						return false;
 					}
 					  /* and finally release memory */
-					if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && Settings::getDirectBoolValue("VisuParams.visuHyperParamSampling2D")){
+					if((CommandSettings::instance().get_visuRes() > 0. ||
+						CommandSettings::instance().get_visuResSimple() > 0.) &&
+					   Settings::instance().getDirectBoolValue("VisuParams.visuHyperParamSampling2D")){
 						DataWriterForVisu::writePointsIn2D("hp_params_"+m_className+".svg", points, values);
 						openFileInViewer("hp_params_"+m_className+".svg");
 					}
 					//std::ofstream file2;
-					//file2.open(Logger::getActDirectory() + "hp" + getClassName() + ".txt");
+					//file2.open(Logger::instance().getActDirectory() + "hp" + getClassName() + ".txt");
 					//int listCounter = 0;
 					//auto itValues = values.begin();
 					//for(auto it = sampledValues.begin(); it != sampledValues.end(); ++it){
@@ -636,7 +635,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //					}
 				}
 				m_gaussKernel->setHyperParamsWith(bestParams);
-				if(CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.){
+					if(CommandSettings::instance().get_visuRes() > 0. ||
+					   CommandSettings::instance().get_visuResSimple() > 0.){
 					setDerivAndLogZFlag(false, false);
 					m_uniformNr.setMinAndMax(1, 1); // final training with all points considered
 					internalTrain(true, verboseLevel);
@@ -653,7 +653,7 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					const bool trained = internalTrain(iGradientCounter % 10 == 0, 0);
 					if(trained){
 						printInPackageOnScreen(m_package, "Gradient is: " << m_derivLogZ << ", p: " << m_gaussKernel->getHyperParams() << ", l: " << m_logZ);
-						logZs.push_back(m_logZ);
+						logZs.emplace_back(m_logZ);
 						if(!m_gaussKernel->hasLengthMoreThanOneDim()){
 							for(unsigned int j = 0; j < 3; ++j){
 								const Real lastLearningRate = sqrtReal(EPSILON + eSquared.m_params[j]->getValue()); // 0,001
@@ -686,13 +686,13 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 				//				DataWriterForVisu::writeSvg("logZ_"+StringHelper::number2String((int)m_labelsForClasses.coeff(0))+".svg", logZs);
 
 				std::ofstream file;
-				file.open(Logger::getActDirectory() + "derivLogZ" + getClassName() + ".txt");
+					file.open(Logger::instance().getActDirectory() + "derivLogZ" + getClassName() + ".txt");
 				for(const auto& logZ : logZs){
 					file << logZ << "\n";
 				}
 				file.close();
 				}
-				if(Settings::getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
+				if(Settings::instance().getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
 					bestParams.writeToFile(kernelFilePath);
 				}
 
@@ -718,7 +718,10 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 					printWarning("The optimization step for ivm " << m_className << " could not be performed!");
 				}
 			}
-			if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && CommandSettings::get_useFakeData() && Settings::getDirectBoolValue("VisuParams.visuFinalIvm")){
+			if((CommandSettings::instance().get_visuRes() > 0. ||
+				CommandSettings::instance().get_visuResSimple() > 0.) &&
+			   CommandSettings::instance().get_useFakeData() &&
+			   Settings::instance().getDirectBoolValue("VisuParams.visuFinalIvm")){
 				DataWriterForVisu::writeSvg("ivm_"+getClassName()+".svg", *this, m_I, m_storage.storage());
 				openFileInViewer("ivm_"+getClassName()+".svg");
 			}
@@ -754,7 +757,8 @@ bool IVM::train(const bool doSampling, const int verboseLevel, const bool useKer
 //			trainOptimizeStep(verboseLevel);
 			m_trained = true;
 		}
-		if((CommandSettings::get_visuRes() > 0. || CommandSettings::get_visuResSimple() > 0.) && Settings::getDirectBoolValue("VisuParams.visuFinalIvm")){
+		if((CommandSettings::instance().get_visuRes() > 0. || CommandSettings::instance().get_visuResSimple() > 0.) &&
+		   Settings::instance().getDirectBoolValue("VisuParams.visuFinalIvm")){
 			printInPackageOnScreen(m_package, "Training finished only visu has to be done!");
 			DataWriterForVisu::writeSvg("ivm_"+m_className+".svg", *this, m_I, m_storage.storage());
 			openFileInViewer("ivm_"+m_className+".svg");
@@ -801,7 +805,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		}else{
 			zeta.coeffRef(i) = 0;
 		}
-		m_J.push_back(i);
+		m_J.emplace_back(i);
 		++amountOfPointsPerClass[(m_y.coeff(i) == 1 ? 0 : 1)];
 	}
 	VectorX g = VectorX(m_numberOfInducingPoints);
@@ -813,7 +817,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 	//printInPackageOnScreen(m_package, "bias: " << m_bias);
 	auto itOfActiveSet = m_I.begin();
 	VectorX s_nk = VectorX(m_dataPoints), k_nk = VectorX(m_dataPoints); // k_nk is not filled for k == 0!!!!
-	const bool visuDeltas = !m_uniformNr.isUsed() && Settings::getDirectBoolValue("VisuParams.visuEntropyForFinalIvm");
+	const bool visuDeltas =
+			!m_uniformNr.isUsed() && Settings::instance().getDirectBoolValue("VisuParams.visuEntropyForFinalIvm");
 	List<Real> deltaValues;
 	List<std::string> colors;
 	int forceUsedOfClass = 0; // 1 or -1 are the possible classes (0 == non selected)
@@ -872,8 +877,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 						g.coeffRef(k) = gForJ;
 						nu.coeffRef(k) = nuForJ;
 					}
-//					deltasValue.push_back(deltaForJ);
-//					colorForDeltas.push_back(std::string(m_y[*itOfJ] == 1 ? "red" : "blue"));
+//					deltasValue.emplace_back(deltaForJ);
+//					colorForDeltas.emplace_back(std::move(std::string(m_y[*itOfJ] == 1 ? "red" : "blue")));
 					increaseValue = m_uniformNr(); // returns a random value
 					for(unsigned int i = 0; i < increaseValue; ++i){
 						++itOfJ; // increases the iterator
@@ -904,8 +909,8 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 //			openFileInViewer("deltas1.svg");
 //			sleepFor(1);
 			if(visuDeltas){
-				deltaValues.push_back((Real) delta[k]);
-				colors.push_back(std::string(m_y[argmax] == 1 ? "red" : "blue"));
+				deltaValues.emplace_back((Real) delta[k]);
+				colors.emplace_back(std::move(std::string(m_y[argmax] == 1 ? "red" : "blue")));
 			}
 		}else{
 			argmax = *itOfActiveSet;
@@ -1138,7 +1143,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 		const unsigned int uiArgmax = argmax;
 		if(uiArgmax < m_dataPoints){ // check that is not -1 == UINT_MAX
 			if(clearActiveSet){
-				m_I.push_back(argmax);
+				m_I.emplace_back(argmax);
 			}
 			m_J.remove(argmax);
 		}
@@ -1279,7 +1284,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 				 _s_sqrt[i] = sqrtEps;
 		 }*/
 			deltaMax = deltaTau.cwiseAbs().maxCoeff();
-			listToPrint.push_back(deltaMax);
+			listToPrint.emplace_back(deltaMax);
 			//minDelta = std::min(minDelta, deltaMax);
 			updateEP.recordActTime();
 		}
@@ -1324,7 +1329,7 @@ bool IVM::internalTrain(bool clearActiveSet, const int verboseLevel){
 bool IVM::trainOptimizeStep(const int verboseLevel){
 	if(m_I.size() > 0){
 //		List<Vector> vecs;
-//		vecs.push_back(m_muTildePlusBias);
+//		vecs.emplace_back(m_muTildePlusBias);
 		VectorX oldMuTildeBias(m_muTildePlusBias);
 		m_I.reverse(); // flip order!
 		const bool ret = internalTrain(false, verboseLevel);
@@ -1332,7 +1337,7 @@ bool IVM::trainOptimizeStep(const int verboseLevel){
 			VectorX diff(m_numberOfInducingPoints);
 			VectorX oldInNewOrder(m_numberOfInducingPoints);
 			VectorX newInNewOrder(m_muTildePlusBias);
-//			vecs.push_back(m_muTildePlusBias);
+//			vecs.emplace_back(m_muTildePlusBias);
 //			vecs.rbegin()->reverse();
 //			VectorX diff(m_muTildePlusBias);
 			for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
@@ -1346,7 +1351,7 @@ bool IVM::trainOptimizeStep(const int verboseLevel){
 //			std::ofstream file;
 //			m_I.reverse(); // flip order!
 //			for(int classNr : {1, -1}){
-//				file.open(Logger::getActDirectory() + "combinedLatentFunctions" + StringHelper::number2String(classNr) + ".txt");
+//				file.open(Logger::instance().getActDirectory() + "combinedLatentFunctions" + StringHelper::number2String(classNr) + ".txt");
 //				file << "index, normal, flipped, diff, combined \n";
 //				auto it = m_I.begin();
 //				for(unsigned int i = 0; i < m_numberOfInducingPoints; ++i){
@@ -1470,13 +1475,14 @@ void IVM::calcDerivatives(const VectorX& muL1){
 				}
 			}
 		}else{
-			std::vector<Matrix> cMatrix(ClassKnowledge::amountOfDims() + m_gaussKernel->getHyperParams().paramsAmount - 1);
+			std::vector<Matrix> cMatrix(
+					ClassKnowledge::instance().amountOfDims() + m_gaussKernel->getHyperParams().paramsAmount - 1);
 			const Matrix Z2 = (muL1 * muL1.transpose()) - m_choleskyLLT.solve(m_eye) * 0.5;
 			int i = 0;
 			for(unsigned int u = 0; u < m_gaussKernel->getHyperParams().paramsAmount; ++u){ // for every kernel param
 				if(!m_gaussKernel->getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
 					if(m_gaussKernel->getHyperParams().m_params[u]->hasMoreThanOneDim()){
-						for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
+						for(unsigned int k = 0; k < ClassKnowledge::instance().amountOfDims(); ++k){
 							m_gaussKernel->calcCovarianceDerivativeForInducingPoints(cMatrix[i], m_I, m_gaussKernel->getHyperParams().m_params[u], k);
 							++i;
 						}
@@ -1493,7 +1499,7 @@ void IVM::calcDerivatives(const VectorX& muL1){
 					for(unsigned int u = 0; u < m_gaussKernel->getHyperParams().paramsAmount; ++u){ // for every kernel param
 						if(!m_gaussKernel->getHyperParams().m_params[u]->isDerivativeOnlyDiag()){
 							if(m_gaussKernel->getHyperParams().m_params[u]->hasMoreThanOneDim()){
-								for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
+								for(unsigned int k = 0; k < ClassKnowledge::instance().amountOfDims(); ++k){
 									m_derivLogZ.m_params[u]->getValues()[k] += z2Value * cMatrix[t].coeff(i,j);
 									++t;
 								}

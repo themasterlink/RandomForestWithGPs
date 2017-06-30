@@ -36,8 +36,6 @@ else(CMAKE_SYSTEM_NAME MATCHES  "Linux")
     set (OpenCV_DIR "/usr/local/opt/opencv3/share/OpenCV")
 endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
-
-
 # opencv
 find_package(OpenCV COMPONENTS opencv_core opencv_imgcodecs opencv_highgui opencv_ml opencv_imgproc opencv_flann REQUIRED)
 
@@ -162,8 +160,8 @@ set(SOURCE_FILES
         src/Utility/TimeFrame.cc
         src/Utility/TimeFrame.h
         src/Utility/Util.h
-        src/kernelCalc.h
-        src/main.cc src/Base/BaseType.h src/Tests/TestManager.cc src/Tests/TestManager.h src/Utility/StringHelper.h src/Tests/TestInformation.cc src/Tests/TestInformation.h src/Utility/StringHelper.cc)
+        src/main.cc src/Base/BaseType.h src/Tests/TestManager.cc src/Tests/TestManager.h src/Utility/StringHelper.h src/Tests/TestInformation.cc src/Tests/TestInformation.h src/Utility/StringHelper.cc src/Utility/GlobalStopWatch.h)
+
 
 add_executable(RandomForestWithGPs ${SOURCE_FILES})
 target_link_libraries(RandomForestWithGPs ${CMAKE_THREAD_LIBS_INIT})

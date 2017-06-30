@@ -9,17 +9,17 @@
 #include "CommandSettings.h"
 #include "../Utility/Util.h"
 
-std::list<Param> CommandSettings::m_params;
-DEFINE_PARAM(bool, useFakeData);
-DEFINE_PARAM(int, visuRes);
-DEFINE_PARAM(int, visuResSimple);
-DEFINE_PARAM(bool, onlyDataView);
-DEFINE_PARAM(Real, samplingAndTraining);
-DEFINE_PARAM(bool, plotHistos);
-DEFINE_PARAM(std::string, settingsFile);
-DEFINE_PARAM(std::string, convertFile);
+CommandSettings::CommandSettings():
+		DEFINE_PARAM(bool, useFakeData),
+		DEFINE_PARAM(int, visuRes),
+		DEFINE_PARAM(int, visuResSimple),
+		DEFINE_PARAM(bool, onlyDataView),
+		DEFINE_PARAM(Real, samplingAndTraining),
+		DEFINE_PARAM(bool, plotHistos),
+		DEFINE_PARAM(std::string, settingsFile),
+		DEFINE_PARAM(std::string, convertFile){};
 
-Param::Param(std::string name, const std::string (*type)(), void* ref){
+Param::Param(std::string name, CommandSettings::FctPtrForName type, void* ref){
 	this->name = name;
 	this->type = type;
 	this->ref = ref;
@@ -43,7 +43,7 @@ void CommandSettings::setValues(boost::program_options::variables_map& vm){
 		for(auto& param : m_params){
 			if(vmEle.first == param.name && !vmEle.second.empty()){
 				found = true;
-				const std::string type = param.type();
+				const std::string type = CALL_MEMBER_FCT(*this, param.type)();
 				if(type == "bool"){
 					*(bool*)param.ref = !*(bool*)(param.ref); // it is there -> flip default
 				}else if(type == "int"){
@@ -67,7 +67,7 @@ void CommandSettings::printAllSettingsToLog(){
 	line << "Program was started with:";
 	for(auto& param : m_params){
 		line << " ";
-		const std::string type = param.type();
+		const std::string type = CALL_MEMBER_FCT(*this, param.type)();
 		if(type == "bool"){
 			if(*(bool*)param.ref){
 				line << param.name;
@@ -82,5 +82,5 @@ void CommandSettings::printAllSettingsToLog(){
 			printError("Unknown type: " << type);
 		}
 	}
-	Logger::addSpecialLineToFile(line.str(), "CommandSettings");
+	Logger::instance().addSpecialLineToFile(line.str(), "CommandSettings");
 }

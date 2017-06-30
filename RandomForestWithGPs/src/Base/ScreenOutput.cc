@@ -8,14 +8,9 @@
 #include "ScreenOutput.h"
 #include "Settings.h"
 
-std::list<std::string> ScreenOutput::m_lines;
-ThreadMaster::PackageList* ScreenOutput::m_runningThreads(nullptr);
-boost::thread* ScreenOutput::m_mainThread(nullptr);
-Real ScreenOutput::m_timeToSleep(0.06);
-Mutex ScreenOutput::m_lineMutex;
-std::list<std::string> ScreenOutput::m_errorLines;
-std::list<int> ScreenOutput::m_errorCounters;
-std::string ScreenOutput::m_progressLine;
+ScreenOutput::ScreenOutput(): m_runningThreads(nullptr),
+							  m_mainThread(nullptr),
+							  m_timeToSleep(0.06){};
 
 void ScreenOutput::quitForScreenMode(){
 #ifndef NO_OUTPUT
@@ -27,7 +22,7 @@ void ScreenOutput::quitForScreenMode(){
 }
 
 void ScreenOutput::start(){
-	m_runningThreads = &ThreadMaster::m_runningList;
+	m_runningThreads = &ThreadMaster::instance().m_runningList;
 #ifndef NO_OUTPUT
 #ifdef USE_SCREEN_OUPUT
 	initscr();
@@ -38,7 +33,7 @@ void ScreenOutput::start(){
 	attron(COLOR_PAIR(1));
 	atexit(ScreenOutput::quitForScreenMode);
 #endif // USE_SCREEN_OUTPUT
-	m_mainThread = new boost::thread(&ScreenOutput::run);
+	m_mainThread = new boost::thread(boost::bind(&ScreenOutput::run, this));
 #endif // NO_OUTPUT
 }
 
@@ -48,7 +43,7 @@ void ScreenOutput::run(){
 	std::pair<WINDOW*, PANEL*> errorLog(nullptr, nullptr);
 	std::vector<PANEL*> panels(8, nullptr);
 	std::string mode;
-	Settings::getValue("main.type", mode);
+	Settings::instance().getValue("main.type", mode);
 	const std::string firstLine = "Online Random Forest with IVMs, mode: " + mode;
 #ifdef USE_SCREEN_OUPUT
 	noecho();
@@ -61,7 +56,7 @@ void ScreenOutput::run(){
 	StopWatch sw;
 	const int startOfMainContent = 4;
 #ifdef USE_SCREEN_OUPUT
-	while(ThreadMaster::m_keepRunning){
+	while(ThreadMaster::instance().m_keepRunning){
 #else
 	while(false){
 #endif
@@ -87,11 +82,13 @@ void ScreenOutput::run(){
 		int x,y;
 		getyx(stdscr, y, x);
 		const std::string amountOfThreadsString = "Amount of running Threads: ";
-		ThreadMaster::m_mutex.lock();
+		ThreadMaster::instance().m_mutex.lock();
 		mvprintw(actLine, 5, amountOfThreadsString.c_str());
 		attron(A_BOLD);
 		attron(COLOR_PAIR(6));
-		const std::string runningThreadAsString = StringHelper::number2String(m_runningThreads->size()) + ", " + StringHelper::number2String(ThreadMaster::m_waitingList.size());
+		const std::string runningThreadAsString = StringHelper::number2String(m_runningThreads->size()) + ", " +
+												  StringHelper::number2String(
+														  ThreadMaster::instance().m_waitingList.size());
 		mvprintw(actLine, (int) (amountOfThreadsString.length() + 5), runningThreadAsString.c_str());
 		attroff(A_BOLD);
 		attron(COLOR_PAIR(1));
@@ -154,7 +151,7 @@ void ScreenOutput::run(){
 			++rowCounter;
 		}
 //		doupdate();
-		ThreadMaster::m_mutex.unlock();
+		ThreadMaster::instance().m_mutex.unlock();
 		m_lineMutex.lock();
 		// remove the general information from the last call
 //		for(unsigned int i = actLine; i < progressBar; ++i){
@@ -206,9 +203,9 @@ void ScreenOutput::run(){
 				auto itNr = m_errorCounters.begin();
 				for(const auto& line : m_errorLines){
 					if(*itNr > 1){
-						combinedErrorLines.push_back(line + " x"+ StringHelper::number2String(*itNr));
+						combinedErrorLines.emplace_back(line + " x" + StringHelper::number2String(*itNr));
 					}else{
-						combinedErrorLines.push_back(line);
+						combinedErrorLines.emplace_back(line);
 					}
 					++itNr;
 				}
@@ -247,7 +244,7 @@ void ScreenOutput::run(){
 //		doupdate();
 		refresh();
 		int ch = getch();
-		if(ch != ERR && ThreadMaster::m_keepRunning){
+		if(ch != ERR && ThreadMaster::instance().m_keepRunning){
 			if(ch == KEY_UP){
 				++lineOffset;
 			}else if(ch == KEY_DOWN){
@@ -507,10 +504,10 @@ void ScreenOutput::print(const std::string& line){
 		std::stringstream ss(line);
 		std::string to;
 		while(std::getline(ss,to,'\n')){
-			m_lines.push_back(to);
+			m_lines.emplace_back(to);
 		}
 	}else{
-		m_lines.push_back(line);
+		m_lines.emplace_back(line);
 	}
 	m_lineMutex.unlock();
 #endif // NO_OUTPUT
@@ -529,12 +526,12 @@ void ScreenOutput::printErrorLine(const std::string& line){
 		if(m_errorLines.back() == line){
 			++m_errorCounters.back();
 		}else{
-			m_errorLines.push_back(line);
-			m_errorCounters.push_back(1);
+			m_errorLines.emplace_back(line);
+			m_errorCounters.emplace_back(1);
 		}
 	}else{
-		m_errorLines.push_back(line);
-		m_errorCounters.push_back(1);
+		m_errorLines.emplace_back(line);
+		m_errorCounters.emplace_back(1);
 	}
 	m_lineMutex.unlock();
 #endif // NO_OUTPUT
@@ -544,16 +541,14 @@ void ScreenOutput::printErrorLine(const std::string& line){
 
 void ScreenOutput::printInProgressLine(const std::string& line){
 #ifndef NO_OUTPUT
-	m_lineMutex.lock();
-	m_progressLine = line;
-	m_lineMutex.unlock();
+	lockStatementWith(m_progressLine = line, m_lineMutex);
 #endif // NO_OUTPUT
 }
 
 void ScreenOutput::printToLog(const std::string& message){
-	Logger::addNormalLineToFile(message);
+	Logger::instance().addNormalLineToFile(message);
 }
 
 void ScreenOutput::printToLogSpecial(const std::string& message, const std::string& special){
-	Logger::addSpecialLineToFile(message, special);
+	Logger::instance().addSpecialLineToFile(message, special);
 }

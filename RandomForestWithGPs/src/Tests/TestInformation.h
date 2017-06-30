@@ -19,6 +19,8 @@ enum class TestMode {
 	TEST,
 	COMBINE,
 	SPLIT,
+	FOR,
+	END_FOR,
 	UNDEFINED
 };
 
@@ -30,12 +32,13 @@ public:
 	static const std::string trainSettingName;
 	static const std::string testSettingName;
 
-	struct Instruction {
+	class Instruction {
+	public:
 		using ExitMode = OnlineRandomForest::TrainingsConfig::TrainingsMode;
 
-		Instruction(const TestMode mode, const std::string& varName):
+		Instruction(const TestMode mode, const std::string& varName, Instruction* scope):
 				m_mode(mode), m_varName(varName), m_exitMode(ExitMode::UNDEFINED),
-				m_seconds((Real) 0.0), m_amountOfTrees(0), m_memory(0){};
+				m_seconds((Real) 0.0), m_amountOfTrees(0), m_memory(0), m_scope(scope), m_currentValue(0){};
 
 		void processLine(const std::vector<std::string>& line);
 
@@ -47,6 +50,13 @@ public:
 		Real m_seconds;
 		unsigned int m_amountOfTrees;
 		MemoryType m_memory;
+		Instruction* m_scope;
+		std::vector<unsigned int> m_range;
+		unsigned int m_currentValue;
+
+		bool operator==(const Instruction& instruction) const;
+
+		void replaceScopeVariables(std::string& definition);
 	};
 
 	class TestDefineName {
@@ -64,8 +74,8 @@ public:
 		bool m_includeClasses; // is true if classes are included, false if they are excluded
 		std::string m_firstFromVariable;
 		std::string m_secondFromVariable;
-		std::vector<unsigned int> m_classes;
 		int m_splitAmount;
+		std::vector<unsigned int> m_classes;
 
 	private: // avoid direct access to var name
 		std::string m_varName;
@@ -75,12 +85,11 @@ public:
 
 	void addDefinitionOrInstruction(const TestMode mode, const std::string& def);
 
-	TestDefineName getDefinition(const std::string& name);
+	TestDefineName getDefinition(const std::string& name, Instruction* currentScope);
 
 	Instruction getInstruction(const unsigned int i);
 
-	bool decipherClasses(const std::vector<std::string>& words, const unsigned int start,
-						 const unsigned int end, std::vector<unsigned int>& usedClasses);
+	unsigned int getInstructionNr(const Instruction& instruction);
 
 	int getSplitNumber(const std::string& name);
 
@@ -90,6 +99,7 @@ private:
 
 	std::vector<Instruction> m_instructions;
 
+	Instruction* m_currentScope;
 };
 
 inline

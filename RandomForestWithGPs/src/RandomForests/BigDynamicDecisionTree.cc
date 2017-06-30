@@ -20,7 +20,7 @@ BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<LabeledVectorX*>& s
 		m_usedMemory(0){ // 16 for ints, 24 for the pointer
 	auto amountOfLayers = layerAmount;
 	if(layerAmount < 1){ // 0 and -1, ...
-		Settings::getValue("OnlineRandomForest.layerAmountOfBigDDT", amountOfLayers);
+		Settings::instance().getValue("OnlineRandomForest.layerAmountOfBigDDT", amountOfLayers);
 	}
 	if(amountOfLayers > 0 && maxDepth > amountOfLayers){
 		const auto amountForFast = (unsigned int) std::min(std::max(layerAmountForFast, 2), amountOfLayers);
@@ -88,6 +88,7 @@ void BigDynamicDecisionTree::prepareForSetting(const unsigned int maxDepth, cons
 
 void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 								   RandomNumberGeneratorForDT& generator){
+	GlobalStopWatch<BigDecisionTreeTrain>::instance().startTime();
 	// unsigned ints, the Memory Type and the two vectors and the size for the layers
 	m_usedMemory = sizeof(unsigned int) * 4 + sizeof(MemoryType) + sizeof(FastTreeStructure) * 2
 				   + m_fastInnerTrees.size() * sizeof(FastTreeInnerStructure)
@@ -236,6 +237,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 			}
 		}
 	}
+	GlobalStopWatch<BigDecisionTreeTrain>::instance().recordActTime();
 }
 
 void BigDynamicDecisionTree::trainChildrenForRoot(PtrDynamicDecisionTree root, SmallTreeInnerStructureIterator& it,

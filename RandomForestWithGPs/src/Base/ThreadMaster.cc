@@ -8,20 +8,16 @@
 #include "ThreadMaster.h"
 #include "Settings.h"
 
-int ThreadMaster::m_counter = 0;
-unsigned int ThreadMaster::m_maxCounter = 0;
-Real ThreadMaster::m_timeToSleep = 0.1;
-ThreadMaster::PackageList ThreadMaster::m_waitingList;
-ThreadMaster::PackageList ThreadMaster::m_runningList;
-boost::thread* ThreadMaster::m_mainThread(nullptr);
-Mutex ThreadMaster::m_mutex;
-std::atomic<bool> ThreadMaster::m_keepRunning(true);
-Mutex ThreadMaster::m_isFinished;
+ThreadMaster::ThreadMaster(): m_counter(0),
+							  m_maxCounter(0),
+							  m_timeToSleep((Real) 0.1),
+							  m_mainThread(nullptr),
+							  m_keepRunning(true){};
 
 void ThreadMaster::start(){
 	if(m_mainThread == nullptr){
 		setMaxCounter();
-		m_mainThread = new boost::thread(&ThreadMaster::run);
+		m_mainThread = new boost::thread(boost::bind(&ThreadMaster::run, this));
 	}
 }
 
@@ -30,9 +26,7 @@ void ThreadMaster::setFrequence(const Real frequence){
 }
 
 void ThreadMaster::threadHasFinished(InformationPackage* package){
-	m_mutex.lock();
-	package->finishedTask();
-	m_mutex.unlock();
+	lockStatementWith(package->finishedTask(), m_mutex);
 	bool found;
 	do{
 		found = false;
@@ -56,7 +50,7 @@ void ThreadMaster::threadHasFinished(InformationPackage* package){
 
 void ThreadMaster::run(){
 	int nrOfInducingPoints;
-	Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
+	Settings::instance().getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 //	const int amountOfPointsNeededForIvms = nrOfInducingPoints * 1.2;
 	m_isFinished.lock();
 	while(m_keepRunning){
@@ -80,7 +74,7 @@ void ThreadMaster::run(){
 		while(m_counter < m_maxCounter && m_waitingList.size() > 0){
 			auto selectedValue = m_waitingList.begin();
 			if(selectedValue != m_waitingList.end()){
-				m_runningList.push_back(*selectedValue); // first add to the running list
+				m_runningList.emplace_back(*selectedValue); // first add to the running list
 				++m_counter; // increase the counter of running threads
 				while(!(*selectedValue)->isWaiting()){ // if the thread is not waiting wait until it waits for reactivation -> should happen fast
 					sleepFor(0.05);
@@ -94,7 +88,8 @@ void ThreadMaster::run(){
 		auto selectedValue = m_waitingList.begin();
 		for(auto it = m_runningList.begin(); it != m_runningList.end(); ++it){
 			// for each running element check if execution is finished
-			const int maxTrainingsTime = (int) ((*it)->getMaxTrainingsTime() > 0 ? (*it)->getMaxTrainingsTime() : CommandSettings::get_samplingAndTraining());
+			const int maxTrainingsTime = (int) ((*it)->getMaxTrainingsTime() > 0 ? (*it)->getMaxTrainingsTime()
+																				 : CommandSettings::instance().get_samplingAndTraining());
 			if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime * 0.05 || (*it)->isTaskFinished()){ // each training have to take at least 5 seconds!
 				if((*it)->getWorkedAmountOfSeconds() > maxTrainingsTime && !(*it)->shouldThreadBeAborted() && (*it)->canBeAbortedAfterCertainTime()){
 //					std::cout << "Abort training, has worked: " << (*it)->getWorkedAmountOfSeconds() << std::endl;
@@ -113,7 +108,7 @@ void ThreadMaster::run(){
 				if((*it)->isWaiting()){
 					// there is a running thread which waits -> put him back in the waiting list
 					auto copyIt = it;
-					m_waitingList.push_back(*it); // append at the waiting list
+					m_waitingList.emplace_back(*it); // append at the waiting list
 					--it; // go one back, in the end of the loop the next element will be taken
 					m_runningList.erase(copyIt); // erase the copied element
 					--m_counter; // -> now a new thread can run
@@ -190,12 +185,8 @@ void ThreadMaster::sortWaitingList(const int minAmountOfPoints, const int maxAmo
 }
 
 bool ThreadMaster::appendThreadToList(InformationPackage* package){
-	bool ret;
-	m_mutex.lock();
-	m_waitingList.push_back(package);
-	ret = true;
-	m_mutex.unlock();
-	return ret;
+	lockStatementWith(m_waitingList.emplace_back(package), m_mutex);
+	return true; // can't fail at the moment
 }
 
 void ThreadMaster::abortAllThreads(){
@@ -214,7 +205,7 @@ void ThreadMaster::abortAllThreads(){
 }
 
 void ThreadMaster::setMaxCounter(){
-	if(Settings::getDirectBoolValue("ThreadMaster.useMultiThread")){
+	if(Settings::instance().getDirectBoolValue("ThreadMaster.useMultiThread")){
 		m_maxCounter = boost::thread::hardware_concurrency();
 	}else{
 		m_maxCounter = 1;

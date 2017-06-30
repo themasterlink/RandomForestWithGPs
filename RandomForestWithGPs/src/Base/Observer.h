@@ -25,6 +25,7 @@ public:
 enum class ClassTypeSubject {
 	ONLINESTORAGE,
 	ONLINERANDOMFOREST,
+	CLASSKNOWLEDGE,
 	UNDEFINED
 };
 

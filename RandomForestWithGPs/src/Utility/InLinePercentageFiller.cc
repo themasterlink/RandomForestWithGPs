@@ -8,7 +8,6 @@
 #include "InLinePercentageFiller.h"
 #include "curses.h"
 #include "Util.h"
-#include "../Base/ScreenOutput.h"
 
 long InLinePercentageFiller::m_max = 0;
 Real InLinePercentageFiller::m_dMax = 0;
@@ -55,7 +54,7 @@ void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned 
 	if(amountOfCalcedElements > 0){
 		str << ", " << amountOfCalcedElements << " calculated elements";
 	}
-	ScreenOutput::printInProgressLine(str.str());
+	ScreenOutput::instance().printInProgressLine(str.str());
 }
 
 void InLinePercentageFiller::setActPercentageAndPrintLine(const Real dAct, const bool lastElement){
@@ -79,7 +78,7 @@ void InLinePercentageFiller::setActPercentageAndPrintLine(const Real dAct, const
 		}else if(dAct >= 100.|| lastElement){
 			str << ", done in: " << m_sw.elapsedAsTimeFrame();
 		}
-		ScreenOutput::printInProgressLine(str.str());
+		ScreenOutput::instance().printInProgressLine(str.str());
 	}else{
 //		printError("The value is not in percent: " << dAct);
 	}

@@ -6,9 +6,6 @@
  */
 
 #include "GaussianKernel.h"
-#include "../../Utility/ReadWriterHelper.h"
-#include <cmath>
-#include "../../Base/Settings.h"
 
 GaussianKernel::GaussianKernel(bool simpleLength): KernelBase<GaussianKernelParams>(GaussianKernelInitParams(simpleLength)){
 	for(unsigned int i = 0; i < getNrOfParams(); ++i){
@@ -258,7 +255,7 @@ void GaussianKernel::setHyperParams(Real len, Real noiseF, Real noiseS){
 
 void GaussianKernel::setHyperParams(const std::vector<Real>& len, Real noiseF, Real noiseS){
 	m_kernelParams.m_length.changeAmountOfDims(true);
-	for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
+	for(unsigned int i = 0; i < ClassKnowledge::instance().amountOfDims(); ++i){
 		m_kernelParams.m_length.getValues()[i] = len[i];
 	}
 	m_kernelParams.m_fNoise.setAllValuesTo(noiseF);
@@ -280,7 +277,7 @@ void GaussianKernel::getCopyOfParams(GaussianKernelParams& params){
 	params.m_sNoise.setAllValuesTo(m_kernelParams.m_sNoise.getValue());
 	params.m_length.changeAmountOfDims(hasLengthMoreThanOneDim());
 	if(hasLengthMoreThanOneDim()){
-		for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
+		for(unsigned int i = 0; i < ClassKnowledge::instance().amountOfDims(); ++i){
 			params.m_length.getValues()[i] = m_kernelParams.m_length.getValues()[i];
 		}
 	}else{

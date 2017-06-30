@@ -49,10 +49,10 @@ void executeForBinaryClass(const bool useRealData){
 			for(int i = 0; i < amountOfElements; ++i){
 				if(i < trainAmount){
 					// train data
-					data.push_back(itData->second[i]);
+					data.emplace_back(itData->second[i]);
 				}else if(i < trainAmount + testAmount){ //  if(i < (fac) * amountOfElements + 200)
 					// test data
-					testData.push_back(itData->second[i]);
+					testData.emplace_back(itData->second[i]);
 				}
 			}
 			++labelCounter;
@@ -186,20 +186,20 @@ void executeForBinaryClass(const bool useRealData){
 		int labelCounter = 0;
 		//const Real fac = 0.80;
 		int trainAmount = 400;
-		Settings::getValue("MultiBinaryGP.trainingAmount", trainAmount);
+		Settings::instance().getValue("MultiBinaryGP.trainingAmount", trainAmount);
 		int testAmount = 100;
-		Settings::getValue("MultiBinaryGP.testingAmount", testAmount);
+		Settings::instance().getValue("MultiBinaryGP.testingAmount", testAmount);
 		for(DataSetsIterator itData = datas.begin(); itData != datas.end(); ++itData){
 			const int amountOfElements = itData->second.size();
 			std::cout << itData->first << " with: " << amountOfElements << " points"<< std::endl;
-			ClassKnowledge::setNameFor(itData->first, labelCounter);
+			ClassKnowledge::instance().setNameFor(itData->first, labelCounter);
 			for(int i = 0; i < amountOfElements; ++i){
 				if(i < trainAmount){
 					// train data
-					data.push_back(itData->second[i]);
+					data.emplace_back(itData->second[i]);
 				}else if(i < trainAmount + testAmount){ //  if(i < (fac) * amountOfElements + 200)
 					// test data
-					testData.push_back(itData->second[i]);
+					testData.emplace_back(itData->second[i]);
 				}
 			}
 			++labelCounter;
@@ -420,9 +420,9 @@ void executeForBinaryClass(const bool useRealData){
 		for(Real yVal = min; yVal <= max; yVal+= stepSize){
 			DataElement ele(dim);
 			ele << xVal, yVal;
-			points.push_back(ele);
+			points.emplace_back(ele);
 			const Real label = gp.predict(ele);
-			dlabels.push_back(label);
+			dlabels.emplace_back(label);
 			++amount;
 		}
 	}

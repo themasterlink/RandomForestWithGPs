@@ -6,7 +6,7 @@
 #include "TestInformation.h"
 
 
-TestInformation::TestInformation(){
+TestInformation::TestInformation(): m_currentScope(nullptr){
 	TestDefineName trainSetting;
 	trainSetting.setVarName(trainSettingName);
 	trainSetting.m_firstFromVariable = trainSettingName;
@@ -26,13 +26,38 @@ TestInformation::TestInformation(){
 }
 
 
-void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std::string& def){
+void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std::string& definition){
 	std::vector<std::string> words;
+	std::string def = definition;
 	StringHelper::getWords(def, words);
 	switch(mode){
+		case TestMode::FOR:{
+			if(words.size() > 2 && words[1] == "in"){
+				Instruction instruction(mode, words[0], m_currentScope);
+				instruction.m_currentValue = 0;
+				StringHelper::decipherRange(words, 2, (unsigned int) (words.size() - 1), instruction.m_range);
+				if(instruction.m_range.size() == 0 || instruction.m_range[0] == UNDEF_CLASS_LABEL){
+					printErrorAndQuit("This range is not valid: " << def);
+				}
+				m_instructions.emplace_back(std::move(instruction));
+				m_currentScope = &m_instructions.back();
+			}else{
+				printErrorAndQuit("For is badly formatted: " << def);
+			}
+			break;
+		}
+		case TestMode::END_FOR:{
+			if(m_currentScope != nullptr){
+				m_instructions.emplace_back(Instruction(mode, "", m_currentScope));
+				m_currentScope = m_currentScope->m_scope; // get one scope up
+			}else{
+				printError("End for without opening for!");
+			}
+			break;
+		}
 		case TestMode::LOAD:{
 			if(words.size() == 1 && (m_definitions.find(words[0]) != m_definitions.end() || words[0] == "all")){
-				m_instructions.emplace_back(mode, words[0]);
+				m_instructions.emplace_back(mode, words[0], m_currentScope);
 			}else{
 				printErrorAndQuit("Loading is only possible for defined or predefined sets: " << def);
 			}
@@ -40,24 +65,12 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 		}
 		case TestMode::DEFINE:{
 			TestDefineName defineName;
-//			std::string classesString = ""; //"((as|without)(\\s)+classes(\\s)+(\\{(.*?)\\}))?";
-//			std::regex ex("(\\s)*(\\b)+?(\\s)+"+classesString+"(from(\\s)+(\\b)+)(\\s)*");
-//			if(std::regex_match(def, ex)){
-//				printOnScreen("Matches: " << def);
-//			}else{
-//				printOnScreen("No Match: " << def);
-//			}
-//			unsigned int c = 0;
-//			for(std::sregex_iterator it(def.begin(), def.end(), ex), it_end; it != it_end; ++it){
-//				++c;
-//				printOnScreen((*it)[0]);
-//			}
-//			printOnScreen("This: " << c);
 			defineName.setVarName(words[0]);
 			bool foundFrom = false, foundClasses = false;
 			for(unsigned int i = 0; i < words.size() - 1; ++i){
 				if(words[i] == "from"){
-					if(m_definitions.find(getDefinition(words[i + 1]).getVarName()) != m_definitions.end()){
+					if(m_definitions.find(getDefinition(words[i + 1], m_currentScope).getVarName()) !=
+					   m_definitions.end()){
 						defineName.m_firstFromVariable = words[i + 1];
 					}else{
 						printErrorAndQuit("A type definition can only refer to the basic types " << trainSettingName << " or "
@@ -77,7 +90,7 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 					//find from
 					for(unsigned int j = i + 2; j < words.size(); ++j){
 						if(words[j] == "from"){
-							foundClasses = decipherClasses(words, i + 2, j - 1, defineName.m_classes);
+							foundClasses = StringHelper::decipherRange(words, i + 2, j - 1, defineName.m_classes);
 							break;
 						}
 					}
@@ -92,7 +105,7 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 			if(!foundClasses){
 				// default is use all classes
 				defineName.m_includeClasses = true;
-				defineName.m_classes.push_back(UNDEF_CLASS_LABEL);
+				defineName.m_classes.emplace_back(UNDEF_CLASS_LABEL);
 			}
 			m_definitions.emplace(defineName.getVarName(), defineName);
 			break;
@@ -103,9 +116,9 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 		}
 		case TestMode::COMBINE: {
 			if(words.size() == 5 && words[1] == "with" && words[3] == "in"){
-				const std::string name = getDefinition(words[0]).getVarName();
+				const std::string name = getDefinition(words[0], m_currentScope).getVarName();
 				if(m_definitions.find(name) != m_definitions.end()){
-					const std::string name2 = getDefinition(words[2]).getVarName();
+					const std::string name2 = getDefinition(words[2], m_currentScope).getVarName();
 					if(m_definitions.find(name2) != m_definitions.end()){
 						TestDefineName defineName;
 						defineName.setVarName(words[4]);
@@ -127,9 +140,9 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 		case TestMode::TRAIN:
 		case TestMode::UPDATE:{
 			if(words.size() > 0){
-				const std::string name = getDefinition(words[0]).getVarName();
+				const std::string name = getDefinition(words[0], m_currentScope).getVarName();
 				if(m_definitions.find(name) != m_definitions.end()){
-					m_instructions.emplace_back(mode, words[0]);
+					m_instructions.emplace_back(mode, words[0], m_currentScope);
 					m_instructions.back().processLine(words);
 				}else{
 					printErrorAndQuit("This type was not defined before: " << words[0] << ", used in: " << def);
@@ -142,9 +155,9 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 		case TestMode::TEST:
 		{
 			if(words.size() == 1){
-				const std::string name = getDefinition(words[0]).getVarName();
+				const std::string name = getDefinition(words[0], m_currentScope).getVarName();
 				if(m_definitions.find(name) != m_definitions.end()){
-					m_instructions.emplace_back(mode, words[0]);
+					m_instructions.emplace_back(mode, words[0], m_currentScope);
 				}else{
 					printErrorAndQuit("This type was not defined before: " << words[0] << ", used in: " << def);
 				}
@@ -161,13 +174,10 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 				if(m_definitions.find(words.back()) != m_definitions.end()){
 					defineName.m_firstFromVariable = words.back();
 					defineName.m_includeClasses = false;
-					try{
-						defineName.m_splitAmount = std::stoi(words[2]);
-					}catch(std::exception &e){
-						printErrorAndQuit("The split number: " << words[2] << " is no number!");
-					}
+					string2Int(words[2], defineName.m_splitAmount,
+							   "The split number: " << words[2] << " is no number!");
 					m_definitions.emplace(defineName.getVarName(), defineName);
-					m_instructions.emplace_back(mode, words[0]);
+					m_instructions.emplace_back(mode, words[0], m_currentScope);
 				}else{
 					printErrorAndQuit("The used dataset in this split has to be defined before: " << def);
 				}
@@ -183,93 +193,11 @@ void TestInformation::addDefinitionOrInstruction(const TestMode mode, const std:
 
 }
 
-bool TestInformation::decipherClasses(const std::vector<std::string> &words, const unsigned int start,
-									  const unsigned int end, std::vector<unsigned int> &usedClasses){
-	usedClasses.clear();
-	if(words[start] == "all"){
-		usedClasses.push_back(UNDEF_CLASS_LABEL);
-		return true;
+TestInformation::TestDefineName TestInformation::getDefinition(const std::string& def, Instruction* currentScope){
+	std::string name = def;
+	if(currentScope != nullptr){
+		currentScope->replaceScopeVariables(name); // just to get the default field
 	}
-	if(StringHelper::startsWith(words[start],'{') && StringHelper::endsWith(words[end], '}')){
-		// more than one class
-		// split words even more
-		std::vector<std::string> numbers;
-		for(unsigned int i = start; i <= end; ++i){
-			if(words[i] != "{" && words[i] != "}"){
-				std::string word(words[i]);
-				if(StringHelper::startsWith(word, ",")){
-					word = word.substr(1, word.length() - 1);
-				}
-				while(word.length() > 0){
-					StringHelper::removeLeadingWhiteSpaces(word);
-					StringHelper::sizeType pos = word.find(',');
-					if(pos != word.npos && pos != 0){
-						numbers.emplace_back(word.substr(0,pos));
-						word = word.substr(pos + 1, word.length() - pos);
-					}else{
-						numbers.emplace_back(word);
-						word = "";
-					}
-				}
-			}
-		}
-		if(StringHelper::startsWith(numbers[0], '{')){
-			numbers[0] = numbers[0].substr(1, numbers[0].length() - 1);
-			if(numbers.front().length() == 0){
-				for(unsigned int i = 0; i < numbers.size() - 1; ++i){
-					numbers[i] = numbers[i + 1];
-				}
-				numbers.pop_back();
-			}
-		}
-		if(StringHelper::startsWith(numbers.back(), '}')){
-			numbers[numbers.size() - 1] = numbers.back().substr(0, numbers.back().length() - 1);
-			if(numbers.back().length() == 0){
-				numbers.pop_back();
-			}
-		}
-		unsigned int lastUsedClass = 0;
-		for(unsigned int i = 0; i < numbers.size(); ++i){
-			if(numbers[i] == "..."){
-				// get next and use all in between
-				unsigned int tillClass = lastUsedClass;
-				if(i + 1 < numbers.size()){
-					try{
-						tillClass = (unsigned int) std::stoi(numbers[i + 1]);
-					}catch(std::exception &e){
-						printError("The word could not be transferred to a class: " << numbers[i + 1]);
-						return false;
-					}
-				}else{
-					printError("The ... can not be the end, there must be an ending class");
-					return false;
-				}
-				for(unsigned int k = lastUsedClass + 1; k < tillClass; ++k){
-					usedClasses.emplace_back(k);
-				}
-			}else{
-				try{
-					usedClasses.emplace_back(std::stoi(numbers[i]));
-				}catch(std::exception &e){
-					printError("The word could not be transferred to a class: " << numbers[i]);
-					return false;
-				}
-			}
-			lastUsedClass = usedClasses.back();
-		}
-	}else if(start == end){
-		try{
-			usedClasses.emplace_back(std::stoi(words[start]));
-		}catch(std::exception& e){
-			printError("The word could not be transferred to a class: " << words[start]);
-			return false;
-		}
-	}
-	return usedClasses.size() != 0;
-
-}
-
-TestInformation::TestDefineName TestInformation::getDefinition(const std::string &name){
 	auto it = m_definitions.find(name);
 	if(it != m_definitions.end()){
 		return it->second;
@@ -286,7 +214,7 @@ TestInformation::TestDefineName TestInformation::getDefinition(const std::string
 			return it->second;
 		}
 	}
-	printErrorAndQuit("This data set does not exist: " << name);
+	printErrorAndQuit("This data set does not exist: " << name << ", currentScope: " << (currentScope != nullptr));
 	return TestDefineName();
 }
 
@@ -294,7 +222,7 @@ TestInformation::Instruction TestInformation::getInstruction(const unsigned int 
 	if(i < m_instructions.size()){
 		return m_instructions[i];
 	}
-	return Instruction(TestMode::UNDEFINED, "");
+	return Instruction(TestMode::UNDEFINED, "", nullptr);
 }
 
 int TestInformation::getSplitNumber(const std::string& name){
@@ -302,13 +230,21 @@ int TestInformation::getSplitNumber(const std::string& name){
 	auto end = name.find(']');
 	if(start != name.npos && end != name.npos){
 		++start;
-		try{
-			return std::stoi(name.substr(start, end - start));
-		}catch(std::exception& e){
-			printErrorAndQuit("The name: " << name << " does not contain a split number!");
-		}
+		int ret = 0;
+		string2Int(name.substr(start, end - start), ret, "The name: " << name << " does not contain a split number!");
+		return ret;
 	}
 	return -1;
+}
+
+unsigned int TestInformation::getInstructionNr(const TestInformation::Instruction& instruction){
+	for(unsigned int i = 0; i < m_instructions.size(); ++i){
+		auto& cur = m_instructions[i];
+		if(instruction == cur){
+			return i;
+		}
+	}
+	return 0;
 }
 
 
@@ -318,7 +254,7 @@ bool TestInformation::TestDefineName::isTrainOrTestSetting() const{
 
 void TestInformation::TestDefineName::useAllClasses(){
 	m_classes.clear();
-	m_classes.push_back((unsigned int) UNDEF_CLASS_LABEL);
+	m_classes.emplace_back((unsigned int) UNDEF_CLASS_LABEL);
 	m_includeClasses = true;
 }
 
@@ -354,11 +290,7 @@ void TestInformation::Instruction::addType(const std::string& preposition, const
 			cpyNrType = cpyNrType.substr(0, cpyNrType.size() - 1);
 		}// else assume seconds
 		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyNrType);
-		try{
-			m_seconds = std::stof(cpyNrType);
-		}catch(std::exception &e){
-			printErrorAndQuit("The time: " << cpyNrType << " is no real value!");
-		}
+		string2Real(cpyNrType, m_seconds, "The time: " << cpyNrType << " is no real value!");
 		m_seconds *= fac; // add factor for minute, hour and day
 		if(m_exitMode == Instruction::ExitMode::UNDEFINED){
 			m_exitMode = Instruction::ExitMode::TIME;
@@ -383,11 +315,9 @@ void TestInformation::Instruction::addType(const std::string& preposition, const
 			cpyNrType = cpyNrType.substr(0, cpyNrType.length() - 2);
 		}// else assume gb
 		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyNrType);
-		try{
-			m_memory = (MemoryType) std::stof(cpyNrType);
-		}catch(std::exception &e){
-			printErrorAndQuit("The memory value: " << cpyNrType << " is not a number!");
-		}
+		Real realMemory;
+		string2Real(cpyNrType, realMemory, "The memory value: " << cpyNrType << " is not a number!");
+		m_memory = (MemoryType) realMemory;
 		m_memory *= fac;
 		if(m_exitMode == Instruction::ExitMode::UNDEFINED){
 			m_exitMode = Instruction::ExitMode::MEMORY;
@@ -410,11 +340,9 @@ void TestInformation::Instruction::addType(const std::string& preposition, const
 		}
 		// else assume trees
 		StringHelper::removeLeadingAndTrailingWhiteSpaces(cpyNrType);
-		try{
-			m_amountOfTrees = (unsigned int) std::stoi(cpyNrType);
-		}catch(std::exception &e){
-			printErrorAndQuit("The memory value: " << cpyNrType << " is not a number!");
-		}
+		int iTrees = 0;
+		string2Int(cpyNrType, iTrees, "The memory value: " << cpyNrType << " is not a number!");
+		m_amountOfTrees = iTrees;
 		if(m_exitMode == Instruction::ExitMode::UNDEFINED){
 			m_exitMode = Instruction::ExitMode::TREEAMOUNT;
 		}else if(m_exitMode == Instruction::ExitMode::MEMORY){
@@ -494,5 +422,35 @@ void TestInformation::Instruction::processLine(const std::vector<std::string>& w
 			addType(cpyWord, nrType);
 		}
 	}
+}
 
+void TestInformation::Instruction::replaceScopeVariables(std::string& definition){
+	if(m_mode == TestMode::FOR){
+		auto pos = definition.find("$");
+		if(pos != definition.npos){
+			if(m_range.size() > 0){
+				std::string sub = definition.substr(pos + 1, m_varName.length());
+				if(sub == m_varName){
+					// replace with current number
+					definition.replace(pos, m_varName.length() + 1,
+									   StringHelper::number2String(m_range[m_currentValue]));
+					replaceScopeVariables(definition);
+				}else if(m_scope != nullptr){
+					m_scope->replaceScopeVariables(definition);
+				}
+			}else{
+				printError("The range is used before it was initialized!");
+			}
+		}
+	}else{
+		printErrorAndQuit("This function can only be called on FOR objects");
+	}
+}
+
+bool TestInformation::Instruction::operator==(const TestInformation::Instruction& instruction) const{
+	return instruction.m_mode == m_mode && instruction.m_varName == m_varName &&
+		   instruction.m_currentValue == m_currentValue && instruction.m_scope == m_scope &&
+		   instruction.m_amountOfTrees == m_amountOfTrees && instruction.m_exitMode == m_exitMode &&
+		   instruction.m_memory == m_memory && instruction.m_seconds == m_seconds &&
+		   instruction.m_range == m_range;
 }

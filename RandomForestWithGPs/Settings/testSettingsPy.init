@@ -1,19 +1,31 @@
 # in python generated test settings file 
 load all 
-define trainSet from TRAIN_SETTING 
-define testSetExclude from TEST_SETTING 
+define trainSet without classes {0,...,4,12,...,15,53,...,60,266,...,273,72,...,76} from TRAIN_SETTING 
+define testSetExclude without classes {0,...,4,12,...,15,53,...,60,266,...,273,72,...,76} from TEST_SETTING 
 define testSet from TEST_SETTING 
-define splitTrainSet as 3 splits from trainSet 
+define appleSet as classes {0,...,4} from TRAIN_SETTING 
+define appleTestSet as classes {0,...,4} from TEST_SETTING 
+define appleSplitSet as 10 splits from appleSet 
+define bananaSet as classes {12,...,15} from TRAIN_SETTING 
+define bananaTestSet as classes {12,...,15} from TEST_SETTING 
+define bananaSplitSet as 10 splits from bananaSet 
+define coffeemugSet as classes {53,...,60} from TRAIN_SETTING 
+define coffeemugTestSet as classes {53,...,60} from TEST_SETTING 
+define coffeemugSplitSet as 10 splits from coffeemugSet 
+define staplerSet as classes {266,...,273} from TRAIN_SETTING 
+define staplerTestSet as classes {266,...,273} from TEST_SETTING 
+define staplerSplitSet as 10 splits from staplerSet 
+define flashlightSet as classes {72,...,76} from TRAIN_SETTING 
+define flashlightTestSet as classes {72,...,76} from TEST_SETTING 
+define flashlightSplitSet as 10 splits from flashlightSet 
+define splitTrainSet as 80 splits from trainSet 
 
 
-train splitTrainSet[0] until 20 trees with only 6 gb
+train splitTrainSet[0] for 30 s with only 6 gb
 test testSetExclude
 test testSet 
-define actualSet1 from splitTrainSet[1]
-train actualSet1 until 20 trees with only 6 gb
+for i in {0,...,80}
+	train splitTrainSet[$i] for 30 s with only 6 gb
 test testSetExclude
 test testSet
-define actualSet2 from splitTrainSet[2]
-train actualSet2 until 20 trees with only 6 gb
-test testSetExclude
-test testSet
+endfor

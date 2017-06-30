@@ -6,7 +6,6 @@
  */
 
 #include "KernelType.h"
-#include "../../Utility/Util.h"
 
 const std::vector<unsigned int> GaussianKernelParams::usedParamTypes = {LengthParam, FNoiseParam, SNoiseParam};
 
@@ -16,7 +15,7 @@ KernelElement::KernelElement(unsigned int kernelNr): m_kernelNr(kernelNr), m_val
 KernelElement::KernelElement(const KernelElement& ele):
 		m_kernelNr(ele.m_kernelNr), m_values(nullptr), m_hasMoreThanOneDim(ele.m_hasMoreThanOneDim){
 	if(ele.m_hasMoreThanOneDim){
-		const unsigned int dim = ClassKnowledge::amountOfDims();
+		const unsigned int dim = ClassKnowledge::instance().amountOfDims();
 		m_values = new Real[dim];
 		for(unsigned int i = 0; i < dim; ++i){
 			m_values[i] = ele.m_values[i];
@@ -38,7 +37,7 @@ void KernelElement::changeAmountOfDims(const bool newHasMoreThanOneDim){
 		m_values = nullptr;
 		m_hasMoreThanOneDim = newHasMoreThanOneDim;
 		if(hasMoreThanOneDim()){
-			m_values = new Real[ClassKnowledge::amountOfDims()];
+			m_values = new Real[ClassKnowledge::instance().amountOfDims()];
 		}else{
 			m_values = new Real[1]; // [1] to make the delete easier
 		}
@@ -48,7 +47,7 @@ void KernelElement::changeAmountOfDims(const bool newHasMoreThanOneDim){
 GaussianKernelElementLength::GaussianKernelElementLength(bool hasMoreThanOneDim): GaussianKernelElement(LengthParam){
 	m_hasMoreThanOneDim = hasMoreThanOneDim;
 	if(m_hasMoreThanOneDim){
-		m_values = new Real[ClassKnowledge::amountOfDims()];
+		m_values = new Real[ClassKnowledge::instance().amountOfDims()];
 	}else{
 		m_values = new Real[1];
 	}
@@ -85,7 +84,7 @@ void GaussianKernelParams::setAllValuesTo(const Real value){
 
 void KernelElement::setAllValuesTo(const Real value){
 	if(hasMoreThanOneDim()){
-		for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
+		for(unsigned int i = 0; i < ClassKnowledge::instance().amountOfDims(); ++i){
 			m_values[i] = value;
 		}
 	}else{
@@ -134,7 +133,7 @@ GaussianKernelParams& GaussianKernelParams::operator=(const GaussianKernelParams
 	const bool hasMoreThanOne = params.m_length.hasMoreThanOneDim();
     m_length.changeAmountOfDims(hasMoreThanOne);
 	if(hasMoreThanOne){
-		for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
+		for(unsigned int i = 0; i < ClassKnowledge::instance().amountOfDims(); ++i){
 			m_length.getValues()[i] = params.m_length.getValues()[i];
 		}
 	}else{
@@ -155,7 +154,7 @@ void GaussianKernelParams::writeToFile(const std::string& filePath){
 	bool hasMoreThanOneDim = m_length.hasMoreThanOneDim();
 	file.write((char*) &hasMoreThanOneDim, sizeof(bool));
 	if(hasMoreThanOneDim){
-		long size = ClassKnowledge::amountOfDims();
+		long size = ClassKnowledge::instance().amountOfDims();
 		file.write((char*) (&size), sizeof(long));
 		file.write((char*) m_length.getValues(), size * sizeof(Real));
 	}else{
@@ -198,7 +197,7 @@ void GaussianKernelParams::readFromFile(const std::string& filePath){
 std::ostream& operator<<(std::ostream& stream, const GaussianKernelParams& params){
 	stream << "len: ";
 	if(params.m_length.hasMoreThanOneDim()){
-		for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
+		for(unsigned int i = 0; i < ClassKnowledge::instance().amountOfDims(); ++i){
 			stream << params.m_length.getValues()[i] << " ";
 		}
 	}else{

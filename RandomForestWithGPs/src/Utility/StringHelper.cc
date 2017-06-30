@@ -179,4 +179,104 @@ namespace StringHelper{
 		return string == "false" || string == "0" || string == "false";
 	}
 
+	bool decipherRange(const std::vector<std::string>& words, const unsigned int start, const unsigned int end,
+					   std::vector<unsigned int>& resultingRange){
+		resultingRange.clear();
+		if(words[start] == "all"){
+			resultingRange.emplace_back(UNDEF_CLASS_LABEL);
+			return true;
+		}
+		if(StringHelper::startsWith(words[start], '{') && StringHelper::endsWith(words[end], '}')){
+			// more than one class
+			// split words even more
+			std::vector<std::string> numbers;
+			for(unsigned int i = start; i <= end; ++i){
+				if(words[i] != "{" && words[i] != "}"){
+					std::string word(words[i]);
+					if(StringHelper::startsWith(word, ",")){
+						word = word.substr(1, word.length() - 1);
+					}
+					while(word.length() > 0){
+						StringHelper::removeLeadingWhiteSpaces(word);
+						StringHelper::sizeType pos = word.find(',');
+						if(pos != word.npos && pos != 0){
+							numbers.emplace_back(word.substr(0, pos));
+							word = word.substr(pos + 1, word.length() - pos);
+						}else{
+							numbers.emplace_back(word);
+							word = "";
+						}
+					}
+				}
+			}
+			if(StringHelper::startsWith(numbers[0], '{')){
+				numbers[0] = numbers[0].substr(1, numbers[0].length() - 1);
+				if(numbers.front().length() == 0){
+					for(unsigned int i = 0; i < numbers.size() - 1; ++i){
+						numbers[i] = numbers[i + 1];
+					}
+					numbers.pop_back();
+				}
+			}
+			if(StringHelper::startsWith(numbers.back(), '}')){
+				numbers[numbers.size() - 1] = numbers.back().substr(0, numbers.back().length() - 1);
+				if(numbers.back().length() == 0){
+					numbers.pop_back();
+				}
+			}
+			unsigned int lastUsedClass = 0;
+			for(unsigned int i = 0; i < numbers.size(); ++i){
+				if(numbers[i] == "..."){
+					// get next and use all in between
+					int tillClass = lastUsedClass;
+					if(i + 1 < numbers.size()){
+						string2Int(numbers[i + 1], tillClass,
+								   "The word could not be transferred to a class: " << numbers[i + 1]);
+					}else{
+						printError("The ... can not be the end, there must be an ending class");
+						return false;
+					}
+					for(unsigned int k = lastUsedClass + 1; k < tillClass; ++k){
+						resultingRange.emplace_back(k);
+					}
+				}else{
+					int value;
+					string2Int(numbers[i], value, "The word could not be transferred to a class: " << numbers[i]);
+					resultingRange.emplace_back(value);
+				}
+				lastUsedClass = resultingRange.back();
+			}
+		}else if(start == end){
+			int value;
+			string2Int(words[start], value, "The word could not be transferred to a class: " << words[start]);
+			resultingRange.emplace_back(value);
+		}
+		return resultingRange.size() != 0;
+	}
+
+	bool decipherRange(const std::string& rangeLine, const unsigned int start, const unsigned int end,
+					   std::vector<unsigned int>& resultingRange){
+		std::vector<std::string> words;
+		getWords(rangeLine, words);
+		return decipherRange(words, start, end, resultingRange);
+	}
+
+	namespace Intern {
+
+		void string2IntIntern(const std::string& intStr, int& intValue, const std::string& errorMsg){
+			try{
+				intValue = std::stoi(intStr);
+			}catch(std::exception& e){
+				printErrorAndQuit(errorMsg);
+			}
+		}
+
+		void string2RealIntern(const std::string& realStr, Real& realValue, const std::string& errorMsg){
+			try{
+				realValue = (Real) std::stod(realStr);
+			}catch(std::exception& e){
+				printErrorAndQuit(errorMsg);
+			}
+		}
+	};
 } // close namespace

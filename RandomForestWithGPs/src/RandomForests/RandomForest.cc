@@ -6,7 +6,6 @@
  */
 
 #include "RandomForest.h"
-#include "../Utility/Util.h"
 
 RandomForest::RandomForest(const int maxDepth, const int amountOfTrees,
 		const int amountOfClasses)
@@ -46,7 +45,7 @@ void RandomForest::train(const LabeledData& data, const int amountOfUsedDims,
 	}
 
 	StopWatch sw;
-	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
+	const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 	boost::thread_group group;
 	TreeCounter counter;
 	m_counterIncreaseValue = std::min(std::max(2, static_cast<int>(m_amountOfTrees / nrOfParallel / 100)), 100);
@@ -113,7 +112,7 @@ unsigned int RandomForest::predict(const LabeledVectorX& point) const{
 
 void RandomForest::predictData(const Data& points, Labels& labels) const{
 	labels.resize(points.size());
-	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
+	const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 	boost::thread_group group;
 	for(auto i = (decltype(nrOfParallel))(0); i < nrOfParallel; ++i){
 		const int start = (int) ((i / (Real) nrOfParallel) * points.size());
@@ -126,7 +125,7 @@ void RandomForest::predictData(const Data& points, Labels& labels) const{
 
 void RandomForest::predictData(const LabeledData& points, Labels& labels) const{
 	labels.resize(points.size());
-	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
+	const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 	boost::thread_group group;
 	for(auto i = (decltype(nrOfParallel))(0); i < nrOfParallel; ++i){
 		const int start = (int) ((i / (Real) nrOfParallel) * points.size());

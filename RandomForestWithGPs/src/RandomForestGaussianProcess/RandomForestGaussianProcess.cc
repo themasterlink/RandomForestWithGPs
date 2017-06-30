@@ -6,12 +6,9 @@
  */
 
 #include "../RandomForestGaussianProcess/RandomForestGaussianProcess.h"
-#include "../GaussianProcess/BayesOptimizer.h"
 #include "../Data/DataWriterForVisu.h"
 #include "../RandomForests/RandomForestWriter.h"
 #include "../Data/DataConverter.h"
-#include "boost/filesystem.hpp"
-#include "../Base/Settings.h"
 
 RandomForestGaussianProcess::RandomForestGaussianProcess(const DataSets& data, const int heightOfTrees,
 		const int amountOfTrees, const std::string& folderPath) :
@@ -75,17 +72,18 @@ void RandomForestGaussianProcess::train(){
 	if(!m_didLoadTree){
 		// calc min used data for training of random forest bool useFixedValuesForMinMaxUsedData;
 		bool useFixedValuesForMinMaxUsedData;
-		Settings::getValue("MinMaxUsedSplits.useFixedValuesForMinMaxUsedSplits", useFixedValuesForMinMaxUsedData);
+		Settings::instance().getValue("MinMaxUsedSplits.useFixedValuesForMinMaxUsedSplits",
+									  useFixedValuesForMinMaxUsedData);
 		Vector2i minMaxUsedData;
 		if(useFixedValuesForMinMaxUsedData){
 			int minVal = 0, maxVal = 0;
-			Settings::getValue("MinMaxUsedSplits.minValue", minVal);
-			Settings::getValue("MinMaxUsedSplits.maxValue", maxVal);
+			Settings::instance().getValue("MinMaxUsedSplits.minValue", minVal);
+			Settings::instance().getValue("MinMaxUsedSplits.maxValue", maxVal);
 			minMaxUsedData << minVal, maxVal;
 		}else{
 			Real minVal = 0, maxVal = 0;
-			Settings::getValue("MinMaxUsedSplits.minValueFractionDependsOnDataSize", minVal);
-			Settings::getValue("MinMaxUsedSplits.maxValueFractionDependsOnDataSize", maxVal);
+			Settings::instance().getValue("MinMaxUsedSplits.minValueFractionDependsOnDataSize", minVal);
+			Settings::instance().getValue("MinMaxUsedSplits.maxValueFractionDependsOnDataSize", maxVal);
 			minMaxUsedData << (int) (minVal * data.size()),  (int) (maxVal * data.size());
 		}
 		std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";
@@ -129,13 +127,13 @@ void RandomForestGaussianProcess::train(){
 		std::cout << std::endl;
 	}*/
 	int thresholdForNoise = 5;
-	Settings::getValue("RFGP.thresholdForNoise", thresholdForNoise);
+	Settings::instance().getValue("RFGP.thresholdForNoise", thresholdForNoise);
 	int pointsPerClassForBayOpt = 16;
-	Settings::getValue("RFGP.pointsPerClassForBayOpt", pointsPerClassForBayOpt);
+	Settings::instance().getValue("RFGP.pointsPerClassForBayOpt", pointsPerClassForBayOpt);
 	m_maxPointsUsedInGpSingleTraining = 1500;
-	Settings::getValue("RFGP.maxPointsUsedInGpSingleTraining", m_maxPointsUsedInGpSingleTraining);
+	Settings::instance().getValue("RFGP.maxPointsUsedInGpSingleTraining", m_maxPointsUsedInGpSingleTraining);
 	int maxNrOfPointsForBayesOpt = 250;
-	Settings::getValue("RFGP.maxNrOfPointsForBayesOpt", maxNrOfPointsForBayesOpt);
+	Settings::instance().getValue("RFGP.maxNrOfPointsForBayesOpt", maxNrOfPointsForBayesOpt);
 	boost::thread_group group;
 	for(int iActRfRes = 0; iActRfRes < m_amountOfUsedClasses; ++iActRfRes){ // go over all classes
 		//m_output.printSwitchingColor("Act Class: " + m_classNames[iActRfRes]);
@@ -191,7 +189,7 @@ void RandomForestGaussianProcess::train(){
 				m_output.printSwitchingColor("In Class: " + m_classNames[iActRfRes] + ", has act class: " + m_classNames[iActClass] + " so many points: " + StringHelper::number2String(classCounts[iActClass]));
 				//m_isGpInUse[iActRfRes][iActClass] = true; // there is actually a gp for this config
 				m_gps[iActRfRes][iActClass] = new GaussianProcess();
-				const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
+				const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 				while(m_nrOfRunningThreads >= nrOfParallel){
 					sleepFor(0.35);
 				}
@@ -224,7 +222,7 @@ void RandomForestGaussianProcess::trainInParallel(const unsigned int iActClass,
 		GaussianProcess* actGp) {
 	++m_nrOfRunningThreads;
 	int nrOfNoChanges;
-	Settings::getValue("RFGP.nrOfNoChanges", nrOfNoChanges);
+	Settings::instance().getValue("RFGP.nrOfNoChanges", nrOfNoChanges);
 	Matrix dataMat;
 	VectorX yGpInit;
 	// calc for final training

@@ -17,9 +17,7 @@ ThreadSafeOutput::~ThreadSafeOutput() {
 }
 
 void ThreadSafeOutput::print(const std::string& text){
-	m_mutex.lock();
-	m_stream << text << std::endl;
-	m_mutex.unlock();
+	lockStatementWith(m_stream << text << std::endl, m_mutex);
 }
 
 void ThreadSafeOutput::printSwitchingColor(const std::string& text){
@@ -35,7 +33,5 @@ void ThreadSafeOutput::printSwitchingColor(const std::string& text){
 }
 
 void ThreadSafeOutput::printInColor(const std::string& text, const char* color){
-	m_mutex.lock();
-	m_stream << color << text << RESET << std::endl;
-	m_mutex.unlock();
+	lockStatementWith(m_stream << color << text << RESET << std::endl, m_mutex);
 }

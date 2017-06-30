@@ -9,33 +9,34 @@
 #include "../Data/LabeledVectorX.h"
 
 class TestManager {
+
+SingeltonMacro(TestManager);
+
 public:
 
-	static void init();
+	void init();
 
-	static TestMode findMode(std::string& line);
+	TestMode findMode(std::string& line);
 
-	static LabeledData getAllPointsFor(const std::string& defName);
+	LabeledData getAllPointsFor(const std::string& defName, TestInformation::Instruction* scope);
 
-	static void removeClassesFrom(LabeledData& data, const TestInformation::TestDefineName& info);
+	void removeClassesFrom(LabeledData& data, const TestInformation::TestDefineName& info);
 
-	static void run();
+	void run();
 
-	static int readAll();
+	int readAll();
 
-	static void setFilePath(const std::string& filePath){ m_filePath = filePath; };
+	void setFilePath(const std::string& filePath){ m_filePath = filePath; };
 
-	static std::string getFilePath(){ return m_filePath; };
+	std::string getFilePath(){ return m_filePath; };
 
 private:
-	TestManager() = delete;
-	~TestManager() = delete;
 
-	static TestInformation m_testInformation;
+	TestInformation m_testInformation;
 
-	static void performTest(const UniquePtr<OnlineRandomForest>& orf, const LabeledData& data);
+	void performTest(const UniquePtr<OnlineRandomForest>& orf, const LabeledData& data);
 
-	static std::string m_filePath;
+	std::string m_filePath;
 };
 
 

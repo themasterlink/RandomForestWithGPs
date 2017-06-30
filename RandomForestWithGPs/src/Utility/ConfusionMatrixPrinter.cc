@@ -7,7 +7,6 @@
 
 #include "ConfusionMatrixPrinter.h"
 #include "../Data/ClassKnowledge.h"
-#include "../Base/ScreenOutput.h"
 
 ConfusionMatrixPrinter::ConfusionMatrixPrinter() {
 	// TODO Auto-generated constructor stub
@@ -21,20 +20,22 @@ ConfusionMatrixPrinter::~ConfusionMatrixPrinter() {
 
 
 void ConfusionMatrixPrinter::print(const Matrix& conv){
-	if(conv.rows() != ClassKnowledge::amountOfClasses() || conv.cols() != ClassKnowledge::amountOfClasses()){
+	if(conv.rows() != ClassKnowledge::instance().amountOfClasses() ||
+	   conv.cols() != ClassKnowledge::instance().amountOfClasses()){
 		printError("The amount of rows or cols does not correspond to the amount of names: ("
-				<< conv.rows() << "," << conv.cols() << ") != " << ClassKnowledge::amountOfClasses());
+						   << conv.rows() << "," << conv.cols() << ") != "
+						   << ClassKnowledge::instance().amountOfClasses());
 		return;
 	}
 	int maxLength = 0;
-	for(unsigned int i = 0; i < ClassKnowledge::amountOfClasses(); ++i){
-		if((int) ClassKnowledge::getNameFor(i).length() > maxLength){
-			maxLength = ClassKnowledge::getNameFor(i).length();
+	for(unsigned int i = 0; i < ClassKnowledge::instance().amountOfClasses(); ++i){
+		if((int) ClassKnowledge::instance().getNameFor(i).length() > maxLength){
+			maxLength = ClassKnowledge::instance().getNameFor(i).length();
 		}
 	}
 	std::vector<int> maxSize(conv.cols(), 0);
 	for(int i = 0; i < conv.cols(); ++i){
-		maxSize[i] = ClassKnowledge::getNameFor(i).length();
+		maxSize[i] = ClassKnowledge::instance().getNameFor(i).length();
 		for(int j = 0; j < conv.rows(); ++j){
 			const int res = amountOfDigits((int)conv.coeff(j,i));
 			if(res > maxSize[i]){
@@ -50,17 +51,17 @@ void ConfusionMatrixPrinter::print(const Matrix& conv){
 		stream << " ";
 	}
 	int l = 0;
-	for(unsigned int t = 0; t < ClassKnowledge::amountOfClasses(); ++t){
-		for(int i = ClassKnowledge::getNameFor(t).length(); i < maxSize[l]; ++i)
+	for(unsigned int t = 0; t < ClassKnowledge::instance().amountOfClasses(); ++t){
+		for(int i = ClassKnowledge::instance().getNameFor(t).length(); i < maxSize[l]; ++i)
 			stream << " ";
-		stream << ClassKnowledge::getNameFor(t);
+		stream << ClassKnowledge::instance().getNameFor(t);
 		++l;
 	}
-	ScreenOutput::print(stream.str());
+	ScreenOutput::instance().print(stream.str());
 		for(int j = 0; j < conv.rows(); ++j){
 		std::stringstream stream2;
-		stream2 << ClassKnowledge::getNameFor(j);
-		for(int k = ClassKnowledge::getNameFor(j).length(); k < maxLength; ++k)
+			stream2 << ClassKnowledge::instance().getNameFor(j);
+			for(int k = ClassKnowledge::instance().getNameFor(j).length(); k < maxLength; ++k)
 			stream2 << " ";
 		for(int i = 0; i < conv.cols(); ++i){
 			const int covMaxSize = maxSize[i];
@@ -70,7 +71,7 @@ void ConfusionMatrixPrinter::print(const Matrix& conv){
 			}
 			stream2 << (int) conv.coeff(j,i);
 		}
-		ScreenOutput::print(stream2.str());
+			ScreenOutput::instance().print(stream2.str());
 	}
 }
 

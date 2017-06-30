@@ -77,9 +77,15 @@ void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 }
 
 RandomNumberGeneratorForDT::BaggingInformation::BaggingInformation():
-		m_stepSizeOverData(Settings::getDirectValue<unsigned int>("OnlineRandomForest.Tree.Bagging.stepSizeOverData")),
-		m_totalUseOfData(Settings::getDirectValue<unsigned int>("OnlineRandomForest.Tree.Bagging.totalAmountOfDataUsedPerTree")),
-		m_mode(BaggingInformation::getMode(Settings::getDirectValue<std::string>("OnlineRandomForest.Tree.Bagging.mode"))){}
+		m_stepSizeOverData(Settings::instance().getDirectValue < unsigned
+
+int>("OnlineRandomForest.Tree.Bagging.stepSizeOverData")),
+
+m_totalUseOfData (Settings::instance()
+
+.getDirectValue<unsigned int>("OnlineRandomForest.Tree.Bagging.totalAmountOfDataUsedPerTree")),
+m_mode(BaggingInformation::getMode(
+		Settings::instance().getDirectValue<std::string>("OnlineRandomForest.Tree.Bagging.mode"))){}
 
 RandomNumberGeneratorForDT::BaggingInformation::BaggingMode
 RandomNumberGeneratorForDT::BaggingInformation::getMode(const std::string& settingsField){

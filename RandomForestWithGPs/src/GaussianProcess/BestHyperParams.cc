@@ -60,28 +60,20 @@ void BestHyperParams::getBestParams(int& bestRight, int& bestRightPositive, int&
 
 
 void BestHyperParams::getBestHypParams(Real& bestLen, Real& bestSigmaF){
-	m_mutex.lock();
-	bestLen = m_len;
-	bestSigmaF = m_sigmaF;
-	m_mutex.unlock();
+	lockStatementWith(bestLen = m_len;
+							  bestSigmaF = m_sigmaF, m_mutex);
 }
 
 void BestHyperParams::getNoChangeCounter(int& noChange){
-	m_mutex.lock();
-	noChange = m_noChangeCounter;
-	m_mutex.unlock();
+	lockStatementWith(noChange = m_noChangeCounter, m_mutex);
 }
 
 void BestHyperParams::getFinishLast(bool& isFinish){
-	m_mutex.lock();
-	isFinish = m_isFinish || m_shutDown;
-	m_mutex.unlock();
+	lockStatementWith(isFinish = m_isFinish || m_shutDown, m_mutex);
 }
 
 void BestHyperParams::getFinishDuring(bool& isFinish){
-	m_mutex.lock();
-	isFinish = m_isFinish;
-	m_mutex.unlock();
+	lockStatementWith(isFinish = m_isFinish, m_mutex);
 }
 
 bool BestHyperParams::checkGoal(){

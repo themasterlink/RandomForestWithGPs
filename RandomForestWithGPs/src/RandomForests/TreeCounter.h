@@ -8,30 +8,26 @@
 #ifndef RANDOMFORESTS_TREECOUNTER_H_
 #define RANDOMFORESTS_TREECOUNTER_H_
 
-#include <boost/thread.hpp> // Boost threads
+#include "../Utility/Util.h"
 
 class TreeCounter{
 public:
-	TreeCounter() : counter(0){};
+	TreeCounter(): m_counter(0){};
 
 	void addToCounter(const int val){
-		mutex.lock();
-		counter += val;
-		mutex.unlock();
+		lockStatementWith(m_counter += val, m_mutex);
 	}
 
 	void addOneToCounter(){
-		mutex.lock();
-		++counter;
-		mutex.unlock();
+		lockStatementWith(++m_counter, m_mutex);
 	}
 
 	int getCounter() const{
-		return counter;
+		return m_counter;
 	}
 private:
-	Mutex mutex;
-	int counter;
+	Mutex m_mutex;
+	int m_counter;
 };
 
 

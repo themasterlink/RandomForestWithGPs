@@ -15,43 +15,43 @@
 
 class Settings{
 
+SingeltonMacro(Settings);
+
 public:
-	static void init(const std::string& settingsfile);
+	void init(const std::string& settingsfile);
 
-	static void writeDefaultFile(const std::string& settingsfile);
-
-	template<typename T>
-	static void getValue(const std::string& nameOfValue, T& value,
-			const T& defaultValue);
+	void writeDefaultFile(const std::string& settingsfile);
 
 	template<typename T>
-	static void getValue(const std::string& nameOfValue, T& value);
+	void getValue(const std::string& nameOfValue, T& value,
+				  const T& defaultValue);
 
 	template<typename T>
-	static T getDirectValue(const std::string& nameOfValue);
+	void getValue(const std::string& nameOfValue, T& value);
 
-	static void getValue(const std::string& nameOfValue, bool& value,
-			const bool& defaultValue);
+	template<typename T>
+	T getDirectValue(const std::string& nameOfValue);
 
-	static void getValue(const std::string& nameOfValue, bool& value);
+	void getValue(const std::string& nameOfValue, bool& value,
+				  const bool& defaultValue);
 
-	static bool getDirectBoolValue(const std::string& nameOfValue);
+	void getValue(const std::string& nameOfValue, bool& value);
 
-	static Real getDirectRealValue(const std::string &nameOfValue);
+	bool getDirectBoolValue(const std::string& nameOfValue);
 
-	static std::string getFilePath(){ return m_filePath; };
+	Real getDirectRealValue(const std::string& nameOfValue);
+
+	std::string getFilePath(){ return m_filePath; };
 
 private:
-	Settings();
-	virtual ~Settings();
 
-	static boost::property_tree::ptree m_root;
+	boost::property_tree::ptree m_root;
 
-	static Mutex m_mutex;
+	Mutex m_mutex;
 
-	static bool m_init;
+	bool m_init;
 
-	static std::string m_filePath;
+	std::string m_filePath;
 };
 
 template<typename T>

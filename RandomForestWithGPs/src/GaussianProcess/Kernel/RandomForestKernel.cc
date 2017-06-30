@@ -40,7 +40,7 @@ RandomForestKernel::~RandomForestKernel(){
 
 void RandomForestKernel::init(){
 	m_init = true;
-	if(Settings::getDirectBoolValue("RandomForestKernel.usePartitionInsteadOfLabels")){
+	if(Settings::instance().getDirectBoolValue("RandomForestKernel.usePartitionInsteadOfLabels")){
 		m_mode = KernelMode::PARTITION;
 	}else{
 		m_mode = KernelMode::LABEL;

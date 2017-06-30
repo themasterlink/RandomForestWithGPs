@@ -18,57 +18,60 @@
 
 class ThreadMaster {
 	friend ScreenOutput;
+
+SingeltonMacro(ThreadMaster);
+
 public:
 
 	using InfoType = InformationPackage::InfoType;
 
-	static void start();
+	void start();
 
-	static void setFrequence(const Real frequence);
+	void setFrequence(const Real frequence);
 
-	static bool appendThreadToList(InformationPackage* package);
+	bool appendThreadToList(InformationPackage* package);
 
-	static void threadHasFinished(InformationPackage* package);
+	void threadHasFinished(InformationPackage* package);
 
-	static void setMaxCounter();
+	void setMaxCounter();
 
-	static void abortAllThreads();
+	void abortAllThreads();
 
-	static const unsigned int getAmountOfThreads();
+	const unsigned int getAmountOfThreads();
 
-	static void stopExecution(){m_keepRunning = false;}
+	void stopExecution(){ m_keepRunning = false; }
 
-	static void blockUntilFinished(){m_isFinished.lock(); m_isFinished.unlock();};
+	void blockUntilFinished(){
+		m_isFinished.lock();
+		m_isFinished.unlock();
+	};
 
 private:
-	static void run();
+	void run();
 
-	static void sortWaitingList(const int minAmountOfPoints, const int maxAmountOfPoints);
-
-	ThreadMaster() = default;
-	~ThreadMaster() = default;
+	void sortWaitingList(const int minAmountOfPoints, const int maxAmountOfPoints);
 
 	using PackageList = std::list<InformationPackage*>;
 	using PackageListIterator = PackageList::iterator;
 	using PackageListConstIterator = PackageList::const_iterator;
 
-	static PackageList m_waitingList;
+	PackageList m_waitingList;
 
-	static PackageList m_runningList;
+	PackageList m_runningList;
 
-	static int m_counter;
+	int m_counter;
 
-	static Real m_timeToSleep;
+	Real m_timeToSleep;
 
-	static boost::thread* m_mainThread;
+	boost::thread* m_mainThread;
 
-	static Mutex m_mutex;
+	Mutex m_mutex;
 
-	static unsigned int m_maxCounter;
+	unsigned int m_maxCounter;
 
-	static std::atomic<bool> m_keepRunning;
+	std::atomic<bool> m_keepRunning;
 
-	static Mutex m_isFinished;
+	Mutex m_isFinished;
 
 };
 

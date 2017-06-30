@@ -6,8 +6,6 @@
  */
 
 #include "GaussianProcessWriter.h"
-#include "../Utility/Util.h"
-#include "../Utility/ReadWriterHelper.h"
 
 GaussianProcessWriter::GaussianProcessWriter() {
 	// TODO Auto-generated constructor stub
@@ -91,7 +89,7 @@ void GaussianProcessWriter::writeToStream(std::fstream& file, GaussianProcess& g
 	bool hasMoreThanOneLength = gp.m_kernel.hasLengthMoreThanOneDim();
 	file.write((char*) &hasMoreThanOneLength, sizeof(bool)); // order is len, sigmaF, sigmaN
 	if(hasMoreThanOneLength){
-		std::vector<Real> length(ClassKnowledge::amountOfDims());
+		std::vector<Real> length(ClassKnowledge::instance().amountOfDims());
 		for(unsigned int i = 0; i < length.size(); ++i){
 			length[i] = gp.m_kernel.getHyperParams().m_length.getValues()[i];
 		}

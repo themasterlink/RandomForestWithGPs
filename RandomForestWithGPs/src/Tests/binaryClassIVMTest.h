@@ -67,17 +67,19 @@ void testIvm(IVM& ivm, const OnlineStorage<LabeledVectorX*>& data){
 		}else{
 			oc.addNew(1.-entropy);
 			ocBVS.addNew(1.-entropyBVS);
-			printOnScreen("Class: " << ClassKnowledge::getNameFor(data[i]->getLabel()) << ", for 0: " << probs[0] << ", for 1: " << probs[1]);
+			printOnScreen(
+					"Class: " << ClassKnowledge::instance().getNameFor(data[i]->getLabel()) << ", for 0: " << probs[0]
+							  << ", for 1: " << probs[1]);
 		}
 		if(prob > 0.5){
 			++amountOfAbove;
 		}else if(prob < 0.5){
 			++amountOfBelow;
 		}
-		probs.push_back(prob);
+		probs.emplace_back(prob);
 	}
 	printOnScreen("Prediction took: " << sw.elapsedAsPrettyTime());
-	if(amountOfTestPoints > 0 && CommandSettings::get_plotHistos()){
+	if(amountOfTestPoints > 0 && CommandSettings::instance().get_plotHistos()){
 		DataWriterForVisu::writeHisto("histo.svg", probs, 14, 0, 1);
 		openFileInViewer("histo.svg");
 	}
@@ -118,11 +120,11 @@ GaussianKernelParams sampleParams(OnlineStorage<LabeledVectorX*>& storage, int n
 		const std::vector<Real>& means, const std::vector<Real>& sds){
 	boost::thread_group group;
 	Mutex mutex;
-	const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
+	const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 	Real bestLogZ = NEG_REAL_MAX;
-	const Real durationOfTraining = CommandSettings::get_samplingAndTraining();
+	const Real durationOfTraining = CommandSettings::instance().get_samplingAndTraining();
 	std::vector<IVM*> ivms(nrOfParallel);
-	bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
+	bool hasMoreThanOneLengthValue = Settings::instance().getDirectBoolValue("IVM.hasLengthMoreThanParam");
 	GaussianKernelParams bestParams(!hasMoreThanOneLengthValue);
 	int counter = 0;
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
@@ -147,32 +149,36 @@ GaussianKernelParams sampleParams(OnlineStorage<LabeledVectorX*>& storage, int n
 
 void trainIVM(IVM* ivm, const int verboseLevel){
 	UNUSED(verboseLevel);
-	ivm->train(CommandSettings::get_samplingAndTraining() > 0, 1, false);
+	ivm->train(CommandSettings::instance().get_samplingAndTraining() > 0, 1, false);
 }
 
 void executeForBinaryClassIVM(){
 	int firstPoints; // all points
-	Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
-	const Real share = Settings::getDirectRealValue("TotalStorage.shareForTraining");
+	Settings::instance().getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
+	const Real share = Settings::instance().getDirectRealValue("TotalStorage.shareForTraining");
 	firstPoints /= share;
 	printOnScreen("Read " << firstPoints << " points per class");
-	TotalStorage::readData(firstPoints);
+	TotalStorage::instance().readData(firstPoints);
 	DataSets datas;
-	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << " with " << TotalStorage::getAmountOfClass() << " classes");
-	const int trainAmount = share * (std::min((int) TotalStorage::getSmallestClassSize(), firstPoints) * (Real) TotalStorage::getAmountOfClass());
+	printOnScreen("TotalStorage::instance().getSmallestClassSize(): " << TotalStorage::instance().getSmallestClassSize()
+																	  << " with "
+																	  << TotalStorage::instance().getAmountOfClass()
+																	  << " classes");
+	const int trainAmount = share * (std::min((int) TotalStorage::instance().getSmallestClassSize(), firstPoints) *
+									 (Real) TotalStorage::instance().getAmountOfClass());
 	OnlineStorage<LabeledVectorX*> train;
 	OnlineStorage<LabeledVectorX*> test;
 	// starts the training by its own
-	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
+	TotalStorage::instance().getOnlineStorageCopyWithTest(train, test, trainAmount);
 	printOnScreen("Finish reading ");
 	Vector2i usedClasses;
 	usedClasses[0] = 0;
 	usedClasses[1] = 1;
 	bool doEpUpdate;
-	Settings::getValue("IVM.doEpUpdate", doEpUpdate);
+	Settings::instance().getValue("IVM.doEpUpdate", doEpUpdate);
 	if(true){
 		int nrOfInducingPoints;
-		Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
+		Settings::instance().getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 		InformationPackage* package = new InformationPackage(InformationPackage::IVM_TRAIN, 0, train.size());
 		package->setStandartInformation("Binary Ivm Training");
 		IVM ivm(train);
@@ -180,7 +186,7 @@ void executeForBinaryClassIVM(){
 		ivm.init(nrOfInducingPoints, usedClasses, doEpUpdate, false);
 		boost::thread_group group;
 		group.add_thread(new boost::thread(boost::bind(&trainIVM, &ivm, 1)));
-		ThreadMaster::appendThreadToList(package);
+		ThreadMaster::instance().appendThreadToList(package);
 		group.join_all();
 		bool ret = ivm.isTrained();
 		if(ret){
@@ -188,13 +194,13 @@ void executeForBinaryClassIVM(){
 			testIvm(ivm, train);
 			printOnScreen("On " << test.size() << " points from real test data:");
 			testIvm(ivm, test);
-			if(CommandSettings::get_visuRes() > 0){
+			if(CommandSettings::instance().get_visuRes() > 0){
 			DataWriterForVisu::writeImg("test.png", &ivm, train.storage());
 			openFileInViewer("test.png");
 			}
 //			OnlineStorage<LabeledVectorX*> removedTrain;
 //			OnlineStorage<LabeledVectorX*> removedTest;
-//			TotalStorage::getRemovedOnlineStorageCopyWithTest(train, test);
+//			TotalStorage::instance().getRemovedOnlineStorageCopyWithTest(train, test);
 //			printOnScreen("On " << train.size() << " removed points from trainings data:");
 //			testIvm(ivm, removedTrain);
 //			printOnScreen("On " << test.size() << " removed points from real test data:");
@@ -209,17 +215,17 @@ void executeForBinaryClassIVM(){
 		}
 //		openFileInViewer("empty.png");
 	}else{
-		Real sNoise = Settings::getDirectRealValue("KernelParam.sNoise");
-		if(CommandSettings::get_samplingAndTraining() > 0.){
+		Real sNoise = Settings::instance().getDirectRealValue("KernelParam.sNoise");
+		if(CommandSettings::instance().get_samplingAndTraining() > 0.){
 			std::vector<Real> means = {10, 1.2, 0.5};
 			std::vector<Real> sds = {8, 0.8, 0.4};
 			int number = 100;
-			if(CommandSettings::get_useFakeData()){
+			if(CommandSettings::instance().get_useFakeData()){
 				means[0] = 1.2;
 				sds[0] = 0.8;
 			}
-			Settings::getValue("IVM.nrOfInducingPoints", number);
-			bool hasMoreThanOneLengthValue = Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam");
+			Settings::instance().getValue("IVM.nrOfInducingPoints", number);
+			bool hasMoreThanOneLengthValue = Settings::instance().getDirectBoolValue("IVM.hasLengthMoreThanParam");
 			if(true){
 				IVM ivm(train);
 				ivm.init(number, usedClasses, doEpUpdate);
@@ -232,27 +238,30 @@ void executeForBinaryClassIVM(){
 				srand(randStartGen);
 				StopWatch swTry;
 				std::string folderLocation;
-				if(CommandSettings::get_useFakeData()){
-					Settings::getValue("TotalStorage.folderLocFake", folderLocation);
+				if(CommandSettings::instance().get_useFakeData()){
+					Settings::instance().getValue("TotalStorage.folderLocFake", folderLocation);
 				}else{
-					Settings::getValue("TotalStorage.folderLocReal", folderLocation);
+					Settings::instance().getValue("TotalStorage.folderLocReal", folderLocation);
 				}
 				const std::string kernelFilePath = folderLocation + "bestKernelParams.binary";
-				if(boost::filesystem::exists(kernelFilePath) && Settings::getDirectBoolValue("IVM.Training.useSavedHyperParams")){
+				if(boost::filesystem::exists(kernelFilePath) &&
+				   Settings::instance().getDirectBoolValue("IVM.Training.useSavedHyperParams")){
 					bestParams.readFromFile(kernelFilePath);
 				}else{
 					StopWatch sw;
 					bestParams = sampleParams(train, number, usedClasses, doEpUpdate, means, sds);
 					printOnScreen("Time for sampling: " << sw.elapsedAsPrettyTime() << ", result: " << bestParams);
 				}
-				if(Settings::getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
+				if(Settings::instance().getDirectBoolValue("IVM.Training.overwriteExistingHyperParams")){
 					bestParams.writeToFile(kernelFilePath);
 				}
 				const TimeFrame timeTry = swTry.elapsedAsTimeFrame();
 				StopWatch swGrad;
 				ivm.getGaussianKernel()->setHyperParamsWith(bestParams);
 				bool t = ivm.train(false, 0);
-				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0) && t){
+				if(CommandSettings::instance().get_useFakeData() && (CommandSettings::instance().get_visuRes() > 0 ||
+																	 CommandSettings::instance().get_visuResSimple() >
+																	 0) && t){
 					DataWriterForVisu::writeSvg("before.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
 					openFileInViewer("before.svg");
 				}
@@ -286,8 +295,8 @@ void executeForBinaryClassIVM(){
 						++amountOfBelow;
 					}
 				}
-				list.push_back(right / (Real) dataMatTest.cols() * 100.0);*/
-						list.push_back(ivm.m_logZ);
+				list.emplace_back(right / (Real) dataMatTest.cols() * 100.0);*/
+						list.emplace_back(ivm.m_logZ);
 						if(smallestLog < ivm.m_logZ){
 							smallestLog = ivm.m_logZ;
 							ivm.getGaussianKernel()->getCopyOfParams(bestParams);
@@ -295,10 +304,10 @@ void executeForBinaryClassIVM(){
 						ivm.getGaussianKernel()->addToHyperParams(ivm.m_derivLogZ, -fac);
 						Real sum = 0;
 						if(ivm.getGaussianKernel()->hasLengthMoreThanOneDim()){
-							for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
+							for(unsigned int i = 0; i < ClassKnowledge::instance().amountOfDims(); ++i){
 								sum += fabs(ivm.m_derivLogZ.m_length.getValues()[i]);
 							}
-							sum /= ClassKnowledge::amountOfDims();
+							sum /= ClassKnowledge::instance().amountOfDims();
 						}else{
 							sum = fabs(ivm.m_derivLogZ.m_length.getValue());
 						}
@@ -315,7 +324,9 @@ void executeForBinaryClassIVM(){
 				t = ivm.train(false, 0);
 				printOnScreen("T: " << t);
 				const TimeFrame timeGrad = swGrad.elapsedAsTimeFrame();
-				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+				if(CommandSettings::instance().get_useFakeData() && (CommandSettings::instance().get_visuRes() > 0 ||
+																	 CommandSettings::instance().get_visuResSimple() >
+																	 0)){
 					if(amountOfTrainingSteps > 0){
 						DataWriterForVisu::writeSvg("after.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
 						openFileInViewer("after.svg");
@@ -328,7 +339,9 @@ void executeForBinaryClassIVM(){
 				printOnScreen("Time try: " << timeTry);
 				printOnScreen("Time gradient: " << timeGrad);
 				printOnScreen("Rand generator: " << randStartGen);
-				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+				if(CommandSettings::instance().get_useFakeData() && (CommandSettings::instance().get_visuRes() > 0 ||
+																	 CommandSettings::instance().get_visuResSimple() >
+																	 0)){
 					std::list<unsigned int> emptyList;
 					DataWriterForVisu::writeSvg("withTest.svg", ivm, emptyList, test.storage());
 					openFileInViewer("withTest.svg");
@@ -340,7 +353,7 @@ void executeForBinaryClassIVM(){
 
 			}else{
 				bool doEpUpdate;
-				Settings::getValue("IVM.doEpUpdate", doEpUpdate);
+				Settings::instance().getValue("IVM.doEpUpdate", doEpUpdate);
 				/*StopWatch total;
 		Matrix m_L = Matrix::Zero(1,1);
 		StopWatch sw;
@@ -365,8 +378,8 @@ void executeForBinaryClassIVM(){
 			VectorX a_nk = VectorX::Zero(m_L2.rows());
 			const Real sqrtNu = 1;
 			sw2.startTime();
-			m_list.push_back(a_nk);
-			m_diag.push_back(1 / sqrtNu);
+			m_list.emplace_back(a_nk);
+			m_diag.emplace_back(1 / sqrtNu);
 			sw2.recordActTime();
 		}
 		sw2.startTime();
@@ -429,7 +442,7 @@ void executeForBinaryClassIVM(){
 //				StopWatch sw;
 //				ivm.train(false, 0);
 //				printOnScreen("Time for training: " << sw.elapsedAsPrettyTime());
-//				if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+//				if(CommandSettings::instance().get_useFakeData() && (CommandSettings::instance().get_visuRes() > 0 || CommandSettings::instance().get_visuResSimple() > 0)){
 //					DataWriterForVisu::writeSvg("new.svg", ivm, ivm.getSelectedInducingPoints(), train.storage());
 //					openFileInViewer("new.svg");
 //				}
@@ -442,9 +455,9 @@ void executeForBinaryClassIVM(){
 		}else{
 			Matrix finalMat;
 			Real bestResult = 0;
-			Real bestX = Settings::getDirectRealValue("KernelParam.len");
-			Real bestY = Settings::getDirectRealValue("KernelParam.fNoise");
-			if(!CommandSettings::get_useFakeData()){
+			Real bestX = Settings::instance().getDirectRealValue("KernelParam.len");
+			Real bestY = Settings::instance().getDirectRealValue("KernelParam.fNoise");
+			if(!CommandSettings::instance().get_useFakeData()){
 				bestX = 32.5579;
 				bestY = 1.24258;
 				sNoise = 1.33968;
@@ -536,13 +549,13 @@ void executeForBinaryClassIVM(){
 			IVM ivm(train);
 			printOnScreen("Size: " << train.size());
 			int nrOfInducingPoints;
-			Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
+			Settings::instance().getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 			ivm.init(nrOfInducingPoints, usedClasses, doEpUpdate);
 			ivm.setDerivAndLogZFlag(true, true);
-			if(Settings::getDirectBoolValue("IVM.hasLengthMoreThanParam")){
+			if(Settings::instance().getDirectBoolValue("IVM.hasLengthMoreThanParam")){
 				bestY = 1.24258; //1.67215;
 				std::vector<Real> bestXs = {1.72188, 0.209048};//{1.03035, -0.280561};
-				if(!CommandSettings::get_useFakeData()){
+				if(!CommandSettings::instance().get_useFakeData()){
 					bestXs = {13.469127, 12.469127};
 					bestY = 0.0357228;
 					sNoise = 0.979355;
@@ -562,7 +575,7 @@ void executeForBinaryClassIVM(){
 			StopWatch sw;
 			ivm.setNumberOfInducingPoints(k);
 			ivm.train(true, 1);
-			times.push_back(sw.elapsedSeconds());
+			times.emplace_back(sw.elapsedSeconds());
 			printOnScreen("For IVM " << k << " training: " << sw.elapsedAsTimeFrame());
 		}
 		DataWriterForVisu::writeSvg("timeLine.svg", times);
@@ -570,11 +583,12 @@ void executeForBinaryClassIVM(){
 		DataWriterForVisu::writeHisto("timeLineHisto.svg", times);
 		openFileInViewer("timeLineHisto.svg");
 			 */
-			if((CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+			if((CommandSettings::instance().get_visuRes() > 0 || CommandSettings::instance().get_visuResSimple() > 0)){
 				int x = 0, y = 1;
-				if(!CommandSettings::get_useFakeData() && ivm.getGaussianKernel()->hasLengthMoreThanOneDim()){
+				if(!CommandSettings::instance().get_useFakeData() &&
+				   ivm.getGaussianKernel()->hasLengthMoreThanOneDim()){
 					Real highestVal = NEG_REAL_MAX, secondHighestVal = NEG_REAL_MAX;
-					for(unsigned int i = 0; i < ClassKnowledge::amountOfDims(); ++i){
+					for(unsigned int i = 0; i < ClassKnowledge::instance().amountOfDims(); ++i){
 						const Real len = ivm.getGaussianKernel()->getHyperParams().m_length.getValues()[i];
 						if(len > highestVal){
 							secondHighestVal = highestVal;
@@ -586,7 +600,7 @@ void executeForBinaryClassIVM(){
 							y = i;
 						}
 					}
-				}else if(CommandSettings::get_useFakeData()){
+				}else if(CommandSettings::instance().get_useFakeData()){
 					DataWriterForVisu::writeSvg("out3.svg", ivm, ivm.getSelectedInducingPoints(), train.storage(), x, y);
 					openFileInViewer("out3.svg");
 					//				DataWriterForVisu::writeSvg("mu.svg", ivm, ivm.getSelectedInducingPoints(), data, x, y, 1);

@@ -7,10 +7,7 @@
 
 #include "GaussianProcessMultiBinary.h"
 
-#include "../Base/Settings.h"
 #include "../Data/DataConverter.h"
-#include "../Data/LabeledVectorX.h"
-#include "../Data/ClassKnowledge.h"
 
 GaussianProcessMultiBinary::GaussianProcessMultiBinary(int amountOfUsedClasses):
 	m_amountOfUsedClasses(amountOfUsedClasses),
@@ -20,10 +17,10 @@ GaussianProcessMultiBinary::GaussianProcessMultiBinary(int amountOfUsedClasses):
 //	m_lowerBound(2),
 //	m_upperBound(2),
 	m_gps(amountOfUsedClasses, NULL){
-//	Settings::getValue("MultiBinaryGP.lowerBoundLength", m_lowerBound[0]);
-//	Settings::getValue("MultiBinaryGP.lowerBoundNoise",  m_lowerBound[1]);
-//	Settings::getValue("MultiBinaryGP.upperBoundLength", m_upperBound[0]);
-//	Settings::getValue("MultiBinaryGP.upperBoundNoise",  m_upperBound[1]);
+//	Settings::instance().getValue("MultiBinaryGP.lowerBoundLength", m_lowerBound[0]);
+//	Settings::instance().getValue("MultiBinaryGP.lowerBoundNoise",  m_lowerBound[1]);
+//	Settings::instance().getValue("MultiBinaryGP.upperBoundLength", m_upperBound[0]);
+//	Settings::instance().getValue("MultiBinaryGP.upperBoundNoise",  m_upperBound[1]);
 }
 
 void GaussianProcessMultiBinary::train(const LabeledData& data, const Labels* guessedLabels){
@@ -36,20 +33,24 @@ void GaussianProcessMultiBinary::train(const LabeledData& data, const Labels* gu
 	}
 	m_amountOfDataPointsForUseAllTestsPoints = 300;
 	int thresholdForNoise = 5;
-	Settings::getValue("RFGP.thresholdForNoise", thresholdForNoise);
+	Settings::instance().getValue("RFGP.thresholdForNoise", thresholdForNoise);
 	int pointsPerClassForBayOpt = 16;
-	Settings::getValue("RFGP.pointsPerClassForBayOpt", pointsPerClassForBayOpt);
+	Settings::instance().getValue("RFGP.pointsPerClassForBayOpt", pointsPerClassForBayOpt);
 	m_maxPointsUsedInGpSingleTraining = 1500;
-	Settings::getValue("RFGP.maxPointsUsedInGpSingleTraining", m_maxPointsUsedInGpSingleTraining);
+	Settings::instance().getValue("RFGP.maxPointsUsedInGpSingleTraining", m_maxPointsUsedInGpSingleTraining);
 	int maxNrOfPointsForBayesOpt = 250;
-	Settings::getValue("RFGP.maxNrOfPointsForBayesOpt", maxNrOfPointsForBayesOpt);
+	Settings::instance().getValue("RFGP.maxNrOfPointsForBayesOpt", maxNrOfPointsForBayesOpt);
 	boost::thread_group group;
 	for(int iActClass = 0; iActClass < m_amountOfUsedClasses; ++iActClass){
 		if(countClasses[iActClass] < thresholdForNoise){
-			m_output.printSwitchingColor(ClassKnowledge::getNameFor(iActClass) + " is not used, because count class is: " + StringHelper::number2String(countClasses[iActClass]) + "!");
+			m_output.printSwitchingColor(
+					ClassKnowledge::instance().getNameFor(iActClass) + " is not used, because count class is: " +
+					StringHelper::number2String(countClasses[iActClass]) + "!");
 			continue; // do not use this class
 		}
-		m_output.printSwitchingColor("In Class: " + ClassKnowledge::getNameFor(iActClass) + " has so many points: " + StringHelper::number2String(countClasses[iActClass]));
+		m_output.printSwitchingColor(
+				"In Class: " + ClassKnowledge::instance().getNameFor(iActClass) + " has so many points: " +
+				StringHelper::number2String(countClasses[iActClass]));
 		//m_isGpInUse[iActRfRes][iActClass] = true; // there is actually a gp for this config
 
 		m_gps[iActClass] = new GaussianProcess();
@@ -77,7 +78,7 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 		const int amountOfHyperPoints, const LabeledData& data,
 		const std::vector<int>& classCounts, GaussianProcess* actGp) {
 	int nrOfNoChanges;
-	Settings::getValue("RFGP.nrOfNoChanges", nrOfNoChanges);
+	Settings::instance().getValue("RFGP.nrOfNoChanges", nrOfNoChanges);
 	Matrix dataMat;
 	VectorX yGpInit;
 	// calc for final training
@@ -97,7 +98,8 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 
 	// compare to all other classes! // one vs. all
 	const int numberOfPointsForClass = classCounts[iActClass];
-	const std::string betweenNames = ", for " + ClassKnowledge::getNameFor(iActClass) + " has " + StringHelper::number2String(numberOfPointsForClass);
+	const std::string betweenNames = ", for " + ClassKnowledge::instance().getNameFor(iActClass) + " has " +
+									 StringHelper::number2String(numberOfPointsForClass);
 	m_output.printSwitchingColor("Start parallel with " + StringHelper::number2String(amountOfPointsUsedForTrainingTheTest) + " amount of points, which are used in the training for the testing" + betweenNames);
 	//VectorX y(numberOfPointsForClass);
 	StopWatch sw;
@@ -149,7 +151,8 @@ void GaussianProcessMultiBinary::optimizeHyperParams(const unsigned int iActClas
 		const Matrix& testDataMat, const VectorX& testYGpInit, BestHyperParams* bestHyperParams){
 	GaussianProcess usedGp;
 	const int numberOfPointsForClass = classCounts[iActClass];
-	const std::string betweenNames = ", for " + ClassKnowledge::getNameFor(iActClass) + " has " + StringHelper::number2String(numberOfPointsForClass);
+	const std::string betweenNames = ", for " + ClassKnowledge::instance().getNameFor(iActClass) + " has " +
+									 StringHelper::number2String(numberOfPointsForClass);
 	int noChange = 1;
 	const bool useAllTestValues = true; //m_amountOfDataPoints <= m_amountOfDataPointsForUseAllTestsPoints; TODO
 	int size = std::min(m_amountOfDataPointsForUseAllTestsPoints, m_amountOfDataPoints);

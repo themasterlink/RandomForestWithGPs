@@ -46,9 +46,9 @@
 
 
 inline void openFileInViewer(const std::string& filename){
-	if(boost::filesystem::exists(Logger::getActDirectory() + filename)){
-		Logger::addSpecialLineToFile("eog " + filename + " &", "System");
-		system(("eog " + Logger::getActDirectory() + filename + " &> /dev/null &").c_str());
+	if(boost::filesystem::exists(Logger::instance().getActDirectory() + filename)){
+		Logger::instance().addSpecialLineToFile("eog " + filename + " &", "System");
+		system(("eog " + Logger::instance().getActDirectory() + filename + " &> /dev/null &").c_str());
 	}
 }
 
@@ -95,24 +95,24 @@ inline void systemCall(const std::string& call){
 }
 
 inline void quitApplication(const bool wait = true){
-	Logger::forcedWrite();
+	Logger::instance().forcedWrite();
 //	if(wait){
-//		if(CommandSettings::get_settingsFile() == CommandSettings::defaultvalue_settingsFile()){
+//		if(CommandSettings::instance().get_settingsFile() == CommandSettings::instance().defaultvalue_settingsFile()){
 //			printOnScreen("Press any key to quit application");
 //			getchar();
 //		}
 //	}
-	ThreadMaster::stopExecution();
-	ThreadMaster::blockUntilFinished();
+	ThreadMaster::instance().stopExecution();
+	ThreadMaster::instance().blockUntilFinished();
 	sleepFor(0.5);
-	ScreenOutput::quitForScreenMode();
+	ScreenOutput::instance().quitForScreenMode();
 	exit(0);
 }
 
 #ifdef USE_SCREEN_OUPUT
 
 #define printError(message) \
-    do{    std::stringstream str; str << "Error in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message; ScreenOutput::printErrorLine(str.str()); }while(false) \
+    do{    std::stringstream str3; str3 << "Error in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message; ScreenOutput::instance().printErrorLine(str3.str()); }while(false) \
 
 #define printWarning(message) \
     printOnScreen("Warning in " << __PRETTY_FUNCTION__ << ":" << StringHelper::number2String(__LINE__) << ": " << message) \
@@ -194,6 +194,14 @@ inline Real absReal(const Real val){
 	return fabsf(val);
 #endif
 }
+
+#define lockStatementWith(statement, mutex) \
+    mutex.lock(); statement; mutex.unlock() \
+
+#define lockStatementWithSave(statement, variable, mutex) \
+    mutex.lock(); variable = statement; mutex.unlock() \
+
+#define CALL_MEMBER_FCT(object, ptrToMember) ((object).*(ptrToMember)) // change to std::invoke in c++ 17
 
 static const auto UNDEF_CLASS_LABEL = (unsigned int) pow2(16) - 3;
 

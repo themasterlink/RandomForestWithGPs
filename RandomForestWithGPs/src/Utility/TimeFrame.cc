@@ -56,9 +56,14 @@ std::ostream& operator<<(std::ostream& stream, const TimeFrame& time){
 		sprintf(times, "%d min, %2.2f sec", time.m_minutes, time.m_seconds);
 		stream << times;
 		return stream;
-	}else{
+	}else if(time.m_seconds >= 1.0){
 		char seconds[14];
 		sprintf(seconds, "%2.2f sec", time.m_seconds);
+		stream << seconds;
+		return stream;
+	}else{
+		char seconds[20];
+		sprintf(seconds, "%3.3f milisec", time.m_seconds * (Real) 1000.0);
 		stream << seconds;
 		return stream;
 	}

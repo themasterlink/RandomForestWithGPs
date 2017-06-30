@@ -8,12 +8,12 @@
 #include "GaussianKernelOptimizer.h"
 
 //GaussianKernelOptimizer::GaussianKernelRandomGenerator(){
-//	std::vector<Real> means = {Settings::getDirectRealValue("KernelParam.lenMean"),
-//			Settings::getDirectRealValue("KernelParam.fNoiseMean"),
-//			Settings::getDirectRealValue("KernelParam.sNoiseMean")};
-//	std::vector<Real> sds = {Settings::getDirectRealValue("KernelParam.lenVar"),
-//			Settings::getDirectRealValue("KernelParam.fNoiseVar"),
-//			Settings::getDirectRealValue("KernelParam.sNoiseVar")};
+//	std::vector<Real> means = {Settings::instance().getDirectRealValue("KernelParam.lenMean"),
+//			Settings::instance().getDirectRealValue("KernelParam.fNoiseMean"),
+//			Settings::instance().getDirectRealValue("KernelParam.sNoiseMean")};
+//	std::vector<Real> sds = {Settings::instance().getDirectRealValue("KernelParam.lenVar"),
+//			Settings::instance().getDirectRealValue("KernelParam.fNoiseVar"),
+//			Settings::instance().getDirectRealValue("KernelParam.sNoiseVar")};
 //	setMeansAndVars(means, sds);
 //}
 

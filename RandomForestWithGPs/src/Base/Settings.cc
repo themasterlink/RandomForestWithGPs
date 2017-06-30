@@ -7,19 +7,8 @@
 
 #include "../Base/Settings.h"
 
-boost::property_tree::ptree Settings::m_root;
-Mutex Settings::m_mutex;
-bool Settings::m_init = false;
-std::string Settings::m_filePath = "";
-
-Settings::Settings(){
-	// TODO Auto-generated constructor stub
-
-}
-
-Settings::~Settings(){
-	// TODO Auto-generated destructor stub
-}
+Settings::Settings(): m_init(false),
+					  m_filePath(""){};
 
 void Settings::init(const std::string& settingsfile){
 	m_filePath = settingsfile;

@@ -6,7 +6,6 @@
  */
 
 #include "TotalStorage.h"
-#include "ClassKnowledge.h"
 #include "DataReader.h"
 #include "../Base/Settings.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
@@ -14,47 +13,25 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
 
-TotalStorage::InternalStorage TotalStorage::m_storage;
-LabeledData TotalStorage::m_trainSet;
-LabeledData TotalStorage::m_testSet;
-LabeledData TotalStorage::m_validationSet;
-LabeledData TotalStorage::m_removeFromTrainSet;
-LabeledData TotalStorage::m_removeFromTestSet;
-LabeledVectorX TotalStorage::m_defaultEle;
-unsigned int TotalStorage::m_totalSize(0);
-VectorX TotalStorage::m_center;
-VectorX TotalStorage::m_var;
-TotalStorage::Mode TotalStorage::m_mode = TotalStorage::Mode::WHOLE;
+TotalStorage::TotalStorage(): m_totalSize(0),
+							  m_dataSetMode(DataSetMode::WHOLE){};
 
-TotalStorage::TotalStorage(){}
-
-TotalStorage::~TotalStorage(){}
-
-LabeledVectorX* TotalStorage::getData(unsigned int classNr, unsigned int elementNr){
-	if(m_storage.size() > 0){
-		Iterator it = m_storage.find(ClassKnowledge::getNameFor(classNr));
-		if(it != m_storage.end()){
-			return it->second[elementNr];
-		}
-	}
-	return &m_defaultEle;
-}
 
 void TotalStorage::readData(const int amountOfData){
 	std::string folderLocation;
-	m_mode = Mode::WHOLE;
-	if(CommandSettings::get_useFakeData()){
-		Settings::getValue("TotalStorage.folderLocFake", folderLocation);
+	m_dataSetMode = DataSetMode::WHOLE;
+	if(CommandSettings::instance().get_useFakeData()){
+		Settings::instance().getValue("TotalStorage.folderLocFake", folderLocation);
 	}else{
-		Settings::getValue("TotalStorage.folderLocReal", folderLocation);
+		Settings::instance().getValue("TotalStorage.folderLocReal", folderLocation);
 	}
 	const bool readTxt = false;
 	bool didNormalizeStep = false;
-	if(Settings::getDirectBoolValue("TotalStorage.readFromFolder")){
+	if(Settings::instance().getDirectBoolValue("TotalStorage.readFromFolder")){
 		if(folderLocation == "../washington/"){
-			m_mode = Mode::SEPERATE; // seperate train und test set
+			m_dataSetMode = DataSetMode::SEPERATE; // seperate train und test set
 			int testNr = 2;
-			Settings::getValue("TotalStorage.folderTestNr", testNr);
+			Settings::instance().getValue("TotalStorage.folderTestNr", testNr);
 			boost::filesystem::path targetDir(folderLocation);
 			boost::filesystem::directory_iterator end_itr;
 			LabeledData wholeTrainingSet;
@@ -88,7 +65,7 @@ void TotalStorage::readData(const int amountOfData){
 				m_trainSet.reserve(wholeTrainingSet.size() + jumper);
 				for(unsigned int i = 0; i < wholeTrainingSet.size(); ++i){
 					if(i % jumper == 0){
-						m_trainSet.push_back(wholeTrainingSet[i]);
+						m_trainSet.emplace_back(wholeTrainingSet[i]);
 					}else{
 						delete wholeTrainingSet[i]; // remove point from the memory
 					}
@@ -101,11 +78,11 @@ void TotalStorage::readData(const int amountOfData){
 //			for(LabeledDataConstIterator it = m_trainSet.begin(); it != m_trainSet.end(); ++it){
 //				if(classes.find((**it).getLabel()) == classes.end()){
 //					classes.insert((**it).getLabel());
-//					ClassKnowledge::setNameFor(StringHelper::number2String((**it).getLabel()), (**it).getLabel());
+//					ClassKnowledge::instance().instance().setNameFor(StringHelper::number2String((**it).getLabel()), (**it).getLabel());
 //				}
 //			}
 		}else if(folderLocation == "../mnistOrg/" || folderLocation == "../uspsOrg/"){
-			m_mode = Mode::SEPERATE; // seperate train und test set
+			m_dataSetMode = DataSetMode::SEPERATE; // seperate train und test set
 			DataSets train, test;
 			DataReader::readFromFiles(train, folderLocation + "training/", (unsigned int) amountOfData, readTxt, didNormalizeStep);
 			unsigned int totalSize = 0;
@@ -115,7 +92,7 @@ void TotalStorage::readData(const int amountOfData){
 			m_trainSet.reserve(totalSize);
 			for(DataSetsConstIterator it = train.begin(); it != train.end(); ++it){
 				for(unsigned int i = 0; i < it->second.size(); ++i){
-					m_trainSet.push_back(it->second[i]);
+					m_trainSet.emplace_back(it->second[i]);
 				}
 			}
 			DataReader::readFromFiles(test, folderLocation + "test/", (unsigned int) amountOfData, readTxt, didNormalizeStep);
@@ -126,11 +103,11 @@ void TotalStorage::readData(const int amountOfData){
 			m_testSet.reserve(totalSizeTest);
 			for(DataSetsConstIterator it = test.begin(); it != test.end(); ++it){
 				for(unsigned int i = 0; i < it->second.size(); ++i){
-					m_testSet.push_back(it->second[i]);
+					m_testSet.emplace_back(it->second[i]);
 				}
 			}
 		}else if(StringHelper::endsWith(folderLocation, "/washingtonData") || StringHelper::endsWith(folderLocation, "/washingtonMax")){
-			m_mode = Mode::SEPERATE; // seperate train und test set
+			m_dataSetMode = DataSetMode::SEPERATE; // seperate train und test set
 			boost::filesystem::path targetDir(folderLocation);
 			boost::filesystem::directory_iterator end_itr;
 			LabeledData wholeTrainingSet;
@@ -141,7 +118,7 @@ void TotalStorage::readData(const int amountOfData){
 						printOnScreen("As training:");
 						DataReader::readFromBinaryFile(m_trainSet, inputPath, INT_MAX);
 					}else if(StringHelper::endsWith(inputPath, "vld_flatten_complete.binary")){
-						if(Settings::getDirectBoolValue("TotalStorage.useValidationForTraining")){
+						if(Settings::instance().getDirectBoolValue("TotalStorage.useValidationForTraining")){
 							printOnScreen("As validation:");
 						}else{
 							printOnScreen("As additional training:");
@@ -153,7 +130,7 @@ void TotalStorage::readData(const int amountOfData){
 					}
 				}
 			}
-			if(Settings::getDirectBoolValue("TotalStorage.useValidationForTraining")){
+			if(Settings::instance().getDirectBoolValue("TotalStorage.useValidationForTraining")){
 				m_trainSet.reserve(m_trainSet.size() + m_validationSet.size());
 				m_trainSet.insert(m_trainSet.end(), m_validationSet.begin(), m_validationSet.end());
 				m_validationSet.clear();
@@ -165,23 +142,24 @@ void TotalStorage::readData(const int amountOfData){
 		LabeledData data;
 		DataReader::readFromBinaryFile(data, "../binary/dataFor_0.binary", (unsigned int) amountOfData);
 		for(unsigned int i = 0; i < data.size(); ++i){
-			DataSetsIterator it = m_storage.find(ClassKnowledge::getNameFor(data[i]->getLabel()));
+			DataSetsIterator it = m_storage.find(ClassKnowledge::instance().instance().getNameFor(data[i]->getLabel()));
 			if(it != m_storage.end()){
-				it->second.push_back(data[i]);
+				it->second.emplace_back(data[i]);
 			}else{
 				LabeledData newData;
-				m_storage.emplace(ClassKnowledge::getNameFor(data[i]->getLabel()), newData);
-				DataSetsIterator newIt = m_storage.find(ClassKnowledge::getNameFor(data[i]->getLabel()));
+				m_storage.emplace(ClassKnowledge::instance().instance().getNameFor(data[i]->getLabel()), newData);
+				DataSetsIterator newIt = m_storage.find(
+						ClassKnowledge::instance().instance().getNameFor(data[i]->getLabel()));
 				if(newIt != m_storage.end()){
-					newIt->second.push_back(data[i]);
+					newIt->second.emplace_back(data[i]);
 				}
 			}
 		}
 	}
-	if(Settings::getDirectBoolValue("TotalStorage.removeUselessDimensions")){
-		if(m_mode == Mode::WHOLE){
-			std::vector<bool> isUsed(ClassKnowledge::amountOfDims(), false);
-			for(unsigned int dim = 0; dim < ClassKnowledge::amountOfDims(); ++dim){
+	if(Settings::instance().getDirectBoolValue("TotalStorage.removeUselessDimensions")){
+		if(m_dataSetMode == DataSetMode::WHOLE){
+			std::vector<bool> isUsed(ClassKnowledge::instance().instance().amountOfDims(), false);
+			for(unsigned int dim = 0; dim < ClassKnowledge::instance().instance().amountOfDims(); ++dim){
 				const Real value = m_storage.begin()->second[0]->coeff(dim);
 				for(Iterator it = m_storage.begin(); it != m_storage.end() && !isUsed[dim]; ++it){
 					const unsigned int start = m_storage.begin() == it ? 1 : 0;
@@ -232,11 +210,11 @@ void TotalStorage::readData(const int amountOfData){
 //			if(isSame){
 //				printOnScreen("Is the same!");
 //			}
-			ClassKnowledge::setAmountOfDims(newAmountOfDims);
-		}else if(m_mode == Mode::SEPERATE){
-			std::vector<bool> isUsed(ClassKnowledge::amountOfDims(), false);
-			printOnScreen("Amount of dims: " << ClassKnowledge::amountOfDims());
-			for(unsigned int dim = 0; dim < ClassKnowledge::amountOfDims(); ++dim){
+			ClassKnowledge::instance().instance().setAmountOfDims(newAmountOfDims);
+		}else if(m_dataSetMode == DataSetMode::SEPERATE){
+			std::vector<bool> isUsed(ClassKnowledge::instance().instance().amountOfDims(), false);
+			printOnScreen("Amount of dims: " << ClassKnowledge::instance().instance().amountOfDims());
+			for(unsigned int dim = 0; dim < ClassKnowledge::instance().instance().amountOfDims(); ++dim){
 				const Real value = m_trainSet[0]->coeff(dim);
 				for(unsigned int i = 1; i < m_trainSet.size(); ++i){
 					if(fabs(value - m_trainSet[i]->coeff(dim)) >= 1e-7){
@@ -245,7 +223,7 @@ void TotalStorage::readData(const int amountOfData){
 					}
 				}
 			}
-			unsigned int newAmountOfDims = 0; //ClassKnowledge::amountOfDims();
+			unsigned int newAmountOfDims = 0; //ClassKnowledge::instance().instance().amountOfDims();
 			for(unsigned int i = 0; i < isUsed.size(); ++i){
 				if(isUsed[i]){
 					++newAmountOfDims;
@@ -262,11 +240,11 @@ void TotalStorage::readData(const int amountOfData){
 //			}
 //			cv::Mat outImg;
 //			cv::resize(img, outImg, cv::Size(img.cols * 20,img.rows * 20), 0, 0, CV_INTER_NN);
-//			cv::imwrite(Logger::getActDirectory() + "test.png", outImg);
+//			cv::imwrite(Logger::instance().getActDirectory() + "test.png", outImg);
 //			openFileInViewer("test.png");
 
 			printOnScreen("newAmountOfDims: " << newAmountOfDims);
-			if(newAmountOfDims != ClassKnowledge::amountOfDims()){
+			if(newAmountOfDims != ClassKnowledge::instance().instance().amountOfDims()){
 				for(LabeledData* it : {&m_trainSet, &m_testSet}){
 					for(unsigned int i = 0; i < it->size(); ++i){
 						LabeledVectorX* newPoint = new LabeledVectorX(newAmountOfDims, (*it)[i]->getLabel());
@@ -285,13 +263,14 @@ void TotalStorage::readData(const int amountOfData){
 					}
 				}
 			}
-			ClassKnowledge::setAmountOfDims(newAmountOfDims);
+			ClassKnowledge::instance().instance().setAmountOfDims(newAmountOfDims);
 		}
 	}
-	if(m_mode == Mode::WHOLE){
+	if(m_dataSetMode == DataSetMode::WHOLE){
 		std::string type = "";
-		Settings::getValue("main.type", type);
-		if(!type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView()){ // type starts with binary -> remove all classes
+		Settings::instance().getValue("main.type", type);
+		if(!type.compare(0, 6, "binary") &&
+		   !CommandSettings::instance().get_onlyDataView()){ // type starts with binary -> remove all classes
 			if(m_storage.size() > 2){
 				Iterator it = m_storage.begin();
 				++it; ++it; // go to the third element!
@@ -308,17 +287,18 @@ void TotalStorage::readData(const int amountOfData){
 		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			m_totalSize += it->second.size();
 		}
-		if(Settings::getDirectBoolValue("TotalStorage.normalizeData") && !didNormalizeStep){
+		if(Settings::instance().getDirectBoolValue("TotalStorage.normalizeData") && !didNormalizeStep){
 			DataConverter::centerAndNormalizeData(m_storage, m_center, m_var);
 		}
 	}else{
 		std::string type = "";
-		Settings::getValue("main.type", type);
+		Settings::instance().getValue("main.type", type);
 		unsigned int usedClass = 0;
-		Settings::getValue("TotalStorage.folderTestNr", usedClass);
+		Settings::instance().getValue("TotalStorage.folderTestNr", usedClass);
 		unsigned int removeClass;
-		Settings::getValue("TotalStorage.excludeClass", removeClass);
-		if(!type.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView()){ // type starts with binary -> remove all classes
+		Settings::instance().getValue("TotalStorage.excludeClass", removeClass);
+		if(!type.compare(0, 6, "binary") &&
+		   !CommandSettings::instance().get_onlyDataView()){ // type starts with binary -> remove all classes
 			for(LabeledData* it : {&m_trainSet, &m_testSet}){
 				for(unsigned int i = 0; i < it->size(); ++i){
 					if(usedClass == (*it)[i]->getLabel()){
@@ -328,54 +308,56 @@ void TotalStorage::readData(const int amountOfData){
 					}
 				}
 			}
-			unsigned int amountOfDims = ClassKnowledge::amountOfDims();
-			ClassKnowledge::init();
-			ClassKnowledge::setAmountOfDims(amountOfDims);
-			ClassKnowledge::setNameFor(StringHelper::number2String(usedClass), 0);
-			ClassKnowledge::setNameFor("rest", 1);
-		}else if(ClassKnowledge::hasClassName(removeClass)){
+			unsigned int amountOfDims = ClassKnowledge::instance().instance().amountOfDims();
+			ClassKnowledge::instance().instance().init();
+			ClassKnowledge::instance().instance().setAmountOfDims(amountOfDims);
+			ClassKnowledge::instance().instance().setNameFor(StringHelper::number2String(usedClass), 0);
+			ClassKnowledge::instance().instance().setNameFor("rest", 1);
+		}else if(ClassKnowledge::instance().instance().hasClassName(removeClass)){
 			std::list<LabeledVectorX*> trainList;
-			m_removeFromTrainSet.reserve(m_trainSet.size() / ClassKnowledge::amountOfClasses() * 2);
+			m_removeFromTrainSet.reserve(
+					m_trainSet.size() / ClassKnowledge::instance().instance().amountOfClasses() * 2);
 			for(unsigned int i = 0; i < m_trainSet.size(); ++i){
 				if(m_trainSet[i]->getLabel() != removeClass){
-					trainList.push_back(m_trainSet[i]);
+					trainList.emplace_back(m_trainSet[i]);
 				}else{
-					m_removeFromTrainSet.push_back(m_trainSet[i]);
+					m_removeFromTrainSet.emplace_back(m_trainSet[i]);
 				}
 			}
 			m_trainSet.clear();
 			m_trainSet.reserve(trainList.size());
 			for(auto& trainVecs : trainList){
-				m_trainSet.push_back(trainVecs);
+				m_trainSet.emplace_back(trainVecs);
 			}
 			std::list<LabeledVectorX*> testList;
-			m_removeFromTestSet.reserve(m_testSet.size() / ClassKnowledge::amountOfClasses() * 2);
+			m_removeFromTestSet.reserve(m_testSet.size() / ClassKnowledge::instance().instance().amountOfClasses() * 2);
 			for(unsigned int i = 0; i < m_testSet.size(); ++i){
 				if(m_testSet[i]->getLabel() != removeClass){
-					testList.push_back(m_testSet[i]);
+					testList.emplace_back(m_testSet[i]);
 				}else{
-					m_removeFromTestSet.push_back(m_testSet[i]);
+					m_removeFromTestSet.emplace_back(m_testSet[i]);
 				}
 			}
 			m_testSet.clear();
 			m_testSet.reserve(testList.size());
 			for(auto it = testList.begin(); it != testList.end(); ++it){
-				m_testSet.push_back(*it);
+				m_testSet.emplace_back(*it);
 			}
 			printOnScreen("Removed class: " << removeClass << " from train: " << m_removeFromTrainSet.size() << ", from test: " << m_removeFromTestSet.size());
 		}
 		int amountOfSizeStep = 0;
-		Settings::getValue("TotalStorage.stepOverTrainingData", amountOfSizeStep);
+		Settings::instance().getValue("TotalStorage.stepOverTrainingData", amountOfSizeStep);
 		if(amountOfSizeStep > 1){
 			std::string mainType;
-			Settings::getValue("main.type", mainType);
+			Settings::instance().getValue("main.type", mainType);
 			std::list<LabeledVectorX*> trainList;
-			const bool useWholeClass = !mainType.compare(0, 6, "binary") && !CommandSettings::get_onlyDataView();
+			const bool useWholeClass =
+					!mainType.compare(0, 6, "binary") && !CommandSettings::instance().get_onlyDataView();
 			printOnScreen("Usewholeclass: " << useWholeClass);
 			if(useWholeClass){
 				for(unsigned int i = 0; i < m_trainSet.size(); ++i){
 					if(m_trainSet[i]->getLabel() == 0){
-						trainList.push_back(m_trainSet[i]);
+						trainList.emplace_back(m_trainSet[i]);
 					}
 				}
 			}
@@ -385,10 +367,10 @@ void TotalStorage::readData(const int amountOfData){
 				if(nextStopPoint == i){
 					if(useWholeClass){
 						if(m_trainSet[i]->getLabel() == 1){
-							trainList.push_back(m_trainSet[i]);
+							trainList.emplace_back(m_trainSet[i]);
 						}
 					}else{
-						trainList.push_back(m_trainSet[i]);
+						trainList.emplace_back(m_trainSet[i]);
 					}
 					nextStopPoint += uniformNr();
 				}else{
@@ -400,19 +382,15 @@ void TotalStorage::readData(const int amountOfData){
 			m_trainSet.clear();
 			m_trainSet.reserve(trainList.size());
 			for(auto it = trainList.begin(); it != trainList.end(); ++it){
-				m_trainSet.push_back(*it);
+				m_trainSet.emplace_back(*it);
 			}
 		}
 		m_totalSize = (unsigned int) (m_trainSet.size() + m_testSet.size());
-		if(Settings::getDirectBoolValue("TotalStorage.normalizeData") && !didNormalizeStep){
+		if(Settings::instance().getDirectBoolValue("TotalStorage.normalizeData") && !didNormalizeStep){
 			DataConverter::centerAndNormalizeData(m_trainSet, m_center, m_var); // first calc on training set
 			DataConverter::centerAndNormalizeData(m_testSet, m_center, m_var);  // apply to test set
 		}
 	}
-}
-
-LabeledVectorX* TotalStorage::getDefaultEle(){
-	return &m_defaultEle;
 }
 
 unsigned int TotalStorage::getTotalSize(){
@@ -420,29 +398,16 @@ unsigned int TotalStorage::getTotalSize(){
 }
 
 unsigned int TotalStorage::getAmountOfClass(){
-	if(m_mode == Mode::WHOLE){
+	if(m_dataSetMode == DataSetMode::WHOLE){
 		return (unsigned int) m_storage.size();
 	}else{
-		return ClassKnowledge::amountOfClasses();
-	}
-}
-
-void TotalStorage::getOnlineStorageCopy(OnlineStorage<LabeledVectorX*>& storage){
-	if(m_mode == Mode::WHOLE){
-		storage.resize(m_totalSize);
-		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-			for(LabeledDataConstIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
-				storage.append(*itData);
-			}
-		}
-	}else{
-		printErrorAndQuit("Not implemented for this mode!");
+		return ClassKnowledge::instance().instance().amountOfClasses();
 	}
 }
 
 void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& train,
 		OnlineStorage<LabeledVectorX*>& test, const int amountOfPointsForTraining){
-	if(m_mode == Mode::WHOLE){
+	if(m_dataSetMode == DataSetMode::WHOLE){
 		LabeledData forTraining;
 		LabeledData forTesting;
 		getLabeledDataCopyWithTest(forTraining, forTesting, amountOfPointsForTraining);
@@ -456,7 +421,7 @@ void TotalStorage::getOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& 
 
 void TotalStorage::getLabeledDataCopyWithTest(LabeledData& train, LabeledData& test,
 											  const int amountOfPointsForTraining){
-	if(m_mode == Mode::WHOLE){
+	if(m_dataSetMode == DataSetMode::WHOLE){
 		int minValue = amountOfPointsForTraining / getAmountOfClass();
 		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			minValue = std::min(static_cast<int>(it->second.size()), minValue);
@@ -465,9 +430,9 @@ void TotalStorage::getLabeledDataCopyWithTest(LabeledData& train, LabeledData& t
 			int counter = 0;
 			for(LabeledDataConstIterator itData = it->second.begin(); itData != it->second.end(); ++itData){
 				if(counter < minValue){
-					train.push_back(*itData);
+					train.emplace_back(*itData);
 				}else{
-					test.push_back(*itData);
+					test.emplace_back(*itData);
 				}
 				++counter;
 			}
@@ -482,7 +447,7 @@ void TotalStorage::getLabeledDataCopyWithTest(LabeledData& train, LabeledData& t
 
 void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<LabeledVectorX*>& train,
 		OnlineStorage<LabeledVectorX*>& test){
-	if(m_mode == Mode::WHOLE){
+	if(m_dataSetMode == DataSetMode::WHOLE){
 		printErrorAndQuit("Not implemented yet!");
 	}else{
 		train.append(m_removeFromTrainSet);
@@ -491,12 +456,12 @@ void TotalStorage::getRemovedOnlineStorageCopyWithTest(OnlineStorage<LabeledVect
 }
 
 void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<LabeledVectorX*> >& trains, OnlineStorage<LabeledVectorX*>& test){
-	if(m_mode != Mode::WHOLE){
-		if(trains.size() != 0){
+	if(m_dataSetMode != DataSetMode::WHOLE){
+		if(!trains.empty()){
 			auto amountOfSplits = (unsigned int)(trains.size());
 			std::vector<LabeledData> forTrainings(amountOfSplits);
 			for(unsigned int i = 0; i < m_trainSet.size(); ++i){
-				forTrainings[i % amountOfSplits].push_back(m_trainSet[i]);
+				forTrainings[i % amountOfSplits].emplace_back(m_trainSet[i]);
 			}
 			for(unsigned int i = 0; i < amountOfSplits; ++i){
 				printOnScreen("Size of " << i << ": " << forTrainings[i].size());
@@ -511,25 +476,13 @@ void TotalStorage::getOnlineStorageCopySplitsWithTest(std::vector<OnlineStorage<
 	}
 }
 
-unsigned int TotalStorage::getSize(unsigned int classNr){
-	if(m_mode == Mode::WHOLE){
-		Iterator it = m_storage.find(ClassKnowledge::getNameFor(classNr));
-		if(it != m_storage.end()){
-			return (unsigned int) it->second.size();
-		}
-	}else{
-		printErrorAndQuit("Not implemented for this mode");
-	}
-	return 0;
-}
-
 unsigned int TotalStorage::getSmallestClassSize(){
-	if(m_mode == Mode::WHOLE){
+	if(m_dataSetMode == DataSetMode::WHOLE){
 		unsigned int min = INT_MAX;
 		for(ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
 			min = std::min(min, (unsigned int) it->second.size());
 		}
-		return m_storage.size() != 0 ? min : 0;
+		return !m_storage.empty() ? min : 0;
 	}else{
 		const auto amountOfClasses = getAmountOfClass();
 		if(amountOfClasses > 0){
@@ -543,7 +496,7 @@ unsigned int TotalStorage::getSmallestClassSize(){
 }
 
 LabeledData* TotalStorage::getValidationSet(){
-	if(m_validationSet.size() > 0){
+	if(!m_validationSet.empty()){
 		return &m_validationSet;
 	}else{
 		return nullptr;

@@ -6,7 +6,8 @@ coffeemug = "53,...,60"
 stapler = "266,...,273"
 flashlight = "72,...,76"
 #keyboard = "152,...,156"
-sets = [] #[("apple", apple),("banana",banana),("coffeemug",coffeemug), ("stapler",stapler),("flashlight",flashlight)]
+sets = [("apple", apple), ("banana", banana), ("coffeemug", coffeemug), ("stapler", stapler),
+		("flashlight", flashlight)]
 
 def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
     text = "# in python generated test settings file \n"
@@ -34,10 +35,16 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
     text += "train splitTrainSet[" + str(0) + "] " + startCondition + " with only 6 gb\n"
     text += "test testSetExclude\n"
     text += "test testSet \n"
+	text += "for i in {0,...,80} \n"
+	text += "\ttrain splitTrainSet[$i] " + timeFrameUpdate + " with only 6 gb\n"
+	text += "test testSetExclude\n"
+	text += "test testSet\n"
+	text += "endfor\n"
+
     tempSetNr = 0
     startPhase = 15
-    for i in range(1, amountOfSplits):
-        if i >= startPhase:
+	for i in range(1, 1):  # amountOfSplits):
+		if i >= startPhase and False:
             nr = min(len(sets) - 1, int((i - startPhase) / widthOfUpdate))
             tempSetNr += 1
             text += "combine " + sets[nr][0] + "SplitSet[" + str(i % widthOfUpdate) + "] with splitTrainSet[" + str(i) \
@@ -50,7 +57,7 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
 
             text += "define actualSet" + str(i) + " from tempSet" + str(tempSetNr) + "\n"
         else:
-            text += "define actualSet" + str(i) + " from splitTrainSet[" + str(i) + "]\n"
+			pass  # text += "define actualSet" + str(i) + " from splitTrainSet[" + str(i) + "]\n"
 
         text += "train actualSet" + str(i) + " " + timeFrameUpdate + " with only 6 gb\n"
         text += "test testSetExclude\n"
@@ -65,5 +72,5 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
     f.close()
 
 
-amountOfSplits = 3 #80
-generateTestSettings(amountOfSplits, "until 20 trees", "until 20 trees")
+amountOfSplits = 80
+generateTestSettings(amountOfSplits, "for 2 m", "for 42 s")

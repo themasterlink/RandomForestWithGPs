@@ -27,16 +27,17 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
 		m_savedAnyTreesToDisk(false),
 		m_amountOfTrainedTrees(0),
 		m_usedMemory(0),
-		m_useRealOnlineUpdate(Settings::getDirectBoolValue("OnlineRandomForest.Tree.performRealOnlineUpdate")),
+		m_useRealOnlineUpdate(
+				Settings::instance().getDirectBoolValue("OnlineRandomForest.Tree.performRealOnlineUpdate")),
 		m_read(std::make_shared<Mutex>()),
 		m_append(std::make_shared<Mutex>()),
 		m_mutexForCounter(std::make_shared<Mutex>()),
 		m_mutexForTrees(std::make_shared<Mutex>()){
 	storage.attach(this);
-	Settings::getValue("OnlineRandomForest.factorAmountOfUsedDims", m_factorForUsedDims);
-	Settings::getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
-	Settings::getValue("OnlineRandomForest.useBigDynamicDecisionTrees", m_useBigDynamicDecisionTrees);
-	Settings::getValue("OnlineRandomForest.amountOfPointsCheckedPerSplit", m_amountOfPointsCheckedPerSplit);
+	Settings::instance().getValue("OnlineRandomForest.factorAmountOfUsedDims", m_factorForUsedDims);
+	Settings::instance().getValue("OnlineRandomForest.amountOfPointsUntilRetrain", m_amountOfPointsUntilRetrain);
+	Settings::instance().getValue("OnlineRandomForest.useBigDynamicDecisionTrees", m_useBigDynamicDecisionTrees);
+	Settings::instance().getValue("OnlineRandomForest.amountOfPointsCheckedPerSplit", m_amountOfPointsCheckedPerSplit);
 	readTrainingsModeFromSetting();
 }
 
@@ -45,7 +46,7 @@ OnlineRandomForest::~OnlineRandomForest(){
 
 void OnlineRandomForest::trainInParallel(SharedPtr<RandomNumberGeneratorForDT> generator, SharedPtr<InformationPackage> package, const unsigned int amountOfTrees,
 		SharedPtr<std::vector<std::vector<unsigned int> > > counterForClasses, SharedPtr<Mutex> mutexForCounter){
-	ThreadMaster::appendThreadToList(package.get());
+	ThreadMaster::instance().appendThreadToList(package.get());
 	package->wait();
 	printInPackageOnScreen(package, "Started training!");
 //	printInPackageOnScreen(package, "Amount of shared packages: " << package.use_count());
@@ -128,20 +129,21 @@ void OnlineRandomForest::train(){
 	}
 	std::vector<int> values(m_amountOfClasses, 0);
 //	const int seed = 0;
-	bool useFixedValuesForMinMaxUsedSplits = Settings::getDirectBoolValue("MinMaxUsedSplits.useFixedValuesForMinMaxUsedSplits");
+	bool useFixedValuesForMinMaxUsedSplits = Settings::instance().getDirectBoolValue(
+			"MinMaxUsedSplits.useFixedValuesForMinMaxUsedSplits");
 	Vector2i minMaxUsedSplits;
 	if(useFixedValuesForMinMaxUsedSplits ){
 		int minVal = 0, maxVal = 0;
-		Settings::getValue("MinMaxUsedSplits.minValue", minVal);
-		Settings::getValue("MinMaxUsedSplits.maxValue", maxVal);
+		Settings::instance().getValue("MinMaxUsedSplits.minValue", minVal);
+		Settings::instance().getValue("MinMaxUsedSplits.maxValue", maxVal);
 		minMaxUsedSplits << minVal, maxVal;
 	}else{
 		Real minVal = (Real) 0, maxVal = (Real) 0;
-		Settings::getValue("MinMaxUsedSplits.minValueFractionDependsOnDataSize", minVal);
-		Settings::getValue("MinMaxUsedSplits.maxValueFractionDependsOnDataSize", maxVal);
+		Settings::instance().getValue("MinMaxUsedSplits.minValueFractionDependsOnDataSize", minVal);
+		Settings::instance().getValue("MinMaxUsedSplits.maxValueFractionDependsOnDataSize", maxVal);
 		minMaxUsedSplits << (int) (minVal * m_storage.size()),  (int) (maxVal * m_storage.size());
 	}
-	const unsigned int amountOfThreads = ThreadMaster::getAmountOfThreads();
+	const unsigned int amountOfThreads = ThreadMaster::instance().getAmountOfThreads();
 	m_generators.resize(amountOfThreads);
 	m_baggingInformation = std::make_unique<RandomNumberGeneratorForDT::BaggingInformation>(); // gets all the information it needs in the constructor
 	for(unsigned int i = 0; i < amountOfThreads; ++i){
@@ -152,7 +154,8 @@ void OnlineRandomForest::train(){
 	}
 	const unsigned int usedAmountOfPackages = std::min(amountOfThreads, m_trainingsConfig.isTreeAmountMode() ? m_trainingsConfig.m_amountOfTrees : amountOfThreads);
 	std::vector<SharedPtr<InformationPackage> > packages(usedAmountOfPackages);
-	if(m_maxDepth > 7 && m_useBigDynamicDecisionTrees && Settings::getDirectBoolValue("OnlineRandomForest.determineBestLayerAmount")){
+	if(m_maxDepth > 7 && m_useBigDynamicDecisionTrees &&
+	   Settings::instance().getDirectBoolValue("OnlineRandomForest.determineBestLayerAmount")){
 		boost::thread_group layerGroup;
 		auto layerValues = std::make_shared<std::list<std::pair<unsigned int, unsigned int> > >(); // from 2 to
 		const auto start = (unsigned int) std::max(2, (int)std::ceil(m_maxDepth / (Real) 12)); // at least 2 layers, but one layer can not be bigger than 20
@@ -162,7 +165,7 @@ void OnlineRandomForest::train(){
 				printOnScreen("Try: " << i << ", " << j);
 			}
 		}
-//		layerValues.push_back(4);
+//		layerValues.emplace_back(4);
 		const Real secondsSpendPerSplit = 180;
 		auto bestLayerSplit = std::make_shared<std::pair<int, int> >(-1, -1);
 		auto bestCorrectness = std::make_shared<Real>((Real) 0);
@@ -176,12 +179,12 @@ void OnlineRandomForest::train(){
 			printOnScreen("Best amount of layers is: " << bestLayerSplit->first << ", " << bestLayerSplit->second << " with: " << *bestCorrectness << " %%");
 			m_amountOfUsedLayer = *bestLayerSplit;
 		}else{
-			Settings::getValue("OnlineRandomForest.layerAmountOfBigDDT", m_amountOfUsedLayer.first);
+			Settings::instance().getValue("OnlineRandomForest.layerAmountOfBigDDT", m_amountOfUsedLayer.first);
 			m_amountOfUsedLayer.second = 2; // default
 		}
 	}else if(m_useBigDynamicDecisionTrees && m_maxDepth > 5){
-		Settings::getValue("OnlineRandomForest.layerAmountOfBigDDT", m_amountOfUsedLayer.first);
-		Settings::getValue("OnlineRandomForest.layerFastAmountOfBigDDT", m_amountOfUsedLayer.second);
+		Settings::instance().getValue("OnlineRandomForest.layerAmountOfBigDDT", m_amountOfUsedLayer.first);
+		Settings::instance().getValue("OnlineRandomForest.layerFastAmountOfBigDDT", m_amountOfUsedLayer.second);
 	}else{
 		m_useBigDynamicDecisionTrees = false;
 	}
@@ -189,7 +192,7 @@ void OnlineRandomForest::train(){
 		printOnScreen("First layer amount: " << m_amountOfUsedLayer.first << ", amount of second layers: " << m_amountOfUsedLayer.second);
 	}
 	SharedPtr<std::vector<std::vector<unsigned int> > > counterForClasses;
-	if(Settings::getDirectBoolValue("OnlineRandomForest.printErrorForTraining")){
+	if(Settings::instance().getDirectBoolValue("OnlineRandomForest.printErrorForTraining")){
 		counterForClasses = std::make_shared<std::vector<std::vector<unsigned int> > >(m_storage.size(), std::vector<unsigned int>(amountOfClasses(), 0));
 	}
 	const Real trainingsTimeForPackages = m_trainingsConfig.isTimeMode() ? m_trainingsConfig.m_seconds : 0;
@@ -216,7 +219,7 @@ void OnlineRandomForest::train(){
 	}
 //	const unsigned long maxTime = 86400;// more than a day
 //	MemoryType maxAmountOfUsedMemory;
-//	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
+//	Settings::instance().getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
 
 //	if(m_desiredAmountOfTrees == 0){
 //		if(trainingsTime > maxTime){
@@ -257,7 +260,7 @@ void OnlineRandomForest::train(){
 				}
 			}
 			m_mutexForCounter->unlock();
-			points.push_back(correct / (Real) m_storage.size() * (Real) 100.);
+			points.emplace_back(correct / (Real) m_storage.size() * (Real) 100.);
 		}
 		sleepFor(0.05);
 	}
@@ -279,7 +282,7 @@ void OnlineRandomForest::train(){
 		printError("The type is not defined here!");
 	}
 	for(auto& package : packages){
-		ThreadMaster::threadHasFinished(package.get( ));
+		ThreadMaster::instance().threadHasFinished(package.get());
 	}
 	if(counterForClasses && points.size() > 0){
 		DataWriterForVisu::writeSvg("correct.svg", points, true);
@@ -296,7 +299,7 @@ void OnlineRandomForest::writeTreesToDisk(const unsigned int amountOfTrees) cons
 		// two different files are needed
 		const std::string fileFirst = m_folderForSavedTrees + "trees_" + StringHelper::number2String(m_savedToDiskTreesFilePaths.size()) + "_firstHalf.binary";
 		const std::string fileSecond = m_folderForSavedTrees + "trees_" + StringHelper::number2String(m_savedToDiskTreesFilePaths.size()) + "_secondHalf.binary";
-		m_savedToDiskTreesFilePaths.push_back(std::pair<std::string, std::string>(fileFirst, fileSecond));
+		m_savedToDiskTreesFilePaths.emplace_back(fileFirst, fileSecond);
 		std::string file = fileFirst;
 		unsigned int start = 0;
 		unsigned int end = amountOfTrees / 2;
@@ -460,7 +463,8 @@ bool OnlineRandomForest::update(){
 														   << list->rbegin()->second << ", median: " << it->second
 														   << ", avg: " << avg.mean() << ", sd: " << standartDeviation);
 		StopWatch swWhole;
-		const auto nrOfParallel = (unsigned int) std::min((int) ThreadMaster::getAmountOfThreads(), (int) m_trees.size());
+		const auto nrOfParallel = (unsigned int) std::min((int) ThreadMaster::instance().getAmountOfThreads(),
+														  (int) m_trees.size());
 		const Real trainingsTimeForPackages = m_trainingsConfig.isTimeMode() ? m_trainingsConfig.m_seconds : 0;
 		auto counter = std::make_shared<unsigned int>(0u);
 		const auto amountOfTotalElements = m_trainingsConfig.isTreeAmountMode() ? m_trainingsConfig.m_amountOfTrees
@@ -528,12 +532,12 @@ bool OnlineRandomForest::update(){
 		}
 		printOnScreen("Updated " << *counter << " trees");
 		for(auto& package : packages){
-			ThreadMaster::threadHasFinished(package.get());
+			ThreadMaster::instance().threadHasFinished(package.get());
 		}
 		m_trees.clear(); // the trees are not longer valid -> so removing the pointer is no problem
 		for(auto& ele : *list){
 			if(ele.first != nullptr){
-				m_trees.push_back(ele.first);
+				m_trees.emplace_back(ele.first);
 			}else{
 				printError("A tree got null!");
 			}
@@ -544,7 +548,8 @@ bool OnlineRandomForest::update(){
 }
 
 void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list){
-	const unsigned int nrOfParallel = std::max(1u, std::min(ThreadMaster::getAmountOfThreads(), (unsigned int) m_trees.size() - 8));
+	const unsigned int nrOfParallel = std::max(1u, std::min(ThreadMaster::instance().getAmountOfThreads(),
+															(unsigned int) m_trees.size() - 8));
 	boost::thread_group group;
 	DecisionTreesContainer copyOfTrees;
 	std::vector<SharedPtr<InformationPackage> > packages(nrOfParallel);
@@ -558,7 +563,7 @@ void OnlineRandomForest::sortTreesAfterPerformance(SortedDecisionTreeList& list)
 	}
 	group.join_all();
 	for(unsigned int i = 0; i < nrOfParallel; ++i){
-		ThreadMaster::threadHasFinished(packages[i].get());
+		ThreadMaster::instance().threadHasFinished(packages[i].get());
 	}
 }
 
@@ -585,10 +590,10 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 			}
 			size = m_storage.size() - startPos;
 		}
-		list->push_back(SortedDecisionTreePair(*m_trees.begin(), correct / (Real) size * (Real) 100.0));
+		list->emplace_back(*m_trees.begin(), correct / (Real) size * (Real) 100.0);
 		return;
 	}
-	ThreadMaster::appendThreadToList(package.get());
+	ThreadMaster::instance().appendThreadToList(package.get());
 	package->wait();
 	SortedDecisionTreeList ownList;
 
@@ -601,7 +606,7 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 		readMutex->lock();
 		for(unsigned int i = 0; i < usedTrees; ++i){
 			if(trees->size() > 0){
-				ownList.push_back(SortedDecisionTreePair(trees->back(), 0));
+				ownList.emplace_back(trees->back(), 0);
 				trees->pop_back();
 			}
 		}
@@ -636,7 +641,7 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 		SortedDecisionTreeList sortedList;
 		for(auto it = ownList.begin(); it != ownList.end(); ++it){
 			if(sortedList.size() == 0){
-				sortedList.push_back(*it);
+				sortedList.emplace_back(*it);
 			}else{
 				bool append = false;
 				for(auto itSort = sortedList.begin(); itSort != sortedList.end(); ++itSort){
@@ -647,7 +652,7 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 					}
 				}
 				if(!append){
-					sortedList.push_back(*it);
+					sortedList.emplace_back(*it);
 				}
 			}
 		}
@@ -673,7 +678,7 @@ void OnlineRandomForest::updateInParallel(SharedPtr<SortedDecisionTreeList> list
 		return;
 	}
 	package->setStandartInformation("Orf updating thread Nr: " + StringHelper::number2String(threadNr));
-	ThreadMaster::appendThreadToList(package.get());
+	ThreadMaster::instance().appendThreadToList(package.get());
 	package->wait();
 	SortedDecisionTreePair pair;
 	DecisionTreePointer switcher;
@@ -745,7 +750,7 @@ void OnlineRandomForest::internalAppendToSortedList(SortedDecisionTreeList* list
 		printError("Not all trees used!");
 		return;
 	}
-	if(list->size() == 0){
+	if(list->empty()){
 		list->emplace_back(pTree, correctVal);
 	}else{
 		bool added = false;
@@ -773,7 +778,7 @@ void OnlineRandomForest::mergeSortedLists(SortedDecisionTreeList* aimList, Sorte
 		++it;
 	}
 	while(itOther != other->end()){
-		aimList->push_back(*itOther);
+		aimList->emplace_back(*itOther);
 		++itOther;
 	}
 }
@@ -788,8 +793,9 @@ OnlineRandomForest::DecisionTreeIterator OnlineRandomForest::findWorstPerforming
 	for(DecisionTreeIterator itTree = m_trees.begin(); itTree != m_trees.end(); ++itTree){
 		int correct = 0;
 		DecisionTreePointer tree = *itTree;
-		for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-			LabeledVectorX& point = *(*it);
+		for(unsigned int i = 0; i < m_storage.size(); ++i){
+//		for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
+			auto& point = *(m_storage[i]);
 			if(point.getLabel() == tree->predict(point)){
 				++correct;
 			}
@@ -874,7 +880,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 	}else{
 		labels.resize(points.size());
 		boost::thread_group group;
-		const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
+		const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			auto start = (const int) (i / (Real) nrOfParallel * points.size());
@@ -908,7 +914,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels) 
 	}else{
 		labels.resize(points.size());
 		boost::thread_group group;
-		const unsigned int nrOfParallel = ThreadMaster::getAmountOfThreads();
+		const unsigned int nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			auto start = (const int) (i / (Real) nrOfParallel * points.size());
@@ -940,7 +946,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::ve
 	probabilities.resize(points.size());
 	if(m_savedAnyTreesToDisk){
 		boost::thread_group group;
-		const unsigned int nrOfParallel = ThreadMaster::getAmountOfThreads();
+		const unsigned int nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 		std::vector<std::vector<std::vector<Real> > >* probsForThreads = new std::vector<std::vector<std::vector<Real> > >(nrOfParallel);
 		unsigned int batchNr = 0;
 		if(m_trees.size() == 0 && m_savedAnyTreesToDisk && batchNr < m_savedToDiskTreesFilePaths.size()){
@@ -978,7 +984,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::ve
 		SAVE_DELETE(probsForThreads);
 	}else{
 		boost::thread_group group;
-		const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
+		const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			const int start = (int) (i / (Real) nrOfParallel * points.size());
@@ -1010,7 +1016,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, 
 	probabilities.resize(points.size());
 	if(m_savedAnyTreesToDisk){
 		boost::thread_group group;
-		const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
+		const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 		auto probsForThreads = new std::vector<std::vector<std::vector<Real> > >(nrOfParallel);
 		unsigned int batchNr = 0;
 		if(m_trees.size() == 0 && m_savedAnyTreesToDisk && batchNr < m_savedToDiskTreesFilePaths.size()){
@@ -1048,7 +1054,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, 
 		SAVE_DELETE(probsForThreads);
 	}else{
 		boost::thread_group group;
-		const auto nrOfParallel = ThreadMaster::getAmountOfThreads();
+		const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 		std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
 			const int start = (int) (i / (Real) nrOfParallel * points.size());
@@ -1163,7 +1169,7 @@ void OnlineRandomForest::predictClassDataProbInParallel(const LabeledData& point
 
 void OnlineRandomForest::predictDataProbInParallelStartEnd(const Data& points, Labels* labels, std::vector< std::vector<Real> >* probabilities, InformationPackage* package, const unsigned int start, const unsigned int end) const{
 	if(m_firstTrainingDone){
-		ThreadMaster::appendThreadToList(package);
+		ThreadMaster::instance().appendThreadToList(package);
 		package->wait();
 		printInPackageOnScreen(package, "Done: " << 0 << " %%");
 		for(unsigned int i = start; i < end; ++i){
@@ -1190,7 +1196,7 @@ void OnlineRandomForest::predictDataProbInParallelStartEnd(const Data& points, L
 
 void OnlineRandomForest::predictClassDataProbInParallelStartEnd(const LabeledData& points, Labels* labels, InformationPackage* package, std::vector< std::vector<Real> >* probabilities, const unsigned int start, const unsigned int end) const{
 	if(m_firstTrainingDone){
-		ThreadMaster::appendThreadToList(package);
+		ThreadMaster::instance().appendThreadToList(package);
 		package->wait();
 		printInPackageOnScreen(package, "Done: " << 0 << " %%");
 		for(unsigned int i = start; i < end; ++i){
@@ -1216,7 +1222,7 @@ void OnlineRandomForest::predictClassDataProbInParallelStartEnd(const LabeledDat
 }
 
 void OnlineRandomForest::predictDataInParallel(const Data& points, Labels* labels, InformationPackage* package, const unsigned int start, const unsigned int end) const{
-	ThreadMaster::appendThreadToList(package);
+	ThreadMaster::instance().appendThreadToList(package);
 	package->wait();
 	printInPackageOnScreen(package, "Done: " << 0 << " %%");
 	for(unsigned int i = start; i < end; ++i){
@@ -1227,7 +1233,7 @@ void OnlineRandomForest::predictDataInParallel(const Data& points, Labels* label
 }
 
 void OnlineRandomForest::predictClassDataInParallel(const LabeledData& points, Labels* labels, InformationPackage* package, const unsigned int start, const unsigned int end) const{
-	ThreadMaster::appendThreadToList(package);
+	ThreadMaster::instance().appendThreadToList(package);
 	package->wait();
 	printInPackageOnScreen(package, "Done: " << 0 << " %%");
 	for(unsigned int i = start; i < end; ++i){
@@ -1239,8 +1245,9 @@ void OnlineRandomForest::predictClassDataInParallel(const LabeledData& points, L
 
 void OnlineRandomForest::getLeafNrFor(std::vector<int>& leafNrs){
 	leafNrs = std::vector<int>(m_amountOfClasses, 0);
-	for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-		leafNrs[predict(**it)] += 1;
+	for(unsigned int i = 0; i < m_storage.size(); ++i){
+//	for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
+		leafNrs[predict(*m_storage[i])] += 1;
 	}
 }
 
@@ -1319,10 +1326,10 @@ void OnlineRandomForest::readTrainingsModeFromSetting(){
 	m_trainingsConfig.m_memory = 0;
 	m_trainingsConfig.m_seconds = 0;
 	MemoryType maxAmountOfUsedMemory;
-	Settings::getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
+	Settings::instance().getValue("OnlineRandomForest.maxAmountOfUsedMemory", maxAmountOfUsedMemory);
 	unsigned int amountOfTrees;
-	Settings::getValue("OnlineRandomForest.amountOfTrainedTrees", amountOfTrees);
-	const Real trainingsTime = CommandSettings::get_samplingAndTraining();
+	Settings::instance().getValue("OnlineRandomForest.amountOfTrainedTrees", amountOfTrees);
+	const Real trainingsTime = CommandSettings::instance().get_samplingAndTraining();
 	if(amountOfTrees == 0){
 		if(trainingsTime > 0 && maxAmountOfUsedMemory == 0){
 			m_trainingsConfig.m_mode = TrainingsConfig::TrainingsMode::TIME;

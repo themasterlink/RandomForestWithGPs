@@ -34,7 +34,7 @@ void testIvm(IVMMultiBinary& ivms, const LabeledData& data){
 	Labels labels;
 	std::vector< std::vector<Real> > probs;
 	ivms.predictData(data, labels, probs);
-	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	const unsigned int amountOfClasses = ClassKnowledge::instance().amountOfClasses();
 	const Real logBase = logReal(amountOfClasses);
 	AvgNumber oc, uc;
 	AvgNumber ocBVS, ucBVS;
@@ -82,7 +82,7 @@ void testIvm(IVMMultiBinary& ivms, const LabeledData& data){
 		}
 		probs.push_back(prob);*/
 	}
-//	if(amountOfTestPoints > 0 && CommandSettings::get_plotHistos()){
+//	if(amountOfTestPoints > 0 && CommandSettings::instance().get_plotHistos()){
 //		DataWriterForVisu::writeHisto("histo.svg", probs, 14, 0, 1);
 //		openFileInViewer("histo.svg");
 //	}
@@ -102,7 +102,8 @@ void testIvm(IVMMultiBinary& ivms, const LabeledData& data){
 //	std::cout << ivm.getKernel().prettyString() << std::endl;
 //	std::cout << RESET;
 	std::fstream output;
-	output.open(Logger::getActDirectory() + "resultForEachPoint.csv", std::fstream::out | std::fstream::trunc);
+	output.open(Logger::instance().getActDirectory() + "resultForEachPoint.csv",
+				std::fstream::out | std::fstream::trunc);
 	std::vector<int> classCounter(ivms.amountOfClasses(),0);
 	if(output.is_open()){
 		output << "real;predicted";
@@ -123,7 +124,7 @@ void testIvm(IVMMultiBinary& ivms, const LabeledData& data){
 	}
 	output.close();
 	std::string out = "";
-	std::ifstream input(Logger::getActDirectory() + "resultForEachPoint.csv");
+	std::ifstream input(Logger::instance().getActDirectory() + "resultForEachPoint.csv");
 	if(input.is_open()){
 		std::string line;
 		while(std::getline(input, line)){
@@ -136,7 +137,8 @@ void testIvm(IVMMultiBinary& ivms, const LabeledData& data){
 		}
 	}
 	std::fstream output2;
-	output2.open(Logger::getActDirectory() + "resultForEachPoint.csv", std::fstream::out | std::fstream::trunc);
+	output2.open(Logger::instance().getActDirectory() + "resultForEachPoint.csv",
+				 std::fstream::out | std::fstream::trunc);
 	output2.write(out.c_str(), out.length());
 	output2.close();
 }
@@ -148,12 +150,12 @@ void executeForMutliClassIVM(){
 	printOnScreen("Finish reading");
 
 	bool doEpUpdate;
-	Settings::getValue("IVM.doEpUpdate", doEpUpdate);
+	Settings::instance().getValue("IVM.doEpUpdate", doEpUpdate);
 	int number;
-	Settings::getValue("IVM.nrOfInducingPoints", number);
+	Settings::instance().getValue("IVM.nrOfInducingPoints", number);
 	IVMMultiBinary ivms(train, number, doEpUpdate);
 	// starts the training by its own
-	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
+	TotalStorage::instance().getOnlineStorageCopyWithTest(train, test, trainAmount);
 	printOnScreen("Finish training");
 
 	printOnScreen("On " << train.storage().size() << " points from trainings data:");
@@ -161,7 +163,8 @@ void executeForMutliClassIVM(){
 	printOnScreen("On " << test.storage().size() << " points from real test data:");
 	testIvm(ivms, test.storage());
 
-	if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+	if(CommandSettings::instance().get_useFakeData() &&
+	   (CommandSettings::instance().get_visuRes() > 0 || CommandSettings::instance().get_visuResSimple() > 0)){
 		DataWriterForVisu::writeSvg("ivms.svg", &ivms, train.storage());
 		openFileInViewer("ivms.svg");
 //		DataWriterForVisu::writeImg("ivms.png", &ivms, train.storage());

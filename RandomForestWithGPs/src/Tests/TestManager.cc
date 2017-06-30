@@ -11,9 +11,8 @@
 // have to be defined before the test Information is defined
 const std::string TestInformation::trainSettingName("TRAIN_SETTING");
 const std::string TestInformation::testSettingName("TEST_SETTING");
-std::string TestManager::m_filePath("");
 
-TestInformation TestManager::m_testInformation;
+TestManager::TestManager(): m_filePath(""){};
 
 void TestManager::init(){;
 	std::fstream file(m_filePath,std::ios::in);
@@ -58,6 +57,10 @@ TestMode TestManager::findMode(std::string &line){
 			return TestMode::UPDATE;
 		}else if(firstWord == "combine"){
 			return TestMode::COMBINE;
+		}else if(firstWord == "endfor"){
+			return TestMode::END_FOR;
+		}else if(firstWord == "for"){
+			return TestMode::FOR;
 		}
 	}
 	return TestMode::UNDEFINED;
@@ -65,68 +68,100 @@ TestMode TestManager::findMode(std::string &line){
 
 int TestManager::readAll(){
 	int firstPoints; // all points
-	Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
-	const Real share = Settings::getDirectRealValue("TotalStorage.shareForTraining");
+	Settings::instance().getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
+	const Real share = Settings::instance().getDirectRealValue("TotalStorage.shareForTraining");
 	firstPoints /= share;
 	printOnScreen("Read " << firstPoints << " points per class");
-	TotalStorage::readData(firstPoints);
-	printOnScreen("TotalStorage::getSmallestClassSize(): " << TotalStorage::getSmallestClassSize() << " with " << TotalStorage::getAmountOfClass() << " classes");
-	const auto trainAmount = (int) (share * (std::min((int) TotalStorage::getSmallestClassSize(), firstPoints) * (Real) TotalStorage::getAmountOfClass()));
+	TotalStorage::instance().readData(firstPoints);
+	printOnScreen("TotalStorage::instance().getSmallestClassSize(): " << TotalStorage::instance().getSmallestClassSize()
+																	  << " with "
+																	  << TotalStorage::instance().getAmountOfClass()
+																	  << " classes");
+	const auto trainAmount = (int) (share *
+									(std::min((int) TotalStorage::instance().getSmallestClassSize(), firstPoints) *
+									 (Real) TotalStorage::instance().getAmountOfClass()));
 	return trainAmount;
 }
 
 void TestManager::run(){
 	OnlineStorage<LabeledVectorX* > train;
 	unsigned int height;
-	Settings::getValue("OnlineRandomForest.Tree.height", height);
+	Settings::instance().getValue("OnlineRandomForest.Tree.height", height);
 	UniquePtr<OnlineRandomForest> orf;
 	unsigned int i = 0;
+	auto lastInfo = m_testInformation.getInstruction(i);
 	while(true){
 		auto testInfo = m_testInformation.getInstruction(i);
 		if(testInfo.m_mode != TestMode::UNDEFINED){
-			auto usedDefinition = m_testInformation.getDefinition(testInfo.m_varName);
-			if(usedDefinition.getVarName() != ""){
-				if(testInfo.m_mode == TestMode::LOAD){
-					readAll(); // TODO read TRAIN or TEST not both
-					orf = std::make_unique<OnlineRandomForest>(train, height, (int) TotalStorage::getAmountOfClass());
-					orf->setValidationSet(TotalStorage::getValidationSet());
-					if(TotalStorage::getValidationSet()){
-						OnlineStorage<LabeledVectorX*> test;
-						test.appendUnique(*TotalStorage::getValidationSet());
-						printOnScreen("Unique elements in validation set are: " << test.size());
+			if(testInfo.m_scope != nullptr){
+				testInfo.m_scope->replaceScopeVariables(testInfo.m_varName);
+			}
+			if(testInfo.m_mode != TestMode::FOR){
+				if(testInfo.m_mode == TestMode::END_FOR){
+					if(lastInfo.m_scope != nullptr){
+						auto& forScope = *lastInfo.m_scope;
+						++forScope.m_currentValue;
+						if(forScope.m_currentValue < forScope.m_range.size()){
+							i = m_testInformation.getInstructionNr(
+									forScope); // find number of for, at the end + 1 to get to the next
+						}
+					}else{
+						printErrorAndQuit("This can never happen!");
 					}
-				}else if(testInfo.m_mode == TestMode::TRAIN){
-					auto data = getAllPointsFor(testInfo.m_varName);
-					OnlineRandomForest::TrainingsConfig config;
-					using Mode = TestInformation::Instruction::ExitMode;
-					config.m_mode = testInfo.m_exitMode;
-					if(config.isTimeMode()){
-						printOnScreen("Time constraint: " << TimeFrame(testInfo.m_seconds));
-						config.m_seconds = testInfo.m_seconds;
-					}else if(config.isTreeAmountMode()){
-						printOnScreen("Amount of tree constraint: " << testInfo.m_amountOfTrees);
-						config.m_amountOfTrees = testInfo.m_amountOfTrees;
+				}else{
+					auto usedDefinition = m_testInformation.getDefinition(testInfo.m_varName, testInfo.m_scope);
+					if(usedDefinition.getVarName() != ""){
+						if(testInfo.m_mode == TestMode::LOAD){
+							readAll(); // TODO read TRAIN or TEST not both
+							orf = std::make_unique<OnlineRandomForest>(train, height,
+																	   (int) TotalStorage::instance().getAmountOfClass());
+							orf->setValidationSet(TotalStorage::instance().getValidationSet());
+//							if(TotalStorage::instance().getValidationSet()){
+//								OnlineStorage<LabeledVectorX*> test;
+//								test.appendUnique(*TotalStorage::instance().getValidationSet());
+//								printOnScreen("Unique elements in validation set are: " << test.size());
+//							}
+						}else if(testInfo.m_mode == TestMode::TRAIN){
+							auto data = getAllPointsFor(testInfo.m_varName, testInfo.m_scope);
+							OnlineRandomForest::TrainingsConfig config;
+							using Mode = TestInformation::Instruction::ExitMode;
+							config.m_mode = testInfo.m_exitMode;
+							if(config.isTimeMode()){
+								printOnScreen("Time constraint: " << TimeFrame(testInfo.m_seconds));
+								config.m_seconds = testInfo.m_seconds;
+							}else if(config.isTreeAmountMode()){
+								printOnScreen("Amount of tree constraint: " << testInfo.m_amountOfTrees);
+								config.m_amountOfTrees = testInfo.m_amountOfTrees;
+							}
+							if(config.hasMemoryConstraint()){
+								printOnScreen(
+										"Memory constraint: " << StringHelper::convertMemorySpace(testInfo.m_memory));
+								config.m_memory = testInfo.m_memory;
+							}
+							orf->setTrainingsMode(config);
+							if(orf){
+								train.appendUnique(data);
+							}
+							printOnScreen("Avg Time for Dynamic Decision Tree train: "
+												  << GlobalStopWatch<DynamicDecisionTreeTrain>::instance().elapsedAvgAsTimeFrame());
+							printOnScreen("Avg Time for Big Decision Tree train: "
+												  << GlobalStopWatch<BigDecisionTreeTrain>::instance().elapsedAvgAsTimeFrame());
+						}else if(testInfo.m_mode == TestMode::TEST){
+							auto data = getAllPointsFor(testInfo.m_varName, testInfo.m_scope);
+							printOnScreen("Perform test for: " << testInfo.m_varName);
+							performTest(orf, data);
+						}
 					}
-					if(config.hasMemoryConstraint()){
-						printOnScreen("Memory constraint: " << StringHelper::convertMemorySpace(testInfo.m_memory));
-						config.m_memory = testInfo.m_memory;
-					}
-					orf->setTrainingsMode(config);
-					if(orf){
-						train.appendUnique(data);
-					}
-				}else if(testInfo.m_mode == TestMode::TEST){
-					auto data = getAllPointsFor(testInfo.m_varName);
-					printOnScreen("Perform test for: " << testInfo.m_varName);
-					performTest(orf, data);
 				}
 			}
 		}else{
 			break;
 		}
+		lastInfo = std::move(testInfo);
 		++i;
 	}
-	if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+	if(CommandSettings::instance().get_useFakeData() &&
+	   (CommandSettings::instance().get_visuRes() > 0 || CommandSettings::instance().get_visuResSimple() > 0)){
 		StopWatch sw;
 		DataWriterForVisu::writeImg("orf.png", orf.get(), train.storage());
 		printOnScreen("For drawing needed time: " << sw.elapsedAsTimeFrame());
@@ -134,25 +169,25 @@ void TestManager::run(){
 	}
 }
 
-LabeledData TestManager::getAllPointsFor(const std::string& defName){
+LabeledData TestManager::getAllPointsFor(const std::string& defName, TestInformation::Instruction* scope){
 	LabeledData res;
-	auto usedDefinition = m_testInformation.getDefinition(defName);
+	auto usedDefinition = m_testInformation.getDefinition(defName, scope);
 	if(usedDefinition.isTrainOrTestSetting()){ // stops recursion
  		// is either train or test so only the points from one are used
 		int firstPoints; // all points
-		Settings::getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
+		Settings::instance().getValue("TotalStorage.amountOfPointsUsedForTraining", firstPoints);
 		LabeledData dummy; // is necessary for interface consistency
 		if(usedDefinition.getVarName() == TestInformation::trainSettingName){
-			TotalStorage::getLabeledDataCopyWithTest(res, dummy, firstPoints);
+			TotalStorage::instance().getLabeledDataCopyWithTest(res, dummy, firstPoints);
 		}else if(usedDefinition.getVarName() == TestInformation::testSettingName){
-			TotalStorage::getLabeledDataCopyWithTest(dummy, res, firstPoints);
+			TotalStorage::instance().getLabeledDataCopyWithTest(dummy, res, firstPoints);
 		}
 	}else{
 		if(usedDefinition.m_splitAmount < 1){
 			if(usedDefinition.m_firstFromVariable.length() > 0){
-				res = getAllPointsFor(usedDefinition.m_firstFromVariable);
+				res = getAllPointsFor(usedDefinition.m_firstFromVariable, scope);
 				if(usedDefinition.m_secondFromVariable.length() > 0){ // combine action
-					auto res2 = getAllPointsFor(usedDefinition.m_secondFromVariable);
+					auto res2 = getAllPointsFor(usedDefinition.m_secondFromVariable, scope);
 					res.insert(res.end(), res2.begin(), res2.end()); // combine both
 				}
 			}else{
@@ -170,7 +205,7 @@ LabeledData TestManager::getAllPointsFor(const std::string& defName){
 				}else if(splitNr >= jumper){
 					printErrorAndQuit("Accessing an split element, which is not available!");
 				}
-				LabeledData temp = getAllPointsFor(usedDefinition.m_firstFromVariable);
+				LabeledData temp = getAllPointsFor(usedDefinition.m_firstFromVariable, scope);
 				res.reserve(temp.size() / usedDefinition.m_splitAmount + usedDefinition.m_splitAmount);
 				for(unsigned int i = splitNr; i < temp.size(); i += jumper){
 					res.emplace_back(temp[i]);
@@ -226,7 +261,7 @@ void TestManager::performTest(const UniquePtr<OnlineRandomForest>& orf, const La
 //	std::vector<std::list<Real> > lists(orf->amountOfClasses(), std::list<Real>());
 	AvgNumber oc, uc;
 	AvgNumber ocBVS, ucBVS;
-	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	const unsigned int amountOfClasses = ClassKnowledge::instance().amountOfClasses();
 	const Real logBase = (Real) logReal(amountOfClasses);
 	for(unsigned int i = 0; i < labels.size(); ++i){
 		if(labels[i] != UNDEF_CLASS_LABEL){
@@ -251,9 +286,9 @@ void TestManager::performTest(const UniquePtr<OnlineRandomForest>& orf, const La
 			}else{
 				oc.addNew((Real) (1. - entropy));
 				ocBVS.addNew((Real) (1. - entropyBVS));
-//				printOnScreen("Class: " << ClassKnowledge::getNameFor(test[i]->getLabel()) << ", for 0: " << probs[i][0] << ", for 1: " << probs[i][1]);
+//				printOnScreen("Class: " << ClassKnowledge::instance().getNameFor(test[i]->getLabel()) << ", for 0: " << probs[i][0] << ", for 1: " << probs[i][1]);
 			}
-//			lists[labels[i]].push_back(probs[i][labels[i]]); // adds only the winning label to the list
+//			lists[labels[i]].emplace_back(probs[i][labels[i]]); // adds only the winning label to the list
 			conv(test[i]->getLabel(), labels[i]) += 1;
 
 		}

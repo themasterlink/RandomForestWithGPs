@@ -12,9 +12,22 @@
 #include <map>
 #include <boost/thread.hpp>
 #include "../Base/Types.h"
+#include "../Base/Observer.h"
 
 class ClassKnowledge {
+
+SingeltonMacro(ClassKnowledge);
+	
 public:
+	class Caller: public Subject {
+	public:
+		enum Event {
+			NEW_CLASS = 500,
+			UNDEFINED = 501
+		};
+
+		ClassTypeSubject classType() const{ return ClassTypeSubject::CLASSKNOWLEDGE; };
+	};
 
 	using LabelNamePair = std::pair<unsigned int, std::string>;
 
@@ -22,30 +35,36 @@ public:
 
 	using LabelNameMapIterator = LabelNameMap::iterator;
 
-	static void setNameFor(const std::string& name, unsigned int nr);
+	void setNameFor(const std::string& name, unsigned int nr);
 
-	static std::string getNameFor(unsigned int nr);
+	std::string getNameFor(unsigned int nr);
 
-	static unsigned int amountOfClasses();
+	unsigned int amountOfClasses();
 
-	static unsigned int amountOfDims();
+	unsigned int amountOfDims();
 
-	static void setAmountOfDims(unsigned int value);
+	void setAmountOfDims(unsigned int value);
 
-	static bool hasClassName(const unsigned int nr);
+	bool hasClassName(const unsigned int nr);
 
-	static void init();
+	void init();
+
+	void attach(Observer* obj);
+
+	void deattach(Observer* obj);
+
+	Caller* getCaller(){ return &m_caller; }
 
 private:
 
-	static LabelNameMap m_names;
+	Caller m_caller;
 
-	static unsigned int m_amountOfDims;
+	LabelNameMap m_names;
 
-	static Mutex m_mutex;
+	unsigned int m_amountOfDims;
 
-	ClassKnowledge();
-	virtual ~ClassKnowledge();
+	Mutex m_mutex;
+
 };
 
 #endif /* DATA_CLASSKNOWLEDGE_H_ */

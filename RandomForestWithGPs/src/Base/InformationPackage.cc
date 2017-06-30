@@ -58,26 +58,21 @@ Real InformationPackage::getWorkedAmountOfSeconds(){
 }
 
 void InformationPackage::setAdditionalInfo(const std::string& line){
-	m_lineMutex.lock();
-	m_additionalInformation = line;
-	m_lineMutex.unlock();
+	lockStatementWith(m_additionalInformation = line, m_lineMutex);
 }
 
 void InformationPackage::printLineToScreenForThisThread(const std::string& line) {
 	m_lineMutex.lock();
-	m_lines.push_back(line);
+	m_lines.emplace_back(line);
 	if(m_type == InfoType::ORF_TRAIN || m_type == InfoType::ORF_TRAIN_FIX) {
-		Logger::addSpecialLineToFile(line, m_standartInfo);
+		Logger::instance().addSpecialLineToFile(line, m_standartInfo);
 	}
 	m_lineMutex.unlock();
 }
 
 void InformationPackage::overwriteLastLineToScreenForThisThread(const std::string& line){
 	if(m_lines.size() > 0){
-		m_lineMutex.lock();
-		m_lines.back() = line;
-		//Logger::addSpecialLineToFile("overwrite: "+line, m_standartInfo);
-		m_lineMutex.unlock();
+		lockStatementWith(m_lines.back() = line, m_lineMutex);
 	}
 }
 
@@ -152,5 +147,9 @@ int InformationPackage::getPriority(){
 		printError("This type is unknown!");
 		return 0;
 	}
+}
+
+void InformationPackage::setStandartInformation(const std::string& line){
+	lockStatementWith(m_standartInfo = line, m_lineMutex);
 }
 

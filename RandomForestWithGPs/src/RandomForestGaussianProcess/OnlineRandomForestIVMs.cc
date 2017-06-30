@@ -53,14 +53,16 @@ void OnlineRandomForestIVMs::update(){
 //		m_orf.update();
 		std::list<unsigned int> predictedLabels;
 		unsigned int amountOfCorrect = 0;
-		Matrix conv = Matrix::Zero(ClassKnowledge::amountOfClasses(), ClassKnowledge::amountOfClasses());
-		for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-			const unsigned int predictedLabel = m_orf.predict(**it);
+		Matrix conv = Matrix::Zero(ClassKnowledge::instance().amountOfClasses(),
+								   ClassKnowledge::instance().amountOfClasses());
+		for(unsigned int i = 0; i < m_storage.size(); ++i){
+			auto& point = *m_storage[i];
+			const unsigned int predictedLabel = m_orf.predict(point);
 			predictedLabels.push_back(predictedLabel);
-			if(predictedLabel == (**it).getLabel()){
+			if(predictedLabel == point.getLabel()){
 				++amountOfCorrect;
 			}
-			conv((*it)->getLabel(), predictedLabels.back()) += 1;
+			conv(point.getLabel(), predictedLabels.back()) += 1;
 		}
 		printOnScreen("Just ORFs:");
 		ConfusionMatrixPrinter::print(conv);
@@ -68,25 +70,27 @@ void OnlineRandomForestIVMs::update(){
 		boost::thread_group* group = new boost::thread_group();
 		std::vector<LabeledData*> datasForPredictedClasses(amountOfClasses(), nullptr);
 		int nrOfInducingPoints = 40;
-		Settings::getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
+		Settings::instance().getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 		for(unsigned int iClassNr = 0; iClassNr < amountOfClasses(); ++iClassNr){
 			// for each class find all predicted values which should be considered in this class
 			datasForPredictedClasses[iClassNr] = new LabeledData();
 			auto itPredictedLabel = predictedLabels.cbegin();
 			std::vector<unsigned int> classCounter(amountOfClasses(), 0);
-			for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it, ++itPredictedLabel){
+			for(unsigned int i = 0; i < m_storage.size(); ++i){
+//			for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it, ++itPredictedLabel){
 				if(*itPredictedLabel == iClassNr){
-					datasForPredictedClasses[iClassNr]->push_back(*it);
-					++classCounter[(*it)->getLabel()];
+					datasForPredictedClasses[iClassNr]->push_back(m_storage[i]);
+					++classCounter[m_storage[i]->getLabel()];
 				}
 			}
 			const int sizeOfPointsForClass = datasForPredictedClasses[iClassNr]->size();
 //			for(unsigned int iInnerClassNr = 0; iInnerClassNr < amountOfClasses(); ++iInnerClassNr){
-//				printOnScreen("Size of class " << ClassKnowledge::getNameFor(iClassNr) << "_"<< ClassKnowledge::getNameFor(iInnerClassNr)<< ": " << classCounter[iInnerClassNr] << ", whole is: " << sizeOfPointsForClass);
+//				printOnScreen("Size of class " << ClassKnowledge::instance().getNameFor(iClassNr) << "_"<< ClassKnowledge::instance().getNameFor(iInnerClassNr)<< ": " << classCounter[iInnerClassNr] << ", whole is: " << sizeOfPointsForClass);
 				if(sizeOfPointsForClass * 0.95 > classCounter[iClassNr] && nrOfInducingPoints + 100 < sizeOfPointsForClass){ // if less than 95 % of the points belong to the right class -> use ivms
 					const bool doEpUpdate = false;
 					group->add_thread(new boost::thread(boost::bind(&OnlineRandomForestIVMs::trainIvm, this, iClassNr, nrOfInducingPoints, doEpUpdate, datasForPredictedClasses[iClassNr], iClassNr)));
-					printOnScreen("Calc ivm for " << ClassKnowledge::getNameFor(iClassNr) << "_"<< ClassKnowledge::getNameFor(iClassNr));
+					printOnScreen("Calc ivm for " << ClassKnowledge::instance().getNameFor(iClassNr) << "_"
+												  << ClassKnowledge::instance().getNameFor(iClassNr));
 				}
 //			}
 		}

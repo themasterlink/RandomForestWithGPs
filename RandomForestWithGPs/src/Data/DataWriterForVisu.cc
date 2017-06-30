@@ -8,9 +8,6 @@
 #include "DataWriterForVisu.h"
 #include "../Utility/ColorConverter.h"
 #include "DataConverter.h"
-#include <opencv2/core/core.hpp>
-#include <math.h>
-#include "../Base/CommandSettings.h"
 
 DataWriterForVisu::DataWriterForVisu()
 {
@@ -29,7 +26,7 @@ void DataWriterForVisu::writeData(const std::string& fileName, const LabeledData
 			return;
 		}
 		std::ofstream file;
-		file.open(Logger::getActDirectory() + fileName);
+		file.open(Logger::instance().getActDirectory() + fileName);
 		if(file.is_open()){
 			for(LabeledDataConstIterator it = data.cbegin(); it != data.cend(); ++it){
 				file << (**it)[x] << " " << (**it)[y] << " " << (*it)->getLabel() << "\n";
@@ -96,7 +93,7 @@ void DataWriterForVisu::generateGrid(const std::string& fileName,
 	DataConverter::getMinMaxIn2D(data, min, max, dimVec);
 	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	std::ofstream file;
-	file.open(Logger::getActDirectory() + fileName);
+	file.open(Logger::instance().getActDirectory() + fileName);
 	Data points;
 	points.reserve(amountOfPointsOnOneAxis * (amountOfPointsOnOneAxis + 1));
 	int amount = 0;
@@ -134,7 +131,8 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorBin
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
-	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::instance().get_visuRes(),
+												  CommandSettings::instance().get_visuResSimple());
 	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	int amount = 0;
 	std::vector<Real> labels;
@@ -143,7 +141,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorBin
 	int iX = 0, iY;
 	std::ofstream file;
 	openSvgFile(fileName, (Real) 820., (Real) (max[0] - min[0]), (Real) (max[1] - min[1]), file);
-	const bool complex = CommandSettings::get_visuRes() > 0;
+	const bool complex = CommandSettings::instance().get_visuRes() > 0;
 	for(Real xVal = min[0]; xVal < max[0]; xVal += stepSize[0]){
 		iY = 0;
 		for(Real yVal = min[1]; yVal < max[1]; yVal+= stepSize[1]){
@@ -191,7 +189,8 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
-	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::instance().get_visuRes(),
+												  CommandSettings::instance().get_visuResSimple());
 	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	int amount = 0;
 	std::vector<Real> labels;
@@ -214,11 +213,11 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 					(*ele)[i] = 0;
 				}
 			}
-			points.push_back(ele);
+			points.emplace_back(ele);
 			++amount;
 		}
 	}
-	const bool complex = CommandSettings::get_visuRes() > 0;
+	const bool complex = CommandSettings::instance().get_visuRes() > 0;
 	Labels result;
 	std::vector< std::vector<Real> > probs;
 	if(complex){
@@ -274,7 +273,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 }
 
 void DataWriterForVisu::writeHisto(const std::string&fileName, const std::list<Real>& list, const unsigned int nrOfBins, const Real minValue, const Real maxValue){
-	if(list.size() == 0){
+	if(list.empty()){
 		printError("No data is given!");
 		return;
 	}
@@ -327,7 +326,8 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
-	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::instance().get_visuRes(),
+												  CommandSettings::instance().get_visuResSimple());
 	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	int amount = 0;
 	const Real elementInX = (int)((max[0] - min[0]) / stepSize[0]);
@@ -335,7 +335,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const IVM& ivm, co
 	int iX = 0, iY;
 	std::ofstream file;
 	openSvgFile(fileName, 820., (Real) (max[0] - min[0]), (Real) (max[1] - min[1]), file);
-	const bool complex = CommandSettings::get_visuRes() > 0;
+	const bool complex = CommandSettings::instance().get_visuRes() > 0;
 	std::vector< std::vector<Real> > colors(2, std::vector<Real>(3));
 	ColorConverter::RGB2LAB(1,0,0, colors[0][0], colors[0][1], colors[0][2]);
 	ColorConverter::RGB2LAB(0,0,1, colors[1][0], colors[1][1], colors[1][2]);
@@ -464,8 +464,11 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 	const int amountOfSeg = 10;
 	drawSvgCoords2D(file, 7.5, 7.5, 10, 10, min, max, amountOfSeg, 820., height);
 	Real minUsedValue = minVal;
-	const int k = CommandSettings::get_visuRes() > 0 ? 20 : CommandSettings::get_visuResSimple() > 0 ? 1 : 0;
-	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	const int k =
+			CommandSettings::instance().get_visuRes() > 0 ? 20 : CommandSettings::instance().get_visuResSimple() > 0 ? 1
+																													 : 0;
+	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::instance().get_visuRes(),
+												  CommandSettings::instance().get_visuResSimple());
 	const Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	Real red[3];
 	Real blue[3];
@@ -486,7 +489,7 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 				}
 			}
 			if(!found){
-				sortedValues.push_back(*it);
+				sortedValues.emplace_back(*it);
 			}
 		}
 		mean /= values.size();
@@ -537,7 +540,7 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 			}
 			const Real xPos = (Real) ((dX - min[0]) / (max[0] - min[0]) * 80. + 10.); // see 10. in drawSvgCoords2D
 			const Real yPos = (Real) ((dY - min[1]) / (max[1] - min[1]) * 80. + 10.);
-			imgPixel.push_back(std::pair<Real, std::pair<Real, Real> >(val,  std::pair<Real, Real>(xPos, yPos)));
+			imgPixel.emplace_back(val, std::pair<Real, Real>(xPos, yPos));
 		}
 	}
 	Real newMinVal = REAL_MAX;
@@ -603,12 +606,13 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorBin
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
 
-	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::instance().get_visuRes(),
+												  CommandSettings::instance().get_visuResSimple());
 	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 //	stepSize[1] *= 0.5;
 	const Real elementInX = ceil((Real)((max[0] - min[0]) / stepSize[0])) + 1;
 	const Real elementInY = ceil((Real)((max[1] - min[1]) / stepSize[1])) + 1;
-	const bool complex = CommandSettings::get_visuRes() > 0;
+	const bool complex = CommandSettings::instance().get_visuRes() > 0;
 	int counter = 0;
 	std::vector< std::vector<Real> > colors(2, std::vector<Real>(3));
 	const bool modeLab = false;
@@ -692,7 +696,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorBin
 		cv::circle(img, cv::Point(dx, dy), (Real) fac * amountOfPointsOnOneAxis / 50.0, actColor, CV_FILLED, CV_AA);
 		cv::circle(img, cv::Point(dx, dy), (Real) fac * amountOfPointsOnOneAxis / 50.0, black, (Real) fac / 4.0 * (Real) amountOfPointsOnOneAxis / 50.0, CV_AA);
 	}
-	cv::imwrite(Logger::getActDirectory() + fileName, img);
+	cv::imwrite(Logger::instance().getActDirectory() + fileName, img);
 }
 
 void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predictor,
@@ -712,12 +716,13 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predict
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
 
-	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::instance().get_visuRes(),
+												  CommandSettings::instance().get_visuResSimple());
 	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 //	stepSize[1] *= 0.5;
 	const Real elementInX = ceil((Real)((max[0] - min[0]) / stepSize[0])) + 1;
 	const Real elementInY = ceil((Real)((max[1] - min[1]) / stepSize[1])) + 1;
-	const bool complex = CommandSettings::get_visuRes() > 0;
+	const bool complex = CommandSettings::instance().get_visuRes() > 0;
 	int counter = 0;
 	std::vector< std::vector<Real> > colors(4, std::vector<Real>(3));
 	const bool modeLab = false;
@@ -822,7 +827,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predict
 		cv::circle(img, cv::Point(dy, dx), (Real) fac * amountOfPointsOnOneAxis / 50.0, black, (Real) fac / 4.0 * (Real) amountOfPointsOnOneAxis / 50.0, CV_AA);
 		cv::circle(img, cv::Point(dy, dx), (Real) fac * amountOfPointsOnOneAxis / 200.0, induActColor, CV_FILLED, CV_AA);
 	}
-	cv::imwrite(Logger::getActDirectory() + fileName, img);
+	cv::imwrite(Logger::instance().getActDirectory() + fileName, img);
 }
 
 
@@ -841,7 +846,8 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	max[1] += diff[1] * 0.2;
 	min[0] -= diff[0] * 0.2;
 	min[1] -= diff[1] * 0.2;
-	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::get_visuRes(), CommandSettings::get_visuResSimple());
+	const Real amountOfPointsOnOneAxis = std::max(CommandSettings::instance().get_visuRes(),
+												  CommandSettings::instance().get_visuResSimple());
 	Vector2 stepSize = (1. / amountOfPointsOnOneAxis) * (max - min);
 	int amount = 0;
 	std::vector<Real> labels;
@@ -862,11 +868,11 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 					(*ele)[i] = 0;
 				}
 			}
-			points.push_back(ele);
+			points.emplace_back(ele);
 			++amount;
 		}
 	}
-	const bool complex = CommandSettings::get_visuRes() > 0;
+	const bool complex = CommandSettings::instance().get_visuRes() > 0;
 	Labels result;
 	std::vector< std::vector<Real> > probs;
 	if(complex){
@@ -956,7 +962,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 		cv::circle(img, cv::Point(dx, dy), fac / 2 * amountOfPointsOnOneAxis / 50, actColor, CV_FILLED, CV_AA);
 		cv::circle(img, cv::Point(dx, dy), fac / 2 * amountOfPointsOnOneAxis / 50, black, fac / 6 * amountOfPointsOnOneAxis / 50, CV_AA);
 	}
-	cv::imwrite(Logger::getActDirectory() + fileName, img);
+	cv::imwrite(Logger::instance().getActDirectory() + fileName, img);
 	for(unsigned int i = 0; i < points.size(); ++i){
 		SAVE_DELETE(points[i]);
 	}
@@ -975,7 +981,7 @@ void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const LabeledData
 				}
 			}
 			if(isInduced){
-				inducedPoints.push_back(it);
+				inducedPoints.emplace_back(it);
 				continue;
 			}
 			const Real dx = ((**it)[dim[0]] - min[0]) / (max[0] - min[0]) * 100.;
@@ -1061,7 +1067,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const Matrix& mat)
 }
 
 void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<Real>& list, const std::list<std::string>& colors){
-	if(list.size() == 0 || list.size() != colors.size()){
+	if(list.empty() || list.size() != colors.size()){
 		printError("The lists are unequal or have no elements!");
 		return;
 	}
@@ -1151,7 +1157,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<Ve
 }
 
 void DataWriterForVisu::writeSvg(const std::string& fileName, const std::list<Real>& list, const bool drawLine){
-	if(list.size() == 0){
+	if(list.empty()){
 		return;
 	}
 	VectorX vec(list.size());
@@ -1313,7 +1319,7 @@ void DataWriterForVisu::drawSvgDots(std::ofstream& file, const VectorX vec,
 }
 
 bool DataWriterForVisu::openSvgFile(const std::string& fileName, const Real width, const Real problemWidth, const Real problemHeight, std::ofstream& file){
-	file.open(Logger::getActDirectory() + fileName);
+	file.open(Logger::instance().getActDirectory() + fileName);
 	const Real height = (width / problemHeight *  problemWidth);
 	file << "<svg version=\"1.1\" " <<
 			"\nbaseProfile=\"full\"" <<

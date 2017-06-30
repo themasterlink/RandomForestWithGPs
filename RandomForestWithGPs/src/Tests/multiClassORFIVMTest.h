@@ -46,17 +46,17 @@ void performTest(OnlineRandomForestIVMs& orf, OnlineStorage<LabeledVectorX*>& te
 
 void executeForBinaryClassORFIVM(){
 	const int trainAmount = readAllData();
-	if(TotalStorage::getMode() == TotalStorage::Mode::SEPERATE){
+	if(TotalStorage::instance().getDataSetMode() == TotalStorage::instance().DataSetMode::SEPERATE){
 		//	OnlineStorage<LabeledVectorX*> train;
 		OnlineStorage<LabeledVectorX*> test;
 		int height;
-		Settings::getValue("OnlineRandomForest.Tree.height", height);
+		Settings::instance().getValue("OnlineRandomForest.Tree.height", height);
 		const unsigned int amountOfSplits = 5;
 		std::vector<OnlineStorage<LabeledVectorX*> > trains(amountOfSplits);
-		OnlineRandomForestIVMs orf(trains[0], height, TotalStorage::getAmountOfClass());
+		OnlineRandomForestIVMs orf(trains[0], height, TotalStorage::instance().getAmountOfClass());
 
-		TotalStorage::getOnlineStorageCopySplitsWithTest(trains, test);
-		//	TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
+		TotalStorage::instance().getOnlineStorageCopySplitsWithTest(trains, test);
+		//	TotalStorage::instance().getOnlineStorageCopyWithTest(train, test, trainAmount);
 		printOnScreen("Training finished");
 		performTest(orf, trains[0]);
 		printOnScreen("First test finished");
@@ -89,7 +89,7 @@ void executeForBinaryClassORFIVM(){
 		}
 
 		int testNr = 2;
-		Settings::getValue("TotalStorage.folderTestNr", testNr);
+		Settings::instance().getValue("TotalStorage.folderTestNr", testNr);
 
 		performTest(orf, test);
 		printOnScreen("Second test finished");
@@ -97,17 +97,17 @@ void executeForBinaryClassORFIVM(){
 		//		performTest(orf, test);
 		//		printOnScreen("Third test after orf.update() finished");
 
-		printOnScreen("Amount of Classes: " << TotalStorage::getAmountOfClass());
+		printOnScreen("Amount of Classes: " << TotalStorage::instance().getAmountOfClass());
 	}else{
 		OnlineStorage<LabeledVectorX*> train;
 		OnlineStorage<LabeledVectorX*> test;
 		int height;
-		Settings::getValue("OnlineRandomForest.Tree.height", height);
-		OnlineRandomForestIVMs orf(train, height, TotalStorage::getAmountOfClass());
+		Settings::instance().getValue("OnlineRandomForest.Tree.height", height);
+		OnlineRandomForestIVMs orf(train, height, TotalStorage::instance().getAmountOfClass());
 		// starts the training by its own
 
 //		std::vector<unsigned int> counter(10,0);
-		TotalStorage::getOnlineStorageCopyWithTest(train, test, trainAmount);
+		TotalStorage::instance().getOnlineStorageCopyWithTest(train, test, trainAmount);
 //		for(OnlineStorage<LabeledVectorX*>::Iterator it = train.begin(); it != train.end(); ++it){
 //			counter[(*it)->getLabel()] += 1;
 //		}
@@ -123,8 +123,9 @@ void executeForBinaryClassORFIVM(){
 		performTest(orf, test);
 		printOnScreen("Second test finished");
 
-		printOnScreen("Amount of Classes: " << TotalStorage::getAmountOfClass());
-		if(CommandSettings::get_useFakeData() && (CommandSettings::get_visuRes() > 0 || CommandSettings::get_visuResSimple() > 0)){
+		printOnScreen("Amount of Classes: " << TotalStorage::instance().getAmountOfClass());
+		if(CommandSettings::instance().get_useFakeData() &&
+		   (CommandSettings::instance().get_visuRes() > 0 || CommandSettings::instance().get_visuResSimple() > 0)){
 			printOnScreen("Print png of data");
 			DataWriterForVisu::writeImg("orf.png", &orf, train.storage());
 			openFileInViewer("orf.png");

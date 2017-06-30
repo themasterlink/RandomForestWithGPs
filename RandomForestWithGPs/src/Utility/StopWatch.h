@@ -28,7 +28,7 @@ public:
 
 	const std::string elapsedAsPrettyTime() const;
 
-	void recordActTime();
+	Real recordActTime();
 
 	const std::string elapsedAvgAsPrettyTime() const;
 
@@ -58,7 +58,7 @@ void StopWatch::stopTime(){
 
 inline
 Real StopWatch::elapsedSeconds() const{
-	return (boost::posix_time::microsec_clock::local_time() - m_start).total_milliseconds() / 1000.0;
+	return (Real) ((boost::posix_time::microsec_clock::local_time() - m_start).total_milliseconds() / 1000.0);
 }
 
 inline

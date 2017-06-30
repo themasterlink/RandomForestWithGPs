@@ -69,17 +69,18 @@ void executeForRFBinaryClass(){
 			//const int dataPoints = data.size();
 			std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
 			bool useFixedValuesForMinMaxUsedData;
-			Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
+			Settings::instance().getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData",
+										  useFixedValuesForMinMaxUsedData);
 			Vector2i minMaxUsedData;
 			if(useFixedValuesForMinMaxUsedData){
 				int minVal = 0, maxVal = 0;
-				Settings::getValue("MinMaxUsedData.minValue", minVal);
-				Settings::getValue("MinMaxUsedData.maxValue", maxVal);
+				Settings::instance().getValue("MinMaxUsedData.minValue", minVal);
+				Settings::instance().getValue("MinMaxUsedData.maxValue", maxVal);
 				minMaxUsedData << minVal, maxVal;
 			}else{
 				Real minVal = 0, maxVal = 0;
-				Settings::getValue("MinMaxUsedData.minValueFraction", minVal);
-				Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
+				Settings::instance().getValue("MinMaxUsedData.minValueFraction", minVal);
+				Settings::instance().getValue("MinMaxUsedData.maxValueFraction", maxVal);
 				minMaxUsedData << (int) (minVal * data.size()),  (int) (maxVal * data.size());
 			}
 			std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";
@@ -106,34 +107,34 @@ void executeForRFBinaryClass(const std::string& path){
 	LabeledData data;
 	DataReader::readFromFile(data, path, 500);
 	bool useFixedValuesForMinMaxUsedData;
-	Settings::getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
+	Settings::instance().getValue("MinMaxUsedData.useFixedValuesForMinMaxUsedData", useFixedValuesForMinMaxUsedData);
 	Vector2i minMaxUsedData;
 	if(useFixedValuesForMinMaxUsedData){
 		int minVal = 0, maxVal = 0;
-		Settings::getValue("MinMaxUsedData.minValue", minVal);
-		Settings::getValue("MinMaxUsedData.maxValue", maxVal);
+		Settings::instance().getValue("MinMaxUsedData.minValue", minVal);
+		Settings::instance().getValue("MinMaxUsedData.maxValue", maxVal);
 		minMaxUsedData << minVal, maxVal;
 	}else{
 		Real minVal = 0, maxVal = 0;
-		Settings::getValue("MinMaxUsedData.minValueFraction", minVal);
-		Settings::getValue("MinMaxUsedData.maxValueFraction", maxVal);
+		Settings::instance().getValue("MinMaxUsedData.minValueFraction", minVal);
+		Settings::instance().getValue("MinMaxUsedData.maxValueFraction", maxVal);
 		minMaxUsedData << (int) (minVal * data.size()),  (int) (maxVal * data.size());
 	}
 	std::cout << "Min max used data, min: " << minMaxUsedData[0] << " max: " << minMaxUsedData[1] << "\n";
 
 	LabeledData testData;
 	std::string testPath;
-	Settings::getValue("Test.path", testPath);
+	Settings::instance().getValue("Test.path", testPath);
 	DataReader::readFromFile(testData, testPath, 500);
 
 	std::cout << "Finished reading" << std::endl;
 	int dim = 2;
-	if(data.size() > 0){
+	if(!data.empty()){
 		dim = (int) data[0]->rows();
 	}
 	int amountOfTrees, height;
-	Settings::getValue("OnlineRandomForest.amountOfTrainedTrees", amountOfTrees);
-	Settings::getValue("OnlineRandomForest.Tree.height", height);
+	Settings::instance().getValue("OnlineRandomForest.amountOfTrainedTrees", amountOfTrees);
+	Settings::instance().getValue("OnlineRandomForest.Tree.height", height);
 	std::cout << "Amount of trees: " << amountOfTrees << " with height: " << height << std::endl;
 
 	RandomForest forest(height, amountOfTrees, dim);
@@ -154,10 +155,10 @@ void executeForRFBinaryClass(const std::string& path){
 
 
 	bool doWriting;
-	Settings::getValue("WriteBinarySaveOfTrees.doWriting", doWriting, false);
+	Settings::instance().getValue("WriteBinarySaveOfTrees.doWriting", doWriting, false);
 	std::string writePath;
 	if(doWriting){
-		Settings::getValue("WriteBinarySaveOfTrees.path", writePath);
+		Settings::instance().getValue("WriteBinarySaveOfTrees.path", writePath);
 		RandomForestWriter::writeToFile(writePath, forest);
 	}
 	RandomForest newForest(0,0,0);
@@ -178,14 +179,14 @@ void executeForRFBinaryClass(const std::string& path){
 
 
 	int printX, printY;
-	Settings::getValue("Write2D.doWriting", doWriting, false);
-	Settings::getValue("Write2D.printX", printX, 0);
-	Settings::getValue("Write2D.printY", printY, 1);
+	Settings::instance().getValue("Write2D.doWriting", doWriting, false);
+	Settings::instance().getValue("Write2D.printX", printX, 0);
+	Settings::instance().getValue("Write2D.printY", printY, 1);
 	if(doWriting){
-		Settings::getValue("Write2D.gridPath", writePath);
+		Settings::instance().getValue("Write2D.gridPath", writePath);
 		StopWatch sw;
 		DataWriterForVisu::generateGrid(writePath, &forest, 200, data, printX, printY);
-		Settings::getValue("Write2D.testPath", writePath);
+		Settings::instance().getValue("Write2D.testPath", writePath);
 		DataWriterForVisu::writeData(writePath, testData, printX, printY);
 		std::cout << "Time for write: " << sw.elapsedSeconds() << std::endl;
 		std::cout << "End Reached" << std::endl;

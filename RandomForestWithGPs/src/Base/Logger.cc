@@ -6,34 +6,28 @@
  */
 
 #include "Logger.h"
-#include <errno.h>
 #include "Settings.h"
 #include <boost/date_time.hpp>
 #include "../Tests/TestManager.h"
 
-Mutex Logger::m_mutex;
-bool Logger::m_init(false);
-bool Logger::m_needToWrite(false);
-std::string Logger::m_text("");
-std::string Logger::m_fileName("");
-const Real Logger::m_timeToSleep((Real) (1.2/*5 * 60.0*/));
-std::map<std::string, std::string> Logger::m_specialLines;
-std::string Logger::m_actualDirectory = "./"; // default
-boost::thread* Logger::m_ownThread(nullptr);
-std::atomic<bool> Logger::m_writeByForceWrite(true);
-UniquePtr<std::ofstream> Logger::m_file(nullptr);
 namespace bfs = boost::filesystem;
 
-Logger::Logger() {
-}
-
-Logger::~Logger() {
+Logger::Logger():
+		m_init(false),
+		m_needToWrite(false),
+		m_text(""),
+		m_fileName(""),
+		m_timeToSleep((Real) (1.2/*5 * 60.0*/)),
+		m_actualDirectory("./"), // default
+		m_ownThread(nullptr),
+		m_writeByForceWrite(true),
+		m_file(nullptr){
 }
 
 void Logger::start(){
 	systemCall("ulimit -Sf 2>&1 >0"); 	// sets the soft limit for the file handles to unlimited,
 										// so no problems for the logging arise
-	m_init = Settings::getDirectBoolValue("Logger.useLogger");
+	m_init = Settings::instance().getDirectBoolValue("Logger.useLogger");
 	if(m_init){
 		auto createFolder = [](const std::string& dir){
 			if(!bfs::exists(dir)){
@@ -50,7 +44,7 @@ void Logger::start(){
 #else // Something else
 		m_actualDirectory = "./";
 #endif
-		Settings::getValue("Logger.fileName", m_fileName);
+		Settings::instance().getValue("Logger.fileName", m_fileName);
 		boost::gregorian::date dayte(boost::gregorian::day_clock::local_day());
 		for(auto&& folder : {StringHelper::number2String(dayte.year()),
 							 StringHelper::number2String(dayte.month().as_number()),
@@ -64,22 +58,22 @@ void Logger::start(){
 //		}
 //		system(std::string("ln -s " + m_actualDirectory + " latest").c_str());
 		printOnScreen("The folder is: " << m_actualDirectory);
-//		bfs::copy_file(Settings::getFilePath(), m_actualDirectory + "usedInit.json");
-		system(std::string("cp " + Settings::getFilePath() + " " + m_actualDirectory + "usedInit.json").c_str());
-		system(std::string("cp " + TestManager::getFilePath() + " " + m_actualDirectory + "testSettings.txt").c_str());
+//		bfs::copy_file(Settings::instance().getFilePath(), m_actualDirectory + "usedInit.json");
+		system(std::string(
+				"cp " + Settings::instance().getFilePath() + " " + m_actualDirectory + "usedInit.json").c_str());
+		system(std::string(
+				"cp " + TestManager::instance().getFilePath() + " " + m_actualDirectory + "testSettings.txt").c_str());
 		std::string mode;
-		Settings::getValue("main.type", mode);
+		Settings::instance().getValue("main.type", mode);
 		m_text = "Online Random Forest with IVMs, mode: " + mode + "\n"; // Standart Information
 		m_text += "Date: " + boost::posix_time::to_simple_string(boost::posix_time::second_clock::local_time()) + "\n";
-		m_ownThread = new boost::thread(&Logger::run);
+		m_ownThread = new boost::thread(boost::bind(&Logger::run, &Logger::instance()));
 	}
 }
 
 void Logger::forcedWrite(){
 	if(m_init && m_writeByForceWrite){
-		m_mutex.lock();
-		write();
-		m_mutex.unlock();
+		lockStatementWith(write(), m_mutex);
 	}
 }
 

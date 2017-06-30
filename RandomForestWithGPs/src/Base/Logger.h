@@ -10,57 +10,58 @@
 
 #include <boost/thread.hpp>
 #include <map>
+#include <atomic>
 #include "BaseType.h"
 #include "Types.h"
 
 class Logger {
+
+SingeltonMacro(Logger);
+
 public:
 
 	// checks the values in the settings file
-	static void start();
+	void start();
 
-	static void addNormalLineToFile(const std::string& line);
+	void addNormalLineToFile(const std::string& line);
 
-	static void addSpecialLineToFile(const std::string& line, const std::string& identifier);
+	void addSpecialLineToFile(const std::string& line, const std::string& identifier);
 
-	static void forcedWrite();
+	void forcedWrite();
 
-	static std::string nameOfLogFile(){ return m_fileName; };
+	std::string nameOfLogFile(){ return m_fileName; };
 
-	static bool isUsed(){ return m_init;}
+	bool isUsed(){ return m_init; }
 
-	static std::string getActDirectory(){ return m_actualDirectory; };
+	std::string getActDirectory(){ return m_actualDirectory; };
 
 private:
 
-	static void write();
+	void run();
 
-	static void run();
+	void write();
 
-	static std::string m_actualDirectory;
+	std::string m_actualDirectory;
 
-	static Mutex m_mutex;
+	Mutex m_mutex;
 
-	static bool m_init;
+	bool m_init;
 
-	static bool m_needToWrite;
+	bool m_needToWrite;
 
-	static std::string m_text;
+	std::string m_text;
 
-	static std::string m_fileName;
+	std::string m_fileName;
 
-	static const Real m_timeToSleep;
+	const Real m_timeToSleep;
 
-	static std::map<std::string, std::string> m_specialLines;
+	std::map<std::string, std::string> m_specialLines;
 
-	Logger();
-	virtual ~Logger();
+	boost::thread* m_ownThread;
 
-	static boost::thread *m_ownThread;
+	std::atomic<bool> m_writeByForceWrite;
 
-	static std::atomic<bool> m_writeByForceWrite;
-
-	static UniquePtr<std::ofstream> m_file;
+	UniquePtr<std::ofstream> m_file;
 };
 
 #endif /* BASE_LOGGER_H_ */

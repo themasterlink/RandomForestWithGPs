@@ -6,8 +6,6 @@
  */
 
 #include "ReadWriterHelper.h"
-#include "../Data/ClassKnowledge.h"
-#include<memory>
 
 ReadWriterHelper::ReadWriterHelper() {
 	// TODO Auto-generated constructor stub
@@ -51,8 +49,8 @@ void ReadWriterHelper::writePoint(std::fstream& stream, const LabeledVectorX& ve
 
 void ReadWriterHelper::writeBigDynamicTree(std::fstream& stream, const BigDynamicDecisionTree& tree){
 	// read standart information
-	const unsigned int amountOfDims = ClassKnowledge::amountOfDims();
-	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	const unsigned int amountOfDims = ClassKnowledge::instance().amountOfDims();
+	const unsigned int amountOfClasses = ClassKnowledge::instance().amountOfClasses();
 	stream.write((char*) (&amountOfDims), sizeof(unsigned int));
 	stream.write((char*) (&amountOfClasses), sizeof(unsigned int));
 	stream.write((char*) (&tree.m_amountOfClasses), sizeof(unsigned int));
@@ -88,8 +86,8 @@ void ReadWriterHelper::writeBigDynamicTree(std::fstream& stream, const BigDynami
 
 void ReadWriterHelper::readBigDynamicTree(std::fstream& stream, BigDynamicDecisionTree& tree){
 	// read standart information
-	const unsigned int amountOfDims = ClassKnowledge::amountOfDims();
-	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	const unsigned int amountOfDims = ClassKnowledge::instance().amountOfDims();
+	const unsigned int amountOfClasses = ClassKnowledge::instance().amountOfClasses();
 	unsigned int readDims = 0;
 	unsigned int readClasses = 0;
 	stream.read((char*) (&readDims), sizeof(unsigned int));

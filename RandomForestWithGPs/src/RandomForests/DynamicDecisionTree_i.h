@@ -9,6 +9,7 @@
 //#include "../Data/ClassKnowledge.h"
 
 #include "../Data/ClassKnowledge.h"
+#include "../Utility/GlobalStopWatch.h"
 
 #ifndef __INCLUDE_DYNAMICDECISIONTREE
 #error "Don't include DynamicDecisionTree_i.h directly. Include DynamicDecisionTree.h instead."
@@ -46,7 +47,7 @@ DynamicDecisionTree<dimType>::DynamicDecisionTree(OnlineStorage<LabeledVectorX *
 // construct empty tree
 template<typename dimType>
 DynamicDecisionTree<dimType>::DynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage):
-		DynamicDecisionTree(storage, 1, ClassKnowledge::amountOfClasses(), 100){
+		DynamicDecisionTree(storage, 1, ClassKnowledge::instance().amountOfClasses(), 100){
 }
 
 // fill empty tree
@@ -92,18 +93,19 @@ DynamicDecisionTree<dimType>::~DynamicDecisionTree(){
 template<typename dimType>
 bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberGeneratorForDT &generator,
 										 const dimType tryCounter, const bool saveDataPosition){
+	GlobalStopWatch<DynamicDecisionTreeTrain>::instance().startTime();
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED || m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
 		// reset training
 		std::fill(m_splitDim.begin(), m_splitDim.end(), NodeType::NODE_IS_NOT_USED);
 		std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), UNDEF_CLASS_LABEL);
 	}
 	std::vector<dimType> usedDims(amountOfUsedDims,-1);
-	if(amountOfUsedDims == ClassKnowledge::amountOfDims()){
+	if(amountOfUsedDims == ClassKnowledge::instance().amountOfDims()){
 		for(dimType i = 0; i < amountOfUsedDims; ++i){
 			usedDims[i] = i;
 		}
 	}else{
-		generator.setRandForDim(0, ClassKnowledge::amountOfDims() - 1);
+		generator.setRandForDim(0, ClassKnowledge::instance().amountOfDims() - 1);
 		for(dimType i = 0; i < amountOfUsedDims; ++i){
 			bool doAgain = false;
 			int counter = 0;
@@ -135,8 +137,8 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 	}
 	m_splitDim[1] = NodeType::NODE_CAN_BE_USED; // init the root value
 	std::vector<unsigned int> leftHisto(m_amountOfClasses), rightHisto(m_amountOfClasses);
-	m_dataPositions = new std::vector<std::vector<unsigned int> >(m_maxNodeNr + 1, std::vector<unsigned int>());
-	std::vector<std::vector<unsigned int> >& dataPosition(*m_dataPositions);
+	m_dataPositions = new std::vector<DataPositions>(m_maxNodeNr + 1, std::vector<unsigned int>());
+	std::vector<DataPositions>& dataPosition(*m_dataPositions);
 //	int breakPoint = 3; // 1 + 2 -> should have at least 2 layers
 //	int actLayer = 2;
 //	bool atLeastPerformedOneSplit = false;
@@ -182,8 +184,8 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 //	}
 	const auto amountOfTriedDims = (unsigned int) std::min(100, std::max((int) (usedDims.size() * 0.1), 2));
 	for(int iActNode = 1; iActNode < (int) m_maxInternalNodeNr + 1; ++iActNode){ // first element is not used!
-		std::vector<unsigned int>& actDataPos = m_useOnlyThisDataPositions != nullptr && iActNode == 1
-				? *m_useOnlyThisDataPositions : dataPosition[iActNode];
+		DataPositions& actDataPos = (m_useOnlyThisDataPositions != nullptr && iActNode == 1)
+									? (*m_useOnlyThisDataPositions) : (dataPosition[iActNode]);
 //		if(iActNode == breakPoint){ // check if early breaking is possible, check is performed always at the start of a layer
 //			if(!atLeastPerformedOneSplit){
 //				break;
@@ -270,8 +272,8 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 			 std::cout << "Found data right " << foundDataRight << std::endl;*/
 		if(rightDataPos.empty() || leftDataPos.empty()){
 			// split is not needed
-			dataPosition[leftPos].clear();
-			dataPosition[rightPos].clear();
+//			dataPosition[leftPos].clear();
+//			dataPosition[rightPos].clear();
 			m_splitDim[iActNode] = NodeType::NODE_IS_NOT_USED; // do not split here
 			if(iActNode == 1){
 				m_splitDim[iActNode] = NodeType::NODE_CAN_BE_USED; // there should be a split
@@ -315,13 +317,15 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 		deleteDataPositions();
 	}
 //	printStream(std::cout);
+	// just in the positive case record Time
+	GlobalStopWatch<DynamicDecisionTreeTrain>::instance().recordActTime();
 	return true;
 }
 
 template<typename dimType>
 Real DynamicDecisionTree<dimType>::trySplitFor(const Real usedSplitValue, const unsigned int usedDim,
-		const std::vector<unsigned int>& dataInNode, std::vector<unsigned int>& leftHisto,
-		std::vector<unsigned int>& rightHisto, RandomNumberGeneratorForDT& generator){
+											   const DataPositions& dataInNode, std::vector<unsigned int>& leftHisto,
+											   std::vector<unsigned int>& rightHisto, RandomNumberGeneratorForDT& generator){
 	int leftAmount = 0, rightAmount = 0;
 	if(dataInNode.size() < m_amountOfPointsCheckedPerSplit){ // under 100 take each value
 		for(const auto& pos : dataInNode){
@@ -456,7 +460,9 @@ void DynamicDecisionTree<dimType>::adjustToNewData(){
 	std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), 0);
 	const unsigned int leafAmount = pow2(m_maxDepth);
 	std::vector< std::vector<int> > histo(leafAmount, std::vector<int>(m_amountOfClasses, 0));
-	for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
+	auto startPos = 0; // TODO
+	for(unsigned int i = startPos; i < m_storage.size(); ++i){
+		const auto point = m_storage[i];
 		int iActNode = 1; // start in root
 		while(iActNode <= (int) m_maxInternalNodeNr){
 			if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){
@@ -472,14 +478,14 @@ void DynamicDecisionTree<dimType>::adjustToNewData(){
 				}
 				break;
 			}
-			const bool right = m_splitValues[iActNode] < (**it).coeff(m_splitDim[iActNode]);
+			const bool right = m_splitValues[iActNode] < point->coeff(m_splitDim[iActNode]);
 			iActNode *= 2; // get to next level
 			if(right){ // point is on right side of split
 				++iActNode; // go to right node
 			}
 
 		}
-		++histo[iActNode - leafAmount][(*it)->getLabel()];
+		++histo[iActNode - leafAmount][point->getLabel()];
 	}
 	for(unsigned int i = 0; i < leafAmount; ++i){
 		int max = -1;

@@ -18,7 +18,7 @@ KernelBase<KernelType, nrOfParams>::KernelBase(const OwnKernelInitParams& initPa
 		m_kernelParams.m_params[i]->changeAmountOfDims(m_kernelParams.m_params[i]->hasMoreThanOneDim()); // to secure that the amount of values is there
 		if(sampleNewParams){
 			if(m_kernelParams.m_params[i]->hasMoreThanOneDim()){
-				for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){
+				for(unsigned int j = 0; j < ClassKnowledge::instance().amountOfDims(); ++j){
 					m_kernelParams.m_params[i]->getValues()[j] = (*m_randomGaussians[i])();
 				}
 			}else{
@@ -44,7 +44,7 @@ void KernelBase<KernelType, nrOfParams>::init(const Matrix& dataMat, const bool 
 	m_calcedDifferenceMatrix = shouldDifferenceMatrixBeCalculated;
 	if(m_calcedDifferenceMatrix){
 		std::string path;
-		Settings::getValue("Kernel.path", path);
+		Settings::instance().getValue("Kernel.path", path);
 		//const std::string path = "kernelFile_" + number2String(dataMat.rows()) + "_" + number2String(dataMat.cols()) + ".kernel";
 		bool read = false;
 		if(boost::filesystem::exists(path) && m_differences == nullptr){
@@ -79,7 +79,7 @@ void KernelBase<KernelType, nrOfParams>::init(const LabeledData& data, const boo
 	m_calcedDifferenceMatrix = shouldDifferenceMatrixBeCalculated;
 	if(m_calcedDifferenceMatrix){
 		std::string path;
-		Settings::getValue("Kernel.path", path);
+		Settings::instance().getValue("Kernel.path", path);
 		//const std::string path = "kernelFile_" + number2String(dataMat.rows()) + "_" + number2String(dataMat.cols()) + ".kernel";
 		bool read = false;
 		if(boost::filesystem::exists(path)){
@@ -191,7 +191,7 @@ template<typename KernelType, unsigned int nrOfParams>
 void KernelBase<KernelType, nrOfParams>::subGradient(const KernelType& gradient, const Real factor){
 	for(unsigned int i = 0; i < nrOfParams; ++i){
 		if(m_kernelParams.m_params[i]->hasMoreThanOneDim() && gradient.m_params[i]->hasMoreThanOneDim()){ // both true
-			for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){
+			for(unsigned int j = 0; j < ClassKnowledge::instance().amountOfDims(); ++j){
 				m_kernelParams.m_params[i]->getValues()[j] -= factor * gradient.m_params[i]->getValues()[j];
 			}
 		}else if(!m_kernelParams.m_params[i]->hasMoreThanOneDim() && !gradient.m_params[i]->hasMoreThanOneDim()){ // both false
@@ -207,11 +207,12 @@ void KernelBase<KernelType, nrOfParams>::setHyperParamsWith(const KernelType& pa
 	for(unsigned int i = 0; i < KernelType::paramsAmount; ++i){
 		if(m_kernelParams.m_params[i]->hasMoreThanOneDim()){
 			if(m_kernelParams.m_params[i]->hasMoreThanOneDim() == params.m_params[i]->hasMoreThanOneDim()){
-				for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){
+				for(unsigned int j = 0; j < ClassKnowledge::instance().amountOfDims(); ++j){
 					m_kernelParams.m_params[i]->getValues()[j] = params.m_params[i]->getValues()[j];
 				}
 			}else{
-				printWarning("Reduce the amount of hyperparams from: " << ClassKnowledge::amountOfDims() << ", to 1");
+				printWarning("Reduce the amount of hyperparams from: " << ClassKnowledge::instance().amountOfDims()
+																	   << ", to 1");
 				m_kernelParams.m_params[i]->changeAmountOfDims(params.m_params[i]->hasMoreThanOneDim()); // hasMoreThanOneDim should be false
 				// -> only one param
 				m_kernelParams.m_params[i]->getValues()[0] = params.m_params[i]->getValue();
@@ -220,9 +221,10 @@ void KernelBase<KernelType, nrOfParams>::setHyperParamsWith(const KernelType& pa
 			if(m_kernelParams.m_params[i]->hasMoreThanOneDim() == params.m_params[i]->hasMoreThanOneDim()){
 				m_kernelParams.m_params[i]->getValues()[0] = params.m_params[i]->getValue();
 			}else{
-				printWarning("Reduce the amount of hyperparams from: " << ClassKnowledge::amountOfDims() << ", to 1");
+				printWarning("Reduce the amount of hyperparams from: " << ClassKnowledge::instance().amountOfDims()
+																	   << ", to 1");
 				m_kernelParams.m_params[i]->changeAmountOfDims(params.m_params[i]->hasMoreThanOneDim()); // hasMoreThanOneDim should be true
-				for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){
+				for(unsigned int j = 0; j < ClassKnowledge::instance().amountOfDims(); ++j){
 					m_kernelParams.m_params[i]->getValues()[j] = params.m_params[i]->getValues()[j];
 				}
 			}
@@ -311,7 +313,7 @@ template<typename KernelType, unsigned int nrOfParams>
 void KernelBase<KernelType, nrOfParams>::newRandHyperParams(){
 	for(unsigned int i = 0; i < nrOfParams; ++i){
 		if(m_kernelParams.m_params[i]->hasMoreThanOneDim()){
-			for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){
+			for(unsigned int j = 0; j < ClassKnowledge::instance().amountOfDims(); ++j){
 				m_kernelParams.m_params[i]->getValues()[j] = (*m_randomGaussians[i])();
 			}
 		}else{
@@ -332,7 +334,7 @@ template<typename KernelType, unsigned int nrOfParams>
 void KernelBase<KernelType, nrOfParams>::addToHyperParams(const KernelType& params, const Real factor){
 	for(unsigned int i = 0; i < m_kernelParams.paramsAmount; ++i){
 		if(m_kernelParams.m_params[i]->hasMoreThanOneDim() && params.m_params[i]->hasMoreThanOneDim()){
-			for(unsigned int j = 0; j < ClassKnowledge::amountOfDims(); ++j){
+			for(unsigned int j = 0; j < ClassKnowledge::instance().amountOfDims(); ++j){
 				m_kernelParams.m_params[i]->getValues()[j] += params.m_params[i]->getValues()[i] * factor;
 			}
 		}else{

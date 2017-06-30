@@ -76,9 +76,9 @@ public:
 	void setClassName(const int classNrOfMulti = UNDEF_CLASS_LABEL){
 		std::stringstream str2;
 		if(classNrOfMulti != UNDEF_CLASS_LABEL){
-			str2 << ClassKnowledge::getNameFor(classNrOfMulti) << "_";
+			str2 << ClassKnowledge::instance().getNameFor(classNrOfMulti) << "_";
 		}
-		str2 << ClassKnowledge::getNameFor(getLabelForOne());
+		str2 << ClassKnowledge::instance().getNameFor(getLabelForOne());
 		m_className = str2.str();
 	}
 

@@ -91,8 +91,8 @@ void ReadWriterHelper::readVector(std::fstream& stream, std::vector<T>& vector){
 template<class T>
 void ReadWriterHelper::writeDynamicTree(std::fstream& stream, const DynamicDecisionTree<T>& tree){
 	// write standart information
-	const unsigned int amountOfDims = ClassKnowledge::amountOfDims();
-	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	const unsigned int amountOfDims = ClassKnowledge::instance().amountOfDims();
+	const unsigned int amountOfClasses = ClassKnowledge::instance().amountOfClasses();
 	stream.write((char*) (&amountOfDims), sizeof(unsigned int));
 	stream.write((char*) (&amountOfClasses), sizeof(unsigned int));
 	stream.write((char*) (&tree.m_amountOfClasses), sizeof(T));
@@ -105,8 +105,8 @@ void ReadWriterHelper::writeDynamicTree(std::fstream& stream, const DynamicDecis
 template<class T>
 void ReadWriterHelper::readDynamicTree(std::fstream& stream, DynamicDecisionTree<T>& tree){
 	// read standart information
-	const unsigned int amountOfDims = ClassKnowledge::amountOfDims();
-	const unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	const unsigned int amountOfDims = ClassKnowledge::instance().amountOfDims();
+	const unsigned int amountOfClasses = ClassKnowledge::instance().amountOfClasses();
 	unsigned int readDims = 0;
 	unsigned int readClasses = 0;
 	stream.read((char*) (&readDims), sizeof(unsigned int));

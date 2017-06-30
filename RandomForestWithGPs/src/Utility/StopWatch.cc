@@ -14,9 +14,11 @@ StopWatch::StopWatch(){
 StopWatch::~StopWatch(){
 }
 
-void StopWatch::recordActTime(){
-	avgTime.addNew(elapsedSeconds());
+Real StopWatch::recordActTime(){
+	const Real currentTime = elapsedSeconds();
+	avgTime.addNew(currentTime);
 	startTime();
+	return currentTime;
 }
 
 const std::string StopWatch::elapsedAvgAsPrettyTime() const{

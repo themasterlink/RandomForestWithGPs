@@ -11,7 +11,6 @@
 #include "../Base/Settings.h"
 
 #include <opencv2/core/core.hpp>
-#include <opencv2/opencv.hpp>
 
 DataReader::DataReader(){
 }
@@ -35,14 +34,14 @@ void DataReader::readFromBinaryFile(LabeledData& data, const std::string& inputN
 		for(unsigned long i = lastSize; i < size + lastSize; ++i){
 			LabeledVectorX* p = new LabeledVectorX();
 			ReadWriterHelper::readPoint(input, *p);
-			if(!ClassKnowledge::hasClassName(p->getLabel())){
-				ClassKnowledge::setNameFor(StringHelper::number2String(p->getLabel()), p->getLabel());
+			if(!ClassKnowledge::instance().hasClassName(p->getLabel())){
+				ClassKnowledge::instance().setNameFor(StringHelper::number2String(p->getLabel()), p->getLabel());
 			}
-			data.push_back(p);
+			data.emplace_back(p);
 			classes.emplace(p->getLabel());
 		}
-		if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
-			ClassKnowledge::setAmountOfDims((unsigned int) data[0]->rows());
+		if(data.size() > 0 && ClassKnowledge::instance().amountOfDims() == 0){
+			ClassKnowledge::instance().setAmountOfDims((unsigned int) data[0]->rows());
 		}
 		printOnScreen("Amount of Classes for file: " << inputName << ": " << classes.size());
 		input.close();
@@ -60,20 +59,20 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName, c
 			std::stringstream ss(line);
 			std::string item;
 			while(std::getline(ss, item, ',')){
-				elements.push_back(item);
+				elements.emplace_back(item);
 			}
 			LabeledVectorX* newEle = new LabeledVectorX((const int) (elements.size() - 1),
 												(const unsigned int) std::stoi(elements.back()));
 			for(int i = 0; i < (int) elements.size() - 1; ++i){
 				(*newEle)[i] = (Real) std::stod(elements[i]);
 			};
-			data.push_back(newEle);
+			data.emplace_back(newEle);
 			if((unsigned int) data.size() == amountOfData){
 				break;
 			}
 		}
-		if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
-			ClassKnowledge::setAmountOfDims((unsigned int) data[0]->rows());
+		if(data.size() > 0 && ClassKnowledge::instance().amountOfDims() == 0){
+			ClassKnowledge::instance().setAmountOfDims((unsigned int) data[0]->rows());
 		}
 		input.close();
 	}else{
@@ -113,13 +112,13 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName,
 				std::stringstream ss(line);
 				std::string item;
 				while(std::getline(ss, item, ' ')){
-					elements.push_back(item);
+					elements.emplace_back(item);
 				}
 				LabeledVectorX* newEle = new LabeledVectorX(int(elements.size()), classNr);
 				for(unsigned int i = 0; i < elements.size(); ++i){
 					newEle->coeffRef(i) = (Real) std::stod(elements[i]);
 				}
-				data.push_back(newEle);
+				data.emplace_back(newEle);
 				if(data.size() == amountOfData){
 					break;
 				}
@@ -143,7 +142,7 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName,
 				std::stringstream ss(line);
 				std::string item;
 				while(std::getline(ss, item, ',')){
-					elements.push_back(item);
+					elements.emplace_back(item);
 				}
 				if(elements.size() > 0){
 					auto label = (unsigned int) std::stoi(elements.front());
@@ -163,7 +162,7 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName,
 					for(unsigned int i = start; i < maxSize; ++i){
 						newEle->coeffRef(i - start) = (Real) std::stod(elements[i]);
 					}
-					data.push_back(newEle);
+					data.emplace_back(newEle);
 					if(data.size() == amountOfData){
 						break;
 					}
@@ -184,8 +183,8 @@ void DataReader::readFromFile(LabeledData& data, const std::string& inputName,
 	}else{
 		printErrorAndQuit("File was not found for .txt or .binary: " << inputName);
 	}
-	if(data.size() > 0 && ClassKnowledge::amountOfDims() == 0){
-		ClassKnowledge::setAmountOfDims((unsigned int) data[0]->rows());
+	if(data.size() > 0 && ClassKnowledge::instance().amountOfDims() == 0){
+		ClassKnowledge::instance().setAmountOfDims((unsigned int) data[0]->rows());
 	}
 }
 
@@ -193,9 +192,9 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 	boost::filesystem::path targetDir(folderLocation);
 	boost::filesystem::directory_iterator end_itr;
 	// cycle through the directory
-	unsigned int amountOfClasses = ClassKnowledge::amountOfClasses();
+	unsigned int amountOfClasses = ClassKnowledge::instance().amountOfClasses();
 	std::string fakeDataLocation;
-	Settings::getValue("TotalStorage.folderLocFake", fakeDataLocation);
+	Settings::instance().getValue("TotalStorage.folderLocFake", fakeDataLocation);
 	boost::filesystem::path fakeDataLoc(fakeDataLocation);
 	int type = 0;
 	if(targetDir.parent_path().parent_path().filename() == "mnistOrg"){
@@ -226,7 +225,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 				std::string filePath(itr->path().c_str());
 				filePath += "/vectors";
 				readFromFile(data, filePath, amountOfData, amountOfClasses, readTxt);
-				ClassKnowledge::setNameFor(name, amountOfClasses);
+				ClassKnowledge::instance().setNameFor(name, amountOfClasses);
 				++amountOfClasses;
 				dataSets.emplace(name, data);
 			}
@@ -269,7 +268,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 									(*newEle).coeffRef(r * rows + c) = ele;
 								}
 							}
-							data[labels[i]].push_back(newEle);
+							data[labels[i]].emplace_back(newEle);
 						}
 					}else if(magicNumber == 2049){
 						int_fast32_t size;
@@ -294,10 +293,10 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			printErrorAndQuit("No data was read!");
 			return;
 		}
-		const bool createNewClasses = ClassKnowledge::amountOfClasses() == 0;
+		const bool createNewClasses = ClassKnowledge::instance().amountOfClasses() == 0;
 		for(unsigned int i = 0; i < 10; ++i){
 			if(createNewClasses){
-				ClassKnowledge::setNameFor(StringHelper::number2String(i), i);
+				ClassKnowledge::instance().setNameFor(StringHelper::number2String(i), i);
 			}
 			dataSets.emplace(StringHelper::number2String(i), data[i]);
 		}
@@ -389,13 +388,13 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 //		}
 //		cv::imwrite("test.png", img);
 //		openFileInViewer("test.png");
-//		ClassKnowledge::setAmountOfDims(newDim);
+//		ClassKnowledge::instance().setAmountOfDims(newDim);
 
-		ClassKnowledge::setAmountOfDims(28 * 28);
+		ClassKnowledge::instance().setAmountOfDims(28 * 28);
 		for(DataSetsIterator it = dataSets.begin(); it != dataSets.end(); ++it){
 			for(unsigned int t = 0; t < it->second.size(); ++t){
 				LabeledVectorX& point = *it->second[t];
-				for(unsigned int k = 0; k < ClassKnowledge::amountOfDims(); ++k){
+				for(unsigned int k = 0; k < ClassKnowledge::instance().amountOfDims(); ++k){
 					point.coeffRef(k) /= 255.;
 				}
 			}
@@ -429,7 +428,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 				std::stringstream ss(line);
 				std::string item;
 				while(std::getline(ss, item, ' ')){
-					elements.push_back(item);
+					elements.emplace_back(item);
 				}
 				if(elements[0] != "10" || elements[1] != "256"){
 					printError("The size or the dimension is wrong!");
@@ -443,14 +442,14 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 					std::stringstream ss(line);
 					std::string item;
 					while(std::getline(ss, item, ' ')){
-						elements.push_back(item);
+						elements.emplace_back(item);
 					}
 					if(elements.size() == 257){
 						LabeledVectorX* newEle = new LabeledVectorX(256, (const unsigned int) std::stoi(elements[0]));
 						for(unsigned int i = 1; i < 257; ++i){
 							newEle->coeffRef(i-1) = (Real) std::stod(elements[i]);
 						}
-						data[newEle->getLabel()].push_back(newEle);
+						data[newEle->getLabel()].emplace_back(newEle);
 					}else if(elements.size() > 0 && elements[0] == "-1"){
 						break;
 					}else{
@@ -463,10 +462,10 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			return;
 		}
 		input.close();
-		const bool firstTime = ClassKnowledge::amountOfClasses() == 0;
+		const bool firstTime = ClassKnowledge::instance().amountOfClasses() == 0;
 		for(unsigned int i = 0; i < 10; ++i){
 			if(firstTime){
-				ClassKnowledge::setNameFor(StringHelper::number2String(i), i);
+				ClassKnowledge::instance().setNameFor(StringHelper::number2String(i), i);
 			}
 			dataSets.emplace(StringHelper::number2String(i), data[i]);
 		}
@@ -475,7 +474,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			return;
 		}
 		auto dimValue = (const unsigned int) data[0][0]->rows();
-		ClassKnowledge::setAmountOfDims(dimValue);
+		ClassKnowledge::instance().setAmountOfDims(dimValue);
 
 //		std::string uspsFolder = targetDir.parent_path().parent_path().c_str();
 //		uspsFolder += "/usps/";
@@ -506,18 +505,18 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 			for(unsigned int i = 0; i < data.size(); ++i){
 				auto it = mapFromOldToNewLabels.find(data[i]->getLabel());
 				if(it != mapFromOldToNewLabels.end()){ // this class was registered before
-					dataSets.find(ClassKnowledge::getNameFor(it->second))->second.push_back(data[i]);
+					dataSets.find(ClassKnowledge::instance().getNameFor(it->second))->second.emplace_back(data[i]);
 				}else{
-					const unsigned int newNumber = ClassKnowledge::amountOfClasses();
+					const unsigned int newNumber = ClassKnowledge::instance().amountOfClasses();
 					mapFromOldToNewLabels.emplace(data[i]->getLabel(), newNumber);
-					ClassKnowledge::setNameFor(StringHelper::number2String(newNumber), newNumber);
+					ClassKnowledge::instance().setNameFor(StringHelper::number2String(newNumber), newNumber);
 					LabeledData newData;
-					dataSets.emplace(ClassKnowledge::getNameFor(newNumber), newData);
-					dataSets.find(ClassKnowledge::getNameFor(newNumber))->second.push_back(data[i]);
+					dataSets.emplace(ClassKnowledge::instance().getNameFor(newNumber), newData);
+					dataSets.find(ClassKnowledge::instance().getNameFor(newNumber))->second.emplace_back(data[i]);
 				}
 			}
 			auto dimValue = static_cast<const unsigned int>(data[0]->rows());
-			ClassKnowledge::setAmountOfDims(dimValue);
+			ClassKnowledge::instance().setAmountOfDims(dimValue);
 		}
 		break;
 	}
