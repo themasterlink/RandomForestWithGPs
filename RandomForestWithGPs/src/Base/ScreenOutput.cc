@@ -47,7 +47,7 @@ void ScreenOutput::run(){
 	const std::string firstLine = "Online Random Forest with IVMs, mode: " + mode;
 #ifdef USE_SCREEN_OUPUT
 	noecho();
-	cbreak();	/* Line buffering disabled. pass on everything */
+	cbreak();    /* Line buffering disabled. pass on everything */
 	nodelay(stdscr, true);
 	keypad(stdscr, true);
 #endif
@@ -60,7 +60,7 @@ void ScreenOutput::run(){
 #else
 	while(false){
 #endif
-		mvprintw(1,5, firstLine.c_str());
+		mvprintw(1, 5, firstLine.c_str());
 //		clear();
 		std::string completeWhite = "";
 		for(unsigned int i = 0; i < (unsigned int) COLS; ++i){
@@ -71,15 +71,15 @@ void ScreenOutput::run(){
 		const int restOfLines = LINES - 7 - heightOfThreadInfo;
 		if(heightOfThreadInfo < 25 && restOfLines > 3 && COLS < 80){
 			clear();
-			mvprintw(1,0, firstLine.c_str());
-			mvprintw(2,0, "There is not enough room to fill the rest with information!");
+			mvprintw(1, 0, firstLine.c_str());
+			mvprintw(2, 0, "There is not enough room to fill the rest with information!");
 			refresh();
 			sleepFor(m_timeToSleep);
 			continue;
 		}
 		int actLine = 2;
-		mvprintw(actLine,0, completeWhite.c_str());
-		int x,y;
+		mvprintw(actLine, 0, completeWhite.c_str());
+		int x, y;
 		getyx(stdscr, y, x);
 		const std::string amountOfThreadsString = "Amount of running Threads: ";
 		ThreadMaster::instance().m_mutex.lock();
@@ -96,11 +96,14 @@ void ScreenOutput::run(){
 			modeNr = -1;
 		}
 		if(modeNr > -1 && modeNr < 8){
-			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()), (", mode: " + StringHelper::number2String(modeNr + 1)).c_str());
+			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()),
+					 (", mode: " + StringHelper::number2String(modeNr + 1)).c_str());
 		}else if(modeNr == 11){
-			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()), ", show general information");
+			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()),
+					 ", show general information");
 		}else if(modeNr == 10){
-			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()), ", show error log");
+			mvprintw(actLine, (int) (amountOfThreadsString.length() + 5 + runningThreadAsString.length()),
+					 ", show error log");
 		}
 		actLine = startOfMainContent;
 
@@ -115,7 +118,8 @@ void ScreenOutput::run(){
 				for(auto it = m_runningThreads->cbegin(); it != m_runningThreads->cend(); ++it, ++rowCounter){
 					const bool isLeft = rowCounter % 2 == 0;
 					const int row = rowCounter / 2; // for 0 and 1 the first and so on
-					updateRunningPackage(it, rowCounter, row, isLeft, m_runningThreads->size() > 1 ? col / 2 : col, amountOfLinesPerThread, actLine, startOfRight, windows, panels);
+					updateRunningPackage(it, rowCounter, row, isLeft, m_runningThreads->size() > 1 ? col / 2 : col,
+										 amountOfLinesPerThread, actLine, startOfRight, windows, panels);
 				}
 				for(unsigned int i = (unsigned int) m_runningThreads->size(); i < 8; ++i){
 					if(panels[i] != nullptr){
@@ -125,7 +129,8 @@ void ScreenOutput::run(){
 			}else{
 				for(auto it = m_runningThreads->cbegin(); it != m_runningThreads->cend(); ++it, ++rowCounter){
 					if(modeNr == rowCounter){
-						updateRunningPackage(it, rowCounter, 0, true, col, heightOfThreadInfo, actLine, startOfRight, windows, panels);
+						updateRunningPackage(it, rowCounter, 0, true, col, heightOfThreadInfo, actLine, startOfRight,
+											 windows, panels);
 					}
 				}
 				for(int i = 0; i < 8; ++i){
@@ -164,7 +169,9 @@ void ScreenOutput::run(){
 		}else if(modeNr == 11){
 			actLine = startOfMainContent;
 		}
-		int heightOfGeneralInfo = std::max(std::min(LINES - actLine - 7 - (int) m_errorLines.size(), (int) m_lines.size()), std::min((int)m_lines.size(), 3)) + 2;
+		int heightOfGeneralInfo =
+				std::max(std::min(LINES - actLine - 7 - (int) m_errorLines.size(), (int) m_lines.size()),
+						 std::min((int) m_lines.size(), 3)) + 2;
 		const bool hasHeadLine = false;
 		drawWindow(&generalInfo.first, &generalInfo.second, heightOfGeneralInfo, col + 1, actLine, 2, hasHeadLine);
 		show_panel(generalInfo.second);
@@ -209,7 +216,8 @@ void ScreenOutput::run(){
 					}
 					++itNr;
 				}
-				drawWindow(&errorLog.first, &errorLog.second, heightOfError, col + 1, actLine, 2, hasErrorHeadLine, color);
+				drawWindow(&errorLog.first, &errorLog.second, heightOfError, col + 1, actLine, 2, hasErrorHeadLine,
+						   color);
 				fillWindow(errorLog.first, combinedErrorLines, col + 1 - 4, heightOfError, hasErrorHeadLine, color);
 			}
 		}
@@ -236,8 +244,8 @@ void ScreenOutput::run(){
 //			mvprintw(actLine++, 3, "-------------------------------------------------------------------------------------------");
 //			attron(COLOR_PAIR(1));
 //		}
-		mvprintw(progressBar,0, completeWhite.c_str());
-		mvprintw(progressBar + 1,0, completeWhite.c_str());
+		mvprintw(progressBar, 0, completeWhite.c_str());
+		mvprintw(progressBar + 1, 0, completeWhite.c_str());
 		mvprintw(progressBar, 4, m_progressLine.c_str());
 		m_lineMutex.unlock();
 		update_panels();
@@ -280,11 +288,14 @@ void ScreenOutput::run(){
 	}
 }
 
-void ScreenOutput::updateRunningPackage(ThreadMaster::PackageListConstIterator& it, const int rowCounter, const int row, const bool isLeft, const int colWidth,
-		const int amountOfLinesPerThread, int& actLine, int startOfRight, std::vector<WINDOW*>& windows, std::vector<PANEL*>& panels){
+void ScreenOutput::updateRunningPackage(ThreadMaster::PackageListConstIterator& it, const int rowCounter, const int row,
+										const bool isLeft, const int colWidth,
+										const int amountOfLinesPerThread, int& actLine, int startOfRight,
+										std::vector<WINDOW*>& windows, std::vector<PANEL*>& panels){
 	(*it)->m_lineMutex.lock();
 	const bool hasHeadLine = true;
-	drawWindow(&windows[rowCounter], &panels[rowCounter], amountOfLinesPerThread, colWidth, row * amountOfLinesPerThread + actLine - 1, isLeft ? 2 : startOfRight - 1, hasHeadLine);
+	drawWindow(&windows[rowCounter], &panels[rowCounter], amountOfLinesPerThread, colWidth,
+			   row * amountOfLinesPerThread + actLine - 1, isLeft ? 2 : startOfRight - 1, hasHeadLine);
 	WINDOW* win = windows[rowCounter];
 	int height, width;
 	getmaxyx(win, height, width);
@@ -292,7 +303,8 @@ void ScreenOutput::updateRunningPackage(ThreadMaster::PackageListConstIterator& 
 	show_panel(panels[rowCounter]);
 	fillWindow(win, (*it)->m_lines, width, height, hasHeadLine);
 	// header information after fillwindow, has a clean operation
-	const std::string standartLine = (*it)->m_standartInfo + ((*it)->m_additionalInformation.length() > 0 ? (", " + (*it)->m_additionalInformation) : "");
+	const std::string standartLine = (*it)->m_standartInfo +
+			((*it)->m_additionalInformation.length() > 0 ? (", " + (*it)->m_additionalInformation) : "");
 	wattron(win, COLOR_PAIR(6));
 	if((int) standartLine.length() > width){
 		mvwprintw(win, 1, 1, (standartLine.substr(0, (unsigned long) (width - 3)) + "...").c_str());
@@ -380,7 +392,8 @@ void ScreenOutput::updateRunningPackage(ThreadMaster::PackageListConstIterator& 
 	(*it)->m_lineMutex.unlock();
 }
 
-void ScreenOutput::drawWindow(WINDOW** window, PANEL** panel, int givenHeight, int givenWidth, int x, int y, const bool hasHeadLine, const int color){
+void ScreenOutput::drawWindow(WINDOW** window, PANEL** panel, int givenHeight, int givenWidth, int x, int y,
+							  const bool hasHeadLine, const int color){
 	int height, width; // in both if they are set
 	WINDOW* win;
 	if(*window == nullptr){
@@ -403,7 +416,7 @@ void ScreenOutput::drawWindow(WINDOW** window, PANEL** panel, int givenHeight, i
 		if(height != givenHeight || width != givenWidth || xPos != x){
 			// new draw!
 			del_panel(*panel);
-			delwin(*window );
+			delwin(*window);
 			*window = newwin(givenHeight, givenWidth, x, y);
 			win = *window;
 			*panel = new_panel(win);
@@ -419,7 +432,8 @@ void ScreenOutput::drawWindow(WINDOW** window, PANEL** panel, int givenHeight, i
 	}
 }
 
-void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, const int width, const int height, const bool hasHeadLine, const int color){
+void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, const int width, const int height,
+							  const bool hasHeadLine, const int color){
 	std::string whiteSpacesForWindow = "";
 	wattron(win, COLOR_PAIR(color));
 	for(int i = 0; i < width; ++i){
@@ -474,12 +488,14 @@ void ScreenOutput::fillWindow(WINDOW* win, const std::list<std::string>& lines, 
 				}
 			}else{
 				std::string line = *itLine;
-				const int neededLen = (int) (ceil(itLine->length() / (Real) width) - 1); // the last line will be printed normally
+				const int neededLen = (int) (ceil(itLine->length() / (Real) width) -
+											 1); // the last line will be printed normally
 				counter += neededLen;
 				int diff = 0;
 				while((int) line.length() > width){
 					if(counter + forStartLine < height){ // -1 for the start line
-						mvwprintw(win, height - counter, 2 + diff, line.substr(0, (unsigned long) (width - diff)).c_str());
+						mvwprintw(win, height - counter, 2 + diff,
+								  line.substr(0, (unsigned long) (width - diff)).c_str());
 					}
 					diff = 2;
 					line = line.substr((unsigned long) width, line.length() - width);
@@ -503,7 +519,7 @@ void ScreenOutput::print(const std::string& line){
 	if(line.find("\n")){
 		std::stringstream ss(line);
 		std::string to;
-		while(std::getline(ss,to,'\n')){
+		while(std::getline(ss, to, '\n')){
 			m_lines.emplace_back(to);
 		}
 	}else{

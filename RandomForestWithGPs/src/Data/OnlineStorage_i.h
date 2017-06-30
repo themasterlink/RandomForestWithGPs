@@ -8,17 +8,48 @@
 
 template<typename T>
 PoolInfo<T>::PoolInfo(): m_desiredSizes(ClassKnowledge::instance().amountOfClasses(), 0),
-						 m_performance(ClassKnowledge::instance().amountOfClasses(), (Real) 0.0){}
+						 m_currentSizes(ClassKnowledge::instance().amountOfClasses(), 0),
+						 m_performance(ClassKnowledge::instance().amountOfClasses(), (Real) 0.0),
+						 m_totalAmountOfSavedPoints(0), m_amountOfPointsPerClass(0){}
 
 template<typename T>
 void PoolInfo<T>::changeAmountOfClasses(const unsigned int amountOfClasses){
 	const unsigned int old = (unsigned int) m_desiredSizes.size();
 	m_desiredSizes.resize(amountOfClasses);
+	m_currentSizes.resize(amountOfClasses);
 	m_performance.resize(amountOfClasses);
 	for(unsigned int i = old; i < amountOfClasses; ++i){
-		m_desiredSizes[i] = 0;
+		m_currentSizes[i] = 0;
 		m_performance[i] = (Real) 0.0;
 	}
+	m_amountOfPointsPerClass = m_totalAmountOfSavedPoints / amountOfClasses;
+	for(unsigned int i = 0; i < amountOfClasses; ++i){
+		m_desiredSizes[i] = m_amountOfPointsPerClass;
+	}
+}
+
+template<typename T>
+void PoolInfo<T>::setMaxNumberOfSavedPoints(const unsigned int maxNr){
+	m_totalAmountOfSavedPoints = maxNr;
+	const unsigned int amountOfClasses = ClassKnowledge::instance().amountOfClasses();
+	m_amountOfPointsPerClass = m_totalAmountOfSavedPoints / amountOfClasses;
+	for(unsigned int i = 0; i < amountOfClasses; ++i){
+		m_desiredSizes[i] = m_amountOfPointsPerClass;
+	}
+}
+
+template<typename T>
+bool PoolInfo<T>::checkIfPointShouldBeAdded(const T& data){
+	// TODO remove old points -> else no new points are added
+	const auto label = data->getLabel();
+	if(m_desiredSizes.size() > label){
+		const bool ret = m_desiredSizes[label] > m_currentSizes[label];
+		if(ret){
+			++m_currentSizes[label];
+			return true;
+		}
+	}
+	return false;
 }
 
 template<typename T>
@@ -32,7 +63,7 @@ OnlineStorage<T>::OnlineStorage(OnlineStorage<T>& storage): m_lastUpdateIndex(st
 		m_internal.reserve(storage.size());
 		m_internal.insert(m_internal.end(), storage.begin(), storage.end());
 	}else if(m_storageMode == StorageMode::POOL){
-
+		printError("This storage type is not supported here!");
 	}else{
 		printError("This storage type is not supported here!");
 	}
@@ -239,9 +270,7 @@ ClassTypeSubject OnlineStorage<T>::classType() const{
 
 template<typename T>
 bool OnlineStorage<T>::checkIfPointShouldBeAdded(const T& data){
-	if(m_storageMode == StorageMode::POOL){
-	}
-	return true;
+	return m_poolInfo.checkIfPointShouldBeAdded(data);
 }
 
 template<typename T>

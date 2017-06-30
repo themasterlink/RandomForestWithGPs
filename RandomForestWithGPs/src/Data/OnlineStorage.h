@@ -22,15 +22,22 @@ public:
 
 	void changeAmountOfClasses(const unsigned int amountOfClasses);
 
+	void setMaxNumberOfSavedPoints(const unsigned int maxNr);
+
+	bool checkIfPointShouldBeAdded(const T& data);
+
 private:
 	std::vector<unsigned int> m_desiredSizes;
+	std::vector<unsigned int> m_currentSizes;
 	std::vector<Real> m_performance;
+	unsigned int m_totalAmountOfSavedPoints;
+	unsigned int m_amountOfPointsPerClass;
 };
 
 template<typename T>
 class OnlineStorage: public Subject, public Observer {
 public:
-	enum Event : unsigned int { // no class, because is used in to many places as an unsigned int
+	enum Event: unsigned int { // no class, because is used in to many places as an unsigned int
 		APPEND = 0,
 		APPENDBLOCK = 1,
 		ERASE = 2,
@@ -121,7 +128,9 @@ private:
 };
 
 #define __INCLUDE_ONLINESTORAGE
+
 #include "OnlineStorage_i.h"
+
 #undef __INCLUDE_ONLINESTORAGE
 
 #endif /* DATA_ONLINESTORAGE_H_ */
