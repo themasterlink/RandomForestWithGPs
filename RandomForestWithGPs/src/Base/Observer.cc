@@ -44,5 +44,5 @@ void Subject::notify(const unsigned int event){
 }
 
 unsigned int Subject::numberOfObservers() const{
-	return m_observers.size();
+	return (unsigned int) m_observers.size();
 }

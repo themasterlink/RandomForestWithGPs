@@ -113,14 +113,14 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 						group->join_all();
 						for(unsigned int i = 0; i < nrOfParallel; ++i){
 							ThreadMaster::instance().threadHasFinished(packages[i]);
-							SAVE_DELETE(packages[i]);
+							saveDelete(packages[i]);
 						}
 						for(unsigned int i = 0; i < amountOfClasses(); ++i){
 							if(m_isClassUsed[i]){
 								m_ivms[i]->getGaussianKernel()->setDifferenceMatrix(differenceMatrix);
 							}
 						}
-						SAVE_DELETE(group);
+						saveDelete(group);
 					}
 					m_init = true;
 					train();
@@ -139,7 +139,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 }
 
 IVMMultiBinary::~IVMMultiBinary() {
-	SAVE_DELETE(m_orfForKernel);
+	saveDelete(m_orfForKernel);
 }
 
 void IVMMultiBinary::train(){
@@ -163,7 +163,7 @@ void IVMMultiBinary::train(){
 			}
 			// remove all running threads
 			for(auto it = m_packages.begin(); it != m_packages.end(); ++it){
-				SAVE_DELETE(*it);
+				saveDelete(*it);
 			}
 			m_packages.clear();
 		}
@@ -275,12 +275,12 @@ void IVMMultiBinary::train(){
 			if(m_isClassUsed[i]){
 				ThreadMaster::instance().threadHasFinished(packages[i]);
 			}
-			SAVE_DELETE(packages[i]);
+			saveDelete(packages[i]);
 		}
 		groupForRetraining.join_all(); // to get a little bit of time until we wait on the finished training
 		for(auto it = packagesForRetrain.begin(); it != packagesForRetrain.end(); ++it){
 			ThreadMaster::instance().threadHasFinished(*it);
-			SAVE_DELETE(*it);
+			saveDelete(*it);
 		}
 //		}else{
 //			const bool fitParams = CommandSettings::instance().get_samplingAndTraining();
@@ -516,7 +516,7 @@ void IVMMultiBinary::predictData(const Data& points, Labels& labels, std::vector
 	group.join_all();
 	for(unsigned int i = 0; i < amountOfClasses(); ++i){
 		ThreadMaster::instance().threadHasFinished(packages[i]);
-		SAVE_DELETE(packages[i]);
+		saveDelete(packages[i]);
 	}
 	for(unsigned int i = 0; i < points.size(); ++i){
 		labels[i] = getLabelFrom(probabilities[i]);
@@ -542,7 +542,7 @@ void IVMMultiBinary::predictData(const LabeledData& points, Labels& labels, std:
 		if(m_isClassUsed[i]){
 			ThreadMaster::instance().threadHasFinished(packages[i]);
 		}
-		SAVE_DELETE(packages[i]); // just to be sure
+		saveDelete(packages[i]); // just to be sure
 	}
 	for(unsigned int i = 0; i < points.size(); ++i){
 		labels[i] = getLabelFrom(probabilities[i]);

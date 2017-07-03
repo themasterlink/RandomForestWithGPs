@@ -90,7 +90,7 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 		VectorX z(amountOfClasses);
 		//auto it = DSqrt_c.begin();
 		for(int i = 0; i < amountOfClasses; ++i){
-			//SAVE_DELETE(*it); // free last iteration, in init it is null
+			//saveDelete(*it); // free last iteration, in init it is null
 			//it = DSqrt_c.insert(it, sqrtPi.segment(i*dataPoints, dataPoints).asDiagonal());
 			//DiagMatrixXd* pDSqrt_c= *it;
 			//if(pDSqrt_c == NULL){

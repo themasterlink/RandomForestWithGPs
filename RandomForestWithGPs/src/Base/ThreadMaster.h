@@ -19,7 +19,7 @@
 class ThreadMaster {
 	friend ScreenOutput;
 
-SingeltonMacro(ThreadMaster);
+SINGELTON_MACRO(ThreadMaster);
 
 public:
 

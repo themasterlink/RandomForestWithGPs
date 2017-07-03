@@ -43,7 +43,7 @@ using UniquePtr = std::unique_ptr<T>;
 
 #define BUILD_SYSTEM_LINUX @BUILD_SYSTEM_CMAKE@
 
-#define SingeltonMacro(ClassName) \
+#define SINGELTON_MACRO(ClassName) \
     public: \
     static ClassName& instance(){ \
         static ClassName m_instance; \

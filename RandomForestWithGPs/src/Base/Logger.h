@@ -16,7 +16,7 @@
 
 class Logger {
 
-SingeltonMacro(Logger);
+SINGELTON_MACRO(Logger);
 
 public:
 

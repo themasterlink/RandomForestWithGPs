@@ -16,7 +16,7 @@ struct BigDecisionTreeTrain {
 template<typename currentWatch>
 class GlobalStopWatch {
 
-SingeltonMacro(GlobalStopWatch);
+SINGELTON_MACRO(GlobalStopWatch);
 
 public:
 
@@ -26,6 +26,11 @@ public:
 
 	TimeFrame elapsedAvgAsTimeFrame(){
 		lockStatementWithSave(m_sw.elapsedAvgAsTimeFrame(), TimeFrame var, m_mutex);
+		return var;
+	}
+
+	unsigned long getAvgCounter(){
+		lockStatementWithSave(m_sw.getAvgCounter(), const unsigned long var, m_mutex);
 		return var;
 	}
 

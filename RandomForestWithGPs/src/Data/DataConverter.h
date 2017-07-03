@@ -9,6 +9,7 @@
 #define DATA_DATACONVERTER_H_
 
 #include "LabeledVectorX.h"
+#include <type_traits>
 
 class DataConverter{
 public:
@@ -35,6 +36,9 @@ public:
 
 	static void getMinMax(const Data& data, Real& min, Real& max, const bool ignoreREAL_MAX_NEG = false);
 
+	template<typename T>
+	static void getMinMax(const std::vector<T>& data, T& min, T& max, const bool ignoreREAL_MAX_NEG = false);
+
 	static void getMinMax(const Matrix& mat, Real& min, Real& max, const bool ignoreREAL_MAX_NEG = false);
 
 	static void getMinMax(const VectorX& vec, Real& min, Real& max, const bool ignoreREAL_MAX_NEG = false);
@@ -50,8 +54,36 @@ public:
 	static void setToData(const DataSets& set, LabeledData& data);
 
 private:
+
 	DataConverter();
 	virtual ~DataConverter();
 };
+
+
+template<typename T>
+void DataConverter::getMinMax(const std::vector<T>& data, T& min, T& max, const bool ignoreREAL_MAX_NEG){
+	min = std::numeric_limits<T>::lowest();
+	max = std::numeric_limits<T>::max();
+	if(std::is_floating_point<T>::value){
+		for(const auto& ele : data){
+			if(ele < min && ele > NEG_REAL_MAX){
+				min = ele;
+			}
+			if(ele > max){
+				max = ele;
+			}
+		}
+	}else{
+		for(const auto& ele : data){
+			if(ele < min){
+				min = ele;
+			}
+			if(ele > max){
+				max = ele;
+			}
+		}
+	};
+}
+
 
 #endif /* DATA_DATACONVERTER_H_ */

@@ -160,7 +160,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 							const bool trained = currentTree->train(amountOfUsedDims, generator, 0, saveDataPositions);
 							currentTree->setUsedDataPositions(nullptr); // erase pointer to used dataPositions
 							if(!trained){
-								SAVE_DELETE(currentTree);
+								saveDelete(currentTree);
 							}else{
 								m_usedMemory += currentTree->getMemSize();
 							}
@@ -270,7 +270,7 @@ void BigDynamicDecisionTree::trainChildrenForRoot(PtrDynamicDecisionTree root, S
 														   saveDataPositions);
 					it->second->setUsedDataPositions(nullptr);
 					if(!trained){
-						SAVE_DELETE(it->second);
+						saveDelete(it->second);
 						actSmallInnerTreeStructure.erase(it);
 					}else{
 						m_usedMemory += it->second->getMemSize() + sizeof(SmallTreeInnerPair) + sizeof(PtrDynamicDecisionTree);

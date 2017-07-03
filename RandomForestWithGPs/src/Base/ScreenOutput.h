@@ -21,7 +21,7 @@
 
 class ScreenOutput {
 
-SingeltonMacro(ScreenOutput);
+SINGELTON_MACRO(ScreenOutput);
 
 public:
 	// must be called to get the needed information

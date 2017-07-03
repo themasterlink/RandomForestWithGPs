@@ -117,23 +117,14 @@ namespace StringHelper{
 
 	std::string number2String(const Real &in, const int precision){
 		if(precision > 0){
-			if(in < 10000.){
-				char buffer[10 + precision];
-				std::stringstream str;
-				str << "%." << precision << "f";
-				sprintf(buffer, str.str().c_str(), in);
-				return std::string(buffer);
-			}else{
-				char buffer[350 + precision]; // higher should be impossible
-				std::stringstream str;
-				str << "%." << precision << "f";
-				sprintf(buffer, str.str().c_str(), in);
-				return std::string(buffer);
-			}
+			std::stringstream str2;
+			str2.setf(std::ios::fixed);
+			str2 << std::setprecision(precision) << in;
+			return str2.str();
 		}else{
-			std::stringstream ss;
-			ss << in;
-			return ss.str();
+			std::stringstream str2;
+			str2 << in;
+			return str2.str();
 		}
 	}
 

@@ -52,6 +52,8 @@
 				"stepSizeOverData": 3
 			}
 		},
+		"activatePoolBased": "true",
+		"maxAmountOfPointsSavedInPool": 3000,
 		"amountOfTrainedTrees": 0,
 		"ownSamplingTime": 0,
 		"maxAmountOfUsedMemory": 1100000000,

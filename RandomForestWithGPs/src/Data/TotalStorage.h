@@ -14,7 +14,7 @@
 
 class TotalStorage {
 
-SingeltonMacro(TotalStorage);
+SINGELTON_MACRO(TotalStorage);
 
 public:
 

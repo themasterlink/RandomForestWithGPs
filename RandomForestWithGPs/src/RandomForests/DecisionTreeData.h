@@ -9,13 +9,6 @@
 #define RANDOMFORESTS_DECISIONTREEDATA_H_
 
 
-struct wordId2ClassLabel{
-	int numberOfIds; //  <=> number of classes
-	char seperatorSign; // usually _
-	int* lengthOfStrings;
-	char* namesOfLabels; // name of labels contains the word id values -> n23201..., are seperated with _
-};
-
 struct DecisionTreeData{
 	int height;
 	int nrOfInternalNodes; // size of dim and split values

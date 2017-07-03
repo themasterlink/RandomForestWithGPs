@@ -17,7 +17,7 @@ public:
 
 	void print(const std::string& text);
 
-	void printInColor(const std::string& text, const char* color);
+	void printInColor(const std::string& text, const std::string& color);
 
 	void printSwitchingColor(const std::string& text);
 

@@ -18,27 +18,21 @@
 #include "../Base/CommandSettings.h"
 #include <boost/filesystem.hpp>
 
-#define RESET   "\033[0m"
-#define BLACK   "\033[30m"      /* Black */
-#define RED     "\033[31m"      /* Red */
-#define GREEN   "\033[32m"      /* Green */
-#define YELLOW  "\033[33m"      /* Yellow */
-#define BLUE    "\033[34m"      /* Blue */
-#define MAGENTA "\033[35m"      /* Magenta */
-#define CYAN    "\033[36m"      /* Cyan */
-#define WHITE   "\033[37m"      /* White */
-#define BOLDBLACK   "\033[1m\033[30m"      /* Bold Black */
-#define BOLDRED     "\033[1m\033[31m"      /* Bold Red */
-#define BOLDGREEN   "\033[1m\033[32m"      /* Bold Green */
-#define BOLDYELLOW  "\033[1m\033[33m"      /* Bold Yellow */
-#define BOLDBLUE    "\033[1m\033[34m"      /* Bold Blue */
-#define BOLDMAGENTA "\033[1m\033[35m"      /* Bold Magenta */
-#define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
-#define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
+static const std::string RESET("\033[0m");
+static const std::string BLACK("\033[30m");      /* Black */
+static const std::string RED("\033[31m");        /* Red */
+static const std::string GREEN("\033[32m");      /* Green */
+static const std::string YELLOW("\033[33m");     /* Yellow */
+static const std::string BLUE("\033[34m");       /* Blue */
+static const std::string MAGENTA("\033[35m");    /* Magenta */
+static const std::string CYAN("\033[36m");       /* Cyan */
+static const std::string WHITE("\033[37m");      /* White */
 
-#define SAVE_DELETE(pointer) \
-    delete(pointer); \
-    pointer = nullptr \
+template<typename T>
+void saveDelete(T*& pointer){
+	delete(pointer);
+	pointer = nullptr;
+}
 
 // for not implemented functions and params which have no use in a function, because for example they are inherited
 #define UNUSED(expr) \
@@ -67,7 +61,7 @@ template<>
 constexpr inline char pow2(const char exponent) noexcept = delete; // prohibits the use with char
 
 template<>
-constexpr inline bool pow2(const bool exponent) noexcept = delete; // prohibits the use with char
+constexpr inline bool pow2(const bool exponent) noexcept = delete; // prohibits the use with bool
 
 template<class T>
 inline auto argMax(const T& begin, const T& end){
@@ -87,7 +81,7 @@ constexpr void overwriteConst(const T& ref, const T& newValue){
 
 template<class T>
 inline void sleepFor(const T seconds){
-	usleep((__useconds_t) (seconds * (T) 1e6));
+	usleep((__useconds_t) (seconds * (Real) 1e6));
 }
 
 inline void systemCall(const std::string& call){
@@ -102,6 +96,7 @@ inline void quitApplication(const bool wait = true){
 //			getchar();
 //		}
 //	}
+	sleepFor(0.5);
 	ThreadMaster::instance().stopExecution();
 	ThreadMaster::instance().blockUntilFinished();
 	sleepFor(0.5);

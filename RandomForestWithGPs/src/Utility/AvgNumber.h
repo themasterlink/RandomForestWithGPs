@@ -23,7 +23,7 @@ public:
 
 	Real mean() const { return m_mean; };
 
-	Real counter() const { return m_mean; };
+	unsigned long counter() const { return (unsigned long) m_counter; };
 
 private:
 	Real m_mean;

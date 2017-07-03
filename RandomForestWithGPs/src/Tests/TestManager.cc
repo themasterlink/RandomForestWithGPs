@@ -85,6 +85,9 @@ int TestManager::readAll(){
 
 void TestManager::run(){
 	OnlineStorage<LabeledVectorX* > train;
+	if(Settings::instance().getDirectBoolValue("OnlineRandomForest.activatePoolBased")){
+		train.setStorageModeToPoolBase();
+	}
 	unsigned int height;
 	Settings::instance().getValue("OnlineRandomForest.Tree.height", height);
 	UniquePtr<OnlineRandomForest> orf;
@@ -143,9 +146,13 @@ void TestManager::run(){
 								train.appendUnique(data);
 							}
 							printOnScreen("Avg Time for Dynamic Decision Tree train: "
-												  << GlobalStopWatch<DynamicDecisionTreeTrain>::instance().elapsedAvgAsTimeFrame());
+												  << GlobalStopWatch<DynamicDecisionTreeTrain>::instance().elapsedAvgAsTimeFrame()
+												  << ", amount trained trees: "
+												  << GlobalStopWatch<DynamicDecisionTreeTrain>::instance().getAvgCounter());
 							printOnScreen("Avg Time for Big Decision Tree train: "
-												  << GlobalStopWatch<BigDecisionTreeTrain>::instance().elapsedAvgAsTimeFrame());
+												  << GlobalStopWatch<BigDecisionTreeTrain>::instance().elapsedAvgAsTimeFrame()
+												  << ", amount trained trees: "
+												  << GlobalStopWatch<BigDecisionTreeTrain>::instance().getAvgCounter());
 						}else if(testInfo.m_mode == TestMode::TEST){
 							auto data = getAllPointsFor(testInfo.m_varName, testInfo.m_scope);
 							printOnScreen("Perform test for: " << testInfo.m_varName);

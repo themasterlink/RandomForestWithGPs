@@ -24,7 +24,15 @@ public:
 
 	void setMaxNumberOfSavedPoints(const unsigned int maxNr);
 
+	void addPointToClass(const unsigned int classNr);
+
+	void updateAccordingToPerformance();
+
 	bool checkIfPointShouldBeAdded(const T& data);
+
+	unsigned int getClassWherePointShouldBeRemoved();
+
+	void removePointFromClass(unsigned int classNr);
 
 private:
 	std::vector<unsigned int> m_desiredSizes;
@@ -50,7 +58,8 @@ public:
 	};
 
 	using InternalStorage = std::vector<T>;
-	using MultiClassInternalStorage = std::vector<InternalStorage>;
+	using ClassInternalStorage = std::list<T>;
+	using MultiClassInternalStorage = std::vector<ClassInternalStorage>;
 	using Iterator = typename InternalStorage::iterator;
 	using ConstIterator = typename InternalStorage::const_iterator;
 
@@ -109,6 +118,9 @@ public:
 	virtual ~OnlineStorage();
 
 private:
+
+	void appendInternal(const std::vector<T>& data, const bool shouldBeAddedUnique);
+
 	InternalStorage m_internal;
 
 	MultiClassInternalStorage m_multiInternal;

@@ -43,9 +43,7 @@ void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned 
 			str << " ";
 		}
 	}
-	char buffer [20];
-	sprintf(buffer, "| %3.2f", dAct); // all other methods are ugly
-	str << buffer << " %%";
+	str << StringHelper::number2String(dAct, 2) << " %%";
 	if(dAct > 0. && dAct < 100. && seconds > 0.){
 		str << ", rest time is: " << TimeFrame(m_dMax - seconds);
 	}else if(dAct >= 100.){
@@ -69,9 +67,7 @@ void InLinePercentageFiller::setActPercentageAndPrintLine(const Real dAct, const
 				str << " ";
 			}
 		}
-		char buffer [20];
-		sprintf(buffer, "| %3.2f", dAct); // all other methods are ugly
-		str << buffer << " %%";
+		str << StringHelper::number2String(dAct, 2) << " %%";
 		if((dAct > 0. && dAct < 100.) || !lastElement){
 			TimeFrame frame = m_sw.elapsedAsTimeFrame();
 			str << ", rest time is: " << (frame * (1. / dAct * 100.) - frame);

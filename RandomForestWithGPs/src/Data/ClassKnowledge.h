@@ -16,7 +16,7 @@
 
 class ClassKnowledge {
 
-SingeltonMacro(ClassKnowledge);
+SINGELTON_MACRO(ClassKnowledge);
 	
 public:
 	class Caller: public Subject {
@@ -52,8 +52,6 @@ public:
 	void attach(Observer* obj);
 
 	void deattach(Observer* obj);
-
-	Caller* getCaller(){ return &m_caller; }
 
 private:
 

@@ -41,7 +41,7 @@ public:
 	void addNewAvgTime(const Real seconds);
 
 	// returns the counter from the avg time measurment
-	unsigned int getAvgCounter() const{ return (unsigned int) avgTime.counter(); };
+	unsigned int getAvgCounter() const{ return avgTime.counter(); };
 
 private:
 

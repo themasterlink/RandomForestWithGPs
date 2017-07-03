@@ -39,7 +39,7 @@ struct Param;
 
 class CommandSettings {
 
-SingeltonMacro(CommandSettings);
+SINGELTON_MACRO(CommandSettings);
 	
 public:
 

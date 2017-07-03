@@ -265,7 +265,7 @@ void DataWriterForVisu::writeSvg(const std::string& fileName, const PredictorMul
 		++iX;
 	}
 	for(unsigned int i = 0; i < points.size(); ++i){
-		SAVE_DELETE(points[i]);
+		saveDelete(points[i]);
 	}
 	std::list<unsigned int> empty;
 	drawSvgDataPoints(file, data, min, max, dimVec, empty, classAmount);
@@ -964,7 +964,7 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	}
 	cv::imwrite(Logger::instance().getActDirectory() + fileName, img);
 	for(unsigned int i = 0; i < points.size(); ++i){
-		SAVE_DELETE(points[i]);
+		saveDelete(points[i]);
 	}
 }
 

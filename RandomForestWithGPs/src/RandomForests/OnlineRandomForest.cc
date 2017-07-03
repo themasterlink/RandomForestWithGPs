@@ -981,7 +981,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::ve
 			}
 			labels[i] = iMax;
 		}
-		SAVE_DELETE(probsForThreads);
+		saveDelete(probsForThreads);
 	}else{
 		boost::thread_group group;
 		const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
@@ -1051,7 +1051,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, 
 			}
 			labels[i] = iMax;
 		}
-		SAVE_DELETE(probsForThreads);
+		saveDelete(probsForThreads);
 	}else{
 		boost::thread_group group;
 		const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();

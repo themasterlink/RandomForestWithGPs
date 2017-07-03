@@ -15,7 +15,7 @@
 
 class Settings{
 
-SingeltonMacro(Settings);
+SINGELTON_MACRO(Settings);
 
 public:
 	void init(const std::string& settingsfile);

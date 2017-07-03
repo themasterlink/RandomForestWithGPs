@@ -29,7 +29,9 @@ void ClassKnowledge::setNameFor(const std::string& name, unsigned int nr){
 		}
 	}else{
 		m_names.emplace(nr, name);
+		m_mutex.unlock();
 		m_caller.notify(Caller::NEW_CLASS); // ensures that all storages are notified over the change
+		return;
 	}
 	if(nr >= UNDEF_CLASS_LABEL){
 		m_mutex.unlock();

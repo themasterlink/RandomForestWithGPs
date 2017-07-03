@@ -10,7 +10,7 @@
 
 class TestManager {
 
-SingeltonMacro(TestManager);
+SINGELTON_MACRO(TestManager);
 
 public:
 

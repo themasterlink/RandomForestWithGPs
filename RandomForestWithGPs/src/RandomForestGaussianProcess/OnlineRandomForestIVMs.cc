@@ -96,9 +96,9 @@ void OnlineRandomForestIVMs::update(){
 		}
 		group->join_all();
 		for(unsigned int iClassNr = 0; iClassNr < amountOfClasses(); ++iClassNr){
-			SAVE_DELETE(datasForPredictedClasses[iClassNr]);
+			saveDelete(datasForPredictedClasses[iClassNr]);
 		}
-		SAVE_DELETE(group);
+		saveDelete(group);
 		printOnScreen("Finished Training!");
 	}else{
 		printErrorAndQuit("Not implemented yet!");

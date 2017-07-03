@@ -515,7 +515,7 @@ void DynamicDecisionTree<dimType>::deleteDataPositions(){
 	if(m_useOnlyThisDataPositions != nullptr){
 		printError("This should always be zero if the other one is deleted");
 	}
-	SAVE_DELETE(m_dataPositions);
+	saveDelete(m_dataPositions);
 }
 
 template<typename dimType>

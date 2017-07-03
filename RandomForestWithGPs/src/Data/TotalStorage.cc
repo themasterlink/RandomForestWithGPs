@@ -191,7 +191,7 @@ void TotalStorage::readData(const int amountOfData){
 					if(realIndex != newAmountOfDims){
 						printError("Something went wrong!");
 					}
-					SAVE_DELETE(it->second[i]);
+					saveDelete(it->second[i]);
 					it->second[i] = newPoint;
 				}
 			}
@@ -258,7 +258,7 @@ void TotalStorage::readData(const int amountOfData){
 						if(realIndex != newAmountOfDims){
 							printError("Something went wrong!");
 						}
-						SAVE_DELETE((*it)[i]);
+						saveDelete((*it)[i]);
 						(*it)[i] = newPoint;
 					}
 				}
@@ -277,7 +277,7 @@ void TotalStorage::readData(const int amountOfData){
 				for(;it != m_storage.end();){
 					std::string name = it->first;
 					for(unsigned int i = 0; i < it->second.size(); ++i){
-						SAVE_DELETE(it->second[i]);
+						saveDelete(it->second[i]);
 					}
 					++it;
 					m_storage.erase(name);
@@ -375,7 +375,7 @@ void TotalStorage::readData(const int amountOfData){
 					nextStopPoint += uniformNr();
 				}else{
 					// reduces the amount of memory used
-					SAVE_DELETE(m_trainSet[i]);
+					saveDelete(m_trainSet[i]);
 				}
 			}
 			printOnScreen("Reduced training size from: " << m_trainSet.size() << " to: " << trainList.size());

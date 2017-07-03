@@ -5,6 +5,8 @@
 
 #include "../Utility/Util.h"
 #include "ClassKnowledge.h"
+#include "../Base/Settings.h"
+#include "DataConverter.h"
 
 template<typename T>
 PoolInfo<T>::PoolInfo(): m_desiredSizes(ClassKnowledge::instance().amountOfClasses(), 0),
@@ -32,30 +34,51 @@ template<typename T>
 void PoolInfo<T>::setMaxNumberOfSavedPoints(const unsigned int maxNr){
 	m_totalAmountOfSavedPoints = maxNr;
 	const unsigned int amountOfClasses = ClassKnowledge::instance().amountOfClasses();
-	m_amountOfPointsPerClass = m_totalAmountOfSavedPoints / amountOfClasses;
-	for(unsigned int i = 0; i < amountOfClasses; ++i){
-		m_desiredSizes[i] = m_amountOfPointsPerClass;
+	if(amountOfClasses > 0){
+		m_amountOfPointsPerClass = m_totalAmountOfSavedPoints / amountOfClasses;
+		for(unsigned int i = 0; i < amountOfClasses; ++i){
+			m_desiredSizes[i] = m_amountOfPointsPerClass;
+		}
+	}else{
+		printError("The amount of classes is zero!");
 	}
 }
 
 template<typename T>
 bool PoolInfo<T>::checkIfPointShouldBeAdded(const T& data){
-	// TODO remove old points -> else no new points are added
 	const auto label = data->getLabel();
-	if(m_desiredSizes.size() > label){
-		const bool ret = m_desiredSizes[label] > m_currentSizes[label];
-		if(ret){
-			++m_currentSizes[label];
-			return true;
+	return m_desiredSizes[label] > m_currentSizes[label];
+}
+
+template<typename T>
+unsigned int PoolInfo<T>::getClassWherePointShouldBeRemoved(){
+	for(unsigned int i = 0, end = (unsigned int) m_desiredSizes.size(); i < end; ++i){
+		if(m_desiredSizes[i] <= m_currentSizes[i]){
+			return i;
 		}
 	}
-	return false;
+	return UNDEF_CLASS_LABEL;
+}
+
+template<typename T>
+void PoolInfo<T>::addPointToClass(const unsigned int classNr){
+	++m_currentSizes[classNr];
+}
+
+template<typename T>
+void PoolInfo<T>::removePointFromClass(unsigned int classNr){
+	--m_currentSizes[classNr];
+}
+
+template<typename T>
+void PoolInfo<T>::updateAccordingToPerformance(){
+	Real min, max;
+	DataConverter::getMinMax(m_performance, min, max);
 }
 
 template<typename T>
 OnlineStorage<T>::OnlineStorage(): m_lastUpdateIndex(0), m_storageMode(StorageMode::NORMAL){
 }
-
 
 template<typename T>
 OnlineStorage<T>::OnlineStorage(OnlineStorage<T>& storage): m_lastUpdateIndex(storage.m_lastUpdateIndex){
@@ -84,6 +107,7 @@ void OnlineStorage<T>::append(const T& data){
 		if(checkIfPointShouldBeAdded(data)){
 			m_lastUpdateIndex = size();
 			m_multiInternal[data->getLabel()].emplace_back(data);
+			m_poolInfo.addPointToClass(data->getLabel());
 			copyMultiInternalInInternal();
 			notify(static_cast<const unsigned int >(Event::APPEND));
 		}
@@ -113,32 +137,20 @@ void OnlineStorage<T>::append(const OnlineStorage<T>& storage){
 
 template<typename T>
 void OnlineStorage<T>::append(const std::vector<T>& storage){
-	if(m_storageMode == StorageMode::NORMAL){
-		m_lastUpdateIndex = size();
-		m_internal.reserve(m_internal.size() + storage.size());
-		m_internal.insert(m_internal.end(), storage.begin(), storage.end());
-		notify(static_cast<const unsigned int>(Event::APPENDBLOCK));
-	}else if(m_storageMode == StorageMode::POOL){
-		for(auto& data : storage){
-			if(checkIfPointShouldBeAdded(data)){
-				m_lastUpdateIndex = size();
-				m_multiInternal[data->getLabel()].emplace_back(data);
-			}
-		}
-		copyMultiInternalInInternal();
-	}else{
-		printError("This type is not supported!");
-	}
+	appendInternal(storage, false);
 }
 
 template<typename T>
 void OnlineStorage<T>::appendUnique(const std::vector<T>& data){
+	appendInternal(data, m_lastUpdateIndex != 0);
+}
+
+template<typename T>
+void OnlineStorage<T>::appendInternal(const std::vector<T>& data, const bool shouldBeAddedUnique){
 	m_lastUpdateIndex = size();
-	if(m_lastUpdateIndex == 0){ // first append
-		append(data);
-	}else{
-		if(m_storageMode == StorageMode::NORMAL){
-			m_internal.reserve(m_lastUpdateIndex + data.size());
+	if(m_storageMode == StorageMode::NORMAL){
+		m_internal.reserve(m_lastUpdateIndex + data.size());
+		if(shouldBeAddedUnique){
 			for(const auto& p : data){
 				bool found = false;
 				for(const auto& existingPoint : m_internal){
@@ -151,36 +163,44 @@ void OnlineStorage<T>::appendUnique(const std::vector<T>& data){
 					m_internal.emplace_back(p);
 				}
 			}
-			notify(static_cast<const unsigned int>(Event::APPENDBLOCK));
-		}else if(m_storageMode == StorageMode::POOL){
-			std::vector<unsigned int> usedData;
-			unsigned i = 0;
-			for(const auto& p : data){
-				bool found = false;
+		}else{
+			m_internal.insert(m_internal.end(), data.begin(), data.end());
+		}
+		notify(static_cast<const unsigned int>(Event::APPENDBLOCK));
+	}else if(m_storageMode == StorageMode::POOL){
+		for(const auto& p : data){
+			bool found = false;
+			if(shouldBeAddedUnique){
 				for(const auto& existingPoint : m_internal){
 					if(existingPoint == p){
 						found = true;
 						break;
 					}
 				}
-				if(!found){
-					usedData.emplace_back(i);
-				}
-				++i;
 			}
-			m_internal.reserve(m_lastUpdateIndex + data.size());
-			for(auto& index : usedData){
-				auto& point = data[index];
-				if(checkIfPointShouldBeAdded(point)){
-					m_lastUpdateIndex = size();
-					m_multiInternal[point->getLabel()].emplace_back(point);
-				}
+			if(!found){
+				m_multiInternal[p->getLabel()].emplace_back(p);
+				m_poolInfo.addPointToClass(p->getLabel());
 			}
-			copyMultiInternalInInternal();
-			notify(static_cast<const unsigned int>(Event::APPENDBLOCK));
-		}else{
-			printError("This type is not supported!");
 		}
+		unsigned int next = m_poolInfo.getClassWherePointShouldBeRemoved();
+		unsigned int amountOfRemovedPoints = 0;
+		while(next != UNDEF_CLASS_LABEL){
+			m_multiInternal[next].pop_front();
+			m_poolInfo.removePointFromClass(next);
+			++amountOfRemovedPoints;
+			next = m_poolInfo.getClassWherePointShouldBeRemoved();
+		}
+		std::stringstream str2;
+		str2 << "Added " << data.size() << " points to the online storage";
+		if(amountOfRemovedPoints > 0){
+			str2 << " and removed " << amountOfRemovedPoints << " old points";
+		}
+		printOnScreen(str2.str());
+		copyMultiInternalInInternal();
+		notify(static_cast<const unsigned int>(Event::APPENDBLOCK));
+	}else{
+		printError("This type is not supported!");
 	}
 }
 
@@ -277,16 +297,17 @@ template<typename T>
 void OnlineStorage<T>::copyMultiInternalInInternal(){
 	if(m_storageMode == StorageMode::POOL){
 		m_internal.clear();
-		typename OnlineStorage<T>::MultiClassInternalStorage::size_type amount;
+		typename OnlineStorage<T>::MultiClassInternalStorage::size_type amount = 0;
 		for(auto& storage : m_multiInternal){
 			amount += storage.size();
 		}
-		m_internal.resize(amount);
+		m_internal.reserve(amount);
 		for(auto& storage : m_multiInternal){
 			for(auto& point : storage){
 				m_internal.emplace_back(point);
 			}
 		}
+		printOnScreen("Current size of the pool: " << m_internal.size());
 	}else{
 		printError("This type is not defined here!");
 	}
@@ -294,7 +315,7 @@ void OnlineStorage<T>::copyMultiInternalInInternal(){
 
 template<typename T>
 void OnlineStorage<T>::update(Subject* caller, unsigned int event){
-	if(caller == ClassKnowledge::instance().getCaller() && event == ClassKnowledge::Caller::NEW_CLASS){
+	if(event == ClassKnowledge::Caller::NEW_CLASS){
 		const auto newAmountOfClasses = ClassKnowledge::instance().amountOfClasses();
 		const auto oldAmount = m_multiInternal.size();
 		if(newAmountOfClasses < oldAmount){
@@ -302,6 +323,8 @@ void OnlineStorage<T>::update(Subject* caller, unsigned int event){
 		}
 		m_poolInfo.changeAmountOfClasses(newAmountOfClasses);
 		m_multiInternal.resize(newAmountOfClasses);
+		const auto nr = Settings::instance().getDirectValue<unsigned int>("OnlineRandomForest.maxAmountOfPointsSavedInPool");
+		m_poolInfo.setMaxNumberOfSavedPoints(nr);
 	}else{
 		printError("This update is not possible on an OnlineStorage!");
 	}
@@ -310,5 +333,5 @@ void OnlineStorage<T>::update(Subject* caller, unsigned int event){
 template<typename T>
 void OnlineStorage<T>::setStorageModeToPoolBase(){
 	m_storageMode = StorageMode::POOL;
-	attach(ClassKnowledge::instance().getCaller());
+	ClassKnowledge::instance().attach(this);
 }

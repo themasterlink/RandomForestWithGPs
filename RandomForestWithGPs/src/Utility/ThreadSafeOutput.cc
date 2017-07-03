@@ -32,6 +32,6 @@ void ThreadSafeOutput::printSwitchingColor(const std::string& text){
 	m_mutex.unlock();
 }
 
-void ThreadSafeOutput::printInColor(const std::string& text, const char* color){
+void ThreadSafeOutput::printInColor(const std::string& text, const std::string& color){
 	lockStatementWith(m_stream << color << text << RESET << std::endl, m_mutex);
 }
