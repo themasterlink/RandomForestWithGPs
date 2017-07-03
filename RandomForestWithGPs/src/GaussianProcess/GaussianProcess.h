@@ -8,6 +8,8 @@
 #ifndef GAUSSIANPROCESS_GAUSSIANPROCESS_H_
 #define GAUSSIANPROCESS_GAUSSIANPROCESS_H_
 
+#ifdef BUILD_OLD_CODE
+
 #include <Eigen/Cholesky>
 #include "../Utility/Util.h"
 #include "../Data/LabeledVectorX.h"
@@ -86,5 +88,7 @@ private:
 
 
 };
+
+#endif // BUILD_OLD_CODE
 
 #endif /* GAUSSIANPROCESS_GAUSSIANPROCESS_H_ */

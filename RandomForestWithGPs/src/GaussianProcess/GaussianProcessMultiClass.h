@@ -8,9 +8,10 @@
 #ifndef GAUSSIANPROCESS_GAUSSIANPROCESSMULTICLASS_H_
 #define GAUSSIANPROCESS_GAUSSIANPROCESSMULTICLASS_H_
 
+#ifdef BUILD_OLD_CODE
+
 #include <Eigen/Cholesky>
 #include "../Utility/Util.h"
-
 
 class GaussianProcessMultiClass{
 public:
@@ -23,5 +24,7 @@ private:
 	GaussianProcessMultiClass();
 	virtual ~GaussianProcessMultiClass();
 };
+
+#endif // BUILD_OLD_CODE
 
 #endif /* GAUSSIANPROCESS_GAUSSIANPROCESSMULTICLASS_H_ */

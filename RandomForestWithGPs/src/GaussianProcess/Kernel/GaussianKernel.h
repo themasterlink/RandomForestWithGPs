@@ -13,11 +13,14 @@
 #include "KernelType.h"
 #include "KernelBase.h"
 
+#ifdef BUILD_OLD_CODE
 class GaussianProcessWriter;
-
+#endif // BUILD_OLD_CODE
 
 class GaussianKernel : public KernelBase<GaussianKernelParams> {
+#ifdef BUILD_OLD_CODE
 	friend GaussianProcessWriter;
+#endif // BUILD_OLD_CODE
 public:
 
 	GaussianKernel(bool simpleLength = true);

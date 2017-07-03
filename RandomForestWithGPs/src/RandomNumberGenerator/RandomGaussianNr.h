@@ -11,10 +11,14 @@
 #include "../Utility/Util.h"
 #include <boost/random/normal_distribution.hpp>
 
+#ifdef BUILD_OLD_CODE
 class GaussianProcessWriter;
+#endif // BUILD_OLD_CODE
 
 class RandomGaussianNr{
+#ifdef BUILD_OLD_CODE
 	friend GaussianProcessWriter;
+#endif // BUILD_OLD_CODE
 public:
 
 	using base_generator_type = GeneratorType; // generator type
@@ -42,7 +46,7 @@ private:
 
 inline
 Real RandomGaussianNr::operator()(){
-	return (*m_normalGenerator)();
+	return (Real) (*m_normalGenerator)();
 }
 
 #endif /* RANDOMNUMBERGENERATOR_RANDOMGAUSSIANNR_H_ */

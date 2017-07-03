@@ -5,6 +5,9 @@
  *      Author: Max
  */
 
+
+#ifdef BUILD_OLD_CODE
+
 #include "BestHyperParams.h"
 #include "../Utility/Util.h"
 
@@ -107,3 +110,5 @@ const std::string BestHyperParams::prettyStringOfBest(const int precision){
 		return str.str();
 	}
 }
+
+#endif // BUILD_OLD_CODE

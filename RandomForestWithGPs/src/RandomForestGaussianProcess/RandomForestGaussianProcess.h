@@ -8,6 +8,8 @@
 #ifndef RANDOMFORESTGAUSSIANPROCESS_RANDOMFORESTGAUSSIANPROCESS_H_
 #define RANDOMFORESTGAUSSIANPROCESS_RANDOMFORESTGAUSSIANPROCESS_H_
 
+#ifdef BUILD_OLD_CODE
+
 #include "../RandomForests/RandomForest.h"
 #include "../Utility/ThreadSafeOutput.h"
 #include <boost/thread.hpp> // Boost threads
@@ -71,5 +73,7 @@ private:
 	bool m_didLoadTree;
 	int m_nrOfRunningThreads;
 };
+
+#endif // BUILD_OLD_CODE
 
 #endif /* RANDOMFORESTGAUSSIANPROCESS_RANDOMFORESTGAUSSIANPROCESS_H_ */

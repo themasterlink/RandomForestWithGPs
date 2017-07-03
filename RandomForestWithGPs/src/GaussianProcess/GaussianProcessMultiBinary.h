@@ -8,6 +8,8 @@
 #ifndef GAUSSIANPROCESS_GAUSSIANPROCESSMULTIBINARY_H_
 #define GAUSSIANPROCESS_GAUSSIANPROCESSMULTIBINARY_H_
 
+#ifdef BUILD_OLD_CODE
+
 #include "../Data/LabeledVectorX.h"
 #include "GaussianProcess.h"
 #include "../Utility/ThreadSafeOutput.h"
@@ -15,7 +17,6 @@
 #include <boost/thread.hpp> // Boost threads
 #include <boost/bind.hpp> // Boost threads
 #include "BestHyperParams.h"
-
 
 class GaussianProcessMultiBinary : public PredictorMultiClass {
 public:
@@ -61,5 +62,7 @@ private:
 	ThreadSafeOutput m_output;
 	std::vector<GaussianProcess* > m_gps;
 };
+
+#endif // BUILD_OLD_CODE
 
 #endif /* GAUSSIANPROCESS_GAUSSIANPROCESSMULTIBINARY_H_ */

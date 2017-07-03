@@ -8,6 +8,7 @@
 #ifndef TESTS_MULTICLASSRFGPTEST_H_
 #define TESTS_MULTICLASSRFGPTEST_H_
 
+#ifdef BUILD_OLD_CODE
 
 #include "../Base/Settings.h"
 #include "../Data/DataReader.h"
@@ -121,5 +122,7 @@ void executeForRFGPMultiClass(const std::string& path){
 	std::cout << "finish" << std::endl;
 	return;
 }
+
+#endif // BUILD_OLD_CODE
 
 #endif /* TESTS_MULTICLASSRFGPTEST_H_ */

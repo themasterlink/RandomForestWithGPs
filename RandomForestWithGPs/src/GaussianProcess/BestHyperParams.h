@@ -8,6 +8,8 @@
 #ifndef GAUSSIANPROCESS_BESTHYPERPARAMS_H_
 #define GAUSSIANPROCESS_BESTHYPERPARAMS_H_
 
+#ifdef BUILD_OLD_CODE
+
 #include <boost/thread.hpp> // Boost threads
 #include "../Base/BaseType.h"
 #include "../Base/Types.h"
@@ -47,5 +49,7 @@ private:
 	bool m_shutDown;
 	Mutex m_mutex;
 };
+
+#endif // BUILD_OLD_CODE
 
 #endif /* GAUSSIANPROCESS_BESTHYPERPARAMS_H_ */

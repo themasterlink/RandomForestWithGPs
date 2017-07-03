@@ -5,6 +5,8 @@
  *      Author: Max
  */
 
+#ifdef BUILD_OLD_CODE
+
 #include "GaussianProcessWriter.h"
 
 GaussianProcessWriter::GaussianProcessWriter() {
@@ -121,3 +123,5 @@ void GaussianProcessWriter::writeToFile(const std::string& filePath, GaussianPro
 		return;
 	}
 }
+
+#endif // BUILD_OLD_CODE

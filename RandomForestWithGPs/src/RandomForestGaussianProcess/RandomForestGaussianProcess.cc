@@ -5,6 +5,8 @@
  *      Author: Max
  */
 
+#ifdef BUILD_OLD_CODE
+
 #include "../RandomForestGaussianProcess/RandomForestGaussianProcess.h"
 #include "../Data/DataWriterForVisu.h"
 #include "../RandomForests/RandomForestWriter.h"
@@ -404,3 +406,5 @@ unsigned int RandomForestGaussianProcess::predict(const VectorX& point) const{
 RandomForestGaussianProcess::~RandomForestGaussianProcess(){
 }
 
+
+#endif // BUILD_OLD_CODE

@@ -5,6 +5,8 @@
  *      Author: Max
  */
 
+#ifdef BUILD_OLD_CODE
+
 #include "RFGPWriter.h"
 #include "../Utility/Util.h"
 #include "../Utility/ReadWriterHelper.h"
@@ -107,3 +109,6 @@ void RFGPWriter::readFromFile(const std::string& filePath, RandomForestGaussianP
 		printError("File is not there: " << filePath);
 	}
 }
+
+
+#endif // BUILD_OLD_CODE

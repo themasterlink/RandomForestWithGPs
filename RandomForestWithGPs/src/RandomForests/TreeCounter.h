@@ -10,6 +10,8 @@
 
 #include "../Utility/Util.h"
 
+#ifdef BUILD_OLD_CODE
+
 class TreeCounter{
 public:
 	TreeCounter(): m_counter(0){};
@@ -30,5 +32,6 @@ private:
 	int m_counter;
 };
 
+#endif // BUILD_OLD_CODE
 
 #endif /* RANDOMFORESTS_TREECOUNTER_H_ */

@@ -8,6 +8,8 @@
 #ifndef GAUSSIANPROCESS_GAUSSIANPROCESSWRITER_H_
 #define GAUSSIANPROCESS_GAUSSIANPROCESSWRITER_H_
 
+#ifdef BUILD_OLD_CODE
+
 #include "GaussianProcess.h"
 #include <fstream>
 
@@ -27,5 +29,7 @@ private:
 	GaussianProcessWriter();
 	virtual ~GaussianProcessWriter();
 };
+
+#endif // BUILD_OLD_CODE
 
 #endif /* GAUSSIANPROCESS_GAUSSIANPROCESSWRITER_H_ */

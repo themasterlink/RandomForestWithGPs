@@ -29,13 +29,19 @@ int readAllData(){
 	return trainAmount;
 }
 
+
+#ifdef BUILD_OLD_CODE
+
 #include "multiClassRFGPTest.h"
 #include "binaryClassRFTest.h"
 #include "binaryClassGPTest.h"
+#include "multiClassGPTest.h"
+
+#endif // BUILD_OLD_CODE
+
 #include "binaryClassIVMTest.h"
 #include "multiClassIVMTest.h"
 #include "binaryClassORFTest.h"
-#include "multiClassGPTest.h"
 #include "multiClassORFIVMTest.h"
 #include "performanceMeasurement.h"
 

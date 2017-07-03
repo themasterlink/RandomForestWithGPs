@@ -11,6 +11,8 @@
 #include "../Data/DataReader.h"
 #include "../GaussianProcess/GaussianProcessMultiClass.h"
 
+#ifdef BUILD_OLD_CODE
+
 void executeForMultiClass(const std::string& path){
 
 	LabeledData data;
@@ -70,6 +72,6 @@ void executeForMultiClass(const std::string& path){
 	GaussianProcessMultiClass::magicFunc(amountOfClass,dataPoints, cov, y);
 }
 
-
+#endif // BUILD_OLD_CODE
 
 #endif /* TESTS_MULTICLASSGPTEST_H_ */

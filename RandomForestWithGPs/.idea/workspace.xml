@@ -14,14 +14,39 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="049817e5-95a7-4829-9b2c-4499a747c94c" name="Default" comment="">
+    <list default="true" id="049817e5-95a7-4829-9b2c-4499a747c94c" name="Default" comment="Changen InLinePercentageFiller to singelton pattern">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/IVMMultiBinary.cc" afterPath="$PROJECT_DIR$/src/GaussianProcess/IVMMultiBinary.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" afterPath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Base/BaseType.h" afterPath="$PROJECT_DIR$/src/Base/BaseType.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/BestHyperParams.cc" afterPath="$PROJECT_DIR$/src/GaussianProcess/BestHyperParams.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/BestHyperParams.h" afterPath="$PROJECT_DIR$/src/GaussianProcess/BestHyperParams.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcess.cc" afterPath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcess.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcess.h" afterPath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcess.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiBinary.cc" afterPath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiBinary.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiBinary.h" afterPath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiBinary.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiClass.cc" afterPath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiClass.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiClass.h" afterPath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiClass.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.cc" afterPath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.h" afterPath="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/Kernel/GaussianKernel.h" afterPath="$PROJECT_DIR$/src/GaussianProcess/Kernel/GaussianKernel.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/GaussianProcess/LevenbergMarquardtSolver.h" afterPath="$PROJECT_DIR$/src/GaussianProcess/LevenbergMarquardtSolver.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForestGaussianProcess/RFGPWriter.cc" afterPath="$PROJECT_DIR$/src/RandomForestGaussianProcess/RFGPWriter.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForestGaussianProcess/RFGPWriter.h" afterPath="$PROJECT_DIR$/src/RandomForestGaussianProcess/RFGPWriter.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForestGaussianProcess/RandomForestGaussianProcess.cc" afterPath="$PROJECT_DIR$/src/RandomForestGaussianProcess/RandomForestGaussianProcess.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForestGaussianProcess/RandomForestGaussianProcess.h" afterPath="$PROJECT_DIR$/src/RandomForestGaussianProcess/RandomForestGaussianProcess.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/DecisionTree.cc" afterPath="$PROJECT_DIR$/src/RandomForests/DecisionTree.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/DecisionTree.h" afterPath="$PROJECT_DIR$/src/RandomForests/DecisionTree.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/DecisionTreeData.h" afterPath="$PROJECT_DIR$/src/RandomForests/DecisionTreeData.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/RandomForest.cc" afterPath="$PROJECT_DIR$/src/RandomForests/RandomForest.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/RandomForest.h" afterPath="$PROJECT_DIR$/src/RandomForests/RandomForest.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/RandomForestWriter.cc" afterPath="$PROJECT_DIR$/src/RandomForests/RandomForestWriter.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/TreeCounter.h" afterPath="$PROJECT_DIR$/src/RandomForests/TreeCounter.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomNumberGenerator/RandomGaussianNr.h" afterPath="$PROJECT_DIR$/src/RandomNumberGenerator/RandomGaussianNr.h" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Tests/binaryClassGPTest.h" afterPath="$PROJECT_DIR$/src/Tests/binaryClassGPTest.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Tests/binaryClassIVMTest.h" afterPath="$PROJECT_DIR$/src/Tests/binaryClassIVMTest.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Utility/InLinePercentageFiller.cc" afterPath="$PROJECT_DIR$/src/Utility/InLinePercentageFiller.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Utility/InLinePercentageFiller.h" afterPath="$PROJECT_DIR$/src/Utility/InLinePercentageFiller.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Tests/binaryClassRFTest.h" afterPath="$PROJECT_DIR$/src/Tests/binaryClassRFTest.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Tests/multiClassGPTest.h" afterPath="$PROJECT_DIR$/src/Tests/multiClassGPTest.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Tests/multiClassRFGPTest.h" afterPath="$PROJECT_DIR$/src/Tests/multiClassRFGPTest.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Tests/tests.h" afterPath="$PROJECT_DIR$/src/Tests/tests.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main.cc" afterPath="$PROJECT_DIR$/src/main.cc" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/CMakeFiles/" />
@@ -41,110 +66,129 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="TestManager.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Tests/TestManager.h">
+      <file leaf-file-name="performanceMeasurement.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Tests/performanceMeasurement.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="InLinePercentageFiller.cc" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Utility/InLinePercentageFiller.cc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="13" column="5" lean-forward="false" selection-start-line="13" selection-start-column="5" selection-end-line="13" selection-end-column="5" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="binaryClassIVMTest.h" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/Tests/binaryClassIVMTest.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="271">
-              <caret line="402" column="13" lean-forward="true" selection-start-line="402" selection-start-column="13" selection-end-line="402" selection-end-column="13" />
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding>
-                <element signature="e#12060#12524#0" expanded="true" />
-                <marker date="1499092148379" expanded="false" signature="23213:23687" ph="/.../" />
+                <element signature="e#0#84#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="InLinePercentageFiller.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Utility/InLinePercentageFiller.h">
+      <file leaf-file-name="TestInformation.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Tests/TestInformation.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="356">
-              <caret line="26" column="9" lean-forward="false" selection-start-line="26" selection-start-column="9" selection-end-line="26" selection-end-column="9" />
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="OnlineRandomForest.cc" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc">
+      <file leaf-file-name="tests.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Tests/tests.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="188">
-              <caret line="219" column="58" lean-forward="true" selection-start-line="219" selection-start-column="58" selection-end-line="219" selection-end-column="58" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="binaryClassGPTest.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Tests/binaryClassGPTest.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="152">
-              <caret line="140" column="18" lean-forward="true" selection-start-line="140" selection-start-column="18" selection-end-line="140" selection-end-column="18" />
+            <state relative-caret-position="219">
+              <caret line="35" column="30" lean-forward="true" selection-start-line="35" selection-start-column="30" selection-end-line="35" selection-end-column="30" />
               <folding>
-                <element signature="e#5500#6451#0" expanded="true" />
-                <element signature="e#7633#7936#0" expanded="true" />
-                <marker date="1499092148419" expanded="false" signature="12992:13471" ph="/.../" />
-                <marker date="1499092148419" expanded="false" signature="13472:15056" ph="/.../" />
+                <element signature="e#1224#1255#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="IVMMultiBinary.cc" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/GaussianProcess/IVMMultiBinary.cc">
+      <file leaf-file-name="main.cc" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main.cc">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="288">
-              <caret line="256" column="62" lean-forward="false" selection-start-line="256" selection-start-column="62" selection-end-line="256" selection-end-column="62" />
+            <state relative-caret-position="67">
+              <caret line="13" column="46" lean-forward="false" selection-start-line="13" selection-start-column="46" selection-end-line="13" selection-end-column="46" />
+              <folding>
+                <element signature="e#270#294#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DataReader.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Data/DataReader.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding>
+                <element signature="e#0#72#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GaussianProcessWriter.cc" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="401">
+              <caret line="126" column="10" lean-forward="false" selection-start-line="126" selection-start-column="10" selection-end-line="126" selection-end-column="10" />
+              <folding>
+                <element signature="e#109#4426#0" expanded="true" />
+                <marker date="1499093571175" expanded="false" signature="2122:2383" ph="/.../" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GaussianProcess.cc" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcess.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="370">
+              <caret line="434" column="24" lean-forward="false" selection-start-line="434" selection-start-column="24" selection-end-line="434" selection-end-column="24" />
+              <folding>
+                <element signature="e#114#15535#0" expanded="true" />
+                <marker date="1499093596841" expanded="false" signature="5562:6366" ph="/.../" />
+                <marker date="1499093596841" expanded="false" signature="9640:9990" ph="/.../" />
+                <marker date="1499093596841" expanded="false" signature="9995:10058" ph="/.../" />
+                <marker date="1499093596841" expanded="false" signature="14281:14391" ph="/.../" />
+                <marker date="1499093596841" expanded="false" signature="14964:15056" ph="/.../" />
+                <marker date="1499093596841" expanded="false" signature="15088:15125" ph="/.../" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DecisionTree.cc" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/RandomForests/DecisionTree.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="401">
+              <caret line="292" column="24" lean-forward="false" selection-start-line="292" selection-start-column="24" selection-end-line="292" selection-end-column="24" />
+              <folding>
+                <element signature="e#105#10575#0" expanded="true" />
+                <marker date="1499093626872" expanded="false" signature="114:278" ph="..." />
+                <marker date="1499093626872" expanded="false" signature="4869:5126" ph="/.../" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GaussianKernel.cc" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/GaussianProcess/Kernel/GaussianKernel.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="34">
+              <caret line="7" column="18" lean-forward="false" selection-start-line="7" selection-start-column="18" selection-end-line="7" selection-end-column="18" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ScreenOutput.cc" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Base/ScreenOutput.cc">
+      <file leaf-file-name="GaussianKernel.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/GaussianProcess/Kernel/GaussianKernel.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="543">
-              <caret line="557" column="19" lean-forward="false" selection-start-line="557" selection-start-column="19" selection-end-line="557" selection-end-column="19" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ThreadSafeOutput.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Utility/ThreadSafeOutput.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="13" column="7" lean-forward="true" selection-start-line="13" selection-start-column="7" selection-end-line="13" selection-end-column="7" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ThreadSafeOutput.cc" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Utility/ThreadSafeOutput.cc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="510">
-              <caret line="35" column="53" lean-forward="false" selection-start-line="35" selection-start-column="53" selection-end-line="35" selection-end-column="53" />
-              <folding />
+            <state relative-caret-position="268">
+              <caret line="37" column="0" lean-forward="true" selection-start-line="37" selection-start-column="0" selection-end-line="37" selection-end-column="0" />
+              <folding>
+                <element signature="e#147#185#0" expanded="true" />
+                <element signature="e#315#343#0" expanded="true" />
+                <element signature="e#458#487#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -160,11 +204,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>ch</find>
-      <find>nu</find>
-      <find>number2St</find>
-      <find>printIn</find>
-      <find>printInColor</find>
       <find>MAG</find>
       <find>printInColor(</find>
       <find>M</find>
@@ -185,11 +224,16 @@
       <find>Singelto</find>
       <find>Singelton</find>
       <find>c</find>
-      <find>char</find>
       <find>InLinePercentageFiller</find>
       <find>InLinePercentageFiller:</find>
       <find>static</find>
+      <find>char[</find>
+      <find>char [</find>
+      <find>char</find>
+      <find>char</find>
+      <find>cmae</find>
       <find>InLinePercentageFiller::</find>
+      <find>cmaes</find>
     </findStrings>
     <replaceStrings>
       <replace>orf-&gt;</replace>
@@ -235,35 +279,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/RandomForestGaussianProcess/OnlineRandomForestIVMs.cc" />
-        <option value="$PROJECT_DIR$/src/Data/DataReader.cc" />
-        <option value="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiBinary.cc" />
-        <option value="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.cc" />
-        <option value="$PROJECT_DIR$/src/GaussianProcess/IVM.cc" />
-        <option value="$PROJECT_DIR$/src/GaussianProcess/IVM.h" />
-        <option value="$PROJECT_DIR$/src/GaussianProcess/Kernel/GaussianKernel.cc" />
-        <option value="$PROJECT_DIR$/src/GaussianProcess/Kernel/KernelBase_i.h" />
-        <option value="$PROJECT_DIR$/src/GaussianProcess/Kernel/KernelType.cc" />
-        <option value="$PROJECT_DIR$/src/Utility/ReadWriterHelper.cc" />
-        <option value="$PROJECT_DIR$/src/Utility/ReadWriterHelper.h" />
-        <option value="$PROJECT_DIR$/src/Utility/ConfusionMatrixPrinter.cc" />
-        <option value="$PROJECT_DIR$/src/Base/ScreenOutput.h" />
-        <option value="$PROJECT_DIR$/src/Tests/TestManager.h" />
-        <option value="$PROJECT_DIR$/src/Base/Logger.cc" />
-        <option value="$PROJECT_DIR$/src/Data/TotalStorage.h" />
-        <option value="$PROJECT_DIR$/src/Data/TotalStorage.cc" />
-        <option value="$PROJECT_DIR$/src/main.cc" />
-        <option value="$PROJECT_DIR$/src/Tests/tests.h" />
-        <option value="$PROJECT_DIR$/src/Tests/multiClassIVMTest.h" />
-        <option value="$PROJECT_DIR$/src/Tests/multiClassORFIVMTest.h" />
-        <option value="$PROJECT_DIR$/src/Tests/binaryClassORFTest.h" />
-        <option value="$PROJECT_DIR$/src/Utility/StopWatch.cc" />
-        <option value="$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree_i.h" />
-        <option value="$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.cc" />
-        <option value="$PROJECT_DIR$/src/Base/ScreenOutput.cc" />
-        <option value="$PROJECT_DIR$/src/Data/ClassKnowledge.h" />
-        <option value="$PROJECT_DIR$/src/Data/ClassKnowledge.cc" />
-        <option value="$PROJECT_DIR$/src/Base/Observer.cc" />
         <option value="$PROJECT_DIR$/Settings/init.json" />
         <option value="$PROJECT_DIR$/Settings/testSettingsPy.init" />
         <option value="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" />
@@ -275,17 +290,46 @@
         <option value="$PROJECT_DIR$/src/Data/OnlineStorage_i.h" />
         <option value="$PROJECT_DIR$/src/Data/DataConverter.h" />
         <option value="$PROJECT_DIR$/src/Utility/StringHelper.cc" />
-        <option value="$PROJECT_DIR$/src/RandomForests/DecisionTreeData.h" />
         <option value="$PROJECT_DIR$/src/Utility/ThreadSafeOutput.h" />
         <option value="$PROJECT_DIR$/src/Utility/ThreadSafeOutput.cc" />
         <option value="$PROJECT_DIR$/src/Utility/Util.h" />
-        <option value="$PROJECT_DIR$/src/Base/BaseType.h" />
         <option value="$PROJECT_DIR$/src/Utility/InLinePercentageFiller.h" />
         <option value="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" />
-        <option value="$PROJECT_DIR$/src/Tests/binaryClassGPTest.h" />
         <option value="$PROJECT_DIR$/src/GaussianProcess/IVMMultiBinary.cc" />
         <option value="$PROJECT_DIR$/src/Utility/InLinePercentageFiller.cc" />
         <option value="$PROJECT_DIR$/src/Tests/binaryClassIVMTest.h" />
+        <option value="$PROJECT_DIR$/src/RandomForests/RandomForest.h" />
+        <option value="$PROJECT_DIR$/src/RandomForests/TreeCounter.h" />
+        <option value="$PROJECT_DIR$/src/RandomForests/DecisionTreeData.h" />
+        <option value="$PROJECT_DIR$/src/RandomNumberGenerator/RandomNumberGeneratorForDT.h" />
+        <option value="$PROJECT_DIR$/src/Tests/binaryClassGPTest.h" />
+        <option value="$PROJECT_DIR$/src/Tests/multiClassGPTest.h" />
+        <option value="$PROJECT_DIR$/src/Base/BaseType.h" />
+        <option value="$PROJECT_DIR$/src/RandomNumberGenerator/RandomGaussianNr.h" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/BestHyperParams.cc" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiClass.cc" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiBinary.cc" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/LevenbergMarquardtSolver.h" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.h" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiClass.h" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiBinary.h" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/GaussianProcess.h" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/BestHyperParams.h" />
+        <option value="$PROJECT_DIR$/src/RandomForestGaussianProcess/RandomForestGaussianProcess.h" />
+        <option value="$PROJECT_DIR$/src/RandomForestGaussianProcess/RFGPWriter.h" />
+        <option value="$PROJECT_DIR$/src/RandomForestGaussianProcess/RFGPWriter.cc" />
+        <option value="$PROJECT_DIR$/src/RandomForestGaussianProcess/RandomForestGaussianProcess.cc" />
+        <option value="$PROJECT_DIR$/src/RandomForests/RandomForest.cc" />
+        <option value="$PROJECT_DIR$/src/RandomForests/RandomForestWriter.cc" />
+        <option value="$PROJECT_DIR$/src/RandomForests/DecisionTree.h" />
+        <option value="$PROJECT_DIR$/src/Tests/multiClassRFGPTest.h" />
+        <option value="$PROJECT_DIR$/src/Tests/binaryClassRFTest.h" />
+        <option value="$PROJECT_DIR$/src/Tests/tests.h" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.cc" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/GaussianProcess.cc" />
+        <option value="$PROJECT_DIR$/src/RandomForests/DecisionTree.cc" />
+        <option value="$PROJECT_DIR$/src/GaussianProcess/Kernel/GaussianKernel.h" />
+        <option value="$PROJECT_DIR$/src/main.cc" />
       </list>
     </option>
   </component>
@@ -413,60 +457,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="RandomForestWithGPs" />
-              <option name="myItemType" value="com.jetbrains.cidr.projectView.CidrFilesViewHelper$MyProjectTreeStructure$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="RandomForestWithGPs" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Utility" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="RandomForestWithGPs" />
-              <option name="myItemType" value="com.jetbrains.cidr.projectView.CidrFilesViewHelper$MyProjectTreeStructure$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="RandomForestWithGPs" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Data" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="RandomForestWithGPs" />
-              <option name="myItemType" value="com.jetbrains.cidr.projectView.CidrFilesViewHelper$MyProjectTreeStructure$1" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="RandomForestWithGPs" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Base" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -794,7 +784,7 @@
       <workItem from="1498805397026" duration="15412000" />
       <workItem from="1498826619586" duration="1860000" />
       <workItem from="1498829434080" duration="187000" />
-      <workItem from="1499063843380" duration="18171000" />
+      <workItem from="1499063843380" duration="19781000" />
     </task>
     <task id="LOCAL-00001" summary="Bug fixes (no dead lock in waiting, better exit for screenouput, memory usage in testmanager corrected, renaming of StringHelper functions)">
       <created>1496756074975</created>
@@ -873,11 +863,18 @@
       <option name="project" value="LOCAL" />
       <updated>1499091775585</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Changen InLinePercentageFiller to singelton pattern">
+      <created>1499092191674</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1499092191674</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="472226000" />
+    <option name="totallyTimeSpent" value="473836000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -893,13 +890,13 @@
     <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922733" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.42553192" sideWeight="0.49520957" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.42553192" sideWeight="0.49520957" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3286026" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.41703057" sideWeight="0.5047904" order="8" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.41657335" sideWeight="0.5047904" order="8" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922733" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.43784994" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32026875" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.249694" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3281075" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24940334" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -954,7 +951,8 @@
     <MESSAGE value="Fixed bug in GlobalStopWatch (if used in multithread functions)" />
     <MESSAGE value="more pool for online storage (not done yet), basic algorithm works" />
     <MESSAGE value="Pooling for Online Storage Basic Version works, renamed some stuff to better fit convention, removed some old code" />
-    <option name="LAST_COMMIT_MESSAGE" value="Pooling for Online Storage Basic Version works, renamed some stuff to better fit convention, removed some old code" />
+    <MESSAGE value="Changen InLinePercentageFiller to singelton pattern" />
+    <option name="LAST_COMMIT_MESSAGE" value="Changen InLinePercentageFiller to singelton pattern" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -977,6 +975,11 @@
           <url>file:///usr/include/boost/thread/thread_only.hpp</url>
           <option name="timeStamp" value="236" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/Tests/tests.h</url>
+          <line>10</line>
+          <option name="timeStamp" value="293" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
@@ -986,377 +989,27 @@
           <properties />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="289" />
+      <option name="time" value="295" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/Tests/multiClassIVMTest.h">
+    <entry file="file://$PROJECT_DIR$/src/Utility/InLinePercentageFiller.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="126">
-          <caret line="132" column="17" lean-forward="true" selection-start-line="132" selection-start-column="17" selection-end-line="132" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/multiClassORFIVMTest.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="126">
-          <caret line="38" column="9" lean-forward="true" selection-start-line="38" selection-start-column="9" selection-end-line="38" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/binaryClassORFTest.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1129">
-          <caret line="85" column="32" lean-forward="true" selection-start-line="85" selection-start-column="32" selection-end-line="85" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/tests.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="14" column="18" lean-forward="true" selection-start-line="14" selection-start-column="18" selection-end-line="14" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/ScreenOutput.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="799">
-          <caret line="61" column="0" lean-forward="true" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1054">
-          <caret line="62" column="22" lean-forward="false" selection-start-line="62" selection-start-column="22" selection-end-line="62" selection-end-column="22" />
+        <state relative-caret-position="356">
+          <caret line="26" column="9" lean-forward="false" selection-start-line="26" selection-start-column="9" selection-end-line="26" selection-end-column="9" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree_i.h">
+    <entry file="file://$PROJECT_DIR$/src/Tests/binaryClassIVMTest.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-12">
-          <caret line="264" column="43" lean-forward="false" selection-start-line="264" selection-start-column="43" selection-end-line="264" selection-end-column="43" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/StopWatch.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="13" column="24" lean-forward="false" selection-start-line="13" selection-start-column="24" selection-end-line="13" selection-end-column="24" />
+        <state relative-caret-position="271">
+          <caret line="402" column="13" lean-forward="true" selection-start-line="402" selection-start-column="13" selection-end-line="402" selection-end-column="13" />
           <folding>
-            <element signature="e#0#72#0" expanded="false" />
+            <element signature="e#12060#12524#0" expanded="false" />
+            <marker date="1499092148379" expanded="false" signature="23213:23687" ph="/.../" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/TimeFrame.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="17" column="20" lean-forward="false" selection-start-line="17" selection-start-column="20" selection-end-line="17" selection-end-column="20" />
-          <folding>
-            <element signature="e#0#72#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/Observer.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="322">
-          <caret line="31" column="6" lean-forward="false" selection-start-line="31" selection-start-column="6" selection-end-line="31" selection-end-column="6" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/boost/thread/pthread/mutex.hpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="112" column="0" lean-forward="false" selection-start-line="112" selection-start-column="0" selection-end-line="112" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/c++/5/bits/stl_list.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="1074" column="0" lean-forward="false" selection-start-line="1074" selection-start-column="0" selection-end-line="1074" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/Observer.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="38" column="38" lean-forward="true" selection-start-line="38" selection-start-column="38" selection-end-line="38" selection-end-column="38" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/ClassKnowledge.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="18" column="9" lean-forward="false" selection-start-line="18" selection-start-column="9" selection-end-line="18" selection-end-column="9" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/DataReader.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="949">
-          <caret line="528" column="39" lean-forward="false" selection-start-line="528" selection-start-column="39" selection-end-line="528" selection-end-column="39" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/ClassKnowledge.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-445">
-          <caret line="30" column="34" lean-forward="false" selection-start-line="30" selection-start-column="34" selection-end-line="30" selection-end-column="34" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/c++/5/ext/new_allocator.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="103" column="0" lean-forward="false" selection-start-line="103" selection-start-column="0" selection-end-line="103" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/c++/5/bits/stl_vector.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="1223" column="0" lean-forward="false" selection-start-line="1223" selection-start-column="0" selection-end-line="1223" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/c++/5/bits/vector.tcc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="74" column="0" lean-forward="false" selection-start-line="74" selection-start-column="0" selection-end-line="74" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/Logger.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="9" column="30" lean-forward="true" selection-start-line="9" selection-start-column="30" selection-end-line="9" selection-end-column="30" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Settings/testSettingsPy.init">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="31" column="12" lean-forward="true" selection-start-line="31" selection-start-column="12" selection-end-line="31" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/TestInformation.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="378">
-          <caret line="204" column="29" lean-forward="true" selection-start-line="204" selection-start-column="29" selection-end-line="204" selection-end-column="29" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/TestManager.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="466">
-          <caret line="154" column="109" lean-forward="false" selection-start-line="154" selection-start-column="109" selection-end-line="154" selection-end-column="109" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="566">
-          <caret line="230" column="9" lean-forward="true" selection-start-line="230" selection-start-column="9" selection-end-line="230" selection-end-column="9" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/GlobalStopWatch.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="634">
-          <caret line="40" column="12" lean-forward="true" selection-start-line="40" selection-start-column="12" selection-end-line="40" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/AvgNumber.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="26" column="0" lean-forward="true" selection-start-line="26" selection-start-column="0" selection-end-line="26" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Settings/init.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1003">
-          <caret line="59" column="42" lean-forward="true" selection-start-line="59" selection-start-column="42" selection-end-line="59" selection-end-column="42" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PythonScripts/generateTestSettings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="489">
-          <caret line="45" column="38" lean-forward="true" selection-start-line="45" selection-start-column="38" selection-end-line="45" selection-end-column="38" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/StopWatch.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="51">
-          <caret line="3" column="26" lean-forward="true" selection-start-line="3" selection-start-column="26" selection-end-line="3" selection-end-column="26" />
-          <folding>
-            <element signature="e#132#184#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="28" column="27" lean-forward="false" selection-start-line="28" selection-start-column="27" selection-end-line="28" selection-end-column="27" />
-          <folding>
-            <element signature="e#138#167#0" expanded="false" />
-            <element signature="e#253#265#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/Types.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="194">
-          <caret line="48" column="6" lean-forward="false" selection-start-line="48" selection-start-column="6" selection-end-line="48" selection-end-column="6" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage_i.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="347">
-          <caret line="332" column="20" lean-forward="true" selection-start-line="332" selection-start-column="20" selection-end-line="332" selection-end-column="20" />
-          <folding>
-            <element signature="e#33#116#0" expanded="false" />
-            <element signature="e#125#153#0" expanded="false" />
-            <element signature="e#248#260#0" expanded="false" />
-            <element signature="e#1641#1653#0" expanded="false" />
-            <element signature="e#1818#1830#0" expanded="false" />
-            <element signature="e#9617#9629#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/Settings.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="806">
-          <caret line="86" column="0" lean-forward="true" selection-start-line="86" selection-start-column="0" selection-end-line="86" selection-end-column="0" />
-          <folding>
-            <element signature="e#1545#1557#0" expanded="false" />
-            <element signature="e#1858#1870#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/DataConverter.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1233">
-          <caret line="469" column="9" lean-forward="false" selection-start-line="461" selection-start-column="8" selection-end-line="469" selection-end-column="9" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/DataConverter.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="203">
-          <caret line="65" column="40" lean-forward="false" selection-start-line="65" selection-start-column="40" selection-end-line="65" selection-end-column="40" />
-          <folding>
-            <element signature="e#138#165#0" expanded="true" />
-            <element signature="e#1447#1459#0" expanded="true" />
-            <element signature="e#2353#2365#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/StringHelper.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="173">
-          <caret line="26" column="16" lean-forward="false" selection-start-line="26" selection-start-column="16" selection-end-line="26" selection-end-column="16" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/DecisionTreeData.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/Util.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="324">
-          <caret line="37" column="7" lean-forward="false" selection-start-line="37" selection-start-column="1" selection-end-line="37" selection-end-column="7" />
-          <folding>
-            <element signature="e#921#933#0" expanded="true" />
-            <element signature="e#3877#4476#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/Logger.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="18" column="1" lean-forward="false" selection-start-line="18" selection-start-column="1" selection-end-line="18" selection-end-column="1" />
-          <folding>
-            <element signature="e#117#144#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/BaseType.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="697">
-          <caret line="45" column="21" lean-forward="false" selection-start-line="45" selection-start-column="21" selection-end-line="45" selection-end-column="21" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/StringHelper.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1329">
-          <caret line="119" column="35" lean-forward="false" selection-start-line="119" selection-start-column="35" selection-end-line="119" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#2#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/ThreadSafeOutput.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="35" column="53" lean-forward="false" selection-start-line="35" selection-start-column="53" selection-end-line="35" selection-end-column="53" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/ThreadSafeOutput.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="13" column="7" lean-forward="true" selection-start-line="13" selection-start-column="7" selection-end-line="13" selection-end-column="7" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1368,11 +1021,338 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/ScreenOutput.cc">
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/IVM.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="543">
-          <caret line="557" column="19" lean-forward="false" selection-start-line="557" selection-start-column="19" selection-end-line="557" selection-end-column="19" />
+        <state relative-caret-position="254">
+          <caret line="52" column="12" lean-forward="true" selection-start-line="52" selection-start-column="12" selection-end-line="52" selection-end-column="12" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/CMAES/cmaes.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="20" column="13" lean-forward="false" selection-start-line="20" selection-start-column="13" selection-end-line="20" selection-end-column="13" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Utility/InLinePercentageFiller.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="20" column="0" lean-forward="true" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomNumberGenerator/RandomNumberGeneratorForDT.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1098">
+          <caret line="150" column="1" lean-forward="false" selection-start-line="150" selection-start-column="1" selection-end-line="150" selection-end-column="1" />
+          <folding>
+            <element signature="e#216#243#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/RandomForest.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="15" column="19" lean-forward="true" selection-start-line="15" selection-start-column="19" selection-end-line="15" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/Kernel/KernelType.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-51">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Tests/multiClassGPTest.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="333">
+          <caret line="74" column="10" lean-forward="false" selection-start-line="74" selection-start-column="10" selection-end-line="74" selection-end-column="10" />
+          <folding>
+            <element signature="e#263#1980#0" expanded="false" />
+            <marker date="1499093048892" expanded="false" signature="648:786" ph="/.../" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/Logger.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="17" column="19" lean-forward="true" selection-start-line="17" selection-start-column="19" selection-end-line="17" selection-end-column="19" />
+          <folding>
+            <element signature="e#71#90#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/BaseType.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-7">
+          <caret line="16" column="0" lean-forward="true" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+          <folding>
+            <element signature="e#139#159#0" expanded="true" />
+            <element signature="e#205#225#0" expanded="true" />
+            <element signature="e#322#357#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/Types.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="452">
+          <caret line="48" column="6" lean-forward="false" selection-start-line="48" selection-start-column="6" selection-end-line="48" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/Kernel/KernelBase.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="13" column="44" lean-forward="true" selection-start-line="13" selection-start-column="44" selection-end-line="13" selection-end-column="44" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomNumberGenerator/RandomGaussianNr.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="765">
+          <caret line="50" column="0" lean-forward="true" selection-start-line="50" selection-start-column="0" selection-end-line="50" selection-end-column="0" />
+          <folding>
+            <element signature="e#181#209#0" expanded="true" />
+            <element signature="e#281#309#0" expanded="true" />
+            <element signature="e#383#412#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiBinary.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="387">
+          <caret line="344" column="10" lean-forward="false" selection-start-line="344" selection-start-column="10" selection-end-line="344" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#89#0" expanded="true" />
+            <element signature="e#114#14801#0" expanded="true" />
+            <marker date="1499093378454" expanded="false" signature="123:189" ph="..." />
+            <marker date="1499093378454" expanded="false" signature="2862:3071" ph="/.../" />
+            <marker date="1499093378454" expanded="false" signature="8032:9336" ph="/.../" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiClass.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="418">
+          <caret line="182" column="10" lean-forward="false" selection-start-line="182" selection-start-column="10" selection-end-line="182" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#88#0" expanded="true" />
+            <element signature="e#114#6603#0" expanded="true" />
+            <marker date="1499093378554" expanded="false" signature="123:169" ph="..." />
+            <marker date="1499093378554" expanded="false" signature="2449:2894" ph="/.../" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/BestHyperParams.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="11" column="28" lean-forward="false" selection-start-line="11" selection-start-column="28" selection-end-line="11" selection-end-column="28" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/BayesOptimizerIVM.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#80#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/BayesOptimizer.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#77#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/LevenbergMarquardtSolver.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="8" column="35" lean-forward="false" selection-start-line="8" selection-start-column="35" selection-end-line="8" selection-end-column="35" />
+          <folding>
+            <element signature="e#183#1269#0" expanded="true" />
+            <marker date="1499093378487" expanded="false" signature="192:309" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="61">
+          <caret line="9" column="0" lean-forward="false" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
+          <folding>
+            <element signature="e#207#664#0" expanded="true" />
+            <marker date="1499093378526" expanded="false" signature="216:254" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiClass.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#87#0" expanded="true" />
+            <marker date="1499093378477" expanded="false" signature="228:273" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcessMultiBinary.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="9" column="0" lean-forward="false" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
+          <folding>
+            <element signature="e#222#2062#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcess.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="204">
+          <caret line="17" column="30" lean-forward="false" selection-start-line="17" selection-start-column="30" selection-end-line="17" selection-end-column="30" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/BestHyperParams.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+          <folding>
+            <element signature="e#189#1198#0" expanded="true" />
+            <marker date="1499093378536" expanded="false" signature="198:290" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/BayesOptimizerIVM.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#79#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/BayesOptimizer.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#76#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForestGaussianProcess/RandomForestGaussianProcess.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="350">
+          <caret line="75" column="0" lean-forward="true" selection-start-line="75" selection-start-column="0" selection-end-line="75" selection-end-column="0" />
+          <folding>
+            <element signature="e#249#2181#0" expanded="true" />
+            <marker date="1499093378517" expanded="false" signature="258:504" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForestGaussianProcess/RFGPWriter.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="452">
+          <caret line="27" column="10" lean-forward="false" selection-start-line="27" selection-start-column="10" selection-end-line="27" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#72#0" expanded="true" />
+            <element signature="e#198#501#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForestGaussianProcess/RFGPWriter.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="418">
+          <caret line="113" column="10" lean-forward="false" selection-start-line="113" selection-start-column="10" selection-end-line="113" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#73#0" expanded="true" />
+            <element signature="e#98#3773#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForestGaussianProcess/RandomForestGaussianProcess.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="387">
+          <caret line="409" column="10" lean-forward="false" selection-start-line="409" selection-start-column="10" selection-end-line="409" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#90#0" expanded="true" />
+            <element signature="e#115#16759#0" expanded="true" />
+            <marker date="1499093466787" expanded="false" signature="124:309" ph="..." />
+            <marker date="1499093466787" expanded="false" signature="2063:2704" ph="/.../" />
+            <marker date="1499093466787" expanded="false" signature="4956:5353" ph="/.../" />
+            <marker date="1499093466787" expanded="false" signature="7720:8055" ph="/.../" />
+            <marker date="1499093466787" expanded="false" signature="9132:9338" ph="/.../" />
+            <marker date="1499093466787" expanded="false" signature="11559:12863" ph="/.../" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/RandomForest.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="387">
+          <caret line="178" column="10" lean-forward="false" selection-start-line="178" selection-start-column="10" selection-end-line="178" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#80#0" expanded="true" />
+            <element signature="e#105#6764#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/RandomForestWriter.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="384">
+          <caret line="104" column="9" lean-forward="false" selection-start-line="104" selection-start-column="9" selection-end-line="104" selection-end-column="9" />
+          <folding>
+            <element signature="e#0#81#0" expanded="true" />
+            <element signature="e#106#3245#0" expanded="true" />
+            <marker date="1499093466768" expanded="false" signature="115:197" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/TreeCounter.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="442">
+          <caret line="26" column="27" lean-forward="true" selection-start-line="26" selection-start-column="27" selection-end-line="26" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#73#0" expanded="true" />
+            <marker date="1499092641170" expanded="true" signature="220:512" ph="{...}" />
+            <marker date="1499092641170" expanded="true" signature="296:348" ph="{...}" />
+            <marker date="1499092641170" expanded="true" signature="373:420" ph="{...}" />
+            <marker date="1499092641170" expanded="true" signature="445:469" ph="{...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1384,50 +1364,171 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/binaryClassGPTest.h">
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/DecisionTree.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="152">
-          <caret line="140" column="18" lean-forward="true" selection-start-line="140" selection-start-column="18" selection-end-line="140" selection-end-column="18" />
+        <state relative-caret-position="255">
+          <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
           <folding>
-            <element signature="e#5500#6451#0" expanded="true" />
-            <element signature="e#7633#7936#0" expanded="true" />
-            <marker date="1499092148419" expanded="false" signature="12992:13471" ph="/.../" />
-            <marker date="1499092148419" expanded="false" signature="13472:15056" ph="/.../" />
+            <element signature="e#0#79#0" expanded="true" />
+            <marker date="1499093466824" expanded="true" signature="351:1908" ph="{...}" />
+            <marker date="1499093466824" expanded="true" signature="376:528" ph="{...}" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/IVMMultiBinary.cc">
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/DecisionTreeData.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
-          <caret line="256" column="62" lean-forward="false" selection-start-line="256" selection-start-column="62" selection-end-line="256" selection-end-column="62" />
+        <state relative-caret-position="289">
+          <caret line="22" column="10" lean-forward="false" selection-start-line="22" selection-start-column="10" selection-end-line="22" selection-end-column="10" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/InLinePercentageFiller.h">
+    <entry file="file://$PROJECT_DIR$/src/Tests/binaryClassGPTest.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="356">
-          <caret line="26" column="9" lean-forward="false" selection-start-line="26" selection-start-column="9" selection-end-line="26" selection-end-column="9" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/InLinePercentageFiller.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="13" column="5" lean-forward="false" selection-start-line="13" selection-start-column="5" selection-end-line="13" selection-end-column="5" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/binaryClassIVMTest.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="271">
-          <caret line="402" column="13" lean-forward="true" selection-start-line="402" selection-start-column="13" selection-end-line="402" selection-end-column="13" />
+        <state relative-caret-position="238">
+          <caret line="448" column="0" lean-forward="true" selection-start-line="448" selection-start-column="0" selection-end-line="448" selection-end-column="0" />
           <folding>
-            <element signature="e#12060#12524#0" expanded="true" />
-            <marker date="1499092148379" expanded="false" signature="23213:23687" ph="/.../" />
+            <marker date="1499093048924" expanded="false" signature="3714:3858" ph="/.../" />
+            <marker date="1499093048924" expanded="false" signature="3859:4145" ph="/.../" />
+            <marker date="1499093048924" expanded="false" signature="5523:6474" ph="/.../" />
+            <marker date="1499093048924" expanded="false" signature="7656:7959" ph="/.../" />
+            <marker date="1499093048924" expanded="false" signature="13015:13494" ph="/.../" />
+            <marker date="1499093048924" expanded="false" signature="13495:15079" ph="/.../" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Tests/multiClassRFGPTest.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="367">
+          <caret line="125" column="10" lean-forward="false" selection-start-line="125" selection-start-column="10" selection-end-line="125" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#80#0" expanded="true" />
+            <element signature="e#178#4109#0" expanded="true" />
+            <marker date="1499093496236" expanded="false" signature="187:274" ph="..." />
+            <marker date="1499093496236" expanded="false" signature="275:425" ph="/.../" />
+            <marker date="1499093496236" expanded="false" signature="435:552" ph="..." />
+            <marker date="1499093496236" expanded="false" signature="3891:3990" ph="/.../" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Tests/binaryClassRFTest.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="350">
+          <caret line="198" column="10" lean-forward="false" selection-start-line="198" selection-start-column="10" selection-end-line="198" selection-end-column="10" />
+          <folding>
+            <element signature="e#0#79#0" expanded="true" />
+            <element signature="e#175#6801#0" expanded="true" />
+            <marker date="1499093496251" expanded="false" signature="184:367" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Tests/performanceMeasurement.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#84#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Tests/TestInformation.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Tests/tests.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="219">
+          <caret line="35" column="30" lean-forward="true" selection-start-line="35" selection-start-column="30" selection-end-line="35" selection-end-column="30" />
+          <folding>
+            <element signature="e#1224#1255#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="401">
+          <caret line="126" column="10" lean-forward="false" selection-start-line="126" selection-start-column="10" selection-end-line="126" selection-end-column="10" />
+          <folding>
+            <element signature="e#109#4426#0" expanded="true" />
+            <marker date="1499093571175" expanded="false" signature="2122:2383" ph="/.../" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcess.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="370">
+          <caret line="434" column="24" lean-forward="false" selection-start-line="434" selection-start-column="24" selection-end-line="434" selection-end-column="24" />
+          <folding>
+            <element signature="e#114#15535#0" expanded="true" />
+            <marker date="1499093596841" expanded="false" signature="5562:6366" ph="/.../" />
+            <marker date="1499093596841" expanded="false" signature="9640:9990" ph="/.../" />
+            <marker date="1499093596841" expanded="false" signature="9995:10058" ph="/.../" />
+            <marker date="1499093596841" expanded="false" signature="14281:14391" ph="/.../" />
+            <marker date="1499093596841" expanded="false" signature="14964:15056" ph="/.../" />
+            <marker date="1499093596841" expanded="false" signature="15088:15125" ph="/.../" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/DecisionTree.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="401">
+          <caret line="292" column="24" lean-forward="false" selection-start-line="292" selection-start-column="24" selection-end-line="292" selection-end-column="24" />
+          <folding>
+            <element signature="e#105#10575#0" expanded="true" />
+            <marker date="1499093626872" expanded="false" signature="114:278" ph="..." />
+            <marker date="1499093626872" expanded="false" signature="4869:5126" ph="/.../" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/Kernel/GaussianKernel.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="7" column="18" lean-forward="false" selection-start-line="7" selection-start-column="18" selection-end-line="7" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/GaussianProcess/Kernel/GaussianKernel.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="268">
+          <caret line="37" column="0" lean-forward="true" selection-start-line="37" selection-start-column="0" selection-end-line="37" selection-end-column="0" />
+          <folding>
+            <element signature="e#147#185#0" expanded="true" />
+            <element signature="e#315#343#0" expanded="true" />
+            <element signature="e#458#487#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Data/DataReader.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#72#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="67">
+          <caret line="13" column="46" lean-forward="false" selection-start-line="13" selection-start-column="46" selection-end-line="13" selection-end-column="46" />
+          <folding>
+            <element signature="e#270#294#0" expanded="true" />
           </folding>
         </state>
       </provider>

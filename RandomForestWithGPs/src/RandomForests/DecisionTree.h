@@ -8,6 +8,8 @@
 #ifndef OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_
 #define OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_
 
+#ifdef BUILD_OLD_CODE
+
 #include "../Data/LabeledVectorX.h"
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 #include "DecisionTreeData.h"
@@ -66,5 +68,7 @@ private:
 	std::vector<int> m_labelsOfWinningClassesInLeaves;
 
 };
+
+#endif // BUILD_OLD_CODE
 
 #endif /* OTHERRANDOMFORESTS_OTHERDECISIONTREE_H_ */

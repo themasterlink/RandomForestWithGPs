@@ -5,6 +5,8 @@
  *      Author: Max
  */
 
+#ifdef BUILD_OLD_CODE
+
 #include "GaussianProcess.h"
 #include <iomanip>
 #include <algorithm>
@@ -430,3 +432,4 @@ void GaussianProcess::setKernelParams(const std::vector<Real>& lens, const Real 
 	m_kernel.setHyperParams(lens, fNoise, sNoise);
 }
 
+#endif // BUILD_OLD_CODE

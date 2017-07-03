@@ -5,6 +5,8 @@
  *      Author: Max
  */
 
+#ifdef BUILD_OLD_CODE
+
 #include "RandomForestWriter.h"
 #include <fstream>
 #include "../Utility/ReadWriterHelper.h"
@@ -100,3 +102,4 @@ void RandomForestWriter::readFromStream(std::fstream& file, RandomForest& forest
 	}
 }
 
+#endif // BUILD_OLD_CODE

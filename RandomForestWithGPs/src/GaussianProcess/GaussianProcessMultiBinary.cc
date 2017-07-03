@@ -5,6 +5,8 @@
  *      Author: Max
  */
 
+#ifdef BUILD_OLD_CODE
+
 #include "GaussianProcessMultiBinary.h"
 
 #include "../Data/DataConverter.h"
@@ -339,3 +341,5 @@ GaussianProcessMultiBinary::~GaussianProcessMultiBinary() {
 	}
 }
 
+
+#endif // BUILD_OLD_CODE

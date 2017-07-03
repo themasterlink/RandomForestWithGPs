@@ -15,6 +15,8 @@
 #include "../Base/Predictor.h"
 #include "TreeCounter.h"
 
+#ifdef BUILD_OLD_CODE
+
 class RandomForest : public PredictorMultiClass {
 public:
 	using DecisionTreesContainer = std::vector<DecisionTree>;
@@ -75,5 +77,7 @@ private:
 			const int end) const;
 
 };
+
+#endif // BUILD_OLD_CODE
 
 #endif /* OTHERRANDOMFORESTS_OTHERRANDOMFOREST_H_ */

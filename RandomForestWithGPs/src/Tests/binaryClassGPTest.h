@@ -21,6 +21,8 @@
 #include <chrono>
 #include <thread>
 
+#ifdef BUILD_OLD_CODE
+
 void executeForBinaryClass(const bool useRealData){
 	LabeledData data;
 	LabeledData testData;
@@ -441,6 +443,6 @@ void executeForBinaryClass(const bool useRealData){
 	 */
 }
 
-
+#endif // BUILD_OLD_CODE
 
 #endif /* TESTS_BINARYCLASSGPTEST_H_ */

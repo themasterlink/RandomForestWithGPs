@@ -7,8 +7,9 @@
 //============================================================================
 
 #include "Tests/tests.h"
-#include "Data/DataBinaryWriter.h"
 #include "Tests/TestManager.h"
+#include "Data/DataBinaryWriter.h"
+#include "Data/DataReader.h"
 
 void handleProgrammOptions(int ac, char* av[]){
 	CommandSettings::instance().init();

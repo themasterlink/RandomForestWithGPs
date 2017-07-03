@@ -8,6 +8,8 @@
 #ifndef LEVENBERGMARQUARDTSOLVER_H_
 #define LEVENBERGMARQUARDTSOLVER_H_
 
+#ifdef BUILD_OLD_CODE
+
 #include <unsupported/Eigen/NonLinearOptimization>
 #include "../Utility/Util.h"
 #include <cmath>
@@ -50,5 +52,8 @@ struct OptimizeFunctor
   int inputs() const { return 3; }
   int values() const { return 3; } // number of constraints
 };
+
+
+#endif // BUILD_OLD_CODE
 
 #endif /* LEVENBERGMARQUARDTSOLVER_H_ */

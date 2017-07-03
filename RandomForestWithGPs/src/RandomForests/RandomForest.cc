@@ -5,6 +5,8 @@
  *      Author: Max
  */
 
+#ifdef BUILD_OLD_CODE
+
 #include "RandomForest.h"
 
 RandomForest::RandomForest(const int maxDepth, const int amountOfTrees,
@@ -173,3 +175,5 @@ unsigned int RandomForest::amountOfClasses() const{
 	return m_amountOfClasses;
 }
 
+
+#endif // BUILD_OLD_CODE

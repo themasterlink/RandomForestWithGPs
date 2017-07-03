@@ -8,6 +8,8 @@
 #ifndef TESTS_BINARYCLASSRFTEST_H_
 #define TESTS_BINARYCLASSRFTEST_H_
 
+#ifdef BUILD_OLD_CODE
+
 #include "../Data/DataReader.h"
 #include "../Data/DataWriterForVisu.h"
 #include "../RandomForests/RandomForest.h"
@@ -193,5 +195,7 @@ void executeForRFBinaryClass(const std::string& path){
 		system("../PythonScripts/plotData.py");
 	}
 }
+
+#endif // BUILD_OLD_CODE
 
 #endif /* TESTS_BINARYCLASSRFTEST_H_ */

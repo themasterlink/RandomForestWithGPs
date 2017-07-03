@@ -5,6 +5,8 @@
  *      Author: Max
  */
 
+#ifdef BUILD_OLD_CODE
+
 #include <cmath>
 #include <random>
 #include <algorithm>
@@ -287,3 +289,5 @@ void DecisionTree::initFromData(const DecisionTreeData& data){
 	m_splitDim = data.dimValues;
 	m_labelsOfWinningClassesInLeaves = data.labelsOfWinningClassInLeaves;
 }
+
+#endif // BUILD_OLD_CODE

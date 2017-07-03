@@ -8,6 +8,8 @@
 #ifndef RANDOMFORESTGAUSSIANPROCESS_RFGPWRITER_H_
 #define RANDOMFORESTGAUSSIANPROCESS_RFGPWRITER_H_
 
+#ifdef BUILD_OLD_CODE
+
 #include "RandomForestGaussianProcess.h"
 
 class RFGPWriter {
@@ -21,5 +23,8 @@ private:
 	RFGPWriter();
 	virtual ~RFGPWriter();
 };
+
+
+#endif // BUILD_OLD_CODE
 
 #endif /* RANDOMFORESTGAUSSIANPROCESS_RFGPWRITER_H_ */

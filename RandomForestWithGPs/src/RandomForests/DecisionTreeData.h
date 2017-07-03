@@ -8,6 +8,7 @@
 #ifndef RANDOMFORESTS_DECISIONTREEDATA_H_
 #define RANDOMFORESTS_DECISIONTREEDATA_H_
 
+#ifdef BUILD_OLD_CODE
 
 struct DecisionTreeData{
 	int height;
@@ -18,5 +19,7 @@ struct DecisionTreeData{
 	std::vector<int> dimValues; // array of the dimension used for the split, if value is -1 -> not used!
 	std::vector<int> labelsOfWinningClassInLeaves;
 };
+
+#endif // BUILD_OLD_CODE
 
 #endif /* RANDOMFORESTS_DECISIONTREEDATA_H_ */

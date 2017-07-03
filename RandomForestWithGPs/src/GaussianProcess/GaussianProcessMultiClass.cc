@@ -5,6 +5,9 @@
  *      Author: Max
  */
 
+
+#ifdef BUILD_OLD_CODE
+
 #include "GaussianProcessMultiClass.h"
 #include <cmath>
 
@@ -175,3 +178,6 @@ void GaussianProcessMultiClass::magicFunc(const int amountOfClasses, const int d
 		getchar();
 	}
 }
+
+
+#endif // BUILD_OLD_CODE
