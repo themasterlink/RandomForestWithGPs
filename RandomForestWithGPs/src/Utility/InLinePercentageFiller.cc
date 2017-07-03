@@ -9,18 +9,7 @@
 #include "curses.h"
 #include "Util.h"
 
-long InLinePercentageFiller::m_max = 0;
-Real InLinePercentageFiller::m_dMax = 0;
-StopWatch InLinePercentageFiller::m_sw;
-
-InLinePercentageFiller::InLinePercentageFiller(){
-	printError("Should never be called!");
-}
-
-InLinePercentageFiller::~InLinePercentageFiller(){
-	printError("Should never be called!");
-}
-
+InLinePercentageFiller::InLinePercentageFiller(): m_max(0), m_dMax(0) {}
 
 void InLinePercentageFiller::setActValueAndPrintLine(const long iAct){
 	if(iAct <= m_max && iAct >= 0){
@@ -56,11 +45,11 @@ void InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(const unsigned 
 }
 
 void InLinePercentageFiller::setActPercentageAndPrintLine(const Real dAct, const bool lastElement){
-	if(dAct >= 0 && dAct <= 100.0){
+	if(dAct >= 0){
 		std::stringstream str;
 		const long amountOfElements = std::max(COLS / 2, 100);
 		for(long i = 0; i < amountOfElements; ++i){
-			const Real t = i / (Real) amountOfElements * 100.;
+			const Real t = i / (Real) amountOfElements * (Real) 100.;
 			if(t <= dAct){
 				str << "#";
 			}else{
@@ -71,11 +60,9 @@ void InLinePercentageFiller::setActPercentageAndPrintLine(const Real dAct, const
 		if((dAct > 0. && dAct < 100.) || !lastElement){
 			TimeFrame frame = m_sw.elapsedAsTimeFrame();
 			str << ", rest time is: " << (frame * (1. / dAct * 100.) - frame);
-		}else if(dAct >= 100.|| lastElement){
+		}else if(dAct >= 100.){
 			str << ", done in: " << m_sw.elapsedAsTimeFrame();
 		}
 		ScreenOutput::instance().printInProgressLine(str.str());
-	}else{
-//		printError("The value is not in percent: " << dAct);
 	}
 }

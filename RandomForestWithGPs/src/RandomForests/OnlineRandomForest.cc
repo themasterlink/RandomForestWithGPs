@@ -209,11 +209,11 @@ void OnlineRandomForest::train(){
 	}
 	int stillOneRunning = 1;
 	if(m_trainingsConfig.isTimeMode()){
-		InLinePercentageFiller::setActMaxTime(m_trainingsConfig.m_seconds);
+		InLinePercentageFiller::instance().setActMaxTime(m_trainingsConfig.m_seconds);
 	}else if(m_trainingsConfig.isTreeAmountMode()){
-		InLinePercentageFiller::setActMax(m_trainingsConfig.m_amountOfTrees);
+		InLinePercentageFiller::instance().setActMax(m_trainingsConfig.m_amountOfTrees);
 	}else if(m_trainingsConfig.hasMemoryConstraint()){
-		InLinePercentageFiller::setActMax(m_trainingsConfig.m_memory);
+		InLinePercentageFiller::instance().setActMax(m_trainingsConfig.m_memory);
 	}else{
 		printError("The type is not defined here!");
 	}
@@ -223,12 +223,12 @@ void OnlineRandomForest::train(){
 
 //	if(m_desiredAmountOfTrees == 0){
 //		if(trainingsTime > maxTime){
-//			InLinePercentageFiller::setActMax((long) maxAmountOfUsedMemory);
+//			InLinePercentageFiller::instance().setActMax((long) maxAmountOfUsedMemory);
 //		}else{
-//			InLinePercentageFiller::setActMaxTime(trainingsTime);
+//			InLinePercentageFiller::instance().setActMaxTime(trainingsTime);
 //		}
 //	}else{
-//		InLinePercentageFiller::setActMax(m_desiredAmountOfTrees);
+//		InLinePercentageFiller::instance().setActMax(m_desiredAmountOfTrees);
 //	}
 //	Real nextCheck = std::min(10.,m_ownSamplingTime / 10.);
 	StopWatch sw;
@@ -242,11 +242,11 @@ void OnlineRandomForest::train(){
 			}
 		}
 		if(m_trainingsConfig.isTimeMode()){
-			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size());
+			InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(m_trees.size());
 		}else if(m_trainingsConfig.isTreeAmountMode()){
-			InLinePercentageFiller::setActValueAndPrintLine(m_trees.size());
+			InLinePercentageFiller::instance().setActValueAndPrintLine(m_trees.size());
 		}else if(m_trainingsConfig.hasMemoryConstraint()){
-			InLinePercentageFiller::setActValueAndPrintLine((long) std::min(m_usedMemory, m_trainingsConfig.m_memory));
+			InLinePercentageFiller::instance().setActValueAndPrintLine((long) std::min(m_usedMemory, m_trainingsConfig.m_memory));
 		}else{
 			printError("The type is not defined here!");
 		}
@@ -273,11 +273,11 @@ void OnlineRandomForest::train(){
 	}
 	printOnScreen("Calculated " << m_trees.size() << " trees with depth: " << m_maxDepth);
 	if(m_trainingsConfig.isTimeMode()){
-		InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size(), true);
+		InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(m_trees.size(), true);
 	}else if(m_trainingsConfig.isTreeAmountMode()){
-		InLinePercentageFiller::setActValueAndPrintLine(m_trees.size());
+		InLinePercentageFiller::instance().setActValueAndPrintLine(m_trees.size());
 	}else if(m_trainingsConfig.hasMemoryConstraint()){
-		InLinePercentageFiller::setActValueAndPrintLine((long) m_trainingsConfig.m_memory);
+		InLinePercentageFiller::instance().setActValueAndPrintLine((long) m_trainingsConfig.m_memory);
 	}else{
 		printError("The type is not defined here!");
 	}
@@ -489,11 +489,11 @@ bool OnlineRandomForest::update(){
 		}
 		int stillOneRunning = 1;
 		if(m_trainingsConfig.isTimeMode()){
-			InLinePercentageFiller::setActMaxTime(m_trainingsConfig.m_seconds);
+			InLinePercentageFiller::instance().setActMaxTime(m_trainingsConfig.m_seconds);
 		}else if(m_trainingsConfig.isTreeAmountMode()){
-			InLinePercentageFiller::setActMax(m_trainingsConfig.m_amountOfTrees);
+			InLinePercentageFiller::instance().setActMax(m_trainingsConfig.m_amountOfTrees);
 		}else if(m_trainingsConfig.hasMemoryConstraint()){
-			InLinePercentageFiller::setActMax(m_trees.size());
+			InLinePercentageFiller::instance().setActMax(m_trees.size());
 		}else{
 			printError("The type is not defined here!");
 		}
@@ -508,11 +508,11 @@ bool OnlineRandomForest::update(){
 			}
 			m_mutexForCounter->lock();
 			if(m_trainingsConfig.isTimeMode()){
-				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(*counter);
+				InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(*counter);
 			}else if(m_trainingsConfig.isTreeAmountMode()){
-				InLinePercentageFiller::setActValueAndPrintLine(*counter);
+				InLinePercentageFiller::instance().setActValueAndPrintLine(*counter);
 			}else if(m_trainingsConfig.hasMemoryConstraint()){
-				InLinePercentageFiller::setActValueAndPrintLine(*counter);
+				InLinePercentageFiller::instance().setActValueAndPrintLine(*counter);
 			}else{
 				printError("The type is not defined here!");
 			}
@@ -522,11 +522,11 @@ bool OnlineRandomForest::update(){
 		group.join_all();
 		printOnScreen("Updating finished, took: " << swWhole.elapsedAsTimeFrame());
 		if(m_trainingsConfig.isTimeMode()){
-			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(m_trees.size(), true);
+			InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(m_trees.size(), true);
 		}else if(m_trainingsConfig.isTreeAmountMode()){
-			InLinePercentageFiller::setActValueAndPrintLine(m_trees.size());
+			InLinePercentageFiller::instance().setActValueAndPrintLine(m_trees.size());
 		}else if(m_trainingsConfig.hasMemoryConstraint()){
-			InLinePercentageFiller::setActValueAndPrintLine((long) m_trainingsConfig.m_memory);
+			InLinePercentageFiller::instance().setActValueAndPrintLine((long) m_trainingsConfig.m_memory);
 		}else{
 			printError("The type is not defined here!");
 		}
@@ -890,7 +890,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictDataInParallel, this, points, &labels, packages[i], start, end)));
 		}
 		bool stillOneRunning = true;
-		InLinePercentageFiller::setActMax(points.size());
+		InLinePercentageFiller::instance().setActMax(points.size());
 		while(stillOneRunning){
 			stillOneRunning = false;
 			long counter = 0;
@@ -900,7 +900,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 				}
 				counter += package->amountOfTrainingStepsPerformed(); // corresponds to amount of points predicted
 			}
-			InLinePercentageFiller::setActValueAndPrintLine(counter);
+			InLinePercentageFiller::instance().setActValueAndPrintLine(counter);
 			sleepFor(0.1);
 		}
 		group.join_all();
@@ -924,7 +924,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels) 
 			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictClassDataInParallel, this, points, &labels, packages[i], start, end)));
 		}
 		bool stillOneRunning = true;
-		InLinePercentageFiller::setActMax(points.size());
+		InLinePercentageFiller::instance().setActMax(points.size());
 		while(stillOneRunning){
 			stillOneRunning = false;
 			long counter = 0;
@@ -934,7 +934,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels) 
 				}
 				counter += package->amountOfTrainingStepsPerformed(); // corresponds to amount of points predicted
 			}
-			InLinePercentageFiller::setActValueAndPrintLine(counter);
+			InLinePercentageFiller::instance().setActValueAndPrintLine(counter);
 			sleepFor(0.1);
 		}
 		group.join_all();
@@ -994,7 +994,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::ve
 			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictDataProbInParallelStartEnd, this, points, &labels, &probabilities, packages[i], start, end)));
 		}
 		bool stillOneRunning = true;
-		InLinePercentageFiller::setActMax(points.size());
+		InLinePercentageFiller::instance().setActMax(points.size());
 		while(stillOneRunning){
 			stillOneRunning = false;
 			long counter = 0;
@@ -1004,7 +1004,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::ve
 				}
 				counter += package->amountOfTrainingStepsPerformed(); // corresponds to amount of points predicted
 			}
-			InLinePercentageFiller::setActValueAndPrintLine(counter);
+			InLinePercentageFiller::instance().setActValueAndPrintLine(counter);
 			sleepFor(0.1);
 		}
 		group.join_all();
@@ -1064,7 +1064,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, 
 			group.add_thread(new boost::thread(boost::bind(&OnlineRandomForest::predictClassDataProbInParallelStartEnd, this, points, &labels, packages[i], &probabilities, start, end)));
 		}
 		bool stillOneRunning = true;
-		InLinePercentageFiller::setActMax(points.size());
+		InLinePercentageFiller::instance().setActMax(points.size());
 		while(stillOneRunning){
 			stillOneRunning = false;
 			long counter = 0;
@@ -1074,7 +1074,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, 
 				}
 				counter += package->amountOfTrainingStepsPerformed(); // corresponds to amount of points predicted
 			}
-			InLinePercentageFiller::setActValueAndPrintLine(counter);
+			InLinePercentageFiller::instance().setActValueAndPrintLine(counter);
 			sleepFor(0.1);
 		}
 		group.join_all();

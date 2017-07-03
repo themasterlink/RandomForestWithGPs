@@ -212,9 +212,9 @@ void IVMMultiBinary::train(){
 		if(m_orfClassLabel == UNDEF_CLASS_LABEL){
 			const auto fitParams = CommandSettings::instance().get_samplingAndTraining();
 			if(fitParams > 0){
-				InLinePercentageFiller::setActMaxTime(durationOfWholeTraining);
+				InLinePercentageFiller::instance().setActMaxTime(durationOfWholeTraining);
 			}else{
-				InLinePercentageFiller::setActMaxTime(5); // max time for sampling
+				InLinePercentageFiller::instance().setActMaxTime(5); // max time for sampling
 			}
 		}
 
@@ -254,7 +254,7 @@ void IVMMultiBinary::train(){
 				}
 			}
 			if(m_orfClassLabel == UNDEF_CLASS_LABEL){
-				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
+				InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(counter, false);
 			}
 			sleepFor(0.15);
 		}
@@ -265,7 +265,7 @@ void IVMMultiBinary::train(){
 			}
 		}
 		if(m_orfClassLabel == UNDEF_CLASS_LABEL){
-			InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
+			InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(counter, true);
 		}
 		group.join_all();
 		for(auto it = packagesForRetrain.cbegin(); it != packagesForRetrain.cend(); ++it){
@@ -285,9 +285,9 @@ void IVMMultiBinary::train(){
 //		}else{
 //			const bool fitParams = CommandSettings::instance().get_samplingAndTraining();
 //			if(fitParams){
-//				InLinePercentageFiller::setActMaxTime(durationOfWholeTraining);
+//				InLinePercentageFiller::instance().setActMaxTime(durationOfWholeTraining);
 //			}else{
-//				InLinePercentageFiller::setActMax(amountOfClasses() + 1);
+//				InLinePercentageFiller::instance().setActMax(amountOfClasses() + 1);
 //			}
 //			// initial start of nrOfParallel threads
 //			int runningCounter = 0;
@@ -322,9 +322,9 @@ void IVMMultiBinary::train(){
 //					break;
 //				}
 //				if(fitParams){
-//					InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, false);
+//					InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(counter, false);
 //				}else{
-//					InLinePercentageFiller::setActValueAndPrintLine(finished);
+//					InLinePercentageFiller::instance().setActValueAndPrintLine(finished);
 //				}
 //				if(runningCounter < nrOfParallel && counterForClass < amountOfClasses()){
 //					group.add_thread(new boost::thread(boost::bind(&IVMMultiBinary::trainInParallel, this, counterForClass, durationOfTraining)));
@@ -338,9 +338,9 @@ void IVMMultiBinary::train(){
 //				counter += m_ivms[i]->getSampleCounter();
 //			}
 //			if(fitParams){
-//				InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
+//				InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(counter, true);
 //			}else{
-//				InLinePercentageFiller::setActValueAndPrintLine(amountOfClasses());
+//				InLinePercentageFiller::instance().setActValueAndPrintLine(amountOfClasses());
 //			}
 //			group.join_all();
 //		}

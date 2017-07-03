@@ -130,7 +130,7 @@ void executeForBinaryClass(const bool useRealData){
 		int amountOfBelow = 0;
 		int amountOfAbove = 0;
 		std::cout << "Test" << std::endl;
-		InLinePercentageFiller::setActMax(dataRef.size());
+		InLinePercentageFiller::instance().setActMax(dataRef.size());
 		for(int j = 0; j < dataRef.size(); ++j){
 			LabeledVectorX& ele = *dataRef[j];
 			Real prob = gp.predict(ele);
@@ -146,7 +146,7 @@ void executeForBinaryClass(const bool useRealData){
 			}else{
 				++amountOfBelow;
 			}
-			InLinePercentageFiller::setActValueAndPrintLine(j);
+			InLinePercentageFiller::instance().setActValueAndPrintLine(j);
 		}
 		std::cout << RED;
 		std::cout << "Amount of right: " << (Real) right / dataRef.size() * 100.0 << "%" << std::endl;
@@ -227,7 +227,7 @@ void executeForBinaryClass(const bool useRealData){
 		std::vector<Real> prob;
 		Matrix confusion = Matrix::Zero(datas.size(), datas.size());
 		int unknownCounter = 0;
-		InLinePercentageFiller::setActMax(dataRef.size());
+		InLinePercentageFiller::instance().setActMax(dataRef.size());
 		for(int j = 0; j < (int) dataRef.size(); ++j){
 			LabeledVectorX& ele = *dataRef[j];
 			const unsigned int label = gp.predict(ele, prob);
@@ -239,7 +239,7 @@ void executeForBinaryClass(const bool useRealData){
 			}else{
 				++unknownCounter;
 			}
-			InLinePercentageFiller::setActValueAndPrintLine(j);
+			InLinePercentageFiller::instance().setActValueAndPrintLine(j);
 		}
 		std::cout << RED;
 		std::cout << "Amount of right:  " << (Real) right / dataRef.size() * 100.0 << "%" << std::endl;
@@ -267,7 +267,7 @@ void executeForBinaryClass(const bool useRealData){
 			int i = 0,j,k = 0;
 			Real minX, minY, minZ;
 			Real minVal = NEG_REAL_MAX;
-			InLinePercentageFiller::setActMax(size1 * size2);
+			InLinePercentageFiller::instance().setActMax(size1 * size2);
 			//for(Real z = -1.; z < 1.0; z += 0.01){
 			{	Real z = 0.1;
 				i = 0;
@@ -294,7 +294,7 @@ void executeForBinaryClass(const bool useRealData){
 						std::cout << "x: " << x << ", y: " << y << std::endl;
 						++j;
 					}
-					//InLinePercentageFiller::setActValueAndPrintLine(k * size * size + i * size + j);
+					//InLinePercentageFiller::instance().setActValueAndPrintLine(k * size * size + i * size + j);
 					++i;
 				}
 				++k;

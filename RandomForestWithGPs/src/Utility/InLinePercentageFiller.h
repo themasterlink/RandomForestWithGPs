@@ -11,27 +11,28 @@
 #include "StopWatch.h"
 
 class InLinePercentageFiller {
+
+	SINGELTON_MACRO(InLinePercentageFiller);
+
 public:
 
-	static void setActMax(const long iMax);
+	void setActMax(const long iMax);
 
-	static void setActMaxTime(const Real dMax);
+	void setActMaxTime(const Real dMax);
 
-	static void setActValueAndPrintLine(const long iAct);
+	void setActValueAndPrintLine(const long iAct);
 
-	static void printLineWithRestTimeBasedOnMaxTime(const unsigned long amountOfCalcedElements, const bool lastElement = false);
+	void printLineWithRestTimeBasedOnMaxTime(const unsigned long amountOfCalcedElements, const bool lastElement = false);
 
-	static void setActPercentageAndPrintLine(const Real dAct, const bool lastElement = false);
+	void setActPercentageAndPrintLine(const Real dAct, const bool lastElement = false);
 
 private:
-	InLinePercentageFiller();
-	virtual ~InLinePercentageFiller();
 
-	static long m_max;
+	long m_max;
 
-	static Real m_dMax;
+	Real m_dMax;
 
-	static StopWatch m_sw;
+	StopWatch m_sw;
 };
 
 inline

@@ -135,15 +135,15 @@ GaussianKernelParams sampleParams(OnlineStorage<LabeledVectorX*>& storage, int n
 		ivms[i]->init(number, usedClasses, doEpUpdate);
 		group.add_thread(new boost::thread(boost::bind(&sampleInParallel, ivms[i], &bestParams, &bestLogZ, &mutex, durationOfTraining, &counter)));
 	}
-	InLinePercentageFiller::setActMaxTime(durationOfTraining);
+	InLinePercentageFiller::instance().setActMaxTime(durationOfTraining);
 	printOnScreen("It will take: " << TimeFrame(durationOfTraining));
 	StopWatch sw;
 	while(sw.elapsedSeconds() < durationOfTraining){
-		InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter);
+		InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(counter);
 		sleepFor(0.1);
 	}
 	group.join_all();
-	InLinePercentageFiller::printLineWithRestTimeBasedOnMaxTime(counter, true);
+	InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(counter, true);
 	return bestParams;
 }
 
@@ -466,7 +466,7 @@ void executeForBinaryClassIVM(){
 			Real worstResult = REAL_MAX;
 			//for(unsigned int i = 0; i < 100000; ++i){
 			const int size = ((1. - 0.9) / 0.005 + 1);
-			InLinePercentageFiller::setActMax(size * size);
+			InLinePercentageFiller::instance().setActMax(size * size);
 			int i = 0;
 			Real bestLogZ = NEG_REAL_MAX;
 			if(false){
@@ -524,7 +524,7 @@ void executeForBinaryClassIVM(){
 							correctVec[size * i + j] = -1;
 							//printOnScreen("len: " << ivm.getGaussianKernel()->len() << ", sigmaF: " << ivm.getGaussianKernel()->sigmaF());
 						}
-						InLinePercentageFiller::setActValueAndPrintLine(size * i + j);
+						InLinePercentageFiller::instance().setActValueAndPrintLine(size * i + j);
 						++j;
 					}
 					++i;
