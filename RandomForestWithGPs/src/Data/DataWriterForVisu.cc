@@ -9,10 +9,15 @@
 #include "../Utility/ColorConverter.h"
 #include "DataConverter.h"
 
+#ifdef USE_OPEN_CV
+#include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
+#endif // USE_OPEN_CV
+
+
 DataWriterForVisu::DataWriterForVisu()
 {
 	// TODO Auto-generated constructor stub
-
 }
 
 DataWriterForVisu::~DataWriterForVisu(){
@@ -591,6 +596,7 @@ void DataWriterForVisu::writePointsIn2D(const std::string& fileName, const std::
 
 void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorBinaryClass* predictor,
 		const LabeledData& data, const int x, const int y){
+#ifdef USE_OPEN_CV
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
@@ -697,10 +703,14 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorBin
 		cv::circle(img, cv::Point(dx, dy), (Real) fac * amountOfPointsOnOneAxis / 50.0, black, (Real) fac / 4.0 * (Real) amountOfPointsOnOneAxis / 50.0, CV_AA);
 	}
 	cv::imwrite(Logger::instance().getActDirectory() + fileName, img);
+#else
+	printError("This function does not work without opencv!");
+#endif // USE_OPEN_CV
 }
 
 void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predictor,
 		const LabeledData& data, const int x, const int y){
+#ifdef USE_OPEN_CV
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
@@ -828,10 +838,14 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const IVM* predict
 		cv::circle(img, cv::Point(dy, dx), (Real) fac * amountOfPointsOnOneAxis / 200.0, induActColor, CV_FILLED, CV_AA);
 	}
 	cv::imwrite(Logger::instance().getActDirectory() + fileName, img);
+#else
+	printError("This function does not work without opencv!");
+#endif // USE_OPEN_CV
 }
 
 
 void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMultiClass* predictor, const LabeledData& data, const int x, const int y){
+#ifdef USE_OPEN_CV
 	if(data.size() == 0){
 		printError("No data is given, this data is needed to find min and max!");
 		return;
@@ -966,6 +980,9 @@ void DataWriterForVisu::writeImg(const std::string& fileName, const PredictorMul
 	for(unsigned int i = 0; i < points.size(); ++i){
 		saveDelete(points[i]);
 	}
+#else
+	printError("This function does not work without opencv!");
+#endif // USE_OPEN_CV
 }
 
 void DataWriterForVisu::drawSvgDataPoints(std::ofstream& file, const LabeledData& points,

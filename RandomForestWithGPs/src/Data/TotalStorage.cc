@@ -10,8 +10,6 @@
 #include "../Base/Settings.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
 #include "../Data/DataConverter.h"
-#include <opencv2/core/core.hpp>
-#include <opencv2/opencv.hpp>
 
 TotalStorage::TotalStorage(): m_totalSize(0),
 							  m_dataSetMode(DataSetMode::WHOLE){};
@@ -229,19 +227,6 @@ void TotalStorage::readData(const int amountOfData){
 					++newAmountOfDims;
 				}
 			}
-//			cv::Mat img(28, 28, CV_8UC3, cv::Scalar(0, 0, 0));
-//			for(unsigned int r = 0; r < 28; ++r){
-//				for(unsigned int c = 0; c < 28; ++c){
-//					cv::Vec3b& color = img.at<cv::Vec3b>(r,c);
-//					color[0] = (isUsed[r * 28 + c] ? 0.8 : 0) * 255;
-//					color[1] = (isUsed[r * 28 + c] ? 0.8 : 0) * 255;
-//					color[2] = (isUsed[r * 28 + c] ? 0.8 : 0) * 255;
-//				}
-//			}
-//			cv::Mat outImg;
-//			cv::resize(img, outImg, cv::Size(img.cols * 20,img.rows * 20), 0, 0, CV_INTER_NN);
-//			cv::imwrite(Logger::instance().getActDirectory() + "test.png", outImg);
-//			openFileInViewer("test.png");
 
 			printOnScreen("newAmountOfDims: " << newAmountOfDims);
 			if(newAmountOfDims != ClassKnowledge::instance().instance().amountOfDims()){

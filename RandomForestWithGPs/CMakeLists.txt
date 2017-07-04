@@ -19,6 +19,11 @@ INCLUDE_DIRECTORIES(/usr/include/ncurses/)
 find_package(Boost COMPONENTS system filesystem program_options random date_time thread REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
+set(USE_OPEN_CV_CMAKE 0)
+if(USE_OPEN_CV_CMAKE MATCHES 1)
+    ADD_DEFINITIONS( -DUSE_OPEN_CV=1)
+endif(USE_OPEN_CV_CMAKE MATCHES 1)
+
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
     set(BUILD_SYSTEM_CMAKE 1)
     #Eigen include:
@@ -28,16 +33,23 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
     set(TBB_LIBRARIES "/home/f_soft/foreign_packages/tbb/4.3.0/lib/osl42-x86_64")
 
     # opencv
-    set (OpenCV_DIR "/home/f_soft/foreign_packages/OpenCV/3.1.0/share/OpenCV/")
+    if(USE_OPEN_CV_CMAKE MATCHES 1)
+        set (OpenCV_DIR "/home/f_soft/foreign_packages/OpenCV/3.1.0/share/OpenCV/")
+    endif(USE_OPEN_CV_CMAKE MATCHES 1)
 else(CMAKE_SYSTEM_NAME MATCHES  "Linux")
     #Eigen include:
     INCLUDE_DIRECTORIES("/usr/local/include/eigen3/")
     #opencv
-    set (OpenCV_DIR "/usr/local/opt/opencv3/share/OpenCV")
+    if(USE_OPEN_CV_CMAKE MATCHES 1)
+        set (OpenCV_DIR "/usr/local/opt/opencv3/share/OpenCV")
+    endif(USE_OPEN_CV_CMAKE MATCHES 1)
 endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 # opencv
+
+if(USE_OPEN_CV_CMAKE MATCHES 1)
 find_package(OpenCV COMPONENTS opencv_core opencv_imgcodecs opencv_highgui opencv_ml opencv_imgproc opencv_flann REQUIRED)
+endif(USE_OPEN_CV_CMAKE MATCHES 1)
 
 set(SOURCE_FILES
         src/Base/Types.h
@@ -163,7 +175,10 @@ set(SOURCE_FILES
         src/main.cc src/Base/BaseType.h src/Tests/TestManager.cc src/Tests/TestManager.h src/Utility/StringHelper.h src/Tests/TestInformation.cc src/Tests/TestInformation.h src/Utility/StringHelper.cc src/Utility/GlobalStopWatch.h)
 
 
+
 add_executable(RandomForestWithGPs ${SOURCE_FILES})
+
+#target_compile_options(RandomForestWithGPs PUBLIC -fsanitize=address)
 target_link_libraries(RandomForestWithGPs ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(RandomForestWithGPs ${GDAL_LIBRARIES})
 target_link_libraries(RandomForestWithGPs ${TBB_LIBRARIES})
@@ -174,5 +189,8 @@ else(CMAKE_SYSTEM_NAME MATCHES  "Linux")
 endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 target_link_libraries(RandomForestWithGPs ${Boost_LIBRARIES} )
+#opencv
+if(USE_OPEN_CV_CMAKE MATCHES 1)
 target_link_libraries(RandomForestWithGPs ${OpenCV_LIBRARIES} )
+endif(USE_OPEN_CV_CMAKE MATCHES 1)
 #target_link_libraries(RandomForestWithGPs "/home/f_soft/foreign_packages/OpenCV/3.1.0/lib/osl42-x86_64" opencv_core opencv_imgcodecs opencv_highgui opencv_ml opencv_imgproc opencv_flann)

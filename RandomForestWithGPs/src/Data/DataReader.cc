@@ -10,8 +10,6 @@
 #include "../Utility/ReadWriterHelper.h"
 #include "../Base/Settings.h"
 
-#include <opencv2/core/core.hpp>
-
 DataReader::DataReader(){
 }
 
@@ -255,8 +253,7 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 						input.read((char*) &cols, 4);
 						cols = highEndian2LowEndian(cols);
 						if(labels.size() != (unsigned long) size){
-							printError("The labels should be read first!");
-							getchar();
+							printErrorAndQuit("The labels should be read first!");
 							return;
 						}
 						for(unsigned int i = 0; i < (unsigned int) size; ++i){
@@ -377,17 +374,6 @@ void DataReader::readFromFiles(DataSets& dataSets, const std::string& folderLoca
 //			}
 //		}
 //		printOnScreen("Reduced from " << amountOfDim << " to " << newDim);
-//		cv::Mat img(28, 28, CV_8UC3, cv::Scalar(0, 0, 0));
-//		for(unsigned int r = 0; r < 28; ++r){
-//			for(unsigned int c = 0; c < 28; ++c){
-//				cv::Vec3b& color = img.at<cv::Vec3b>(r,c);
-//				color[0] = (notUsed[r * 28 + c] ? 1 : 0) * 255;
-//				color[1] = (notUsed[r * 28 + c] ? 1 : 0) * 255;
-//				color[2] = (notUsed[r * 28 + c] ? 1 : 0) * 255;
-//			}
-//		}
-//		cv::imwrite("test.png", img);
-//		openFileInViewer("test.png");
 //		ClassKnowledge::instance().setAmountOfDims(newDim);
 
 		ClassKnowledge::instance().setAmountOfDims(28 * 28);

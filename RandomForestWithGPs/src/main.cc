@@ -73,6 +73,11 @@ void doOnlyDataView(){
 
 int main(int ac, char** av){
 	printOnScreen("Start");
+#ifdef USE_OPEN_CV
+	printOnScreen("OpenCv was used");
+#else
+	printOnScreen("OpenCv was not used");
+#endif
 	handleProgrammOptions(ac,av);
 	TestManager::instance().setFilePath("../Settings/testSettingsPy.init"); // must be called before the logger
 	const std::string settingsFile = CommandSettings::instance().get_settingsFile();
