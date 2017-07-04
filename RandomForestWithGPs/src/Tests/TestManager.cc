@@ -178,6 +178,7 @@ void TestManager::run(){
 
 LabeledData TestManager::getAllPointsFor(const std::string& defName, TestInformation::Instruction* scope){
 	LabeledData res;
+	printOnScreen("Get all points for: " << defName);
 	auto usedDefinition = m_testInformation.getDefinition(defName, scope);
 	if(usedDefinition.isTrainOrTestSetting()){ // stops recursion
  		// is either train or test so only the points from one are used

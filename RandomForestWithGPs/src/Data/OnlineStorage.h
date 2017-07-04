@@ -14,7 +14,7 @@
 #include <vector>
 
 template<typename T>
-class PoolInfo {
+class PoolInfo : public Observer {
 public:
 	PoolInfo();
 
@@ -34,6 +34,8 @@ public:
 
 	void removePointFromClass(unsigned int classNr);
 
+	void update(Subject* caller, unsigned int event);
+
 private:
 	std::vector<unsigned int> m_desiredSizes;
 	std::vector<unsigned int> m_currentSizes;
@@ -49,7 +51,8 @@ public:
 		APPEND = 0,
 		APPENDBLOCK = 1,
 		ERASE = 2,
-		UNDEFINED = 3
+		UNDEFINED = 3,
+		UPDATE_VALIDATION_SET = 4
 	};
 
 	enum class StorageMode {
@@ -114,6 +117,8 @@ public:
 	unsigned int getAmountOfNew() const;
 
 	ClassTypeSubject classType() const override;
+
+	PoolInfo<T>& getPoolInfoRef(){ return m_poolInfo; };
 
 	virtual ~OnlineStorage();
 

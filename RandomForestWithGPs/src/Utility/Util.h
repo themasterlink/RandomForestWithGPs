@@ -38,7 +38,6 @@ void saveDelete(T*& pointer){
 #define UNUSED(expr) \
      (void)(expr) \
 
-
 inline void openFileInViewer(const std::string& filename){
 	if(boost::filesystem::exists(Logger::instance().getActDirectory() + filename)){
 		Logger::instance().addSpecialLineToFile("eog " + filename + " &", "System");
@@ -171,6 +170,14 @@ inline Real logReal(const Real val){
 	return log(val);
 #else
 	return logf(val);
+#endif
+}
+
+constexpr Real operator""_r(long double val){
+#ifdef USE_DOUBLE
+	return val;
+#else
+	return (Real) val;
 #endif
 }
 

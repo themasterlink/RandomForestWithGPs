@@ -102,7 +102,7 @@ public:
 
 	void readTrainingsModeFromSetting();
 
-	void setValidationSet(LabeledData* pValidation){ m_validationSet = pValidation; }
+	void setValidationSet(LabeledData* pValidation);
 
 private:
 
@@ -214,6 +214,10 @@ private:
 	TrainingsConfig m_trainingsConfig;
 
 	const bool m_useRealOnlineUpdate;
+
+	bool m_useOnlinePool;
+
+	std::vector<Real> m_classCounterForValidationSet;
 
 	// are copied to the threads (automatic reference counting for them)
 	mutable SharedPtr<Mutex> m_read;

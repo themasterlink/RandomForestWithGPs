@@ -77,6 +77,22 @@ void PoolInfo<T>::updateAccordingToPerformance(){
 }
 
 template<typename T>
+void PoolInfo<T>::update(Subject* caller, unsigned int event){
+	if(caller){
+		if(caller->classType() == ClassTypeSubject::ONLINERANDOMFOREST){
+			if(event == OnlineStorage<T>::UPDATE_VALIDATION_SET){
+				updateAccordingToPerformance();
+			}
+			// other event types are not direct at the pool info
+		}else{
+			printError("This type is not supported here!");
+		}
+	}else{
+		printError("The subject caller was zero!");
+	}
+}
+
+template<typename T>
 OnlineStorage<T>::OnlineStorage(): m_lastUpdateIndex(0), m_storageMode(StorageMode::NORMAL){
 }
 

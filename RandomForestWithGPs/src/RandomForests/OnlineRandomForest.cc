@@ -17,7 +17,7 @@ OnlineRandomForest::OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
 		m_amountOfPointsUntilRetrain(0),
 		m_counterForRetrain(0),
 		m_amountOfUsedDims(0),
-		m_factorForUsedDims((Real) 0.),
+		m_factorForUsedDims(0._r),
 		m_storage(storage),
 		m_validationSet(nullptr),
 		m_firstTrainingDone(false),
@@ -452,6 +452,22 @@ bool OnlineRandomForest::update(){
 		if(list->size() != m_trees.size()){
 			printError("The sorting process failed, list size is: " << list->size() << ", should be: " << m_trees.size());
 			return false;
+		}
+		if(m_useOnlinePool){
+			Labels labels;
+			const auto& valRef = *m_validationSet;
+			predictData(valRef, labels);
+			auto& performanceRef = m_storage.getPoolInfoRef().getPerformancesRef();
+			for(unsigned int i = 0, end = (unsigned int) labels.size(); i < end; ++i){
+				if(labels[i] == valRef[i]->getLabel()){
+					++performanceRef[labels[i]];
+				}
+			}
+			for(unsigned int i = 0, end = (unsigned int) performanceRef.size(); i < end; ++i){
+				performanceRef[i] /= m_classCounterForValidationSet[i];
+			}
+			// updates the pool info
+			notify(static_cast<const unsigned int>(OnlineStorage<LabeledVectorX*>::Event::UPDATE_VALIDATION_SET));
 		}
 		auto it = list->begin();
 		for(unsigned int i = 0; i < list->size() / 2;++i){ ++it; }
@@ -1380,4 +1396,15 @@ void OnlineRandomForest::packageUpdateForPrediction(InformationPackage* package,
 	}
 	package->performedOneTrainingStep(); // used for the InLinePercentageFiller
 
+}
+
+void OnlineRandomForest::setValidationSet(LabeledData* pValidation){
+	if(pValidation != nullptr){
+		m_validationSet = pValidation;
+		m_classCounterForValidationSet.resize(ClassKnowledge::instance().amountOfClasses());
+		std::fill(m_classCounterForValidationSet.begin(), m_classCounterForValidationSet.end(), 0.0);
+		for(const auto& point : *m_validationSet){
+			m_classCounterForValidationSet[point->getLabel()] += 1.0_r;
+		}
+	}
 }

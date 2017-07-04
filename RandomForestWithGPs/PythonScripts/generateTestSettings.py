@@ -73,4 +73,4 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
 
 
 amountOfSplits = 80
-generateTestSettings(amountOfSplits, "for 2 m", "for 42 s")
+generateTestSettings(amountOfSplits, "until 360 trees", "until 120 trees")

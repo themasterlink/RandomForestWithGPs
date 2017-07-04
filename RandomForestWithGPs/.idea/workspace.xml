@@ -16,21 +16,15 @@
   <component name="ChangeListManager">
     <list default="true" id="049817e5-95a7-4829-9b2c-4499a747c94c" name="Default" comment="Speed up build process, by introducing a flag, to not build old code">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/CMakeLists.txt" afterPath="$PROJECT_DIR$/CMakeLists.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" afterPath="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Settings/testSettingsPy.init" afterPath="$PROJECT_DIR$/Settings/testSettingsPy.init" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/DataReader.cc" afterPath="$PROJECT_DIR$/src/Data/DataReader.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/DataWriterForVisu.cc" afterPath="$PROJECT_DIR$/src/Data/DataWriterForVisu.cc" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/OnlineStorage.h" afterPath="$PROJECT_DIR$/src/Data/OnlineStorage.h" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/OnlineStorage_i.h" afterPath="$PROJECT_DIR$/src/Data/OnlineStorage_i.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/TotalStorage.cc" afterPath="$PROJECT_DIR$/src/Data/TotalStorage.cc" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" afterPath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" afterPath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Tests/TestManager.cc" afterPath="$PROJECT_DIR$/src/Tests/TestManager.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Utility/ColorConverter.h" afterPath="$PROJECT_DIR$/src/Utility/ColorConverter.h" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Utility/TimeFrame.cc" afterPath="$PROJECT_DIR$/src/Utility/TimeFrame.cc" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Utility/Util.h" afterPath="$PROJECT_DIR$/src/Utility/Util.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main.cc" afterPath="$PROJECT_DIR$/src/main.cc" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/CMakeFiles/" />
@@ -106,8 +100,8 @@
       <file leaf-file-name="BaseType.h" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Base/BaseType.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="379">
-              <caret line="35" column="33" lean-forward="true" selection-start-line="35" selection-start-column="33" selection-end-line="35" selection-end-column="33" />
+            <state relative-caret-position="175">
+              <caret line="23" column="35" lean-forward="true" selection-start-line="23" selection-start-column="35" selection-end-line="23" selection-end-column="35" />
               <folding />
             </state>
           </provider>
@@ -799,7 +793,7 @@
       <workItem from="1498826619586" duration="1860000" />
       <workItem from="1498829434080" duration="187000" />
       <workItem from="1499063843380" duration="20038000" />
-      <workItem from="1499150894186" duration="13890000" />
+      <workItem from="1499150894186" duration="13991000" />
     </task>
     <task id="LOCAL-00001" summary="Bug fixes (no dead lock in waiting, better exit for screenouput, memory usage in testmanager corrected, renaming of StringHelper functions)">
       <created>1496756074975</created>
@@ -892,11 +886,18 @@
       <option name="project" value="LOCAL" />
       <updated>1499093890068</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="make opencv optional">
+      <created>1499169037710</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1499169037710</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="487983000" />
+    <option name="totallyTimeSpent" value="488084000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -975,7 +976,8 @@
     <MESSAGE value="Pooling for Online Storage Basic Version works, renamed some stuff to better fit convention, removed some old code" />
     <MESSAGE value="Changen InLinePercentageFiller to singelton pattern" />
     <MESSAGE value="Speed up build process, by introducing a flag, to not build old code" />
-    <option name="LAST_COMMIT_MESSAGE" value="Speed up build process, by introducing a flag, to not build old code" />
+    <MESSAGE value="make opencv optional" />
+    <option name="LAST_COMMIT_MESSAGE" value="make opencv optional" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1588,8 +1590,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Base/BaseType.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="379">
-          <caret line="35" column="33" lean-forward="true" selection-start-line="35" selection-start-column="33" selection-end-line="35" selection-end-column="33" />
+        <state relative-caret-position="175">
+          <caret line="23" column="35" lean-forward="true" selection-start-line="23" selection-start-column="35" selection-end-line="23" selection-end-column="35" />
           <folding />
         </state>
       </provider>
