@@ -7,9 +7,7 @@
 
 #include "TotalStorage.h"
 #include "DataReader.h"
-#include "../Base/Settings.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
-#include "../Data/DataConverter.h"
 
 TotalStorage::TotalStorage(): m_totalSize(0),
 							  m_dataSetMode(DataSetMode::WHOLE){};

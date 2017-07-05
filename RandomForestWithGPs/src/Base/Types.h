@@ -24,10 +24,6 @@ using Matrix = Eigen::MatrixXd;
 
 using Vector2 = Eigen::Vector2d;
 
-static const auto REAL_MAX = DBL_MAX;
-
-static const auto NEG_REAL_MAX = -REAL_MAX;
-
 #else
 
 using VectorX = Eigen::VectorXf;
@@ -36,11 +32,11 @@ using Matrix = Eigen::MatrixXf;
 
 using Vector2 = Eigen::Vector2f;
 
-static const auto REAL_MAX = FLT_MAX;
-
-static const auto NEG_REAL_MAX = -REAL_MAX;
-
 #endif
+
+static const auto REAL_MAX = std::numeric_limits<Real>::max();
+
+static const auto NEG_REAL_MAX = std::numeric_limits<Real>::lowest();
 
 using DiagMatrixXd = Eigen::DiagonalWrapper<const Matrix>;
 

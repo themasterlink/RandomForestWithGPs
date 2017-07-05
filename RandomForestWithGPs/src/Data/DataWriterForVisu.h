@@ -13,7 +13,7 @@
 #include <string>
 #include "../GaussianProcess/IVM.h"
 
-class DataWriterForVisu{
+class DataWriterForVisu {
 public:
 
 	static void writeData(const std::string& fileName, const LabeledData& data, const int x = 0, const int y = 1);
@@ -98,7 +98,7 @@ private:
 
 
 	DataWriterForVisu();
-	virtual ~DataWriterForVisu();
+	~DataWriterForVisu();
 
 };
 

@@ -14,17 +14,20 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="049817e5-95a7-4829-9b2c-4499a747c94c" name="Default" comment="Speed up build process, by introducing a flag, to not build old code">
+    <list default="true" id="049817e5-95a7-4829-9b2c-4499a747c94c" name="Default" comment="online pool update now works, changes the amount of points used for each class, based on the performance (still one minor bug, with the use of the data in the trees)">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" afterPath="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Settings/init.json" afterPath="$PROJECT_DIR$/Settings/init.json" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Settings/testSettingsPy.init" afterPath="$PROJECT_DIR$/Settings/testSettingsPy.init" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/OnlineStorage.h" afterPath="$PROJECT_DIR$/src/Data/OnlineStorage.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Base/Logger.cc" afterPath="$PROJECT_DIR$/src/Base/Logger.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Base/Types.h" afterPath="$PROJECT_DIR$/src/Base/Types.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/DataConverter.h" afterPath="$PROJECT_DIR$/src/Data/DataConverter.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/DataWriterForVisu.h" afterPath="$PROJECT_DIR$/src/Data/DataWriterForVisu.h" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/OnlineStorage_i.h" afterPath="$PROJECT_DIR$/src/Data/OnlineStorage_i.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Data/TotalStorage.cc" afterPath="$PROJECT_DIR$/src/Data/TotalStorage.cc" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" afterPath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" afterPath="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Tests/TestManager.cc" afterPath="$PROJECT_DIR$/src/Tests/TestManager.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Utility/TimeFrame.cc" afterPath="$PROJECT_DIR$/src/Utility/TimeFrame.cc" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Utility/Util.h" afterPath="$PROJECT_DIR$/src/Utility/Util.h" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/RandomNumberGenerator/RandomNumberGeneratorForDT.cc" afterPath="$PROJECT_DIR$/src/RandomNumberGenerator/RandomNumberGeneratorForDT.cc" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Tests/TestInformation.h" afterPath="$PROJECT_DIR$/src/Tests/TestInformation.h" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <ignored path="$PROJECT_DIR$/CMakeFiles/" />
@@ -44,107 +47,96 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="OnlineStorage_i.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage_i.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="379">
+              <caret line="85" column="66" lean-forward="true" selection-start-line="85" selection-start-column="66" selection-end-line="85" selection-end-column="66" />
+              <folding>
+                <element signature="e#125#153#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DynamicDecisionTree_i.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree_i.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="238">
+              <caret line="148" column="50" lean-forward="true" selection-start-line="148" selection-start-column="50" selection-end-line="148" selection-end-column="50" />
+              <folding>
+                <element signature="e#0#82#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="BigDynamicDecisionTree.cc" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="450">
+              <caret line="185" column="34" lean-forward="true" selection-start-line="185" selection-start-column="34" selection-end-line="185" selection-end-column="34" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="OnlineStorage.h" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="187">
+              <caret line="16" column="21" lean-forward="true" selection-start-line="16" selection-start-column="21" selection-end-line="16" selection-end-column="21" />
+              <folding>
+                <element signature="e#138#167#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="getResults.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/PythonScripts/getResults.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="153">
+              <caret line="52" column="0" lean-forward="false" selection-start-line="52" selection-start-column="0" selection-end-line="52" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="init.json" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Settings/init.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="476">
+              <caret line="55" column="41" lean-forward="false" selection-start-line="55" selection-start-column="41" selection-end-line="55" selection-end-column="41" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="ColorConverter.h" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Utility/ColorConverter.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
-              <caret line="13" column="29" lean-forward="false" selection-start-line="13" selection-start-column="29" selection-end-line="13" selection-end-column="29" />
+            <state relative-caret-position="595">
+              <caret line="40" column="43" lean-forward="false" selection-start-line="40" selection-start-column="26" selection-end-line="40" selection-end-column="43" />
               <folding>
-                <element signature="e#185#214#0" expanded="true" />
-                <element signature="e#593#756#0" expanded="true" />
-                <element signature="e#960#1015#0" expanded="true" />
+                <marker date="1499167207525" expanded="false" signature="185:214" ph="..." />
+                <marker date="1499167207525" expanded="true" signature="593:756" ph="..." />
+                <marker date="1499167207525" expanded="true" signature="960:1015" ph="..." />
+                <marker date="1499167207525" expanded="false" signature="1196:1251" ph="..." />
+                <marker date="1499167207525" expanded="false" signature="1455:1510" ph="..." />
+                <marker date="1499167207525" expanded="false" signature="1715:1771" ph="..." />
+                <marker date="1499167207525" expanded="false" signature="1976:2032" ph="..." />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="main.cc" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main.cc">
+      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="72" column="0" lean-forward="false" selection-start-line="72" selection-start-column="0" selection-end-line="72" selection-end-column="0" />
-              <folding>
-                <element signature="e#270#294#0" expanded="true" />
-                <element signature="e#3434#3467#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="DataWriterForVisu.cc" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Data/DataWriterForVisu.cc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="607" column="57" lean-forward="false" selection-start-line="607" selection-start-column="57" selection-end-line="607" selection-end-column="57" />
-              <folding>
-                <element signature="e#82#112#0" expanded="true" />
-                <marker date="1499167801518" expanded="true" signature="208:261" ph="..." />
-                <marker date="1499167801518" expanded="false" signature="23862:23920" ph="..." />
-                <marker date="1499167801518" expanded="false" signature="29196:29254" ph="..." />
-                <marker date="1499167801518" expanded="false" signature="34190:34248" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ScreenOutput.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Base/ScreenOutput.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="889">
-              <caret line="59" column="0" lean-forward="false" selection-start-line="59" selection-start-column="0" selection-end-line="59" selection-end-column="0" />
+            <state relative-caret-position="357">
+              <caret line="21" column="23" lean-forward="false" selection-start-line="21" selection-start-column="23" selection-end-line="21" selection-end-column="23" />
               <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="BaseType.h" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/Base/BaseType.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="175">
-              <caret line="23" column="35" lean-forward="true" selection-start-line="23" selection-start-column="35" selection-end-line="23" selection-end-column="35" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="DataConverter.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Data/DataConverter.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="13" column="20" lean-forward="false" selection-start-line="13" selection-start-column="20" selection-end-line="13" selection-end-column="20" />
-              <folding>
-                <element signature="e#138#165#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="TotalStorage.cc" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Data/TotalStorage.cc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="11" column="34" lean-forward="false" selection-start-line="11" selection-start-column="34" selection-end-line="11" selection-end-column="34" />
-              <folding>
-                <element signature="e#77#102#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="DataReader.cc" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Data/DataReader.cc">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
-              <caret line="10" column="29" lean-forward="false" selection-start-line="10" selection-start-column="29" selection-end-line="10" selection-end-column="29" />
-              <folding>
-                <element signature="e#75#98#0" expanded="true" />
-                <marker date="1499166038271" expanded="true" signature="225:228" ph="{...}" />
-                <marker date="1499166038271" expanded="true" signature="255:258" ph="{...}" />
-                <marker date="1499166038271" expanded="true" signature="377:1583" ph="{...}" />
-                <marker date="1499166038271" expanded="true" signature="1696:2574" ph="{...}" />
-                <marker date="1499166038271" expanded="true" signature="2774:6292" ph="{...}" />
-                <marker date="1499166038271" expanded="true" signature="6456:19196" ph="{...}" />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -152,12 +144,9 @@
       <file leaf-file-name="Util.h" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Utility/Util.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2124">
-              <caret line="175" column="33" lean-forward="false" selection-start-line="175" selection-start-column="33" selection-end-line="175" selection-end-column="33" />
-              <folding>
-                <element signature="e#0#66#0" expanded="true" />
-                <element signature="e#5494#5505#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="296">
+              <caret line="82" column="5" lean-forward="false" selection-start-line="82" selection-start-column="5" selection-end-line="82" selection-end-column="5" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -173,36 +162,36 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>su</find>
-      <find>substr(</find>
-      <find>stri</find>
-      <find>string</find>
-      <find>string*</find>
-      <find>s&quot;</find>
-      <find>&quot;</find>
-      <find>validation</find>
-      <find>&quot;</find>
-      <find>Event:</find>
-      <find>notify*</find>
-      <find>notif</find>
-      <find>Eve</find>
-      <find>Event</find>
-      <find>init()</find>
-      <find>setV</find>
-      <find>_</find>
-      <find>_R</find>
-      <find>cv::</find>
-      <find>oepnc</find>
-      <find>oepn</find>
-      <find>oep</find>
-      <find>oe</find>
       <find>opemnc</find>
       <find>opemn</find>
       <find>opem</find>
-      <find>ope</find>
-      <find>opencv</find>
-      <find>cv</find>
       <find>cv:</find>
+      <find>_R</find>
+      <find>cv</find>
+      <find>o</find>
+      <find>operator</find>
+      <find>operator&quot;</find>
+      <find>operator&quot;&quot;</find>
+      <find>(</find>
+      <find>(R</find>
+      <find>17</find>
+      <find>_r</find>
+      <find>(Real)</find>
+      <find>ope</find>
+      <find>open</find>
+      <find>opencv</find>
+      <find>s</find>
+      <find>sleep(</find>
+      <find>valRe</find>
+      <find>sleep()</find>
+      <find>u</find>
+      <find>write</find>
+      <find>write(</find>
+      <find>usle</find>
+      <find>c</find>
+      <find>cv::</find>
+      <find>rea</find>
+      <find>online</find>
     </findStrings>
     <replaceStrings>
       <replace>expReal(</replace>
@@ -251,13 +240,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/Utility/InLinePercentageFiller.cc" />
-        <option value="$PROJECT_DIR$/src/Tests/binaryClassIVMTest.h" />
-        <option value="$PROJECT_DIR$/src/RandomForests/RandomForest.h" />
-        <option value="$PROJECT_DIR$/src/RandomForests/TreeCounter.h" />
-        <option value="$PROJECT_DIR$/src/RandomForests/DecisionTreeData.h" />
-        <option value="$PROJECT_DIR$/src/RandomNumberGenerator/RandomNumberGeneratorForDT.h" />
-        <option value="$PROJECT_DIR$/src/Tests/binaryClassGPTest.h" />
         <option value="$PROJECT_DIR$/src/Tests/multiClassGPTest.h" />
         <option value="$PROJECT_DIR$/src/RandomNumberGenerator/RandomGaussianNr.h" />
         <option value="$PROJECT_DIR$/src/GaussianProcess/BestHyperParams.cc" />
@@ -285,22 +267,29 @@
         <option value="$PROJECT_DIR$/src/GaussianProcess/Kernel/GaussianKernel.h" />
         <option value="$PROJECT_DIR$/src/Utility/TimeFrame.cc" />
         <option value="$PROJECT_DIR$/src/Tests/TestManager.cc" />
-        <option value="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" />
-        <option value="$PROJECT_DIR$/Settings/testSettingsPy.init" />
         <option value="$PROJECT_DIR$/src/Base/CommandSettings.cc" />
-        <option value="$PROJECT_DIR$/src/Base/Logger.cc" />
         <option value="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.h" />
-        <option value="$PROJECT_DIR$/src/Data/OnlineStorage_i.h" />
         <option value="$PROJECT_DIR$/src/Utility/Util.h" />
         <option value="$PROJECT_DIR$/src/Data/OnlineStorage.h" />
-        <option value="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" />
-        <option value="$PROJECT_DIR$/src/Data/TotalStorage.cc" />
         <option value="$PROJECT_DIR$/src/Data/DataReader.cc" />
         <option value="$PROJECT_DIR$/src/Base/ScreenOutput.h" />
         <option value="$PROJECT_DIR$/src/Base/BaseType.h" />
         <option value="$PROJECT_DIR$/src/Utility/ColorConverter.h" />
         <option value="$PROJECT_DIR$/src/main.cc" />
         <option value="$PROJECT_DIR$/src/Data/DataWriterForVisu.cc" />
+        <option value="$PROJECT_DIR$/src/Data/DataWriterForVisu.h" />
+        <option value="$PROJECT_DIR$/src/Data/TotalStorage.cc" />
+        <option value="$PROJECT_DIR$/src/Base/Observer.h" />
+        <option value="$PROJECT_DIR$/src/Tests/TestInformation.h" />
+        <option value="$PROJECT_DIR$/src/Base/Logger.cc" />
+        <option value="$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc" />
+        <option value="$PROJECT_DIR$/src/Base/Types.h" />
+        <option value="$PROJECT_DIR$/src/Data/DataConverter.h" />
+        <option value="$PROJECT_DIR$/PythonScripts/generateTestSettings.py" />
+        <option value="$PROJECT_DIR$/Settings/testSettingsPy.init" />
+        <option value="$PROJECT_DIR$/Settings/init.json" />
+        <option value="$PROJECT_DIR$/src/Data/OnlineStorage_i.h" />
+        <option value="$PROJECT_DIR$/src/RandomNumberGenerator/RandomNumberGeneratorForDT.cc" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
       </list>
     </option>
@@ -473,7 +462,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
+    <property name="settings.editor.selected.configurable" value="CPPToolchains" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/src/Data" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -793,7 +782,7 @@
       <workItem from="1498826619586" duration="1860000" />
       <workItem from="1498829434080" duration="187000" />
       <workItem from="1499063843380" duration="20038000" />
-      <workItem from="1499150894186" duration="13991000" />
+      <workItem from="1499150894186" duration="27178000" />
     </task>
     <task id="LOCAL-00001" summary="Bug fixes (no dead lock in waiting, better exit for screenouput, memory usage in testmanager corrected, renaming of StringHelper functions)">
       <created>1496756074975</created>
@@ -893,11 +882,18 @@
       <option name="project" value="LOCAL" />
       <updated>1499169037710</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="PoolInfo now as Observer for OnlineRandomForest after each update, the pool is updated according to the performance on the validation set (80 % done)">
+      <created>1499169093734</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1499169093734</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="488084000" />
+    <option name="totallyTimeSpent" value="501271000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -919,10 +915,10 @@
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.43784994" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922733" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32026875" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25276753" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25239235" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3281075" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24940334" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.387458" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.38646287" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -932,27 +928,6 @@
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
-    <layout-to-restore>
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32969433" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.41593885" sideWeight="0.49520957" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32881" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.41703057" sideWeight="0.5047904" order="8" side_tool="true" content_ui="tabs" />
-      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922733" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4268559" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3209607" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3286026" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24940334" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39847162" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-    </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="processedProjectFiles" value="true" />
@@ -977,7 +952,8 @@
     <MESSAGE value="Changen InLinePercentageFiller to singelton pattern" />
     <MESSAGE value="Speed up build process, by introducing a flag, to not build old code" />
     <MESSAGE value="make opencv optional" />
-    <option name="LAST_COMMIT_MESSAGE" value="make opencv optional" />
+    <MESSAGE value="PoolInfo now as Observer for OnlineRandomForest after each update, the pool is updated according to the performance on the validation set (80 % done)" />
+    <option name="LAST_COMMIT_MESSAGE" value="PoolInfo now as Observer for OnlineRandomForest after each update, the pool is updated according to the performance on the validation set (80 % done)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -996,11 +972,11 @@
           <url>file://$PROJECT_DIR$/src/Data/LabeledVectorX.cc</url>
           <option name="timeStamp" value="148" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+        <line-breakpoint type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file:///usr/include/boost/thread/thread_only.hpp</url>
           <option name="timeStamp" value="236" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+        <line-breakpoint type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/src/Tests/tests.h</url>
           <line>10</line>
           <option name="timeStamp" value="293" />
@@ -1014,166 +990,11 @@
           <properties />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="295" />
+      <option name="time" value="300" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/RandomForestGaussianProcess/RFGPWriter.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="113" column="10" lean-forward="false" selection-start-line="113" selection-start-column="10" selection-end-line="113" selection-end-column="10" />
-          <folding>
-            <element signature="e#0#73#0" expanded="false" />
-            <element signature="e#98#3773#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForestGaussianProcess/RandomForestGaussianProcess.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="387">
-          <caret line="409" column="10" lean-forward="false" selection-start-line="409" selection-start-column="10" selection-end-line="409" selection-end-column="10" />
-          <folding>
-            <element signature="e#0#90#0" expanded="false" />
-            <element signature="e#115#16759#0" expanded="false" />
-            <marker date="1499093466787" expanded="false" signature="124:309" ph="..." />
-            <marker date="1499093466787" expanded="false" signature="2063:2704" ph="/.../" />
-            <marker date="1499093466787" expanded="false" signature="4956:5353" ph="/.../" />
-            <marker date="1499093466787" expanded="false" signature="7720:8055" ph="/.../" />
-            <marker date="1499093466787" expanded="false" signature="9132:9338" ph="/.../" />
-            <marker date="1499093466787" expanded="false" signature="11559:12863" ph="/.../" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/RandomForest.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="387">
-          <caret line="178" column="10" lean-forward="false" selection-start-line="178" selection-start-column="10" selection-end-line="178" selection-end-column="10" />
-          <folding>
-            <element signature="e#0#80#0" expanded="false" />
-            <element signature="e#105#6764#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/RandomForestWriter.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="384">
-          <caret line="104" column="9" lean-forward="false" selection-start-line="104" selection-start-column="9" selection-end-line="104" selection-end-column="9" />
-          <folding>
-            <element signature="e#0#81#0" expanded="false" />
-            <element signature="e#106#3245#0" expanded="false" />
-            <marker date="1499093466768" expanded="false" signature="115:197" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/TreeCounter.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="26" column="27" lean-forward="true" selection-start-line="26" selection-start-column="27" selection-end-line="26" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#73#0" expanded="false" />
-            <marker date="1499092641170" expanded="true" signature="220:512" ph="{...}" />
-            <marker date="1499092641170" expanded="true" signature="296:348" ph="{...}" />
-            <marker date="1499092641170" expanded="true" signature="373:420" ph="{...}" />
-            <marker date="1499092641170" expanded="true" signature="445:469" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/DecisionTree.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#79#0" expanded="false" />
-            <marker date="1499093466824" expanded="true" signature="351:1908" ph="{...}" />
-            <marker date="1499093466824" expanded="true" signature="376:528" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/DecisionTreeData.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="22" column="10" lean-forward="false" selection-start-line="22" selection-start-column="10" selection-end-line="22" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/binaryClassGPTest.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="448" column="0" lean-forward="true" selection-start-line="448" selection-start-column="0" selection-end-line="448" selection-end-column="0" />
-          <folding>
-            <marker date="1499093048924" expanded="false" signature="3714:3858" ph="/.../" />
-            <marker date="1499093048924" expanded="false" signature="3859:4145" ph="/.../" />
-            <marker date="1499093048924" expanded="false" signature="5523:6474" ph="/.../" />
-            <marker date="1499093048924" expanded="false" signature="7656:7959" ph="/.../" />
-            <marker date="1499093048924" expanded="false" signature="13015:13494" ph="/.../" />
-            <marker date="1499093048924" expanded="false" signature="13495:15079" ph="/.../" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/multiClassRFGPTest.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="367">
-          <caret line="125" column="10" lean-forward="false" selection-start-line="125" selection-start-column="10" selection-end-line="125" selection-end-column="10" />
-          <folding>
-            <element signature="e#0#80#0" expanded="false" />
-            <element signature="e#178#4109#0" expanded="false" />
-            <marker date="1499093496236" expanded="false" signature="187:274" ph="..." />
-            <marker date="1499093496236" expanded="false" signature="275:425" ph="/.../" />
-            <marker date="1499093496236" expanded="false" signature="435:552" ph="..." />
-            <marker date="1499093496236" expanded="false" signature="3891:3990" ph="/.../" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/binaryClassRFTest.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="350">
-          <caret line="198" column="10" lean-forward="false" selection-start-line="198" selection-start-column="10" selection-end-line="198" selection-end-column="10" />
-          <folding>
-            <element signature="e#0#79#0" expanded="false" />
-            <element signature="e#175#6801#0" expanded="false" />
-            <marker date="1499093496251" expanded="false" signature="184:367" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/performanceMeasurement.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#84#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/TestInformation.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Tests/tests.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="595">
-          <caret line="35" column="30" lean-forward="false" selection-start-line="35" selection-start-column="30" selection-end-line="35" selection-end-column="30" />
-          <folding>
-            <element signature="e#1224#1255#0" expanded="true" />
-            <marker date="1499093538527" expanded="true" signature="227:1047" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/GaussianProcess/GaussianProcessWriter.cc">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2142">
@@ -1287,22 +1108,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PythonScripts/generateTestSettings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="52">
-          <caret line="58" column="13" lean-forward="true" selection-start-line="58" selection-start-column="13" selection-end-line="58" selection-end-column="13" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Settings/testSettingsPy.init">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="8" column="59" lean-forward="true" selection-start-line="8" selection-start-column="59" selection-end-line="8" selection-end-column="59" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/include/c++/5/bits/stl_pair.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
@@ -1335,45 +1140,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage_i.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="765">
-          <caret line="75" column="54" lean-forward="true" selection-start-line="75" selection-start-column="54" selection-end-line="75" selection-end-column="54" />
-          <folding>
-            <element signature="e#33#116#0" expanded="false" />
-            <element signature="e#5050#5062#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/Observer.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="509">
-          <caret line="42" column="15" lean-forward="false" selection-start-line="42" selection-start-column="9" selection-end-line="42" selection-end-column="15" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/Base/Observer.cc">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="544">
           <caret line="37" column="14" lean-forward="false" selection-start-line="37" selection-start-column="14" selection-end-line="37" selection-end-column="14" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/Logger.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="129">
-          <caret line="23" column="24" lean-forward="false" selection-start-line="23" selection-start-column="24" selection-end-line="23" selection-end-column="24" />
-          <folding>
-            <marker date="1499158892036" expanded="true" signature="457:460" ph="{...}" />
-            <marker date="1499158892036" expanded="true" signature="2500:2581" ph="{...}" />
-            <marker date="1499158892036" expanded="true" signature="2603:4993" ph="{...}" />
-            <marker date="1499158892036" expanded="true" signature="5013:5172" ph="{...}" />
-            <marker date="1499158892036" expanded="true" signature="5231:5337" ph="{...}" />
-            <marker date="1499158892036" expanded="true" signature="5428:5735" ph="{...}" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1423,87 +1194,51 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage.h">
+    <entry file="file://$PROJECT_DIR$/src/main.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="129" column="0" lean-forward="false" selection-start-line="129" selection-start-column="0" selection-end-line="129" selection-end-column="0" />
+        <state relative-caret-position="260">
+          <caret line="72" column="0" lean-forward="false" selection-start-line="72" selection-start-column="0" selection-end-line="72" selection-end-column="0" />
           <folding>
-            <element signature="e#0#75#0" expanded="false" />
-            <marker date="1499162055305" expanded="false" signature="147:243" ph="..." />
-            <marker date="1499162055305" expanded="false" signature="245:265" ph="&lt;T&gt;" />
-            <marker date="1499162055305" expanded="true" signature="299:1024" ph="{...}" />
-            <marker date="1499162055305" expanded="false" signature="1027:1047" ph="&lt;T&gt;" />
-            <marker date="1499162055305" expanded="true" signature="1101:3180" ph="{...}" />
-            <marker date="1499162055305" expanded="true" signature="1137:1298" ph="{...}" />
-            <marker date="1499162055305" expanded="true" signature="1325:1346" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="13" column="70" lean-forward="false" selection-start-line="13" selection-start-column="70" selection-end-line="13" selection-end-column="70" />
-          <folding>
-            <marker date="1499164907981" expanded="false" signature="92:183" ph="..." />
-            <marker date="1499164907981" expanded="true" signature="1095:1591" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="1634:1637" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="1908:4737" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="4772:13789" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="13872:15435" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="15520:16753" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="17088:18384" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="18454:19182" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="19240:19270" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="19305:24885" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="24967:25848" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="26100:29074" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="29364:32623" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="32752:33156" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="33263:33572" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="33679:34477" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="34548:34878" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="34997:35684" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="35845:36706" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="36786:38150" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="38237:39614" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="39743:42621" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="42757:45578" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="45786:46966" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="47186:48328" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="48558:49382" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="49624:50448" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="50617:50916" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="51097:51396" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="51462:51719" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="51788:51810" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="51891:51913" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="51969:52018" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="52083:53283" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="53377:53540" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="53597:55602" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="55788:56207" ph="{...}" />
-            <marker date="1499164907981" expanded="true" signature="56276:56639" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Data/DataConverter.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="13" column="20" lean-forward="false" selection-start-line="13" selection-start-column="20" selection-end-line="13" selection-end-column="20" />
-          <folding>
-            <element signature="e#138#165#0" expanded="true" />
+            <element signature="e#270#294#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Data/TotalStorage.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="11" column="34" lean-forward="false" selection-start-line="11" selection-start-column="34" selection-end-line="11" selection-end-column="34" />
+        <state relative-caret-position="85">
+          <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
           <folding>
-            <element signature="e#77#102#0" expanded="true" />
+            <element signature="e#77#102#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Data/DataWriterForVisu.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="100">
+          <caret line="11" column="27" lean-forward="false" selection-start-line="11" selection-start-column="27" selection-end-line="11" selection-end-column="27" />
+          <folding>
+            <marker date="1499173205294" expanded="true" signature="288:4670" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/BaseType.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="8" column="0" lean-forward="true" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/ScreenOutput.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="15" column="12" lean-forward="false" selection-start-line="15" selection-start-column="12" selection-end-line="15" selection-end-column="12" />
+          <folding>
+            <element signature="e#156#175#0" expanded="false" />
+            <marker date="1499166368269" expanded="false" signature="1854:2248" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1513,85 +1248,229 @@
         <state relative-caret-position="85">
           <caret line="10" column="29" lean-forward="false" selection-start-line="10" selection-start-column="29" selection-end-line="10" selection-end-column="29" />
           <folding>
-            <element signature="e#75#98#0" expanded="true" />
-            <marker date="1499166038271" expanded="true" signature="225:228" ph="{...}" />
-            <marker date="1499166038271" expanded="true" signature="255:258" ph="{...}" />
-            <marker date="1499166038271" expanded="true" signature="377:1583" ph="{...}" />
-            <marker date="1499166038271" expanded="true" signature="1696:2574" ph="{...}" />
-            <marker date="1499166038271" expanded="true" signature="2774:6292" ph="{...}" />
-            <marker date="1499166038271" expanded="true" signature="6456:19196" ph="{...}" />
+            <element signature="e#75#98#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/Util.h">
+    <entry file="file://$PROJECT_DIR$/src/Base/Observer.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2124">
-          <caret line="175" column="33" lean-forward="false" selection-start-line="175" selection-start-column="33" selection-end-line="175" selection-end-column="33" />
-          <folding>
-            <element signature="e#0#66#0" expanded="true" />
-            <element signature="e#5494#5505#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/ScreenOutput.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="889">
-          <caret line="59" column="0" lean-forward="false" selection-start-line="59" selection-start-column="0" selection-end-line="59" selection-end-column="0" />
+        <state relative-caret-position="833">
+          <caret line="54" column="2" lean-forward="false" selection-start-line="54" selection-start-column="2" selection-end-line="54" selection-end-column="2" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Utility/ColorConverter.h">
+    <entry file="file://$PROJECT_DIR$/src/Tests/TestInformation.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="13" column="29" lean-forward="false" selection-start-line="13" selection-start-column="29" selection-end-line="13" selection-end-column="29" />
+        <state relative-caret-position="92">
+          <caret line="53" column="36" lean-forward="false" selection-start-line="53" selection-start-column="36" selection-end-line="53" selection-end-column="36" />
           <folding>
-            <element signature="e#185#214#0" expanded="true" />
-            <element signature="e#593#756#0" expanded="true" />
-            <element signature="e#960#1015#0" expanded="true" />
+            <element signature="e#134#151#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main.cc">
+    <entry file="file://$PROJECT_DIR$/src/Base/Settings.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="72" column="0" lean-forward="false" selection-start-line="72" selection-start-column="0" selection-end-line="72" selection-end-column="0" />
+        <state relative-caret-position="296">
+          <caret line="68" column="15" lean-forward="false" selection-start-line="68" selection-start-column="15" selection-end-line="68" selection-end-column="15" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/Types.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="493">
+          <caret line="38" column="69" lean-forward="false" selection-start-line="38" selection-start-column="69" selection-end-line="38" selection-end-column="69" />
           <folding>
-            <element signature="e#270#294#0" expanded="true" />
-            <element signature="e#3434#3467#0" expanded="true" />
+            <element signature="e#354#453#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Base/Logger.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-408">
+          <caret line="23" column="34" lean-forward="false" selection-start-line="23" selection-start-column="34" selection-end-line="23" selection-end-column="34" />
+          <folding>
+            <element signature="e#71#90#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Tests/TestManager.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="7" column="21" lean-forward="false" selection-start-line="7" selection-start-column="21" selection-end-line="7" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Data/DataConverter.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="634">
+          <caret line="62" column="20" lean-forward="false" selection-start-line="62" selection-start-column="20" selection-end-line="62" selection-end-column="20" />
+          <folding>
+            <element signature="e#138#165#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/include/boost/program_options/detail/parsers.hpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="144">
+          <caret line="133" column="52" lean-forward="true" selection-start-line="133" selection-start-column="52" selection-end-line="133" selection-end-column="52" />
+          <folding>
+            <element signature="e#0#32#0" expanded="false" />
+            <element signature="e#271#322#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/OnlineRandomForest.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="246">
+          <caret line="470" column="49" lean-forward="false" selection-start-line="470" selection-start-column="49" selection-end-line="470" selection-end-column="49" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Settings/testSettingsPy.init">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="8" column="59" lean-forward="false" selection-start-line="8" selection-start-column="59" selection-end-line="8" selection-end-column="59" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PythonScripts/generateTestSettings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="782">
+          <caret line="46" column="27" lean-forward="false" selection-start-line="46" selection-start-column="27" selection-end-line="46" selection-end-column="27" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Data/DataWriterForVisu.cc">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="607" column="57" lean-forward="false" selection-start-line="607" selection-start-column="57" selection-end-line="607" selection-end-column="57" />
+        <state relative-caret-position="136">
+          <caret line="15" column="0" lean-forward="false" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
           <folding>
-            <element signature="e#82#112#0" expanded="true" />
-            <marker date="1499167801518" expanded="true" signature="208:261" ph="..." />
-            <marker date="1499167801518" expanded="false" signature="23862:23920" ph="..." />
-            <marker date="1499167801518" expanded="false" signature="29196:29254" ph="..." />
-            <marker date="1499167801518" expanded="false" signature="34190:34248" ph="..." />
+            <marker date="1499167801518" expanded="true" signature="199:261" ph="..." />
+            <marker date="1499167801518" expanded="true" signature="20061:23854" ph="..." />
+            <marker date="1499167801518" expanded="true" signature="24104:29188" ph="..." />
+            <marker date="1499167801518" expanded="false" signature="29453:34182" ph="..." />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Utility/ColorConverter.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="595">
+          <caret line="40" column="43" lean-forward="false" selection-start-line="40" selection-start-column="26" selection-end-line="40" selection-end-column="43" />
+          <folding>
+            <marker date="1499167207525" expanded="false" signature="185:214" ph="..." />
+            <marker date="1499167207525" expanded="true" signature="593:756" ph="..." />
+            <marker date="1499167207525" expanded="true" signature="960:1015" ph="..." />
+            <marker date="1499167207525" expanded="false" signature="1196:1251" ph="..." />
+            <marker date="1499167207525" expanded="false" signature="1455:1510" ph="..." />
+            <marker date="1499167207525" expanded="false" signature="1715:1771" ph="..." />
+            <marker date="1499167207525" expanded="false" signature="1976:2032" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/include/unistd.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1418">
+          <caret line="459" column="11" lean-forward="false" selection-start-line="459" selection-start-column="11" selection-end-line="459" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Utility/Util.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="296">
+          <caret line="82" column="5" lean-forward="false" selection-start-line="82" selection-start-column="5" selection-end-line="82" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PythonScripts/getResults.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="52" column="0" lean-forward="false" selection-start-line="52" selection-start-column="0" selection-end-line="52" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Settings/init.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="476">
+          <caret line="55" column="41" lean-forward="false" selection-start-line="55" selection-start-column="41" selection-end-line="55" selection-end-column="41" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="16" column="21" lean-forward="true" selection-start-line="16" selection-start-column="21" selection-end-line="16" selection-end-column="21" />
+          <folding>
+            <element signature="e#138#167#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Data/OnlineStorage_i.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="379">
+          <caret line="85" column="66" lean-forward="true" selection-start-line="85" selection-start-column="66" selection-end-line="85" selection-end-column="66" />
+          <folding>
+            <element signature="e#125#153#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomNumberGenerator/RandomNumberGeneratorForDT.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="194">
+          <caret line="43" column="31" lean-forward="true" selection-start-line="43" selection-start-column="31" selection-end-line="43" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomNumberGenerator/RandomNumberGeneratorForDT.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="26" column="19" lean-forward="true" selection-start-line="26" selection-start-column="19" selection-end-line="26" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/DynamicDecisionTree_i.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="148" column="50" lean-forward="true" selection-start-line="148" selection-start-column="50" selection-end-line="148" selection-end-column="50" />
+          <folding>
+            <element signature="e#0#82#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/RandomForests/BigDynamicDecisionTree.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="450">
+          <caret line="185" column="34" lean-forward="true" selection-start-line="185" selection-start-column="34" selection-end-line="185" selection-end-column="34" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="595">
-          <caret line="35" column="35" lean-forward="true" selection-start-line="35" selection-start-column="35" selection-end-line="35" selection-end-column="35" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Base/BaseType.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="175">
-          <caret line="23" column="35" lean-forward="true" selection-start-line="23" selection-start-column="35" selection-end-line="23" selection-end-column="35" />
+        <state relative-caret-position="357">
+          <caret line="21" column="23" lean-forward="false" selection-start-line="21" selection-start-column="23" selection-end-line="21" selection-end-column="23" />
           <folding />
         </state>
       </provider>

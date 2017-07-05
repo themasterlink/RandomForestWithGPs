@@ -9,6 +9,7 @@
 #include "Settings.h"
 #include <boost/date_time.hpp>
 #include "../Tests/TestManager.h"
+#include "../Utility/Util.h"
 
 namespace bfs = boost::filesystem;
 
@@ -17,7 +18,7 @@ Logger::Logger():
 		m_needToWrite(false),
 		m_text(""),
 		m_fileName(""),
-		m_timeToSleep((Real) (1.2/*5 * 60.0*/)),
+		m_timeToSleep(1.2_r/*5 * 60.0*/),
 		m_actualDirectory("./"), // default
 		m_ownThread(nullptr),
 		m_writeByForceWrite(true),

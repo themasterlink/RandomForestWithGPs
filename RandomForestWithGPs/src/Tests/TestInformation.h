@@ -6,7 +6,6 @@
 #define RANDOMFORESTWITHGPS_TESTINFORMATION_H
 
 #include <string>
-#include "../Utility/Util.h"
 #include "../Data/OnlineStorage.h"
 #include "../RandomForests/OnlineRandomForest.h"
 

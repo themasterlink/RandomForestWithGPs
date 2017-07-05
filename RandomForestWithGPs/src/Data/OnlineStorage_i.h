@@ -73,7 +73,33 @@ void PoolInfo<T>::removePointFromClass(unsigned int classNr){
 template<typename T>
 void PoolInfo<T>::updateAccordingToPerformance(){
 	Real min, max;
-	DataConverter::getMinMax(m_performance, min, max);
+	const auto ignoreRealNegMax = true; // avoids the classes which have no size at the moment
+	DataConverter::getMinMax(m_performance, min, max, ignoreRealNegMax);
+	if(min < max){
+		const auto amountOfFixedPoints = m_amountOfPointsPerClass / 2;
+		auto addedError = 0._r;
+		for(unsigned int i = 0, end = (unsigned int) m_desiredSizes.size(); i < end; ++i){
+			if(m_performance[i] >= min){ // exclude NEG_REAL_MAX
+				addedError += 1._r - m_performance[i];
+			}
+		}
+		const auto amountOfSharedPoints = (m_amountOfPointsPerClass - amountOfFixedPoints) * m_performance.size();
+		for(unsigned int i = 0, end = (unsigned int) m_desiredSizes.size(); i < end; ++i){
+			if(m_performance[i] >= min){ // exclude NEG_REAL_MAX
+				const auto fac = (1._r - m_performance[i]) / addedError;
+				m_desiredSizes[i] = (unsigned int) (amountOfFixedPoints + amountOfSharedPoints * fac);
+				printOnScreen("Class: " << i << ", performance: " << m_performance[i]
+										<< ", new size: " << m_desiredSizes[i]
+										<< ", current size: " << m_currentSizes[i]);
+			}
+		}
+//		const auto fac = 1.0_r - (m_performance[i] - min) / (max - min);
+//
+
+		printOnScreen("Min: " << min << ", max: " << max);
+	}else{
+		printError("Min and max are equal!");
+	}
 }
 
 template<typename T>

@@ -62,8 +62,8 @@ private:
 
 template<typename T>
 void DataConverter::getMinMax(const std::vector<T>& data, T& min, T& max, const bool ignoreREAL_MAX_NEG){
-	min = std::numeric_limits<T>::lowest();
-	max = std::numeric_limits<T>::max();
+	min = std::numeric_limits<T>::max();
+	max = std::numeric_limits<T>::lowest();
 	if(std::is_floating_point<T>::value){
 		for(const auto& ele : data){
 			if(ele < min && ele > NEG_REAL_MAX){
