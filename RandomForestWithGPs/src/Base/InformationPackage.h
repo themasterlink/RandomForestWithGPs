@@ -8,9 +8,8 @@
 #ifndef BASE_INFORMATIONPACKAGE_H_
 #define BASE_INFORMATIONPACKAGE_H_
 
-#include <boost/thread.hpp>
-#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 #include <atomic>
+#include <condition_variable>
 #include "../Utility/StopWatch.h"
 #include "BaseType.h"
 #include "Types.h"
@@ -37,6 +36,8 @@ public:
 	};
 
 	InformationPackage(InfoType type, Real correctlyClassified, int amountOfPoints);
+
+	InformationPackage(InformationPackage&& package);
 
 	Real correctlyClassified() const { return m_correctlyClassified; };
 
@@ -100,11 +101,11 @@ private:
 
 	const InfoType m_type;
 
-	//boost::interprocess::interprocess_condition m_condition;
+	Mutex m_mutexForCond;
 
-	//boost::interprocess::interprocess_mutex m_mutexForCondition;
+	std::condition_variable m_conditional;
 
-	boost::interprocess::interprocess_semaphore m_semaphoreForWaiting;
+	unsigned int m_condCounter;
 
 	bool m_isTaskPerformed;
 

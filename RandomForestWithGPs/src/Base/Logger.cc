@@ -67,7 +67,7 @@ void Logger::start(){
 		Settings::instance().getValue("main.type", mode);
 		m_text = "Online Random Forest with IVMs, mode: " + mode + "\n"; // Standart Information
 		m_text += "Date: " + boost::posix_time::to_simple_string(boost::posix_time::second_clock::local_time()) + "\n";
-		m_ownThread = new boost::thread(boost::bind(&Logger::run, &Logger::instance()));
+		m_ownThread = makeThread(&Logger::run, &Logger::instance());
 	}
 }
 

@@ -8,18 +8,17 @@
 #ifndef GAUSSIANPROCESS_KERNEL_GAUSSIANKERNELOPTIMIZER_H_
 #define GAUSSIANPROCESS_KERNEL_GAUSSIANKERNELOPTIMIZER_H_
 
-#include <boost/random.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_real.hpp>
+#ifdef BUILD_OLD_CODE
+
 #include "../../Data/OnlineStorage.h"
 #include "../../Utility/Util.h"
 #include "GaussianKernel.h"
 
 class GaussianKernelOptimizer {
 public:
-	using base_generator_type = GeneratorType; // generator type
-	using uniform_distribution_int = boost::random::uniform_int_distribution<int>; // generator type
-	using uniform_distribution_real = boost::uniform_real<Real>; // generator type
+//	using base_generator_type = GeneratorType; // generator type
+//	using uniform_distribution_int = boost::random::uniform_int_distribution<int>; // generator type
+//	using uniform_distribution_real = boost::uniform_real<Real>; // generator type
 
 	GaussianKernelOptimizer(const int maxTriesPerSolution, const int amountOfUsedClasses, const std::vector<Vector2>& minAndMaxValues, const int seed);
 	virtual ~GaussianKernelOptimizer();
@@ -66,11 +65,11 @@ private:
 
 	std::vector<Vector2 > m_minAndMaxValues; // should have the dimension of the used params amount
 
-	uniform_distribution_int m_randomDistrubtionInts; // gives a value between 0 and the amount of used classes - 1
-
-	uniform_distribution_real m_randomDistrubtionDist; // gives a value between -1 and 1
-
-	std::vector<base_generator_type> m_generators; // each used class gets its own generator to ensure that each single thread per class gets its own random numbers
+//	uniform_distribution_int m_randomDistrubtionInts; // gives a value between 0 and the amount of used classes - 1
+//
+//	uniform_distribution_real m_randomDistrubtionDist; // gives a value between -1 and 1
+//
+//	std::vector<base_generator_type> m_generators; // each used class gets its own generator to ensure that each single thread per class gets its own random numbers
 
 	using ParamList = std::list<GaussianKernelParams>;
 	using SolutionVector = std::vector<ParamList>;
@@ -83,5 +82,7 @@ private:
 
 	Mutex m_mutex;
 };
+
+#endif // BUILD_OLD_CODE
 
 #endif /* GAUSSIANPROCESS_KERNEL_GAUSSIANKERNELOPTIMIZER_H_ */

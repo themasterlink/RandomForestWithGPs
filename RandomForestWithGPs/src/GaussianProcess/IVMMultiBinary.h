@@ -12,6 +12,7 @@
 #include "../Base/Predictor.h"
 #include "../Base/InformationPackage.h"
 #include "../Data/OnlineStorage.h"
+#include "../Base/Thread.h"
 
 class IVMMultiBinary  : public PredictorMultiClass, public Observer {
 public:
@@ -81,9 +82,9 @@ private:
 
 	OnlineRandomForest* m_orfForKernel;
 
-	boost::thread_group m_group;
+	ThreadGroup m_group;
 
-	std::list<InformationPackage*> m_packages;
+	std::list<UniquePtr<InformationPackage> > m_packages;
 
 	std::vector<Real> m_correctAmountForTrainingDataForClasses;
 

@@ -14,8 +14,6 @@
 #include "GaussianProcess.h"
 #include "../Utility/ThreadSafeOutput.h"
 #include "../Utility/ThreadSafeThreadCounter.h"
-#include <boost/thread.hpp> // Boost threads
-#include <boost/bind.hpp> // Boost threads
 #include "BestHyperParams.h"
 
 class GaussianProcessMultiBinary : public PredictorMultiClass {

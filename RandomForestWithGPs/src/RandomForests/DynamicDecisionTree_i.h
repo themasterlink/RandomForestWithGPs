@@ -105,7 +105,7 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 			usedDims[i] = i;
 		}
 	}else{
-		generator.setRandForDim(0, ClassKnowledge::instance().amountOfDims() - 1);
+		generator.setRandForDim(ClassKnowledge::instance().amountOfDims() - 1);
 		for(dimType i = 0; i < amountOfUsedDims; ++i){
 			bool doAgain = false;
 			int counter = 0;
@@ -133,7 +133,7 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 				++counter;
 			}while(doAgain);
 		}
-		generator.setRandForDim(0, amountOfUsedDims - 1);
+		generator.setRandForDim(amountOfUsedDims - 1);
 	}
 	m_splitDim[1] = NodeType::NODE_CAN_BE_USED; // init the root value
 	std::vector<unsigned int> leftHisto(m_amountOfClasses), rightHisto(m_amountOfClasses);
@@ -328,7 +328,8 @@ Real DynamicDecisionTree<dimType>::trySplitFor(const Real usedSplitValue, const 
 											   const DataPositions& dataInNode, std::vector<unsigned int>& leftHisto,
 											   std::vector<unsigned int>& rightHisto, RandomNumberGeneratorForDT& generator){
 	int leftAmount = 0, rightAmount = 0;
-	if(dataInNode.size() < m_amountOfPointsCheckedPerSplit){ // under 100 take each value
+	// * 2 ensures that stepSize in else is bigger than 1
+	if(dataInNode.size() < m_amountOfPointsCheckedPerSplit * 2){ // under 100 take each value
 		for(const auto& pos : dataInNode){
 			if(usedSplitValue < m_storage[pos]->coeff(usedDim)){ // TODO check < or <=
 				++leftAmount;

@@ -11,7 +11,7 @@
 InformationPackage::InformationPackage(InfoType type,
 		Real correctlyClassified,
 		int amountOfPoints): m_type(type),
-							 m_semaphoreForWaiting(0),
+							 m_condCounter(0),
 		m_isTaskPerformed(false),
 		m_shouldThreadBeAborted(false),
 		m_isWaiting(false),
@@ -22,6 +22,20 @@ InformationPackage::InformationPackage(InfoType type,
 		m_workedTime(0),
 		m_maxTrainingsTime(-1){
 };
+
+InformationPackage::InformationPackage(InformationPackage&& package):
+		m_type(package.m_type),
+		m_condCounter(package.m_condCounter),
+		m_isTaskPerformed(package.m_isTaskPerformed),
+		m_shouldThreadBeAborted(package.m_shouldThreadBeAborted),
+		m_isWaiting(package.m_isWaiting),
+		m_shouldThreadPause(package.m_shouldThreadPause),
+		m_correctlyClassified(package.m_correctlyClassified),
+		m_amountOfAffectedPoints(package.m_amountOfAffectedPoints),
+		m_amountOfTrainingsSteps(package.m_amountOfTrainingsSteps),
+		m_workedTime(package.m_workedTime),
+		m_maxTrainingsTime(package.m_maxTrainingsTime){
+}
 
 
 Real InformationPackage::calcAttractionLevel(const int minAmountOfPoints, const int maxAmountOfPoints){
@@ -38,14 +52,23 @@ void InformationPackage::wait(){
 		m_shouldThreadPause = false; // could be called, because the training should be hold
 		m_workedTime += m_sw.elapsedSeconds();
 		m_isWaiting = true;
-		m_semaphoreForWaiting.wait();
+		{ // the std does not contain a semaphore => own implementation
+			std::unique_lock<decltype(m_mutexForCond)> lock(m_mutexForCond);
+			while(!m_condCounter) // Handle spurious wake-ups.
+				m_conditional.wait(lock);
+			--m_condCounter;
+		}
 	}
 };
 
 void InformationPackage::notify(){
 	if(m_isWaiting) {
 		m_isWaiting = false;
-		m_semaphoreForWaiting.post();
+		{
+			std::unique_lock<decltype(m_mutexForCond)> lock(m_mutexForCond);
+			++m_condCounter;
+			m_conditional.notify_one();
+		}
 		m_sw.startTime();
 	}
 };

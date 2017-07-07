@@ -9,7 +9,6 @@
 #define RANDOMNUMBERGENERATOR_RANDOMGAUSSIANNR_H_
 
 #include "../Utility/Util.h"
-#include <boost/random/normal_distribution.hpp>
 
 #ifdef BUILD_OLD_CODE
 class GaussianProcessWriter;
@@ -20,10 +19,6 @@ class RandomGaussianNr{
 	friend GaussianProcessWriter;
 #endif // BUILD_OLD_CODE
 public:
-
-	using base_generator_type = GeneratorType; // generator type
-	using normal_distribution = boost::random::normal_distribution<>;
-	using variante_generator = boost::random::variate_generator<base_generator_type&, normal_distribution >;
 
 	RandomGaussianNr(const Real mean = (Real) 0.0, const Real sd = (Real) 1.0, const int seed = -1);
 	virtual ~RandomGaussianNr();
@@ -38,15 +33,13 @@ public:
 private:
 	static int counter;
 
-	base_generator_type m_generator;
-	UniquePtr<variante_generator> m_normalGenerator;
-	Real m_mean;
-	Real m_sd;
+	GeneratorType m_generator;
+	std::normal_distribution<Real> m_normal;
 };
 
 inline
 Real RandomGaussianNr::operator()(){
-	return (Real) (*m_normalGenerator)();
+	return (Real) m_normal(m_generator);
 }
 
 #endif /* RANDOMNUMBERGENERATOR_RANDOMGAUSSIANNR_H_ */

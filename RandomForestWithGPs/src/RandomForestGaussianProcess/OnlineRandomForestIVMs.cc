@@ -67,38 +67,34 @@ void OnlineRandomForestIVMs::update(){
 		printOnScreen("Just ORFs:");
 		ConfusionMatrixPrinter::print(conv);
 		printOnScreen("Just ORFs correct: " << StringHelper::number2String(amountOfCorrect / (Real) m_storage.size() * 100.0, 2));
-		boost::thread_group* group = new boost::thread_group();
-		std::vector<LabeledData*> datasForPredictedClasses(amountOfClasses(), nullptr);
+		UniquePtr<ThreadGroup> group = std::make_unique<ThreadGroup>();
+		std::vector<UniquePtr<LabeledData> > datasForPredictedClasses(amountOfClasses());
 		int nrOfInducingPoints = 40;
 		Settings::instance().getValue("IVM.nrOfInducingPoints", nrOfInducingPoints);
 		for(unsigned int iClassNr = 0; iClassNr < amountOfClasses(); ++iClassNr){
 			// for each class find all predicted values which should be considered in this class
-			datasForPredictedClasses[iClassNr] = new LabeledData();
+			datasForPredictedClasses[iClassNr] = std::make_unique<LabeledData>();
 			auto itPredictedLabel = predictedLabels.cbegin();
 			std::vector<unsigned int> classCounter(amountOfClasses(), 0);
 			for(unsigned int i = 0; i < m_storage.size(); ++i){
 //			for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it, ++itPredictedLabel){
 				if(*itPredictedLabel == iClassNr){
-					datasForPredictedClasses[iClassNr]->push_back(m_storage[i]);
+					datasForPredictedClasses[iClassNr]->emplace_back(m_storage[i]);
 					++classCounter[m_storage[i]->getLabel()];
 				}
 			}
 			const int sizeOfPointsForClass = datasForPredictedClasses[iClassNr]->size();
 //			for(unsigned int iInnerClassNr = 0; iInnerClassNr < amountOfClasses(); ++iInnerClassNr){
 //				printOnScreen("Size of class " << ClassKnowledge::instance().getNameFor(iClassNr) << "_"<< ClassKnowledge::instance().getNameFor(iInnerClassNr)<< ": " << classCounter[iInnerClassNr] << ", whole is: " << sizeOfPointsForClass);
-				if(sizeOfPointsForClass * 0.95 > classCounter[iClassNr] && nrOfInducingPoints + 100 < sizeOfPointsForClass){ // if less than 95 % of the points belong to the right class -> use ivms
-					const bool doEpUpdate = false;
-					group->add_thread(new boost::thread(boost::bind(&OnlineRandomForestIVMs::trainIvm, this, iClassNr, nrOfInducingPoints, doEpUpdate, datasForPredictedClasses[iClassNr], iClassNr)));
-					printOnScreen("Calc ivm for " << ClassKnowledge::instance().getNameFor(iClassNr) << "_"
-												  << ClassKnowledge::instance().getNameFor(iClassNr));
-				}
+			if(sizeOfPointsForClass * 0.95 > classCounter[iClassNr] && nrOfInducingPoints + 100 < sizeOfPointsForClass){ // if less than 95 % of the points belong to the right class -> use ivms
+				const bool doEpUpdate = false;
+				group->addThread(makeThread(&OnlineRandomForestIVMs::trainIvm, this, iClassNr, nrOfInducingPoints, doEpUpdate, datasForPredictedClasses[iClassNr].get(), iClassNr));
+				printOnScreen("Calc ivm for " << ClassKnowledge::instance().getNameFor(iClassNr) << "_"
+											  << ClassKnowledge::instance().getNameFor(iClassNr));
+			}
 //			}
 		}
-		group->join_all();
-		for(unsigned int iClassNr = 0; iClassNr < amountOfClasses(); ++iClassNr){
-			saveDelete(datasForPredictedClasses[iClassNr]);
-		}
-		saveDelete(group);
+		group->joinAll();
 		printOnScreen("Finished Training!");
 	}else{
 		printErrorAndQuit("Not implemented yet!");
@@ -112,7 +108,7 @@ void OnlineRandomForestIVMs::trainIvm(const int usedIvm, const int nrOfInducingP
 }
 
 unsigned int OnlineRandomForestIVMs::predict(const VectorX& point) const{
-	const int label = m_orf.predict(point);
+	const unsigned int label = m_orf.predict(point);
 	if(label != UNDEF_CLASS_LABEL){
 		if(m_ivms[label] != nullptr){
 			return m_ivms[label]->predict(point);
@@ -123,7 +119,7 @@ unsigned int OnlineRandomForestIVMs::predict(const VectorX& point) const{
 }
 
 unsigned int OnlineRandomForestIVMs::predict(const LabeledVectorX& point) const{
-	const int label = m_orf.predict(point);
+	const unsigned int label = m_orf.predict(point);
 	if(label != UNDEF_CLASS_LABEL){
 		if(m_ivms[label] != nullptr){
 			return m_ivms[label]->predict(point);

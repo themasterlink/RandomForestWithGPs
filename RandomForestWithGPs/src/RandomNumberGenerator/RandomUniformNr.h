@@ -8,17 +8,16 @@
 #ifndef RANDOMNUMBERGENERATOR_RANDOMUNIFORMNR_H_
 #define RANDOMNUMBERGENERATOR_RANDOMUNIFORMNR_H_
 
+#include <stdint.h>
 #include "../Utility/Util.h"
-#include <boost/random/uniform_int.hpp>
+
+// from: https://en.wikipedia.org/wiki/Xorshift#Xorshift.2B
 
 class RandomUniformNr {
 public:
 
-	using base_generator_type = GeneratorType; // generator type
-	using uniform_distribution_int = boost::random::uniform_int_distribution<int> ; // generator type
-
 	RandomUniformNr(const int min, const int max, const int seed);
-	virtual ~RandomUniformNr();
+	~RandomUniformNr();
 
 	void setSeed(const int seed);
 
@@ -30,11 +29,47 @@ public:
 	int operator()();
 
 private:
-	base_generator_type m_generator;
-
-	uniform_distribution_int m_uniform;
-
 	bool m_isUsed;
+
+	uint64_t m_currentSeeds[2];
+	int m_minAndDiff[2];
+
+};
+
+
+class RandomUniformUnsignedNr {
+public:
+
+	RandomUniformUnsignedNr(const unsigned int max, const int seed);
+	~RandomUniformUnsignedNr() = default;
+
+	void setSeed(const int seed);
+
+	void setMax(const unsigned int max);
+
+	unsigned int operator()();
+
+private:
+
+	uint64_t m_currentSeeds[2];
+	unsigned int m_diff;
+};
+
+class RandomDistributionReal {
+public:
+
+	RandomDistributionReal(): dis(0._r,1._r){}
+
+	RandomDistributionReal(const Real min, const Real max): dis(min,max){}
+
+	void setMinAndMax(const Real min, const Real max);
+
+	template<typename T>
+	inline Real operator()(T& gen){ return dis(gen); };
+
+private:
+
+	std::uniform_real_distribution<Real> dis;
 
 };
 

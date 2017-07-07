@@ -6,25 +6,22 @@
  */
 
 #include <regex>
-#include "RandomNumberGeneratorForDT.h"
 #include "../RandomForests/OnlineRandomForest.h"
-#include "../Base/Settings.h"
 
 RandomNumberGeneratorForDT::RandomNumberGeneratorForDT(const int dim, const int minUsedData,
-	const int maxUsedData, const int amountOfData, const int seed, const BaggingInformation& baggingInformation, const bool useRealOnlineUpdate)
-	:	m_baggingInformation(baggingInformation),
-		m_currentStepSize(2),
-		m_generator((unsigned int) seed),
-		m_uniformDistDimension(0, dim - 1), // 0 ... (dimension of data - 1)
-		m_uniformDistUsedData(minUsedData, maxUsedData),
-		m_uniformDistData(0, amountOfData - 1),
-		m_uniformStepOverStorage(1, amountOfData - 1),
-		m_varGenDimension(m_generator, m_uniformDistDimension),
-		m_varGenUsedData(m_generator, m_uniformDistUsedData),
-		m_varGenData(m_generator, m_uniformDistData),
-		m_varGenStepOverStorage(m_generator, m_uniformStepOverStorage),
-		m_useDim((unsigned long) dim, false),
-		m_useRealOnlineUpdate(useRealOnlineUpdate){
+													   const int maxUsedData, const int amountOfData, const int seed,
+													   const BaggingInformation& baggingInformation,
+													   const bool useRealOnlineUpdate)
+		: m_baggingInformation(baggingInformation),
+		  m_currentStepSize(2),
+		  m_generator((unsigned int) seed + 307),
+		  m_uniformDistDimension(dim - 1, seed + 563), // 0 ... (dimension of data - 1)
+		  m_uniformDistUsedData(minUsedData, maxUsedData, seed + 1093),
+		  m_uniformDistData(amountOfData - 1, seed + 4933),
+		  m_uniformStepOverStorage(amountOfData - 1, seed + 463),
+		  m_uniformDistRange(0, 1, seed + 107),
+		  m_useDim((unsigned long) dim, false),
+		  m_useRealOnlineUpdate(useRealOnlineUpdate){
 }
 
 RandomNumberGeneratorForDT::~RandomNumberGeneratorForDT(){
@@ -33,7 +30,7 @@ RandomNumberGeneratorForDT::~RandomNumberGeneratorForDT(){
 void RandomNumberGeneratorForDT::setMinAndMaxForSplitInDim(const unsigned int dim, const Real min, const Real max){
 	m_useDim[dim] = min < max;
 	if(m_useDim[dim]){
-		m_uniformSplitValues[dim].param(uniform_distribution_real::param_type(min, max));
+		m_uniformSplitValues[dim].setMinAndMax(min, max);
 	}
 }
 
@@ -54,7 +51,7 @@ void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 				printError("This type is unknown here!");
 			}
 			m_currentStepSize = std::max((unsigned int) 1, std::min(m_currentStepSize, size));
-			m_varGenStepOverStorage.distribution().param(uniform_distribution_int::param_type(1, m_currentStepSize));
+			m_uniformStepOverStorage.setMax(m_currentStepSize);
 		}
 		if(m_uniformSplitValues.size() != dim){
 			m_uniformSplitValues.resize(dim);

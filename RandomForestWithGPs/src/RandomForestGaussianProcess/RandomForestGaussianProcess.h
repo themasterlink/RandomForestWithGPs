@@ -12,8 +12,6 @@
 
 #include "../RandomForests/RandomForest.h"
 #include "../Utility/ThreadSafeOutput.h"
-#include <boost/thread.hpp> // Boost threads
-#include <boost/bind.hpp> // Boost threads
 #include "../GaussianProcess/GaussianProcess.h"
 #include "../Data/LabeledVectorX.h"
 

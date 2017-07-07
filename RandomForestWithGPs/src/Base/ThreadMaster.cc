@@ -17,7 +17,7 @@ ThreadMaster::ThreadMaster(): m_counter(0),
 void ThreadMaster::start(){
 	if(m_mainThread == nullptr){
 		setMaxCounter();
-		m_mainThread = new boost::thread(boost::bind(&ThreadMaster::run, this));
+		m_mainThread = makeThread(&ThreadMaster::run, this);
 	}
 }
 
@@ -25,21 +25,22 @@ void ThreadMaster::setFrequence(const Real frequence){
 	m_timeToSleep = std::max(Real(1.) / frequence, (Real) 0.001);
 }
 
-void ThreadMaster::threadHasFinished(InformationPackage* package){
+void ThreadMaster::threadHasFinished(SharedPtr<InformationPackage>&& package){
 	lockStatementWith(package->finishedTask(), m_mutex);
 	bool found;
+	const auto pPackage = package.get();
 	do{
 		found = false;
 		m_mutex.lock();
 		for(auto& waitingPackage : m_waitingList){
-			if(waitingPackage == package){
+			if(waitingPackage == pPackage){
 				found = true;
 				break;
 			}
 		}
 
 		for(auto& runningPackage : m_runningList){
-			if(runningPackage == package){
+			if(runningPackage == pPackage){
 				found = true;
 				break;
 			}
@@ -206,7 +207,7 @@ void ThreadMaster::abortAllThreads(){
 
 void ThreadMaster::setMaxCounter(){
 	if(Settings::instance().getDirectBoolValue("ThreadMaster.useMultiThread")){
-		m_maxCounter = boost::thread::hardware_concurrency();
+		m_maxCounter = std::thread::hardware_concurrency();
 	}else{
 		m_maxCounter = 1;
 	}

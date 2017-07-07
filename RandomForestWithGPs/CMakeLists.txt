@@ -16,7 +16,7 @@ find_package(Threads REQUIRED)
 INCLUDE_DIRECTORIES(/usr/include/ncurses/)
 
 #Boost include:
-find_package(Boost COMPONENTS system filesystem program_options random date_time thread REQUIRED)
+find_package(Boost COMPONENTS filesystem program_options date_time REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 set(USE_OPEN_CV_CMAKE 0)
@@ -172,8 +172,11 @@ set(SOURCE_FILES
         src/Utility/TimeFrame.cc
         src/Utility/TimeFrame.h
         src/Utility/Util.h
-        src/main.cc src/Base/BaseType.h src/Tests/TestManager.cc src/Tests/TestManager.h src/Utility/StringHelper.h src/Tests/TestInformation.cc src/Tests/TestInformation.h src/Utility/StringHelper.cc src/Utility/GlobalStopWatch.h)
-
+        src/main.cc src/Base/BaseType.h src/Tests/TestManager.cc
+        src/Tests/TestManager.h src/Utility/StringHelper.h
+        src/Tests/TestInformation.cc src/Tests/TestInformation.h
+        src/Utility/StringHelper.cc src/Utility/GlobalStopWatch.h
+        src/Base/Singleton.h src/Base/Thread.h)
 
 
 add_executable(RandomForestWithGPs ${SOURCE_FILES})

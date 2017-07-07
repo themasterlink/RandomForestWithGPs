@@ -42,7 +42,7 @@ void GaussianProcessMultiBinary::train(const LabeledData& data, const Labels* gu
 	Settings::instance().getValue("RFGP.maxPointsUsedInGpSingleTraining", m_maxPointsUsedInGpSingleTraining);
 	int maxNrOfPointsForBayesOpt = 250;
 	Settings::instance().getValue("RFGP.maxNrOfPointsForBayesOpt", maxNrOfPointsForBayesOpt);
-	boost::thread_group group;
+	ThreadGroup group;
 	for(int iActClass = 0; iActClass < m_amountOfUsedClasses; ++iActClass){
 		if(countClasses[iActClass] < thresholdForNoise){
 			m_output.printSwitchingColor(
@@ -60,15 +60,15 @@ void GaussianProcessMultiBinary::train(const LabeledData& data, const Labels* gu
 		while(!m_threadCounter.addNewThread()){ // if it is not possible wait
 			sleepFor(0.35);
 		}
-		group.add_thread(new boost::thread(boost::bind(&GaussianProcessMultiBinary::trainInParallel, this, iActClass,
+		group.addThread(makeThread(&GaussianProcessMultiBinary::trainInParallel, this, iActClass,
 				std::min(maxNrOfPointsForBayesOpt, pointsPerClassForBayOpt * (int) m_amountOfUsedClasses),
-				data, countClasses, m_gps[iActClass])));
+				data, countClasses, m_gps[iActClass]));
 		/*trainInParallel(iActClass, amountOfDataInRfRes,
 							pointsPerClassForBayOpt, amountOfClassesOverThreshold,
 							maxPointsUsedInGpSingleTraining, dataOfActRf,
 							labelsOfActRf, classCounts, actGp);*/
 	}
-	group.join_all();
+	group.joinAll();
 	int c = 0;
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
 		c += m_gps[i] != NULL? 1 : 0;
@@ -106,7 +106,7 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 	//VectorX y(numberOfPointsForClass);
 	StopWatch sw;
 	BestHyperParams bestHyperParams(20);
-	boost::thread_group group;
+	ThreadGroup group;
 	bool isFinish = false;
 	int iCounter = 0;
 	while(!isFinish){
@@ -119,8 +119,8 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 		}
 		if(addNewThread){ // if adding is possible
 			// create a new one for this problem
-			group.add_thread(new boost::thread(boost::bind(&GaussianProcessMultiBinary::optimizeHyperParams, this,
-					iActClass, amountOfHyperPoints, data, classCounts, usedElementsForTheValidationSet, testDataMat, testYGpInit, &bestHyperParams)));
+			group.addThread(makeThread(&GaussianProcessMultiBinary::optimizeHyperParams, this,
+					iActClass, amountOfHyperPoints, data, classCounts, usedElementsForTheValidationSet, testDataMat, testYGpInit, &bestHyperParams));
 			m_output.printInColor("At the moment are " + StringHelper::number2String(m_threadCounter.currentThreadCount()) + " threads running" + betweenNames, RESET);
 		}
 		bestHyperParams.getFinishLast(isFinish);
@@ -129,7 +129,7 @@ void GaussianProcessMultiBinary::trainInParallel(const int iActClass,
 		}
 		++iCounter;
 	}
-	group.join_all();
+	group.joinAll();
 	m_output.printInColor("Finish optimizing with in: " + sw.elapsedAsPrettyTime()
 					+ ", with: " + bestHyperParams.prettyStringOfBest()
 					+ betweenNames, MAGENTA);

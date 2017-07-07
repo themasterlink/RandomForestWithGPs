@@ -8,14 +8,12 @@
 #ifndef BASE_THREADMASTER_H_
 #define BASE_THREADMASTER_H_
 
-#include <boost/thread.hpp>
-#include <boost/interprocess/sync/interprocess_condition.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
 #include "../Utility/StopWatch.h"
 #include "InformationPackage.h"
 #include "Types.h"
 #include <atomic>
 #include "Singleton.h"
+#include "Thread.h"
 
 class ScreenOutput;
 
@@ -34,7 +32,7 @@ public:
 
 	bool appendThreadToList(InformationPackage* package);
 
-	void threadHasFinished(InformationPackage* package);
+	void threadHasFinished(SharedPtr<InformationPackage>&& package);
 
 	void setMaxCounter();
 
@@ -66,7 +64,7 @@ private:
 
 	Real m_timeToSleep;
 
-	boost::thread* m_mainThread;
+	UniquePtr<Thread> m_mainThread;
 
 	Mutex m_mutex;
 

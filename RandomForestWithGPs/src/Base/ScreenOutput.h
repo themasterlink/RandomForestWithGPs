@@ -17,6 +17,7 @@
 #include "../Utility/StopWatch.h"
 #include "Types.h"
 #include "Singleton.h"
+#include "Thread.h"
 
 #define MAX_HEIGHT 120
 
@@ -69,7 +70,7 @@ private:
 
 	ThreadMaster::PackageList* m_runningThreads;
 
-	boost::thread* m_mainThread;
+	UniquePtr<Thread> m_mainThread;
 
 	Real m_timeToSleep;
 

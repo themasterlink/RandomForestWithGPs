@@ -16,7 +16,7 @@
 #define NH_cmaes_h 
 
 #include <time.h>
-#include <boost/thread.hpp>
+#include <mutex>
 
 namespace cmaes {
 
@@ -285,7 +285,7 @@ char * new_string( const char *);
 void assign_string( char **, const char*);
 
 
-static boost::mutex readMutex;
+static std::mutex readMutex;
 
 }
 

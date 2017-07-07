@@ -8,11 +8,9 @@
 #ifndef RANDOMNUMBERGENERATORFORDT_RANDOMNUMBERGENERATORFORDT_H_
 #define RANDOMNUMBERGENERATORFORDT_RANDOMNUMBERGENERATORFORDT_H_
 
-#include <boost/random.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_real.hpp>
 #include "../Utility/Util.h"
 #include "../Base/Observer.h"
+#include "RandomUniformNr.h"
 
 class RandomNumberGeneratorForDT : public Observer {
 public:
@@ -44,11 +42,6 @@ public:
 		static BaggingMode getMode(const std::string& settingsField);
 	};
 
-	using base_generator_type = GeneratorType; // generator type
-	using uniform_distribution_int = boost::random::uniform_int_distribution<int>; // generator type
-	using uniform_distribution_real = boost::uniform_real<Real>; // generator type
-	using variante_generator = boost::variate_generator<base_generator_type, uniform_distribution_int>;
-
 	RandomNumberGeneratorForDT(const int dim, const int minUsedData, const int maxUsedData,
 			const int amountOfData, const int seed, const BaggingInformation& baggingInformation, const bool useRealOnlineUpdate);
 
@@ -62,7 +55,7 @@ public:
 
 	void setRandFromRange(const int min, const int max);
 
-	void setRandForDim(const int min, const int max);
+	void setRandForDim(const int max);
 
 	int getRandFromRange();
 
@@ -86,21 +79,15 @@ private:
 	const BaggingInformation& m_baggingInformation;
 	unsigned int m_currentStepSize;
 
-	base_generator_type m_generator;
+	GeneratorType m_generator;
 
-	uniform_distribution_int m_uniformDistDimension;
-	uniform_distribution_int m_uniformDistUsedData;
-	uniform_distribution_int m_uniformDistData;
-	uniform_distribution_int m_uniformStepOverStorage;
+	RandomUniformUnsignedNr m_uniformDistDimension;
+	RandomUniformNr m_uniformDistUsedData;
+	RandomUniformUnsignedNr m_uniformDistData;
+	RandomUniformUnsignedNr m_uniformStepOverStorage;
+	RandomUniformNr m_uniformDistRange;
 
-	uniform_distribution_int m_uniformDistRange;
-
-	std::vector<uniform_distribution_real> m_uniformSplitValues;
-
-	variante_generator m_varGenDimension;
-	variante_generator m_varGenUsedData;
-	variante_generator m_varGenData;
-	variante_generator m_varGenStepOverStorage;
+	std::vector<RandomDistributionReal> m_uniformSplitValues;
 
 	Mutex m_mutex;
 
@@ -110,32 +97,32 @@ private:
 };
 
 inline int RandomNumberGeneratorForDT::getRandDim(){
-	return m_varGenDimension();
+	return m_uniformDistDimension();
 }
 
 inline int RandomNumberGeneratorForDT::getRandAmountOfUsedData(){
-	return m_varGenUsedData();
+	return m_uniformDistUsedData();
 }
 
 inline int RandomNumberGeneratorForDT::getRandNextDataEle(){
-	return m_varGenData();
+	return m_uniformDistData();
 }
 
 inline unsigned int RandomNumberGeneratorForDT::getRandStepOverStorage(){
-	return (unsigned int) m_varGenStepOverStorage();
+	return m_uniformStepOverStorage() + 1; // never returns zero
 }
 
 
 inline void RandomNumberGeneratorForDT::setRandFromRange(const int min, const int max){
-	m_uniformDistRange.param(uniform_distribution_int::param_type(min, max));
+	m_uniformDistRange.setMinAndMax(min, max);
 }
 
-inline void RandomNumberGeneratorForDT::setRandForDim(const int min, const int max){
-	m_varGenDimension.distribution().param(uniform_distribution_int::param_type(min, max));
+inline void RandomNumberGeneratorForDT::setRandForDim(const int max){
+	m_uniformDistDimension.setMax(max);
 }
 
 inline int RandomNumberGeneratorForDT::getRandFromRange(){
-	return m_uniformDistRange(m_generator);
+	return m_uniformDistRange();
 }
 
 inline Real RandomNumberGeneratorForDT::getRandSplitValueInDim(const unsigned int dim){

@@ -33,7 +33,7 @@ void ScreenOutput::start(){
 	attron(COLOR_PAIR(1));
 	atexit(ScreenOutput::quitForScreenMode);
 #endif // USE_SCREEN_OUTPUT
-	m_mainThread = new boost::thread(boost::bind(&ScreenOutput::run, this));
+	m_mainThread = makeThread(&ScreenOutput::run, this);
 #endif // NO_OUTPUT
 }
 

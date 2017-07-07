@@ -118,7 +118,7 @@ void sampleInParallel(IVM* ivm, GaussianKernelParams* bestParams, Real* bestLogZ
 
 GaussianKernelParams sampleParams(OnlineStorage<LabeledVectorX*>& storage, int number, const Vector2i& usedClasses, bool doEpUpdate,
 		const std::vector<Real>& means, const std::vector<Real>& sds){
-	boost::thread_group group;
+	ThreadGroup group;
 	Mutex mutex;
 	const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 	Real bestLogZ = NEG_REAL_MAX;
@@ -133,7 +133,7 @@ GaussianKernelParams sampleParams(OnlineStorage<LabeledVectorX*>& storage, int n
 		ivms[i]->getGaussianKernel()->setGaussianRandomVariables(means, sds);
 		ivms[i]->setDerivAndLogZFlag(true, false);
 		ivms[i]->init(number, usedClasses, doEpUpdate);
-		group.add_thread(new boost::thread(boost::bind(&sampleInParallel, ivms[i], &bestParams, &bestLogZ, &mutex, durationOfTraining, &counter)));
+		group.addThread(makeThread(&sampleInParallel, ivms[i], &bestParams, &bestLogZ, &mutex, durationOfTraining, &counter));
 	}
 	InLinePercentageFiller::instance().setActMaxTime(durationOfTraining);
 	printOnScreen("It will take: " << TimeFrame(durationOfTraining));
@@ -142,7 +142,7 @@ GaussianKernelParams sampleParams(OnlineStorage<LabeledVectorX*>& storage, int n
 		InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(counter);
 		sleepFor(0.1);
 	}
-	group.join_all();
+	group.joinAll();
 	InLinePercentageFiller::instance().printLineWithRestTimeBasedOnMaxTime(counter, true);
 	return bestParams;
 }
@@ -184,10 +184,10 @@ void executeForBinaryClassIVM(){
 		IVM ivm(train);
 		ivm.setInformationPackage(package);
 		ivm.init(nrOfInducingPoints, usedClasses, doEpUpdate, false);
-		boost::thread_group group;
-		group.add_thread(new boost::thread(boost::bind(&trainIVM, &ivm, 1)));
+		ThreadGroup group;
+		group.addThread(makeThread(&trainIVM, &ivm, 1));
 		ThreadMaster::instance().appendThreadToList(package);
-		group.join_all();
+		group.joinAll();
 		bool ret = ivm.isTrained();
 		if(ret){
 			printOnScreen("On " << train.size() << " points from trainings data:");

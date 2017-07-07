@@ -11,7 +11,6 @@
 #include "../Utility/Util.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <boost/thread.hpp> // Boost mutex
 #include "Singleton.h"
 
 class Settings: public Singleton<Settings> {

@@ -10,7 +10,6 @@
 
 #ifdef BUILD_OLD_CODE
 
-#include <boost/thread.hpp> // Boost threads
 #include "../Base/BaseType.h"
 #include "../Base/Types.h"
 

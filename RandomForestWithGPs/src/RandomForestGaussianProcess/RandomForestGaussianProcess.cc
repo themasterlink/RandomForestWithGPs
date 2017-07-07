@@ -136,7 +136,7 @@ void RandomForestGaussianProcess::train(){
 	Settings::instance().getValue("RFGP.maxPointsUsedInGpSingleTraining", m_maxPointsUsedInGpSingleTraining);
 	int maxNrOfPointsForBayesOpt = 250;
 	Settings::instance().getValue("RFGP.maxNrOfPointsForBayesOpt", maxNrOfPointsForBayesOpt);
-	boost::thread_group group;
+	ThreadGroup group;
 	for(int iActRfRes = 0; iActRfRes < m_amountOfUsedClasses; ++iActRfRes){ // go over all classes
 		//m_output.printSwitchingColor("Act Class: " + m_classNames[iActRfRes]);
 		const LabeledData& dataOfActRf = sortedData[iActRfRes];
@@ -195,9 +195,9 @@ void RandomForestGaussianProcess::train(){
 				while(m_nrOfRunningThreads >= nrOfParallel){
 					sleepFor(0.35);
 				}
-				group.add_thread(new boost::thread(boost::bind(&RandomForestGaussianProcess::trainInParallel, this, iActClass, amountOfDataInRfRes,
+				group.addThread(makeThread(&RandomForestGaussianProcess::trainInParallel, this, iActClass, amountOfDataInRfRes,
 						std::min(maxNrOfPointsForBayesOpt, pointsPerClassForBayOpt * amountOfClassesOverThreshold),
-						iActRfRes, dataOfActRf, classCounts, m_gps[iActRfRes][iActClass])));
+						iActRfRes, dataOfActRf, classCounts, m_gps[iActRfRes][iActClass]));
 				/*trainInParallel(iActClass, amountOfDataInRfRes,
 						pointsPerClassForBayOpt, amountOfClassesOverThreshold,
 						maxPointsUsedInGpSingleTraining, dataOfActRf,
@@ -208,7 +208,7 @@ void RandomForestGaussianProcess::train(){
 			m_pureClassLabelForRfClass[iActRfRes] = idOfMaxClass; // pure class -> save id
 		}
 	}
-	group.join_all();
+	group.joinAll();
 	int c = 0;
 	for(int i = 0; i < m_amountOfUsedClasses; ++i){
 		for(int j = 0; j < m_amountOfUsedClasses; ++j){

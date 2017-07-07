@@ -13,7 +13,6 @@
 #include <limits>
 #include "../Utility/Util.h"
 #include "DecisionTree.h"
-#include <boost/thread.hpp> // Boost threads
 
 #define MIN_NR_TO_SPLIT 2
 

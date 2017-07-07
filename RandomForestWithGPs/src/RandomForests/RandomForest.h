@@ -8,7 +8,6 @@
 #ifndef OTHERRANDOMFORESTS_OTHERRANDOMFOREST_H_
 #define OTHERRANDOMFORESTS_OTHERRANDOMFOREST_H_
 
-#include <boost/thread.hpp> // Boost threads
 #include "../RandomNumberGenerator/RandomNumberGeneratorForDT.h"
 #include "DecisionTree.h"
 #include "DecisionTreeData.h"

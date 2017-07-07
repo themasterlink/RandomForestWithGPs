@@ -5,6 +5,8 @@
  *      Author: Max
  */
 
+#ifdef BUILD_OLD_CODE
+
 #include "GaussianKernelOptimizer.h"
 
 //GaussianKernelOptimizer::GaussianKernelRandomGenerator(){
@@ -46,3 +48,6 @@ GaussianKernelOptimizer::~GaussianKernelOptimizer(){
 //void GaussianKernelOptimizer::randParams(GaussianKernelParams& params){
 //
 //}
+
+
+#endif // BUILD_OLD_CODE

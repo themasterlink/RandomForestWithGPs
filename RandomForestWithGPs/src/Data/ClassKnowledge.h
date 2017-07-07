@@ -10,7 +10,6 @@
 
 #include <string>
 #include <map>
-#include <boost/thread.hpp>
 #include "../Base/Types.h"
 #include "../Base/Observer.h"
 #include "../Base/Singleton.h"

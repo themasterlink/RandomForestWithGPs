@@ -5,8 +5,7 @@
 #ifndef RANDOMFORESTWITHGPS_TYPES_H
 #define RANDOMFORESTWITHGPS_TYPES_H
 
-#include <boost/random.hpp>
-#include <boost/thread/mutex.hpp>
+#include <mutex>
 #include "BaseType.h"
 #include <Eigen/Dense>
 #include <vector>
@@ -14,7 +13,7 @@
 #include <map>
 #include <string>
 
-using GeneratorType = boost::random::taus88;
+using GeneratorType = std::minstd_rand;
 
 #ifdef USE_DOUBLE
 
@@ -53,6 +52,6 @@ using Labels = std::vector<unsigned int>;
 template <typename T>
 using List = std::list<T>;
 
-using Mutex = boost::mutex;
+using Mutex = std::mutex;
 
 #endif //RANDOMFORESTWITHGPS_TYPES_H

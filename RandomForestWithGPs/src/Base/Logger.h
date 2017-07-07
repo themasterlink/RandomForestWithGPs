@@ -8,12 +8,12 @@
 #ifndef BASE_LOGGER_H_
 #define BASE_LOGGER_H_
 
-#include <boost/thread.hpp>
 #include <map>
 #include <atomic>
 #include "BaseType.h"
 #include "Types.h"
 #include "Singleton.h"
+#include "Thread.h"
 
 class Logger : public Singleton<Logger> {
 
@@ -59,7 +59,7 @@ private:
 	using InnerSpecialLines = std::vector< std::pair<std::string, unsigned int> >;
 	std::map<std::string, InnerSpecialLines> m_specialLines;
 
-	boost::thread* m_ownThread;
+	UniquePtr<Thread> m_ownThread;
 
 	std::atomic<bool> m_writeByForceWrite;
 
