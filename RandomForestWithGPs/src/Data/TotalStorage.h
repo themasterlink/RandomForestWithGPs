@@ -11,10 +11,11 @@
 #include <vector>
 #include "LabeledVectorX.h"
 #include "OnlineStorage.h"
+#include "../Base/Singleton.h"
 
-class TotalStorage {
+class TotalStorage : public Singleton<TotalStorage> {
 
-SINGELTON_MACRO(TotalStorage);
+	friend class Singleton<TotalStorage>;
 
 public:
 
@@ -71,6 +72,9 @@ private:
 	DataSetMode m_dataSetMode;
 
 	unsigned int m_totalSize;
+
+	TotalStorage();
+	~TotalStorage() = default;
 };
 
 #endif /* DATA_TOTALSTORAGE_H_ */

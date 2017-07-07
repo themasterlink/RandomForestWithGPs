@@ -15,6 +15,8 @@ public:
 
 	AvgNumber(): m_mean(0), m_counter(0){};
 
+	AvgNumber(Real startVal): m_mean(startVal), m_counter(0){};
+
 	void addNew(Real val){
 		++m_counter;
 		const Real fac = (Real) 1.0 / m_counter;

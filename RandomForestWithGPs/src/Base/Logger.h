@@ -13,10 +13,11 @@
 #include <atomic>
 #include "BaseType.h"
 #include "Types.h"
+#include "Singleton.h"
 
-class Logger {
+class Logger : public Singleton<Logger> {
 
-SINGELTON_MACRO(Logger);
+	friend class Singleton<Logger>;
 
 public:
 
@@ -55,13 +56,17 @@ private:
 
 	const Real m_timeToSleep;
 
-	std::map<std::string, std::string> m_specialLines;
+	using InnerSpecialLines = std::vector< std::pair<std::string, unsigned int> >;
+	std::map<std::string, InnerSpecialLines> m_specialLines;
 
 	boost::thread* m_ownThread;
 
 	std::atomic<bool> m_writeByForceWrite;
 
 	UniquePtr<std::ofstream> m_file;
+
+	Logger();
+	~Logger() = default;
 };
 
 #endif /* BASE_LOGGER_H_ */

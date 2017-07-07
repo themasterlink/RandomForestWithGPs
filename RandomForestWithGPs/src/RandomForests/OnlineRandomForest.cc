@@ -457,18 +457,17 @@ bool OnlineRandomForest::update(){
 			Labels labels;
 			const auto& valRef = *m_validationSet;
 			predictData(valRef, labels);
+//			std::fill(performanceRef.begin(), performanceRef.end(), 0._r);
 			auto& performanceRef = m_storage.getPoolInfoRef().getPerformancesRef();
-			std::fill(performanceRef.begin(), performanceRef.end(), 0._r);
+			std::vector<Real> performanceCounter(performanceRef.size(), 0._r);
 			for(unsigned int i = 0, end = (unsigned int) labels.size(); i < end; ++i){
 				if(labels[i] == valRef[i]->getLabel()){
-					++performanceRef[labels[i]];
+					++performanceCounter[labels[i]];
 				}
 			}
 			for(unsigned int i = 0, end = (unsigned int) performanceRef.size(); i < end; ++i){
-				if(performanceRef[i] > 0.5){
-					performanceRef[i] /= m_classCounterForValidationSet[i];
-				}else{
-					performanceRef[i] = NEG_REAL_MAX;
+				if(performanceCounter[i] > 0.5){
+					performanceRef[i].addNew(performanceCounter[i] / m_classCounterForValidationSet[i]);
 				}
 			}
 			// updates the pool info
@@ -603,7 +602,7 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 			}
 			size = (unsigned int) m_validationSet->size();
 		}else{
-			const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+			const auto startPos = m_useRealOnlineUpdate && !m_storage.isInPoolMode() ? m_storage.getLastUpdateIndex() : 0;
 			for(int i = startPos; i < m_storage.size(); ++i){
 				if(m_storage[i]->getLabel() == (*m_trees.begin())->predict(*m_storage[i])){
 					++correct;
@@ -649,7 +648,7 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 				}
 				size = (unsigned int) m_validationSet->size();
 			}else{
-				const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+				const auto startPos = m_useRealOnlineUpdate && !m_storage.isInPoolMode() ? m_storage.getLastUpdateIndex() : 0;
 				for(int i = startPos; i < m_storage.size(); ++i){
 					if(m_storage[i]->getLabel() == tree->predict(*m_storage[i])){
 						++correct;
@@ -709,7 +708,7 @@ void OnlineRandomForest::updateInParallel(SharedPtr<SortedDecisionTreeList> list
 		switcher = std::make_shared<DynamicDecisionTree<unsigned int> >(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 	}
 //	Real correctValOfSwitcher = pair.second;
-	const auto startPos = 0; // m_useRealOnlineUpdate ? m_storage.getLastUpdateIndex() : 0;
+
 	RandomGaussianNr randomNr(0, standartDeviation, (threadNr + 13) * 12337);
 	for(unsigned int i = 0; i < amountOfSteps - 1; ++i){
 		switcher->train((unsigned int) m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
@@ -723,6 +722,7 @@ void OnlineRandomForest::updateInParallel(SharedPtr<SortedDecisionTreeList> list
 			}
 			size = (unsigned int) m_validationSet->size();
 		}else{
+			const auto startPos = m_useRealOnlineUpdate && !m_storage.isInPoolMode() ? m_storage.getLastUpdateIndex() : 0;
 			for(unsigned int j = startPos; j < m_storage.size(); ++j){
 				if(m_storage[j]->getLabel() == switcher->predict(*m_storage[j])){
 					++correct;
@@ -730,7 +730,7 @@ void OnlineRandomForest::updateInParallel(SharedPtr<SortedDecisionTreeList> list
 			}
 			size = m_storage.size() - startPos;
 		}
-		const auto correctVal = std::min(100.0_r, correct / size * 100._r + absReal(randomNr())); // adding some noise to the change
+		const auto correctVal = std::min(100.0_r, correct / (Real) size * 100._r + absReal(randomNr())); // adding some noise to the change
 		mutex->lock();
 		pair = std::move(*list->begin()); // get new element
 		list->pop_front(); // remove it

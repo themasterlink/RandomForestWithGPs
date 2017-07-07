@@ -13,10 +13,11 @@
 #include <boost/thread.hpp>
 #include "../Base/Types.h"
 #include "../Base/Observer.h"
+#include "../Base/Singleton.h"
 
-class ClassKnowledge {
+class ClassKnowledge : public Singleton<ClassKnowledge> {
 
-SINGELTON_MACRO(ClassKnowledge);
+	friend class Singleton<ClassKnowledge>;
 	
 public:
 	class Caller: public Subject {
@@ -62,6 +63,9 @@ private:
 	unsigned int m_amountOfDims;
 
 	Mutex m_mutex;
+
+	ClassKnowledge();
+	~ClassKnowledge() = default;
 
 };
 

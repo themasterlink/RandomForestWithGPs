@@ -539,9 +539,16 @@ void ScreenOutput::printErrorLine(const std::string& line){
 	}
 	// to avoid that the same error is displayed 100 of times
 	if(m_errorLines.size() > 0){
-		if(m_errorLines.back() == line){
-			++m_errorCounters.back();
-		}else{
+		auto itC = m_errorCounters.begin();
+		bool found = false;
+		for(auto itL = m_errorLines.begin(); itL != m_errorLines.end(); ++itL, ++itC){
+			if(*itL == line){
+				(*itC) += 1;
+				found = true;
+				break;
+			}
+		}
+		if(!found){
 			m_errorLines.emplace_back(line);
 			m_errorCounters.emplace_back(1);
 		}

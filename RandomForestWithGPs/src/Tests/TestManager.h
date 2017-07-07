@@ -7,10 +7,10 @@
 
 #include "TestInformation.h"
 #include "../Data/LabeledVectorX.h"
+#include "../Base/Singleton.h"
 
-class TestManager {
-
-SINGELTON_MACRO(TestManager);
+class TestManager : public Singleton<TestManager> {
+	friend Singleton<TestManager>;
 
 public:
 
@@ -37,6 +37,9 @@ private:
 	void performTest(const UniquePtr<OnlineRandomForest>& orf, const LabeledData& data);
 
 	std::string m_filePath;
+
+	TestManager();
+	~TestManager() = default;
 };
 
 

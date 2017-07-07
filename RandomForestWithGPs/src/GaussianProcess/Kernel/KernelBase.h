@@ -60,7 +60,7 @@ public:
 
 	unsigned int getNrOfParams(){ return nrOfParams; };
 
-	void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf* usedMatrix);
+	void calcDifferenceMatrix(const int start, const int end, SharedPtr<Eigen::MatrixXf> usedMatrix);
 
 	static void calcDifferenceMatrix(const int start, const int end, Eigen::MatrixXf& usedMatrix, const OnlineStorage<LabeledVectorX*>& storage, InformationPackage* package = nullptr);
 
@@ -72,8 +72,8 @@ public:
 
 	virtual std::string prettyString() const = 0;
 
-	void setDifferenceMatrix(Eigen::MatrixXf* differenceMatrix){
-		m_differences = differenceMatrix;
+	void setDifferenceMatrix(SharedPtr<Eigen::MatrixXf> differenceMatrix){ // create copy
+		m_differences = std::move(differenceMatrix); // move copy
 		m_calcedDifferenceMatrix = true;
 	}
 
@@ -89,7 +89,7 @@ protected:
 
 	virtual Real kernelFuncDerivativeToParam(const int row, const int col, const OwnKernelElement* type, const int element = -1) const = 0;
 
-	Eigen::MatrixXf* m_differences;
+	SharedPtr<Eigen::MatrixXf> m_differences;
 
 	Matrix* m_pDataMat;
 
@@ -103,7 +103,7 @@ protected:
 
 	KernelType m_kernelParams;
 
-	RandomGaussianNr* m_randomGaussians[nrOfParams];
+	UniquePtr<RandomGaussianNr> m_randomGaussians[nrOfParams];
 
 	Real m_seed;
 

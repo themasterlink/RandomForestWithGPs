@@ -12,10 +12,11 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/thread.hpp> // Boost mutex
+#include "Singleton.h"
 
-class Settings{
+class Settings: public Singleton<Settings> {
 
-SINGELTON_MACRO(Settings);
+	friend class Singleton<Settings>;
 
 public:
 	void init(const std::string& settingsfile);
@@ -52,6 +53,9 @@ private:
 	bool m_init;
 
 	std::string m_filePath;
+
+	Settings();
+	~Settings() = default;
 };
 
 template<typename T>

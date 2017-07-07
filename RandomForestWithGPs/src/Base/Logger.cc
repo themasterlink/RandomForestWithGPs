@@ -9,7 +9,6 @@
 #include "Settings.h"
 #include <boost/date_time.hpp>
 #include "../Tests/TestManager.h"
-#include "../Utility/Util.h"
 
 namespace bfs = boost::filesystem;
 
@@ -84,19 +83,29 @@ void Logger::write(){
 //	m_file.write(m_text.c_str(), m_text.length());
 	out += "This m_file was written at: " + StringHelper::getActualTimeOfDayAsString() + "\n";
 	out += m_text;
-	for(const auto& line : m_specialLines){
-		if(!(line.first == "Error" || line.first == "Warning")){
-			out += line.first + "\n" + line.second;
-//			m_file << line.first << "\n";
-//			m_file.write(line.second.c_str(), line.second.length());
+	for(const auto& ele : m_specialLines){
+		if(!(ele.first == "Error" || ele.first == "Warning")){
+			out += ele.first + "\n";
+			for(const auto& lines : ele.second){
+				if(lines.second < 2){
+					out += "\t" + lines.first + "\n";
+				}else{
+					out += "\t" + lines.first + ", occured " + StringHelper::number2String(lines.second) + " times\n";
+				}
+			}
 		}
 	}
 	for(auto&& name : {"Warning", "Error"}){
 		auto itOther = m_specialLines.find(name);
 		if(itOther != m_specialLines.end()){
-			out += itOther->first + "\n" + itOther->second;
-//			m_file << itOther->first << "\n";
-//			m_file.write(itOther->second.c_str(), itOther->second.length());
+			out += itOther->first + "\n";
+			for(const auto& lines : itOther->second){
+				if(lines.second < 2){
+					out += "\t" + lines.first + "\n";
+				}else{
+					out += "\t" + lines.first + ", occured " + StringHelper::number2String(lines.second) + " times\n";
+				}
+			}
 		}
 	}
 	const std::string oldFileName = m_fileName;
@@ -169,10 +178,23 @@ void Logger::addSpecialLineToFile(const std::string& line, const std::string& id
 		m_mutex.lock();
 		auto it = m_specialLines.find(identifier);
 		if(it != m_specialLines.end()){
-			it->second += ("\t" + line + "\n");
+			auto& ref = it->second;
+			bool found = false;
+			for(auto& ele : ref){
+				if(ele.first == line){
+					++ele.second;
+					found = true;
+					break;
+				}
+			}
+			if(!found){
+				// add line
+				ref.emplace_back(line, 1);
+			}
 		}else{
-			const std::string input = "\t" + line + "\n";
-			m_specialLines.emplace(identifier, input);
+			InnerSpecialLines lines;
+			lines.emplace_back(line, 1);
+			m_specialLines.emplace(identifier, lines);
 		}
 		m_needToWrite = true;
 		m_mutex.unlock();

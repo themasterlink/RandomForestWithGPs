@@ -11,6 +11,7 @@
 #include "../Base/Observer.h"
 #include "ClassKnowledge.h"
 #include "../Base/BaseType.h"
+#include "../Utility/AvgNumber.h"
 #include <vector>
 
 template<typename T>
@@ -18,7 +19,7 @@ class PoolInfo : public Observer {
 public:
 	PoolInfo();
 
-	std::vector<Real>& getPerformancesRef(){ return m_performance; };
+	std::vector<AvgNumber>& getPerformancesRef(){ return m_performance; };
 
 	void changeAmountOfClasses(const unsigned int amountOfClasses);
 
@@ -39,7 +40,7 @@ public:
 private:
 	std::vector<unsigned int> m_desiredSizes;
 	std::vector<unsigned int> m_currentSizes;
-	std::vector<Real> m_performance;
+	std::vector<AvgNumber> m_performance;
 	unsigned int m_totalAmountOfSavedPoints;
 	unsigned int m_amountOfPointsPerClass;
 };
@@ -119,6 +120,8 @@ public:
 	ClassTypeSubject classType() const override;
 
 	PoolInfo<T>& getPoolInfoRef(){ return m_poolInfo; };
+
+	const bool isInPoolMode() const { return m_storageMode == StorageMode::POOL; };
 
 	virtual ~OnlineStorage();
 

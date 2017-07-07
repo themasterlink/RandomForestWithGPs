@@ -15,11 +15,14 @@
 #include "InformationPackage.h"
 #include "Types.h"
 #include <atomic>
+#include "Singleton.h"
 
-class ThreadMaster {
+class ScreenOutput;
+
+class ThreadMaster : public Singleton<ThreadMaster> {
+
 	friend ScreenOutput;
-
-SINGELTON_MACRO(ThreadMaster);
+	friend Singleton<ThreadMaster>;
 
 public:
 
@@ -72,6 +75,9 @@ private:
 	std::atomic<bool> m_keepRunning;
 
 	Mutex m_isFinished;
+
+	ThreadMaster();
+	~ThreadMaster() = default;
 
 };
 

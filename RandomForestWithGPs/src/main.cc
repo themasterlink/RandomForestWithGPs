@@ -30,6 +30,7 @@ void handleProgrammOptions(int ac, char* av[]){
 		boost::program_options::store(boost::program_options::parse_command_line(ac, av, desc), vm);
 	} catch (std::exception& e) {
 		std::cout << "The given program options are wrong: " << e.what() << std::endl;
+		quitApplication();
 	};
 	CommandSettings::instance().setValues(vm);
 	boost::program_options::notify(vm);

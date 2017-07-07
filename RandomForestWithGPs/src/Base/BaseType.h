@@ -45,15 +45,15 @@ using UniquePtr = std::unique_ptr<T>;
 
 //#define BUILD_OLD_CODE
 
-#define SINGELTON_MACRO(ClassName) \
-    public: \
-    static ClassName& instance(){ \
-        static ClassName m_instance; \
-        return m_instance; }; \
-    ~ClassName() = default; \
-    ClassName(const ClassName&) = delete; \
-    void operator=(const ClassName&) = delete; \
-    private: \
-        ClassName(); \
+//#define SINGELTON_MACRO(ClassName) \
+//    public: \
+//    static ClassName& instance(){ \
+//        static ClassName m_instance; \
+//        return m_instance; }; \
+//    ~ClassName() = default; \
+//    ClassName(const ClassName&) = delete; \
+//    void operator=(const ClassName&) = delete; \
+//    private: \
+//        ClassName(); \
 
 #endif //RANDOMFORESTWITHGPS_REALTYPE_H

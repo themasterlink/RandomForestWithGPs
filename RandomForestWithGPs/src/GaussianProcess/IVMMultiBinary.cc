@@ -100,7 +100,7 @@ void IVMMultiBinary::update(Subject* caller, unsigned int event){
 					const unsigned int size = (m_storage.size() * m_storage.size() + m_storage.size()) / 2;
 					const unsigned int sizeOfPart =  size / nrOfParallel;
 					if(kernelType == 0 && amountOfUsedClasses > 0 && m_storage.size() <= 10000){ // GAUSS, calc the kernel matrix
-						Eigen::MatrixXf* differenceMatrix = new Eigen::MatrixXf(m_storage.size(), m_storage.size());
+						SharedPtr<Eigen::MatrixXf> differenceMatrix = std::make_shared<Eigen::MatrixXf>(m_storage.size(), m_storage.size());
 						boost::thread_group* group = new boost::thread_group();
 						std::vector<InformationPackage*> packages(nrOfParallel, nullptr);
 
@@ -391,11 +391,11 @@ void IVMMultiBinary::retrainIvmIfNeeded(IVM* ivm, InformationPackage* package, c
 	}
 }
 
-void IVMMultiBinary::initInParallel(const int startOfKernel, const int endOfKernel, Eigen::MatrixXf* differenceMatrix, InformationPackage* package){
+void IVMMultiBinary::initInParallel(const int startOfKernel, const int endOfKernel, SharedPtr<Eigen::MatrixXf> differenceMatrix, InformationPackage* package){
 	ThreadMaster::instance().appendThreadToList(package);
 	package->setStandartInformation("Calc of difference matrix from: " + StringHelper::number2String(startOfKernel) + " to: " +  StringHelper::number2String(endOfKernel) + (m_orfClassLabel != UNDEF_CLASS_LABEL ? ", for orf class: " + StringHelper::number2String(m_orfClassLabel) : ""));
 	package->wait();
-	GaussianKernel::calcDifferenceMatrix(startOfKernel, endOfKernel, *differenceMatrix, m_storage, package);
+	GaussianKernel::calcDifferenceMatrix(startOfKernel, endOfKernel, *differenceMatrix.get(), m_storage, package);
 	package->finishedTask();
 }
 

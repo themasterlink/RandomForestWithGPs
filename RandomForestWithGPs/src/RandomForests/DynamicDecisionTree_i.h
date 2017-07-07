@@ -146,8 +146,9 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 	// 2 3
 	if(m_useOnlyThisDataPositions == nullptr){
 		auto& dataPos = dataPosition[1];
-		const auto startPos = generator.useRealOnlineUpdate() ? m_storage.getLastUpdateIndex() : 0;
-		const auto size = generator.useRealOnlineUpdate() ? m_storage.getAmountOfNew() : m_storage.size();
+		const bool useShortenSpanOfStorage = generator.useRealOnlineUpdate() && !m_storage.isInPoolMode();
+		const auto startPos = useShortenSpanOfStorage ? m_storage.getLastUpdateIndex() : 0;
+		const auto size = useShortenSpanOfStorage ? m_storage.getAmountOfNew() : m_storage.size();
 		bool useWholeDataSet = false;
 		if(generator.useWholeDataSet()){
 			useWholeDataSet = true;
@@ -184,6 +185,9 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 //	}
 	const auto amountOfTriedDims = (unsigned int) std::min(100, std::max((int) (usedDims.size() * 0.1), 2));
 	for(int iActNode = 1; iActNode < (int) m_maxInternalNodeNr + 1; ++iActNode){ // first element is not used!
+		if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){ // checks if node contains data or not
+			continue; // if node is not used, go to next node, if node can be used process it
+		}
 		DataPositions& actDataPos = (m_useOnlyThisDataPositions != nullptr && iActNode == 1)
 									? (*m_useOnlyThisDataPositions) : (dataPosition[iActNode]);
 //		if(iActNode == breakPoint){ // check if early breaking is possible, check is performed always at the start of a layer
@@ -194,9 +198,6 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 //			breakPoint += pow2(actLayer); // first iteration from 3 -> 7, 7 -> 15, 15 -> 31
 //			++actLayer;
 //		}
-		if(m_splitDim[iActNode] == NodeType::NODE_IS_NOT_USED){ // checks if node contains data or not
-			continue; // if node is not used, go to next node, if node can be used process it
-		}
 		// calc actual nodesararg
 		// calc split value for each node
 		// choose dimension for split
@@ -280,7 +281,7 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 			}
 		}else{
 //			atLeastPerformedOneSplit = true;
-			actDataPos.clear();
+//			actDataPos.clear();
 			// set the use flag for children:
 			if(rightPos < (int) m_maxInternalNodeNr + 1){ // if right is not a leave, than left is too -> just control one
 				m_splitDim[leftPos] = leftDataPos.empty()   ? NodeType::NODE_IS_NOT_USED : NodeType::NODE_CAN_BE_USED;
@@ -358,13 +359,13 @@ Real DynamicDecisionTree<dimType>::trySplitFor(const Real usedSplitValue, const 
 	Real leftCost = 0, rightCost = 0;
 	for(dimType i = 0; i < m_amountOfClasses; ++i){
 		const Real normalizer = leftHisto[i] + rightHisto[i];
-		if(normalizer > 0){
+		if(normalizer > 0._r){
 			const Real leftClassProb = leftHisto[i] / normalizer;
-			if(leftClassProb > 0){
+			if(leftClassProb > 0._r){
 				leftCost -= leftClassProb * logReal(leftClassProb);
 			}
-			if(leftClassProb < 1.0){
-				rightCost -= (1. - leftClassProb) * logReal(1. - leftClassProb);
+			if(leftClassProb < 1.0_r){
+				rightCost -= (1._r - leftClassProb) * logReal(1._r - leftClassProb);
 			}
 //			if(leftClassProb > 0){
 //				leftCost += leftClassProb * (1- leftClassProb);

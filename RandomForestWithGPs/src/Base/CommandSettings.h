@@ -10,6 +10,7 @@
 
 #include <boost/program_options.hpp>
 #include "Types.h"
+#include "Singleton.h"
 
 #define MEMBER_PARAM(param) m_##param
 
@@ -37,9 +38,9 @@ struct Param;
 /* Always ADD, DEFINE and INIT, for adding new params
  */
 
-class CommandSettings {
+class CommandSettings : public Singleton<CommandSettings> {
 
-SINGELTON_MACRO(CommandSettings);
+	friend Singleton<CommandSettings>;
 	
 public:
 
@@ -62,6 +63,9 @@ public:
 
 private:
 	std::list<Param> m_params;
+
+	CommandSettings();
+	~CommandSettings() = default;
 };
 
 struct Param {

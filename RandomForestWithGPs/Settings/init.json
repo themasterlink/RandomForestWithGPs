@@ -45,7 +45,7 @@
 	"OnlineRandomForest": {
 		"Tree": {
 			"height": 35,
-			"performRealOnlineUpdate": "false",
+			"performRealOnlineUpdate": "true",
 			"Bagging": {
 				"mode": "use total amount",
 				"totalAmountOfDataUsedPerTree": 5000,
@@ -53,7 +53,7 @@
 			}
 		},
 		"activatePoolBased": "true",
-		"maxAmountOfPointsSavedInPool": 50000,
+		"maxAmountOfPointsSavedInPool": 40000,
 		"amountOfTrainedTrees": 0,
 		"ownSamplingTime": 0,
 		"maxAmountOfUsedMemory": 1100000000,

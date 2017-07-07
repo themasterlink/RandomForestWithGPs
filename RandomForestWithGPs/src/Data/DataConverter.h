@@ -9,6 +9,7 @@
 #define DATA_DATACONVERTER_H_
 
 #include "LabeledVectorX.h"
+#include "../Utility/Util.h"
 #include <type_traits>
 
 class DataConverter{
@@ -38,6 +39,9 @@ public:
 
 	template<typename T>
 	static void getMinMax(const std::vector<T>& data, T& min, T& max, const bool ignoreREAL_MAX_NEG = false);
+
+	template<typename T, typename internT>
+	static void getMinMax(const std::vector<T>& data, internT& min, internT& max, internT (T::*get)() const, const bool ignoreREAL_MAX_NEG);
 
 	static void getMinMax(const Matrix& mat, Real& min, Real& max, const bool ignoreREAL_MAX_NEG = false);
 
@@ -75,6 +79,33 @@ void DataConverter::getMinMax(const std::vector<T>& data, T& min, T& max, const 
 		}
 	}else{
 		for(const auto& ele : data){
+			if(ele < min){
+				min = ele;
+			}
+			if(ele > max){
+				max = ele;
+			}
+		}
+	};
+}
+
+template<typename T, typename internT>
+void DataConverter::getMinMax(const std::vector<T>& data, internT& min, internT& max, internT (T::*get)() const, const bool ignoreREAL_MAX_NEG){
+	min = std::numeric_limits<internT>::max();
+	max = std::numeric_limits<internT>::lowest();
+	if(std::is_floating_point<internT>::value){
+		for(const auto& element : data){
+			const internT ele = CALL_MEMBER_FCT(element, get)();
+			if(ele < min && ele > NEG_REAL_MAX){
+				min = ele;
+			}
+			if(ele > max){
+				max = ele;
+			}
+		}
+	}else{
+		for(const auto& element : data){
+			const internT ele = CALL_MEMBER_FCT(element, get)();
 			if(ele < min){
 				min = ele;
 			}

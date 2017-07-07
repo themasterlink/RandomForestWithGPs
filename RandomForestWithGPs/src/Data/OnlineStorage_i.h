@@ -11,7 +11,7 @@
 template<typename T>
 PoolInfo<T>::PoolInfo(): m_desiredSizes(ClassKnowledge::instance().amountOfClasses(), 0),
 						 m_currentSizes(ClassKnowledge::instance().amountOfClasses(), 0),
-						 m_performance(ClassKnowledge::instance().amountOfClasses(), (Real) 0.0),
+						 m_performance(ClassKnowledge::instance().amountOfClasses(), AvgNumber(NEG_REAL_MAX)),
 						 m_totalAmountOfSavedPoints(0), m_amountOfPointsPerClass(0){}
 
 template<typename T>
@@ -22,7 +22,7 @@ void PoolInfo<T>::changeAmountOfClasses(const unsigned int amountOfClasses){
 	m_performance.resize(amountOfClasses);
 	for(unsigned int i = old; i < amountOfClasses; ++i){
 		m_currentSizes[i] = 0;
-		m_performance[i] = (Real) 0.0;
+		m_performance[i] = AvgNumber(NEG_REAL_MAX);
 	}
 	m_amountOfPointsPerClass = m_totalAmountOfSavedPoints / amountOfClasses;
 	for(unsigned int i = 0; i < amountOfClasses; ++i){
@@ -74,21 +74,23 @@ template<typename T>
 void PoolInfo<T>::updateAccordingToPerformance(){
 	Real min, max;
 	const auto ignoreRealNegMax = true; // avoids the classes which have no size at the moment
-	DataConverter::getMinMax(m_performance, min, max, ignoreRealNegMax);
+	DataConverter::getMinMax(m_performance, min, max, &AvgNumber::mean, ignoreRealNegMax);
 	if(min < max){
 		const auto amountOfFixedPoints = m_amountOfPointsPerClass / 2;
 		auto addedError = 0._r;
 		for(unsigned int i = 0, end = (unsigned int) m_desiredSizes.size(); i < end; ++i){
-			if(m_performance[i] >= min){ // exclude NEG_REAL_MAX
-				addedError += 1._r - m_performance[i];
+			const auto val = m_performance[i].mean();
+			if(val >= min){ // exclude NEG_REAL_MAX
+				addedError += 1._r - val;
 			}
 		}
 		const auto amountOfSharedPoints = (m_amountOfPointsPerClass - amountOfFixedPoints) * m_performance.size();
 		for(unsigned int i = 0, end = (unsigned int) m_desiredSizes.size(); i < end; ++i){
-			if(m_performance[i] >= min){ // exclude NEG_REAL_MAX
-				const auto fac = (1._r - m_performance[i]) / addedError;
+			const auto val = m_performance[i].mean();
+			if(val >= min){ // exclude NEG_REAL_MAX
+				const auto fac = (1._r - val) / addedError;
 				m_desiredSizes[i] = (unsigned int) (amountOfFixedPoints + amountOfSharedPoints * fac);
-				printOnScreen("Class: " << i << ", performance: " << m_performance[i]
+				printOnScreen("Class: " << i << ", performance: " << val
 										<< ", new size: " << m_desiredSizes[i]
 										<< ", current size: " << m_currentSizes[i]);
 			}

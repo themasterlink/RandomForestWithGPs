@@ -20,8 +20,10 @@ class ScreenOutput;
 class ThreadMaster;
 
 class InformationPackage {
+
 	friend ScreenOutput;
 	friend ThreadMaster;
+
 public:
 	enum InfoType { // low is more important, class can not be used ordering and values are important
 		ORF_TRAIN = 0,

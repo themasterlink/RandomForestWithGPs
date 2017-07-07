@@ -6,6 +6,7 @@
 #define RANDOMFORESTWITHGPS_GLOBALSTOPWATCH_H
 
 #include "StopWatch.h"
+#include "../Base/Singleton.h"
 
 struct DynamicDecisionTreeTrain {
 };
@@ -14,9 +15,9 @@ struct BigDecisionTreeTrain {
 
 
 template<typename currentWatch>
-class GlobalStopWatch {
+class GlobalStopWatch  : public Singleton<GlobalStopWatch<currentWatch> > {
 
-SINGELTON_MACRO(GlobalStopWatch);
+	friend Singleton<GlobalStopWatch<currentWatch> >;
 
 public:
 
@@ -40,10 +41,9 @@ private:
 
 	StopWatch m_sw;
 
+	GlobalStopWatch() = default;
+	~GlobalStopWatch() = default;
+
 };
-
-template<typename currentWatch>
-GlobalStopWatch<currentWatch>::GlobalStopWatch(){};
-
 
 #endif //RANDOMFORESTWITHGPS_GLOBALSTOPWATCH_H

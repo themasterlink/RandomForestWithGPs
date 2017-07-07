@@ -9,10 +9,11 @@
 #define UTILITY_INLINEPERCENTAGEFILLER_H_
 
 #include "StopWatch.h"
+#include "../Base/Singleton.h"
 
-class InLinePercentageFiller {
+class InLinePercentageFiller : public Singleton<InLinePercentageFiller> {
 
-	SINGELTON_MACRO(InLinePercentageFiller);
+	friend class Singleton<InLinePercentageFiller>;
 
 public:
 
@@ -33,6 +34,9 @@ private:
 	Real m_dMax;
 
 	StopWatch m_sw;
+	InLinePercentageFiller();
+	~InLinePercentageFiller() = default;
+
 };
 
 inline

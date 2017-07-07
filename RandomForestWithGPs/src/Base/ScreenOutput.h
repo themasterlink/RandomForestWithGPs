@@ -16,12 +16,13 @@
 #include "ThreadMaster.h"
 #include "../Utility/StopWatch.h"
 #include "Types.h"
+#include "Singleton.h"
 
 #define MAX_HEIGHT 120
 
-class ScreenOutput {
+class ScreenOutput : public Singleton<ScreenOutput> {
 
-SINGELTON_MACRO(ScreenOutput);
+	friend class Singleton<ScreenOutput>;
 
 public:
 	// must be called to get the needed information
@@ -73,6 +74,10 @@ private:
 	Real m_timeToSleep;
 
 	std::string m_progressLine;
+
+	ScreenOutput();
+	~ScreenOutput() = default;
+
 };
 
 #ifdef USE_SCREEN_OUPUT
