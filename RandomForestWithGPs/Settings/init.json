@@ -53,7 +53,7 @@
 			}
 		},
 		"activatePoolBased": "true",
-		"maxAmountOfPointsSavedInPool": 40000,
+		"maxAmountOfPointsSavedInPool": 6000,
 		"amountOfTrainedTrees": 0,
 		"ownSamplingTime": 0,
 		"maxAmountOfUsedMemory": 1100000000,
@@ -70,7 +70,7 @@
 		"path": "../realTest/kernelData.kernel"
 	},
 	"ThreadMaster": {
-		"useMultiThread": "true"
+		"useMultiThread": "false"
 	},
 	"RandomForestKernel": {
 		"samplingAmount": 200,

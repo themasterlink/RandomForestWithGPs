@@ -145,6 +145,9 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 	//  1
 	// 2 3
 	if(m_useOnlyThisDataPositions == nullptr){
+		if(VerboseMode::instance().isVerboseLevelHigher()){
+			printOnScreen("here");
+		}
 		auto& dataPos = dataPosition[1];
 		const bool useShortenSpanOfStorage = generator.useRealOnlineUpdate() && !m_storage.isInPoolMode();
 		const auto startPos = useShortenSpanOfStorage ? m_storage.getLastUpdateIndex() : 0;
@@ -201,11 +204,12 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 		// calc actual nodesararg
 		// calc split value for each node
 		// choose dimension for split
-		int randDim, amountOfUsedData;
-		Real minDimValue, maxDimValue;
+		const auto actDataSize = actDataPos.size();
+		dimType randDim;
+		Real minDimValue = REAL_MAX, maxDimValue = NEG_REAL_MAX;
 		// try different dimension and find one where the points have a difference
-		amountOfUsedData = generator.getRandAmountOfUsedData();
-		for(unsigned int i = 0; i < amountOfTriedDims; ++i){
+		auto amountOfUsedData = generator.getRandAmountOfUsedData();
+		for(unsigned int i = 0; i < amountOfTriedDims && actDataSize > 0; ++i){
 			randDim = usedDims[generator.getRandDim()]; // generates number in the range 0...amountOfUsedDims - 1
 			minDimValue = REAL_MAX;
 			maxDimValue = NEG_REAL_MAX;
