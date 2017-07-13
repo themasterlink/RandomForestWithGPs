@@ -38,8 +38,7 @@ private:
 };
 
 template<typename... Args>
-std::unique_ptr<Thread> makeThread(Args&&... args)
-{
+std::unique_ptr<Thread> makeThread(Args&&... args){
 	return std::make_unique<Thread>(std::forward<Args>(args)...);
 }
 

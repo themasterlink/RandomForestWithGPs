@@ -100,7 +100,7 @@ for fileN in files[-minA:]:
 		for i in x:
 			newLines.append(str(i))
 		newLines[0] += ",testSet,testSetExclude"
-		for i in range(0, len(x2)):
+		for i in range(0, min(len(x2), len(x))):
 			newLines[i+1] += "," + str(points["testSet"][i]) + "," + str(points["testSetExclude"][i])
 		for key, point in points.iteritems():
 			name = key

@@ -31,18 +31,21 @@ TimeFrame::TimeFrame(const Real seconds){
 }
 
 void TimeFrame::setWithSeconds(const Real seconds){
-	if(seconds > 3600){
+	if(seconds > 3600._r){
 		this->m_hours = (int) seconds / 3600;
 		this->m_minutes = (int) (seconds - this->m_hours * 3600) / 60;
 		this->m_seconds = modReal(seconds, (Real) 60.0);
-	}else if(seconds > 60){
+	}else if(seconds > 60._r){
 		this->m_hours = 0;
 		this->m_minutes = (int) seconds / 60;
 		this->m_seconds = modReal(seconds, (Real) 60.0);
-	}else{
+	}else if(seconds > 0._r){
 		this->m_hours = 0;
 		this->m_minutes = 0;
 		this->m_seconds = seconds;
+	}else{
+		this->m_hours = this->m_minutes = 0;
+		this->m_seconds = 0._r;
 	}
 }
 
@@ -53,8 +56,10 @@ std::ostream& operator<<(std::ostream& stream, const TimeFrame& time){
 		stream <<  time.m_minutes << " min, " << StringHelper::number2String(time.m_seconds, 2) << " sec";
 	}else if(time.m_seconds >= 1.0){
 		stream << StringHelper::number2String(time.m_seconds, 2) << " sec";
-	}else{
+	}else if(time.m_seconds > 0.0){
 		stream << StringHelper::number2String(time.m_seconds * (Real) 1000.0, 3) << " milisec";
+	}else{
+		stream << "0.0 milisec";
 	}
 	return stream;
 }

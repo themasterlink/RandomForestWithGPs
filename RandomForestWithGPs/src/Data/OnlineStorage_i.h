@@ -51,9 +51,14 @@ bool PoolInfo<T>::checkIfPointShouldBeAdded(const T& data){
 }
 
 template<typename T>
+unsigned int PoolInfo<T>::getDifferenceForClass(const unsigned int classNr){
+	return m_currentSizes[classNr] - m_desiredSizes[classNr];
+}
+
+template<typename T>
 unsigned int PoolInfo<T>::getClassWherePointShouldBeRemoved(){
 	for(unsigned int i = 0, end = (unsigned int) m_desiredSizes.size(); i < end; ++i){
-		if(m_desiredSizes[i] <= m_currentSizes[i]){
+		if(m_desiredSizes[i] < m_currentSizes[i]){
 			return i;
 		}
 	}
@@ -61,13 +66,13 @@ unsigned int PoolInfo<T>::getClassWherePointShouldBeRemoved(){
 }
 
 template<typename T>
-void PoolInfo<T>::addPointToClass(const unsigned int classNr){
+inline void PoolInfo<T>::addPointToClass(const unsigned int classNr){
 	++m_currentSizes[classNr];
 }
 
 template<typename T>
-void PoolInfo<T>::removePointFromClass(unsigned int classNr){
-	--m_currentSizes[classNr];
+inline void PoolInfo<T>::removePointsFromClass(unsigned int classNr, unsigned int amount){
+	m_currentSizes[classNr] -= amount;
 }
 
 template<typename T>
@@ -150,8 +155,9 @@ void OnlineStorage<T>::append(const T& data){
 		printWarning("The pool mode should not be used with the single append function!");
 		if(checkIfPointShouldBeAdded(data)){
 			m_lastUpdateIndex = size();
-			m_multiInternal[data->getLabel()].emplace_back(data);
-			m_poolInfo.addPointToClass(data->getLabel());
+			const auto label = data->getLabel();
+			m_multiInternal[label].emplace_back(data);
+			m_poolInfo.addPointToClass(label);
 			copyMultiInternalInInternal();
 			notify(static_cast<const unsigned int >(Event::APPEND));
 		}
@@ -219,7 +225,7 @@ void OnlineStorage<T>::appendInternal(const std::vector<T>& data, const bool sho
 					if(existingPoint == p){
 						found = true;
 						break;
-					}
+				}
 				}
 			}
 			if(!found){
@@ -230,9 +236,19 @@ void OnlineStorage<T>::appendInternal(const std::vector<T>& data, const bool sho
 		unsigned int next = m_poolInfo.getClassWherePointShouldBeRemoved();
 		unsigned int amountOfRemovedPoints = 0;
 		while(next != UNDEF_CLASS_LABEL){
-			m_multiInternal[next].pop_front();
-			m_poolInfo.removePointFromClass(next);
-			++amountOfRemovedPoints;
+			const auto diff = m_poolInfo.getDifferenceForClass(next);
+			if(diff > 0){
+				auto& actInternal = m_multiInternal[next];
+				for(unsigned int k = 0, endNext = actInternal.size(); k + diff < endNext; ++k){
+					actInternal[k] = actInternal[k + diff];
+				}
+				actInternal.resize(std::max(0u, (unsigned int) actInternal.size() - diff));
+				m_poolInfo.removePointsFromClass(next, diff);
+				amountOfRemovedPoints += diff;
+			}else{
+				m_poolInfo.getDifferenceForClass(next);
+				printError("The diff is negativ!");
+			}
 			next = m_poolInfo.getClassWherePointShouldBeRemoved();
 		}
 		std::stringstream str2;
@@ -346,8 +362,8 @@ void OnlineStorage<T>::copyMultiInternalInInternal(){
 			amount += storage.size();
 		}
 		m_internal.reserve(amount);
-		for(auto& storage : m_multiInternal){
-			for(auto& point : storage){
+		for(const auto& storage : m_multiInternal){
+			for(const auto& point : storage){
 				m_internal.emplace_back(point);
 			}
 		}

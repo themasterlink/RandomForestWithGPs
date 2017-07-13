@@ -103,6 +103,25 @@ inline void quitApplication(const bool wait = true){
 	exit(0);
 }
 
+class VerboseMode : public Singleton<VerboseMode> {
+
+	friend class Singleton<VerboseMode>;
+public:
+
+	void setVerboseLevel(unsigned int verboseLevel){ m_verboseLevel = verboseLevel; }
+
+	unsigned int getVerboseLevel() const { return m_verboseLevel; }
+
+	const bool isVerboseLevelHigher() const { return getVerboseLevel() != 0; }
+
+private:
+
+	VerboseMode() : m_verboseLevel(0) {};
+	virtual ~VerboseMode() = default;
+
+	unsigned int m_verboseLevel;
+};
+
 #ifdef USE_SCREEN_OUPUT
 
 #define printError(message) \

@@ -81,6 +81,9 @@ void OnlineRandomForest::trainInParallel(SharedPtr<RandomNumberGeneratorForDT> g
 			treePointer = std::make_shared<DynamicDecisionTree<unsigned int> >(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 		}
 		treePointer->train((unsigned int) m_amountOfUsedDims, *generator);
+		if(VerboseMode::instance().isVerboseLevelHigher()){
+			printLine();
+		}
 		const MemoryType memForTree = treePointer->getMemSize();
 		printInPackageOnScreen(package, "Number " << counter++ << " was calculated, total memory usage: " << StringHelper::convertMemorySpace(m_usedMemory + memForTree));
 		if(counterForClasses){
@@ -287,7 +290,7 @@ void OnlineRandomForest::train(){
 		DataWriterForVisu::writeSvg("correct.svg", points, true);
 		openFileInViewer("correct.svg");
 	}
-	m_firstTrainingDone = true;
+	m_firstTrainingDone = m_trees.front() != nullptr;
 }
 
 void OnlineRandomForest::writeTreesToDisk(const unsigned int amountOfTrees) const{
@@ -481,6 +484,9 @@ bool OnlineRandomForest::update(){
 		printOnScreen("Finished sorting, worst tree has: " << list->begin()->second << ", best tree has: "
 														   << list->rbegin()->second << ", median: " << it->second
 														   << ", avg: " << avg.mean() << ", sd: " << standartDeviation);
+		if(VerboseMode::instance().isVerboseLevelHigher()){
+			printLine();
+		}
 		StopWatch swWhole;
 		const auto nrOfParallel = (unsigned int) std::min((int) ThreadMaster::instance().getAmountOfThreads(),
 														  (int) m_trees.size());
@@ -494,6 +500,9 @@ bool OnlineRandomForest::update(){
 		std::vector<SharedPtr<InformationPackage> > packages(nrOfParallel);
 		ThreadGroup group;
 		const auto infoType = m_trainingsConfig.isTimeMode() ? InformationPackage::InfoType::ORF_TRAIN : InformationPackage::InfoType::ORF_TRAIN_FIX;
+		if(VerboseMode::instance().isVerboseLevelHigher()){
+			printLine();
+		}
 		for(unsigned int i = 0; i < packages.size(); ++i){
 			packages[i] = std::make_shared<InformationPackage>(infoType, 0,
 												 (int) (m_trees.size() / (Real) nrOfParallel));
@@ -561,6 +570,9 @@ bool OnlineRandomForest::update(){
 			}
 		}
 		printOnScreen("New worst tree has: " << list->begin()->second);
+	}
+	if(m_trees.front() == nullptr){
+		printErrorAndQuit("The training failed!");
 	}
 	return true;
 }
@@ -705,10 +717,15 @@ void OnlineRandomForest::updateInParallel(SharedPtr<SortedDecisionTreeList> list
 		switcher = std::make_shared<DynamicDecisionTree<unsigned int> >(m_storage, m_maxDepth, m_amountOfClasses, m_amountOfPointsCheckedPerSplit);
 	}
 //	Real correctValOfSwitcher = pair.second;
-
 	RandomGaussianNr randomNr(0, standartDeviation, (threadNr + 13) * 12337);
 	for(unsigned int i = 0; i < amountOfSteps - 1; ++i){
+		if(VerboseMode::instance().isVerboseLevelHigher()){
+			printLine();
+		}
 		switcher->train((unsigned int) m_amountOfUsedDims, *m_generators[threadNr]); // retrain worst tree
+		if(VerboseMode::instance().isVerboseLevelHigher()){
+			printLine();
+		}
 		int correct = 0;
 		unsigned int size = 0;
 		if(m_validationSet != nullptr){
@@ -1220,8 +1237,8 @@ void OnlineRandomForest::predictClassDataProbInParallelStartEnd(const LabeledDat
 		printInPackageOnScreen(package, "Done: " << 0 << " %%");
 		for(unsigned int i = start; i < end; ++i){
 			(*probabilities)[i].resize(m_amountOfClasses);
-			for(DecisionTreeConstIterator it = m_trees.cbegin(); it != m_trees.cend(); ++it){
-				(*probabilities)[i][(*it)->predict(*points[i])] += 1;
+			for(const auto& tree : m_trees){
+				(*probabilities)[i][tree->predict(*points[i])] += 1;
 			}
 			unsigned int iMax = UNDEF_CLASS_LABEL;
 			Real max = 0._r;

@@ -118,10 +118,8 @@ void ReadWriterHelper::readBigDynamicTree(std::fstream& stream, BigDynamicDecisi
 				bool useThisTree;
 				stream.read((char*) (&useThisTree), sizeof(bool));
 				if(useThisTree){
-					tree.m_fastInnerTrees[i][j] = new DynamicDecisionTree<dimTypeForDDT>(tree.m_storage);
-					readDynamicTree(stream, *tree.m_fastInnerTrees[i][j]);
-				}else{
-					tree.m_fastInnerTrees[i][j] = nullptr;
+					tree.m_fastInnerTrees[i][j] = std::make_unique<DynamicDecisionTree<dimTypeForDDT> >(tree.m_storage);
+					readDynamicTree(stream, *tree.m_fastInnerTrees[i][j].get());
 				}
 			}
 		}
@@ -129,9 +127,9 @@ void ReadWriterHelper::readBigDynamicTree(std::fstream& stream, BigDynamicDecisi
 			for(unsigned int j = 0; j < sizes[i]; ++j){
 				unsigned int nr;
 				stream.read((char*) (&nr), sizeof(unsigned int));
-				auto* pTree = new DynamicDecisionTree<dimTypeForDDT>(tree.m_storage);
-				readDynamicTree(stream, *pTree);
-				tree.m_smallInnerTrees[i].emplace(nr, pTree);
+				auto pTree = std::make_unique<DynamicDecisionTree<dimTypeForDDT> >(tree.m_storage);
+				readDynamicTree(stream, *pTree.get());
+				tree.m_smallInnerTrees[i].emplace(nr, std::move(pTree));
 			}
 		}
 

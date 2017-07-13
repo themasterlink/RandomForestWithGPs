@@ -55,8 +55,8 @@ public:
 	MemoryType getMemSize() const override { return m_usedMemory; };
 
 private:
-
-	using PtrDynamicDecisionTree = DynamicDecisionTree<dimTypeForDDT>*;
+	using UsedDecisionTree = DynamicDecisionTree<dimTypeForDDT>;
+	using PtrDynamicDecisionTree = UniquePtr<UsedDecisionTree>;
 	using SmallTreeInnerStructure = std::map<unsigned int, PtrDynamicDecisionTree>;
 	using SmallTreeInnerStructureIterator = SmallTreeInnerStructure::iterator;
 	using SmallTreeInnerPair = std::pair<unsigned int, PtrDynamicDecisionTree>;
@@ -66,7 +66,7 @@ private:
 
 	bool shouldNewTreeBeCalculatedFor(std::vector<unsigned int>& dataPositions);
 
-	void trainChildrenForRoot(PtrDynamicDecisionTree root, SmallTreeInnerStructureIterator& it,
+	void trainChildrenForRoot(UsedDecisionTree* root, SmallTreeInnerStructureIterator& it,
 							  SmallTreeInnerStructure& actSmallInnerTreeStructure,
 							  const unsigned int depthInThisLayer, const unsigned int iRootId,
 							  const unsigned int leavesForTreesInTheFatherLayer, const int amountOfUsedDims,

@@ -33,7 +33,9 @@ public:
 
 	unsigned int getClassWherePointShouldBeRemoved();
 
-	void removePointFromClass(unsigned int classNr);
+	void removePointsFromClass(unsigned int classNr, unsigned int amount);
+
+	unsigned int getDifferenceForClass(const unsigned int classNr);
 
 	void update(Subject* caller, unsigned int event);
 
@@ -62,7 +64,7 @@ public:
 	};
 
 	using InternalStorage = std::vector<T>;
-	using ClassInternalStorage = std::list<T>;
+	using ClassInternalStorage = std::vector<T>;
 	using MultiClassInternalStorage = std::vector<ClassInternalStorage>;
 	using Iterator = typename InternalStorage::iterator;
 	using ConstIterator = typename InternalStorage::const_iterator;

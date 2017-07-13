@@ -46,7 +46,7 @@ public:
 	virtual ~DynamicDecisionTree();
 
 	void train(unsigned int amountOfUsedDims, RandomNumberGeneratorForDT &generator) override {
-		train(amountOfUsedDims, generator, 0, false);
+		train((dimType) amountOfUsedDims, generator, 0, false);
 	}
 
 	bool train(dimType amountOfUsedDims, RandomNumberGeneratorForDT &generator, const dimType tryCounter,
