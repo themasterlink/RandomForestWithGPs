@@ -56,6 +56,9 @@ unsigned int RandomUniformUnsignedNr::operator()(){
 }
 
 void RandomUniformUnsignedNr::setMax(const unsigned int max){
+	if(max == 0){
+		printError("The max value must be bigger than 0!");
+	}
 	m_diff = max;
 }
 

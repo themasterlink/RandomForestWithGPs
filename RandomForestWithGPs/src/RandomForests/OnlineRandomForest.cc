@@ -150,6 +150,7 @@ void OnlineRandomForest::train(){
 	const unsigned int amountOfThreads = ThreadMaster::instance().getAmountOfThreads();
 	m_generators.resize(amountOfThreads);
 	m_baggingInformation = std::make_unique<RandomNumberGeneratorForDT::BaggingInformation>(); // gets all the information it needs in the constructor
+
 	for(unsigned int i = 0; i < amountOfThreads; ++i){
 		m_generators[i] = std::make_shared<RandomNumberGeneratorForDT>(m_storage.dim(), minMaxUsedSplits[0],
 														 minMaxUsedSplits[1], m_storage.size(), (i + 1) * 827537, *(m_baggingInformation.get()), m_useRealOnlineUpdate);

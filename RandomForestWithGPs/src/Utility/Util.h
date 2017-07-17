@@ -80,7 +80,11 @@ constexpr void overwriteConst(const T& ref, const T& newValue){
 
 template<class T>
 inline void sleepFor(const T seconds){
+#if(BUILD_SYSTEM_CMAKE == 1)
 	usleep((__useconds_t) (seconds * (Real) 1e6));
+#else
+	usleep((useconds_t) (seconds * (Real) 1e6));
+#endif
 }
 
 inline void systemCall(const std::string& call){

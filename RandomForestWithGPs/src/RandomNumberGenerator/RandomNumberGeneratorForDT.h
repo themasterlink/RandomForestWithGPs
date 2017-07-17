@@ -73,6 +73,8 @@ public:
 
 	unsigned int getRandStepOverStorage();
 
+	const bool isRandStepOverStorageUsed() const { return m_uniformStepOverStorage.isUsed(); };
+
 	const bool useRealOnlineUpdate() const { return m_useRealOnlineUpdate; };
 
 private:

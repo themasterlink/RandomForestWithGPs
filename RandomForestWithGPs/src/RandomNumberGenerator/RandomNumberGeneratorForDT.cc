@@ -41,7 +41,7 @@ void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 		OnlineStorage<LabeledVectorX*>& storage = forest->getStorageRef();
 		const unsigned int dim = storage.dim();
 		if(!useWholeDataSet()){
-			const auto size = m_useRealOnlineUpdate ? storage.getAmountOfNew() : storage.size();
+			const auto size = !storage.isInPoolMode() && m_useRealOnlineUpdate ? storage.getAmountOfNew() : storage.size();
 			m_currentStepSize = m_baggingInformation.m_stepSizeOverData;
 			if(m_baggingInformation.useStepSize()){
 				m_currentStepSize = m_baggingInformation.m_stepSizeOverData;

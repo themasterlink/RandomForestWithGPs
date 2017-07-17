@@ -41,7 +41,7 @@ using SharedPtr = std::shared_ptr<T>;
 template<typename T>
 using UniquePtr = std::unique_ptr<T>;
 
-#define BUILD_SYSTEM_LINUX @BUILD_SYSTEM_CMAKE@
+//#define BUILD_SYSTEM_LINUX @BUILD_SYSTEM_CMAKE@
 
 //#define BUILD_OLD_CODE
 

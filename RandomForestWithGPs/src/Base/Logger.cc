@@ -34,7 +34,7 @@ void Logger::start(){
 				bfs::create_directory(dir);
 			}
 		};
-#ifdef BUILD_SYSTEM_LINUX
+#if(BUILD_SYSTEM_CMAKE == 1)
 		// "Linux"
 		m_actualDirectory = "/home_local/denn_ma"; // default
 		createFolder(m_actualDirectory);
@@ -109,7 +109,7 @@ void Logger::write(){
 		}
 	}
 	const std::string oldFileName = m_fileName;
-	m_fileName = "log" + StringHelper::getActualTimeOfDayAsString() + ".txt";
+	m_fileName = "log.txt"; // " + StringHelper::getActualTimeOfDayAsString() + "
 	const auto fileLoc = getActDirectory() + m_fileName;
 	const auto fileLocOld = getActDirectory() + oldFileName;
 //	if(bfs::exists(fileLoc)){
@@ -129,7 +129,7 @@ void Logger::write(){
 	if(m_file->is_open()){
 		m_file->write(out.c_str(), out.length());
 		m_file.reset(nullptr); // destroys the ofstream object -> closes the m_file handle?
-		std::string latestFile = getActDirectory() + "log.txt";
+		/*std::string latestFile = getActDirectory() + "log.txt";
 		if(bfs::exists(latestFile)){
 			bfs::remove(latestFile);
 		}
@@ -143,7 +143,7 @@ void Logger::write(){
 //		system(std::string("zip " + getActDirectory() + "log.zip " + fileLoc + " &>/dev/null 2>&1").c_str());
 		if(bfs::exists(fileLocOld)){
 			bfs::remove(fileLocOld);
-		}
+		}*/
 	}else{
 		m_mutex.unlock();
 		m_writeByForceWrite = false; // to avoid that the quit of the program calls the force write method

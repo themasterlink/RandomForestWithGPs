@@ -162,8 +162,12 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 				dataPos.reserve(amountOfPoints);
 			}else if(baggingInfo.useTotalAmountOfPoints()){
 				if(size > baggingInfo.m_totalUseOfData){
-					const auto steps = (size / baggingInfo.m_totalUseOfData) * 2;
-					dataPos.reserve(baggingInfo.m_totalUseOfData * 2);
+					if(generator.isRandStepOverStorageUsed()){ // the step value is bigger than 1
+						const auto steps = (size / baggingInfo.m_totalUseOfData) * 2;
+						dataPos.reserve(baggingInfo.m_totalUseOfData * 2);
+					}else{ // is just 1
+						useWholeDataSet = true; // is faster that way
+					}
 				}else{
 					useWholeDataSet = true;
 				}
@@ -518,9 +522,6 @@ unsigned int DynamicDecisionTree<dimType>::amountOfClasses() const{
 
 template<typename dimType>
 void DynamicDecisionTree<dimType>::deleteDataPositions(){
-	if(m_useOnlyThisDataPositions != nullptr){
-		printError("This should always be zero if the other one is deleted");
-	}
 	saveDelete(m_dataPositions);
 }
 

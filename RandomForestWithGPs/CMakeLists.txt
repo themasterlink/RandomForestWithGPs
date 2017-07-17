@@ -25,7 +25,6 @@ if(USE_OPEN_CV_CMAKE MATCHES 1)
 endif(USE_OPEN_CV_CMAKE MATCHES 1)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-    set(BUILD_SYSTEM_CMAKE 1)
     #Eigen include:
     include_directories(/home/f_soft/foreign_packages/Eigen/3.3.2/include/)
 
@@ -186,8 +185,10 @@ target_link_libraries(RandomForestWithGPs ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(RandomForestWithGPs ${GDAL_LIBRARIES})
 target_link_libraries(RandomForestWithGPs ${TBB_LIBRARIES})
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    target_compile_definitions(RandomForestWithGPs PRIVATE BUILD_SYSTEM_CMAKE=1)
     target_link_libraries(RandomForestWithGPs "/usr/local/lib/" ncurses panel)
 else(CMAKE_SYSTEM_NAME MATCHES  "Linux")
+    target_compile_definitions(RandomForestWithGPs PRIVATE BUILD_SYSTEM_CMAKE=0)
     target_link_libraries(RandomForestWithGPs "/usr/lib/" ncurses panel)
 endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
 

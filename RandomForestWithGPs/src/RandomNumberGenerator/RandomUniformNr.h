@@ -49,6 +49,8 @@ public:
 
 	unsigned int operator()();
 
+	const bool isUsed() const { return m_diff == 1; }
+
 private:
 
 	uint64_t m_currentSeeds[2];

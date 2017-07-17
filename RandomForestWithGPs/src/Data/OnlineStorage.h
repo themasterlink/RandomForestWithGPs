@@ -37,7 +37,7 @@ public:
 
 	unsigned int getDifferenceForClass(const unsigned int classNr);
 
-	void update(Subject* caller, unsigned int event);
+	void update(Subject* caller, unsigned int event) override;
 
 private:
 	std::vector<unsigned int> m_desiredSizes;
@@ -75,7 +75,7 @@ public:
 
 	void setStorageModeToPoolBase();
 
-	void update(Subject* caller, unsigned int event);
+	void update(Subject* caller, unsigned int event) override;
 
 	void append(const T& data);
 
