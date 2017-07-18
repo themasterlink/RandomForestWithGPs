@@ -154,7 +154,7 @@ void OnlineRandomForestIVMs::predictData(const Data& points, Labels& labels, std
 				probabilities[i][j] = 0;
 			}
 			m_ivms[labels[i]]->predict(**it, probabilities[i]);
-			labels[i] = argMax(probabilities[i].cbegin(), probabilities[i].cend());
+			labels[i] = argMax(probabilities[i]);
 		}
 	}
 }
@@ -168,7 +168,7 @@ void OnlineRandomForestIVMs::predictData(const LabeledData& points, Labels& labe
 				probabilities[i][j] = 0;
 			}
 			m_ivms[labels[i]]->predict(**it, probabilities[i]);
-			labels[i] = argMax(probabilities[i].cbegin(), probabilities[i].cend());
+			labels[i] = argMax(probabilities[i]);
 		}
 	}
 }

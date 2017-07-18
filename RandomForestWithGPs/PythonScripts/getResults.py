@@ -10,7 +10,7 @@ def hourConvert(hour):
 	return (int(eles[0]), int(eles[1]), int(float(eles[2])))
 
 def convert(month, day, hour):
-	res = 0.0	
+	res = 0
 	res += int(month) * 60 * 60 * 24 * 31
 	res += int(day) * 60 * 60 * 24
 	eles = hourConvert(hour)
@@ -19,6 +19,29 @@ def convert(month, day, hour):
 	res += eles[2]
 
 	return int(res)
+
+def getColorFor(nr):
+	if 0 <= nr <= 4: # apple
+		return (1.0,0.0,0.0,1.0)
+	elif 12 <= nr <= 15:
+		return (0.0,0.0,1.0,1.0)
+	elif 53 <= nr <= 60:
+		return (0.0,1.0,0.0,1.0)
+	elif 266 <= nr <= 273:
+		return (0.0,1.0,1.0,1.0)
+	elif 72 <= nr <= 76:
+		return (1.0,0.0,1.0,1.0)
+	else:
+		grey = 0.3
+		return (grey, grey, grey, 1.0)
+
+def printArray(array, name):
+	figure = plt.figure()
+	fig = figure.add_subplot(1, 1, 1)
+	plt.title(str(ele[1] + "/" + ele[0] + " " + ele[2] + ":" + ele[3] + ":" + ele[4] + " " + name))
+	x = [e for e in range(len(array[0]))]
+	for nr in range(len(array)):
+		fig.plot(x, array[nr], color = getColorFor(nr))
 
 path = "../cmake-build-release/2017/"
 logFiles = []
@@ -33,6 +56,7 @@ for month in os.listdir(path):
 				logFiles.append(t)
 
 logFiles.sort(key=lambda tup: tup[1])
+logFiles.reverse()
 amount = int(raw_input("Nr of last log files: "))
 counterFig = 0
 
@@ -40,24 +64,33 @@ counterFig = 0
 
 files = []
 
-for fileN in logFiles[-len(logFiles) + 1:]:
+
+
+for fileN in logFiles:
 	counter2 = 0
-	for line in open(fileN[0]).read().split("\n"):
-		if "Result:" in line:
-			counter2 += 1
-		if counter2 > 90:
-			files.append(fileN)
-			break
+	lines = open(fileN[0]).read().split("\n")
+	if len(lines) > 50:
+		for line in lines:
+			if "Result:" in line:
+				counter2 += 1
+			if counter2 > 60:
+				files.append(fileN)
+				break
+	if len(files) > amount + 1:
+		break
 
 minA = min(amount, len(files) - 1)
 
-for fileN in files[-minA:]:
+for fileN in files[:minA]:
 	points = {}
 	found = False
 	fakeData = False
 	isTest = False
 	counter = 0
 	currentTestSet = ""
+	poolPerformance = [[] for ele in range(300)]
+	newSizePool = [[] for ele in range(300)]
+	currentSizePool = [[] for ele in range(300)]
 	for line in open(fileN[0]).read().split("\n"):
 		if "fakeData" in line:
 			fakeData = True
@@ -68,6 +101,17 @@ for fileN in files[-minA:]:
 		if "Perform test for:" in line:
 			currentTestSet = line.split(" ")[-1]
 			print(line)
+		if "Class: " in line and " performance: " in line and " current size: " in line:
+			restLine = line[len("Class: "):]
+			classStr = restLine[:restLine.find(",")]
+			tempStr = (restLine[restLine.find(": ") + 2:])
+			performanceStr = tempStr[:tempStr.find(",")]
+			tempStr = tempStr[tempStr.find("new size: ") + len("new size: "):]
+			newSize = tempStr[:tempStr.find(",")]
+			currentSize = int(tempStr[tempStr.find("current size: ") + len("current size: "):])
+			poolPerformance[int(classStr)].append(float(performanceStr))
+			newSizePool[int(classStr)].append(int(newSize))
+			currentSizePool[int(classStr)].append(int(currentSize))
 		if "Result:" in line:
 			#if fakeData:
 				#print("For fake data r" + line[1:])
@@ -84,13 +128,29 @@ for fileN in files[-minA:]:
 				points[currentTestSet].append(float(line.split(" ")[-2]))
 			else:
 				points[currentTestSet] = [float(line.split(" ")[-2])]
+	maxEle = 0
+	for classEles in poolPerformance:
+		maxEle = max(maxEle, len(classEles))
+	if maxEle > 0:
+		for i in range(len(poolPerformance)):
+			while maxEle != len(poolPerformance[i]):
+				poolPerformance[i].insert(0, 0.0) # add a zero add the start to get the right performance for all classes
+			while maxEle != len(newSizePool[i]):
+				newSizePool[i].insert(0, 0)
+			while maxEle != len(currentSizePool[i]):
+				currentSizePool[i].insert(0, 0)
+
 	sets = ["apple","banana","coffeemug","stapler","flashlight","keyboard"]
 	#print(points)
 	newLines = [] 
 	if "testSet" in points and "testSetExclude" in points and len(points["testSetExclude"]) > 1:
+		ele = fileN[2]
+		if len(poolPerformance[0]) > 3:
+			printArray(poolPerformance, "performance")
+			printArray(newSizePool, "new size")
+			printArray(currentSizePool, "current size")
 		figure = plt.figure()
 		fig = figure.add_subplot(1, 1, 1)
-		ele = fileN[2]
 		plt.title(str(ele[1] + "/" + ele[0] + " " + ele[2] + ":" + ele[3] + ":" + ele[4]))
 		x = [e for e in range(0, len(points["testSet"]))]	
 		x2 = [e for e in range(0, len(points["testSetExclude"]))]		
@@ -119,7 +179,6 @@ for fileN in files[-minA:]:
 				else:
 					newLines[i+1] += ",0"
 			fig.plot(x3, point)
-
 	file = open("../cmake-build-release/result.txt", "w")
 	file.write("\n".join(newLines))
 	file.close()

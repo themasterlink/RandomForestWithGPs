@@ -258,7 +258,7 @@ void OnlineRandomForest::train(){
 			int correct = 0;
 			m_mutexForCounter->lock();
 			for(unsigned int i = 0; i < m_storage.size(); ++i){
-				if(m_storage[i]->getLabel() == argMax((*counterForClasses)[i].cbegin(), (*counterForClasses)[i].cend())){
+				if(m_storage[i]->getLabel() == argMax((*counterForClasses)[i])){
 					++correct;
 				}
 			}
@@ -856,7 +856,7 @@ unsigned int OnlineRandomForest::predict(const VectorX& point) const {
 		for(auto& tree : m_trees){
 			++values[tree->predict(point)];
 		}
-		return (unsigned int) argMax(values.cbegin(), values.cend());
+		return (unsigned int) argMax(values);
 	}
 	return UNDEF_CLASS_LABEL;
 }
@@ -914,6 +914,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 		std::vector<std::vector<Real> > probs;
 		predictData(points, labels, probs);
 	}else{
+		StopWatch sw;
 		labels.resize(points.size());
 		ThreadGroup group;
 		const auto nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
@@ -940,6 +941,7 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 			sleepFor(0.1);
 		}
 		group.joinAll();
+		printOnScreen("Prediction was done in: " << sw.elapsedAsTimeFrame() << ", for: " << points.size() << ", in per: " << sw.elapsedAsTimeFrame() / (Real) points.size());
 	}
 }
 
@@ -948,6 +950,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels) 
 		std::vector<std::vector<Real> > probs;
 		predictData(points, labels, probs);
 	}else{
+		StopWatch sw;
 		labels.resize(points.size());
 		ThreadGroup group;
 		const unsigned int nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
@@ -974,10 +977,12 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels) 
 			sleepFor(0.1);
 		}
 		group.joinAll();
+		printOnScreen("Prediction was done in: " << sw.elapsedAsTimeFrame() << ", for: " << points.size() << ", in per: " << sw.elapsedAsTimeFrame() / (Real) points.size());
 	}
 }
 
 void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const{
+	StopWatch sw;
 	labels.resize(points.size());
 	probabilities.resize(points.size());
 	if(m_savedAnyTreesToDisk){
@@ -1045,9 +1050,11 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels, std::ve
 		}
 		group.joinAll();
 	}
+	printOnScreen("Prediction was done in: " << sw.elapsedAsTimeFrame() << ", for: " << points.size() << ", in per: " << sw.elapsedAsTimeFrame() / (Real) points.size());
 }
 
 void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const{
+	StopWatch sw;
 	labels.resize(points.size());
 	probabilities.resize(points.size());
 	if(m_savedAnyTreesToDisk){
@@ -1116,6 +1123,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, 
 		}
 		group.joinAll();
 	}
+	printOnScreen("Prediction was done in: " << sw.elapsedAsTimeFrame() << ", for: " << points.size() << ", in per: " << sw.elapsedAsTimeFrame() / (Real) points.size());
 }
 
 void OnlineRandomForest::predictDataProbInParallel(const Data& points, std::vector< std::vector<Real> >* probabilities,

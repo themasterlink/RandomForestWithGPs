@@ -15,6 +15,8 @@
 #include "../Base/Predictor.h"
 #include "DynamicDecisionTreeInterface.h"
 
+#define USE_GINI // if not used -> Entropy is used
+
 class ReadWriterHelper;
 
 template<typename dimType = unsigned short>
@@ -31,7 +33,7 @@ public:
 
 	enum NodeType : dimType{ // saved in m_splitDim
 		NODE_IS_NOT_USED = m_maxAmountOfElements,
-		NODE_CAN_BE_USED = m_maxAmountOfElements - 1
+		NODE_CAN_BE_USED = m_maxAmountOfElements - 1 // must be the smaller element (code depends on it)
 	};
 
 	DynamicDecisionTree(OnlineStorage<LabeledVectorX *> &storage, const unsigned int maxDepth,
@@ -107,6 +109,7 @@ private:
 	const dimType m_amountOfClasses;
 
 	const DataPositions::size_type m_amountOfPointsCheckedPerSplit;
+
 	// contains the split values for the nodes:
 	// the order of the nodes is like that:
 	// !!!! first element is not used !!!!

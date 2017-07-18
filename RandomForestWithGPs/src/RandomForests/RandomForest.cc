@@ -100,7 +100,7 @@ unsigned int RandomForest::predict(const VectorX& point) const{
 		++values[it->predict(point)];
 	}
 	//std::cout << "First: " << values[0] << ", second: " << values[1] << std::endl;
-	return (unsigned int) argMax(values.cbegin(), values.cend());
+	return (unsigned int) argMax(values);
 }
 
 unsigned int RandomForest::predict(const LabeledVectorX& point) const{
@@ -109,7 +109,7 @@ unsigned int RandomForest::predict(const LabeledVectorX& point) const{
 		++values[it->predict(point)];
 	}
 	//std::cout << "First: " << values[0] << ", second: " << values[1] << std::endl;
-	return (unsigned int) argMax(values.cbegin(), values.cend());
+	return (unsigned int) argMax(values);
 }
 
 void RandomForest::predictData(const Data& points, Labels& labels) const{

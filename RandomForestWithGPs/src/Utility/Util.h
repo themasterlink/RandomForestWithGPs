@@ -62,14 +62,36 @@ constexpr inline char pow2(const char exponent) noexcept = delete; // prohibits 
 template<>
 constexpr inline bool pow2(const bool exponent) noexcept = delete; // prohibits the use with bool
 
-template<class T>
-inline auto argMax(const T& begin, const T& end){
-	return std::distance(begin, std::max_element(begin, end));
+template<class T, class internSizeType = typename T::size_type>
+inline internSizeType argMax(const T& container){
+	using internT = typename T::value_type;
+	auto max = std::numeric_limits<internT>::lowest();
+	internSizeType value = 0;
+	internSizeType it = 0;
+	for(const auto& ele: container){
+		if(ele > max){
+			max = ele;
+			value = it;
+		}
+		++it;
+	}
+	return value;
 }
 
-template<class T>
-inline auto argMin(const T& begin, const T& end){
-	return std::distance(begin, std::min_element(begin, end));
+template<class T, class internSizeType = typename T::size_type>
+inline internSizeType argMin(const T& container){
+	using internT = typename T::value_type;
+	auto min = std::numeric_limits<internT>::max();
+	internSizeType value = 0;
+	internSizeType it = 0;
+	for(const auto& ele: container){
+		if(ele < min){
+			min = ele;
+			value = it;
+		}
+		++it;
+	}
+	return value;
 }
 
 template<class T>

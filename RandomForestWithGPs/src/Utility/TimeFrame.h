@@ -36,6 +36,12 @@ public:
 
 	friend const TimeFrame operator*(const TimeFrame& frame, const Real fac);
 
+	friend const TimeFrame operator*(const Real fac, const TimeFrame& frame);
+
+	friend const TimeFrame operator/(const TimeFrame& frame, const Real fac);
+
+	friend const TimeFrame operator/(const Real fac, const TimeFrame& frame);
+
 	friend const TimeFrame operator-(const TimeFrame& lhs, const TimeFrame& rhs);
 
 	friend const TimeFrame operator+(const TimeFrame& lhs, const TimeFrame& rhs);

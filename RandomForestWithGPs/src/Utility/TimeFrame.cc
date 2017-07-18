@@ -14,6 +14,24 @@ const TimeFrame operator*(const TimeFrame& frame, const Real fac){
 	return newFrame;
 }
 
+const TimeFrame operator*(const Real fac, const TimeFrame& frame){
+	TimeFrame newFrame(frame);
+	newFrame *= fac;
+	return newFrame;
+}
+
+const TimeFrame operator/(const TimeFrame& frame, const Real fac){
+	TimeFrame newFrame(frame);
+	newFrame *= (Real) 1.0 / fac;
+	return newFrame;
+}
+
+const TimeFrame operator/(const Real fac, const TimeFrame& frame){
+	TimeFrame newFrame(frame);
+	newFrame *= (Real) 1.0 / fac;
+	return newFrame;
+}
+
 const TimeFrame operator-(const TimeFrame& lhs, const TimeFrame& rhs){
 	TimeFrame newFrame(lhs);
 	newFrame -= rhs;

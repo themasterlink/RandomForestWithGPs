@@ -1,7 +1,10 @@
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 cmake_minimum_required(VERSION 3.7)
 project(RandomForestWithGPs)
 
 set(CMAKE_CXX_STANDARD 14)
+
+add_definitions("-march=native")
 
 
 # add this for terminal execution
@@ -175,7 +178,7 @@ set(SOURCE_FILES
         src/Tests/TestManager.h src/Utility/StringHelper.h
         src/Tests/TestInformation.cc src/Tests/TestInformation.h
         src/Utility/StringHelper.cc src/Utility/GlobalStopWatch.h
-        src/Base/Singleton.h src/Base/Thread.h)
+        src/Base/Singleton.h src/Base/Thread.h src/Tests/SpeedTests/ArgMaxAndMin.h src/Tests/SpeedTests/EigenVectorX.h)
 
 
 add_executable(RandomForestWithGPs ${SOURCE_FILES})

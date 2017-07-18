@@ -10,6 +10,8 @@
 #include "Tests/TestManager.h"
 #include "Data/DataBinaryWriter.h"
 #include "Data/DataReader.h"
+#include "Tests/SpeedTests/ArgMaxAndMin.h"
+#include "Tests/SpeedTests/EigenVectorX.h"
 
 void handleProgrammOptions(int ac, char* av[]){
 	CommandSettings::instance().init();
@@ -79,6 +81,10 @@ int main(int ac, char** av){
 #else
 	printOnScreen("OpenCv was not used");
 #endif
+
+//	SpeedTests::EigenVsVector::runAll();
+//	return 0;
+
 	handleProgrammOptions(ac,av);
 	TestManager::instance().setFilePath("../Settings/testSettingsPy.init"); // must be called before the logger
 	const std::string settingsFile = CommandSettings::instance().get_settingsFile();

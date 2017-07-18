@@ -53,7 +53,7 @@
 			}
 		},
 		"activatePoolBased": "true",
-		"maxAmountOfPointsSavedInPool": 6000,
+		"maxAmountOfPointsSavedInPool": 30000,
 		"amountOfTrainedTrees": 0,
 		"ownSamplingTime": 0,
 		"maxAmountOfUsedMemory": 1100000000,
