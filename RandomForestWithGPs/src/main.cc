@@ -75,36 +75,40 @@ void doOnlyDataView(){
 }
 
 int main(int ac, char** av){
-	printOnScreen("Start");
+	try{
+		printOnScreen("Start");
 #ifdef USE_OPEN_CV
-	printOnScreen("OpenCv was used");
+		printOnScreen("OpenCv was used");
 #else
-	printOnScreen("OpenCv was not used");
+		printOnScreen("OpenCv was not used");
 #endif
 
-//	SpeedTests::EigenVsVector::runAll();
-//	return 0;
+//		SpeedTests::EigenVsVector::runAll();
+//		return 0;
 
-	handleProgrammOptions(ac,av);
-	TestManager::instance().setFilePath("../Settings/testSettingsPy.init"); // must be called before the logger
-	const std::string settingsFile = CommandSettings::instance().get_settingsFile();
-	Settings::instance().init(settingsFile);
-	ThreadMaster::instance().start(); // must be performed after Settings init!
-	ScreenOutput::instance().start(); // should be started after ThreadMaster and Settings
-	ClassKnowledge::instance().init();
+		handleProgrammOptions(ac, av);
+		TestManager::instance().setFilePath("../Settings/testSettingsPy.init"); // must be called before the logger
+		const std::string settingsFile = CommandSettings::instance().get_settingsFile();
+		Settings::instance().init(settingsFile);
+		ThreadMaster::instance().start(); // must be performed after Settings init!
+		ScreenOutput::instance().start(); // should be started after ThreadMaster and Settings
+		ClassKnowledge::instance().init();
 
-	doOnlyDataView();
+		doOnlyDataView();
 
-	Logger::instance().start();
-	printOnScreen("Settingsfile: " << settingsFile);
-	CommandSettings::instance().printAllSettingsToLog();
-	if(CommandSettings::instance().get_samplingAndTraining() > 0){
-		printOnScreen("Training time: " << TimeFrame(CommandSettings::instance().get_samplingAndTraining()));
+		Logger::instance().start();
+		printOnScreen("Settingsfile: " << settingsFile);
+		CommandSettings::instance().printAllSettingsToLog();
+		if(CommandSettings::instance().get_samplingAndTraining() > 0){
+			printOnScreen("Training time: " << TimeFrame(CommandSettings::instance().get_samplingAndTraining()));
+		}
+
+		TestManager::instance().init();
+		TestManager::instance().run();
+		quitApplication(); // throws the ExitException
+	}catch(const ExitException& e){
+		return e.getValue();
 	}
-
-	TestManager::instance().init();
-	TestManager::instance().run();
-	quitApplication();
 	return 0;
 }
 

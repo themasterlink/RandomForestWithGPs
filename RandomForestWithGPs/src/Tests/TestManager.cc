@@ -167,6 +167,7 @@ void TestManager::run(){
 		lastInfo = std::move(testInfo);
 		++i;
 	}
+	printOnScreen("Run through all instructions!");
 	if(CommandSettings::instance().get_useFakeData() &&
 	   (CommandSettings::instance().get_visuRes() > 0 || CommandSettings::instance().get_visuResSimple() > 0)){
 		StopWatch sw;

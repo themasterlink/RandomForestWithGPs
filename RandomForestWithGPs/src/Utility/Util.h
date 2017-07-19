@@ -113,7 +113,19 @@ inline void systemCall(const std::string& call){
 	system(call.c_str());
 }
 
+class ExitException : public std::exception {
+public:
+	ExitException(int value) : m_value(value) {}
+
+	int getValue() const {return m_value;}
+
+private:
+	int m_value;
+};
+
+// throws ExitException
 inline void quitApplication(const bool wait = true){
+	printOnScreen("Quit Application!");
 	Logger::instance().forcedWrite();
 //	if(wait){
 //		if(CommandSettings::instance().get_settingsFile() == CommandSettings::instance().defaultvalue_settingsFile()){
@@ -121,12 +133,13 @@ inline void quitApplication(const bool wait = true){
 //			getchar();
 //		}
 //	}
-	sleepFor(0.5);
+	Logger::instance().stopLogger(); // auto blocks
 	ThreadMaster::instance().stopExecution();
 	ThreadMaster::instance().blockUntilFinished();
-	sleepFor(0.5);
-	ScreenOutput::instance().quitForScreenMode();
-	exit(0);
+	sleepFor(0.5); // waits until ThreadMaster AND ScreenOuput are done
+	ScreenOutput::instance().quitForScreenMode(); // cleaning up ScreenOutput
+	ScreenOutput::instance().blockUntilStopped();
+	throw ExitException(0);
 }
 
 class VerboseMode : public Singleton<VerboseMode> {

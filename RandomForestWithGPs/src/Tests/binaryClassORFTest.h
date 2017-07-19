@@ -121,7 +121,7 @@ void executeForBinaryClassORF(){
 			//		}
 			//	}
 			//	sleepFor(5);
-			//	exit(0);
+			//	quitApplication();
 
 
 			TotalStorage::instance().getOnlineStorageCopySplitsWithTest(trains, test);

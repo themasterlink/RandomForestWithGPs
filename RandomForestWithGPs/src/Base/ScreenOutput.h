@@ -39,6 +39,13 @@ public:
 	// is interally called by the curses library, must be static therefore
 	static void quitForScreenMode();
 
+	void blockUntilStopped(){ // is automatically stopped when ThreadMaster is stopped
+		if(m_mainThread){
+			m_mainThread->join();
+			m_mainThread.reset(nullptr);
+		}
+	}
+
 	// just function to make a connection to Logger
 	void printToLog(const std::string& message);
 

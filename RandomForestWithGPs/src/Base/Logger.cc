@@ -21,7 +21,8 @@ Logger::Logger():
 		m_actualDirectory("./"), // default
 		m_ownThread(nullptr),
 		m_writeByForceWrite(true),
-		m_file(nullptr){
+		m_file(nullptr),
+		m_running(false){
 }
 
 void Logger::start(){
@@ -67,6 +68,7 @@ void Logger::start(){
 		Settings::instance().getValue("main.type", mode);
 		m_text = "Online Random Forest with IVMs, mode: " + mode + "\n"; // Standart Information
 		m_text += "Date: " + boost::posix_time::to_simple_string(boost::posix_time::second_clock::local_time()) + "\n";
+		m_running = true;
 		m_ownThread = makeThread(&Logger::run, &Logger::instance());
 	}
 }
@@ -154,7 +156,7 @@ void Logger::write(){
 }
 
 void Logger::run(){
-	while(m_init){
+	while(m_init && m_running){
 		m_mutex.lock();
 		if(m_needToWrite){ // write only if something changed
 			write();

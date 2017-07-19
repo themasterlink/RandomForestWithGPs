@@ -26,9 +26,28 @@ def doRFGP(data):
 os.chdir("../cmake-build-release/")
 #data["TotalStorage"]["folderLocReal"] = "../mnistOrg/"
 
-for x1 in [2000,3000,4000,5000,6000]:
-    for t in ["false", "true"]:
-        data["OnlineRandomForest"]["Tree"]["performRealOnlineUpdate"] = t
-        data["OnlineRandomForest"]["Tree"]["Bagging"]["totalAmountOfDataUsedPerTree"] = x1
-        doRFGP(data)
+data["OnlineRandomForest"]["Tree"]["determineBestLayerAmount"] = "true"
+
+for heights in [16,20,28,35]:
+    data["OnlineRandomForest"]["Tree"]["height"] = heights
+    doRFGP(data)
+
+
+data["OnlineRandomForest"]["Tree"]["determineBestLayerAmount"] = "false"
+data["OnlineRandomForest"]["Tree"]["height"] = 35
+
+# amount of test points in each split
+for splitValues in [25, 50, 100, 200, 500, 1000]:
+    data["OnlineRandomForest"]["amountOfPointsCheckedPerSplit"] = splitValues
+    doRFGP(data)
+
+data["OnlineRandomForest"]["amountOfPointsCheckedPerSplit"] = 100
+
+# use proportional
+data["MinMaxUsedSplits"]["useFixedValuesForMinMaxUsedSplits"] = "false"
+# amount of splits depends on the amount of data
+for splitValues in [0.1, 0.2,0.4,0.5,0.6,0.7]:
+	data["MinMaxUsedSplits"]["minValueFractionDependsOnDataSize"] = splitValues
+	data["MinMaxUsedSplits"]["maxValueFractionDependsOnDataSize"] = splitValues + 0.25
+	doRFGP(data)
 

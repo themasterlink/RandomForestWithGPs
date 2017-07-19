@@ -45,6 +45,10 @@ public:
 	void blockUntilFinished(){
 		m_isFinished.lock();
 		m_isFinished.unlock();
+		if(m_mainThread){
+			m_mainThread->join();
+			m_mainThread.reset(nullptr); // remove the thread object
+		}
 	};
 
 private:

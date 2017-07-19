@@ -36,6 +36,13 @@ public:
 
 	std::string getActDirectory(){ return m_actualDirectory; };
 
+	void stopLogger(){ m_running = false;
+		if(m_ownThread){
+			m_ownThread->join();
+			m_ownThread.reset(nullptr);
+		}
+	}
+
 private:
 
 	void run();
@@ -64,6 +71,8 @@ private:
 	std::atomic<bool> m_writeByForceWrite;
 
 	UniquePtr<std::ofstream> m_file;
+
+	bool m_running;
 
 	Logger();
 	~Logger() = default;
