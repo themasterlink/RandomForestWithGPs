@@ -20,15 +20,15 @@ def doRFGP(data):
     if os.path.exists(file):
         os.remove(file)
     with open(file, 'w') as outfile:
-        json.dump(data, outfile)
+        json.dump(data, outfile, indent=4)
     subprocess.check_call("./RandomForestWithGPs --settingsFile " + file, shell=True)
 
 os.chdir("../cmake-build-release/")
 #data["TotalStorage"]["folderLocReal"] = "../mnistOrg/"
 
-data["OnlineRandomForest"]["Tree"]["determineBestLayerAmount"] = "true"
+data["OnlineRandomForest"]["determineBestLayerAmount"] = "true"
 
-for heights in [16,20,28,35]:
+for heights in [12,16,20,28,35]:
     data["OnlineRandomForest"]["Tree"]["height"] = heights
     doRFGP(data)
 

@@ -153,7 +153,8 @@ private:
 
 	void tryAmountForLayers(SharedPtr<RandomNumberGeneratorForDT> generator, const Real secondsPerSplit,
 							SharedPtr<std::list<std::pair<unsigned int, unsigned int> > > layerValues,
-							SharedPtr<Mutex> mutex, SharedPtr<std::pair<int, int> > bestLayerSplit, SharedPtr<Real> bestCorrectness);
+							SharedPtr<Mutex> mutex, SharedPtr<std::pair<int, int> > bestLayerSplit, SharedPtr<Real> bestCorrectness,
+							SharedPtr<InformationPackage> package);
 
 	void writeTreesToDisk(const unsigned int amountOfTrees) const;
 
