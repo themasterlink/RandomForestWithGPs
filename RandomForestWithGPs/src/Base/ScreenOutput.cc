@@ -56,6 +56,7 @@ void ScreenOutput::run(){
 	StopWatch sw;
 	const int startOfMainContent = 4;
 #ifdef USE_SCREEN_OUPUT
+	bool isExited = false;
 	while(ThreadMaster::instance().m_keepRunning){
 #else
 	while(false){
@@ -258,7 +259,7 @@ void ScreenOutput::run(){
 			}else if(ch == KEY_DOWN){
 				--lineOffset;
 			}else if(ch == 27){ // end of program == esc
-				quitApplication();
+				makeThread(&quitApplication, false); // start in a different thread otherwise the screenoutput is blocked
 			}else if(49 <= ch && ch <= 56){
 				const int newNr = ch - 49;
 				if(newNr == modeNr){

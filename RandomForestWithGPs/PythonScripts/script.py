@@ -28,7 +28,7 @@ os.chdir("../cmake-build-release/")
 
 data["OnlineRandomForest"]["determineBestLayerAmount"] = "true"
 
-for heights in [12,16,20,28,35]:
+for heights in [12,16,20,28,36]:
     data["OnlineRandomForest"]["Tree"]["height"] = heights
     doRFGP(data)
 

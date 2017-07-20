@@ -54,6 +54,7 @@ public:
 	ADD_PARAM(bool, plotHistos, false, "Should some histogramms be plotted");
 	ADD_PARAM(std::string, settingsFile, "../Settings/init.json", "location of the settings file");
 	ADD_PARAM(std::string, convertFile, "", "location of the desired file");
+	ADD_PARAM(std::string, test, "", "test case used for testing");
 
 	void init();
 

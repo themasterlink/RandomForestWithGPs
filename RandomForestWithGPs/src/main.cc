@@ -10,8 +10,7 @@
 #include "Tests/TestManager.h"
 #include "Data/DataBinaryWriter.h"
 #include "Data/DataReader.h"
-#include "Tests/SpeedTests/ArgMaxAndMin.h"
-#include "Tests/SpeedTests/EigenVectorX.h"
+#include "Tests/SpeedTests/TestHeader.h"
 
 void handleProgrammOptions(int ac, char* av[]){
 	CommandSettings::instance().init();
@@ -26,7 +25,8 @@ void handleProgrammOptions(int ac, char* av[]){
 					("plotHistos", "should some histogramms be plotted")
 					("settingsFile", boost::program_options::value<std::string>()->default_value("../Settings/init.json"), "Give the filepath of the settingsfile")
 					("convertFile", boost::program_options::value<std::string>()->default_value(""), "Give the filepath of the desired file which should be converted into binary")
-					;
+					("test", boost::program_options::value<std::string>()->default_value(""), "Give the test case, which should be executed")
+			;
 	boost::program_options::variables_map vm;
 	try{
 		boost::program_options::store(boost::program_options::parse_command_line(ac, av, desc), vm);
@@ -38,6 +38,11 @@ void handleProgrammOptions(int ac, char* av[]){
 	boost::program_options::notify(vm);
 	if (vm.count("help")) {
 		std::cout << desc << "\n";
+		quitApplication();
+	}
+	if(CommandSettings::instance().get_test().length() > 0){
+		std::cout << "Run test: " << CommandSettings::instance().get_test() << std::endl;
+		SpeedTests::runTest(CommandSettings::instance().get_test());
 		quitApplication();
 	}
 }
@@ -82,10 +87,6 @@ int main(int ac, char** av){
 #else
 		printOnScreen("OpenCv was not used");
 #endif
-
-//		SpeedTests::EigenVsVector::runAll();
-//		return 0;
-
 		handleProgrammOptions(ac, av);
 		TestManager::instance().setFilePath("../Settings/testSettingsPy.init"); // must be called before the logger
 		const std::string settingsFile = CommandSettings::instance().get_settingsFile();

@@ -170,19 +170,19 @@ void OnlineRandomForest::train(){
 			}
 		}
 //		layerValues.emplace_back(4);
-		const Real secondsSpendPerSplit = 180;
+		const Real secondsSpendPerSplit = 90;
 		auto bestLayerSplit = std::make_shared<std::pair<int, int> >(-1, -1);
-		auto bestCorrectness = std::make_shared<Real>(0._r);
+		auto bestAmountOfTrainedTrees = std::make_shared<Real>(0._r);
 		std::vector<SharedPtr<InformationPackage> > packages(std::min(amountOfThreads, (unsigned int) layerValues->size()));
 		for(unsigned int i = 0; i < std::min(amountOfThreads, (unsigned int) layerValues->size()); ++i){
 			packages[i] = std::make_shared<InformationPackage>(InformationPackage::InfoType::ORF_TRAIN_FIX, 0, 0);
 			packages[i]->setStandartInformation("Try trees, thread nr: " + StringHelper::number2String(i));
 			layerGroup.addThread(makeThread(&OnlineRandomForest::tryAmountForLayers, this, m_generators[i], secondsSpendPerSplit,
-								layerValues, m_mutexForTrees, bestLayerSplit, bestCorrectness, packages[i]));
+								layerValues, m_mutexForTrees, bestLayerSplit, bestAmountOfTrainedTrees, packages[i]));
 		}
 		layerGroup.joinAll();
 		if(bestLayerSplit->first != -1){
-			printOnScreen("Best amount of layers is: " << bestLayerSplit->first << ", " << bestLayerSplit->second << " with: " << *bestCorrectness << " %%");
+			printOnScreen("Best amount of layers is: " << bestLayerSplit->first << ", " << bestLayerSplit->second << " with: " << *bestAmountOfTrainedTrees << " trained trees");
 			m_amountOfUsedLayer = *bestLayerSplit;
 		}else{
 			Settings::instance().getValue("OnlineRandomForest.layerAmountOfBigDDT", m_amountOfUsedLayer.first);
@@ -378,7 +378,7 @@ void OnlineRandomForest::loadBatchOfTreesFromDisk(const unsigned int batchNr) co
 void OnlineRandomForest::tryAmountForLayers(SharedPtr<RandomNumberGeneratorForDT> generator, const Real secondsPerSplit,
 											SharedPtr<std::list<std::pair<unsigned int, unsigned int> > > layerValues,
 											SharedPtr<Mutex> mutex, SharedPtr<std::pair<int, int> > bestLayerSplit,
-											SharedPtr<Real> bestCorrectness, SharedPtr<InformationPackage> package){
+											SharedPtr<Real> bestAmountOfTrainedTrees, SharedPtr<InformationPackage> package){
 	ThreadMaster::instance().appendThreadToList(package.get());
 	package->wait();
 	while(true){
@@ -405,14 +405,14 @@ void OnlineRandomForest::tryAmountForLayers(SharedPtr<RandomNumberGeneratorForDT
 				}
 				++counter;
 			}
-			const Real corr = counter; //correctAmount / (Real) m_storage.size() * 100._r ;
+			const Real amountOfTrainedTrees = counter; //correctAmount / (Real) m_storage.size() * 100._r ;
 			mutex->lock();
-			printInPackageOnScreen(package, "Test: " << layerAmount << ", " << amountOfFastLayers << ", with " << corr << " trees");
-			if(corr > *bestCorrectness || (corr >= *bestCorrectness && layerAmount > bestLayerSplit->first)){
+			printInPackageOnScreen(package, "Test: " << layerAmount << ", " << amountOfFastLayers << ", with " << amountOfTrainedTrees << " trees");
+			if(amountOfTrainedTrees > *bestAmountOfTrainedTrees || (amountOfTrainedTrees >= *bestAmountOfTrainedTrees && layerAmount > bestLayerSplit->first)){
 				bestLayerSplit->first = layerAmount;
 				bestLayerSplit->second = amountOfFastLayers;
-				*bestCorrectness = corr;
-				printInPackageOnScreen(package, "New best layer amount: " << layerAmount << ", " << amountOfFastLayers << ", with " << *bestCorrectness << " trees");
+				*bestAmountOfTrainedTrees = amountOfTrainedTrees;
+				printInPackageOnScreen(package, "New best layer amount: " << layerAmount << ", " << amountOfFastLayers << ", with " << *bestAmountOfTrainedTrees << " trees");
 			}
 			mutex->unlock();
 		}else{

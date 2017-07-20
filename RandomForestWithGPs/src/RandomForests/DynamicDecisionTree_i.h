@@ -257,18 +257,18 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 		}
 		// save actual split
 		m_splitValues[iActNode] = maxScoreElementValue;//(Real) (*m_storage[maxScoreElement])[randDim];
-		m_splitDim[iActNode] = (dimType) randDim;
+		m_splitDim[iActNode] = randDim;
 		// apply split to data
 		const int leftPos = iActNode * 2, rightPos = iActNode * 2 + 1;
 		auto& leftDataPos = dataPosition[leftPos];
 		leftDataPos.reserve(actDataPos.size());
 		auto& rightDataPos = dataPosition[rightPos];
 		rightDataPos.reserve(actDataPos.size());
-		for(auto it = actDataPos.cbegin(); it != actDataPos.cend(); ++it){
-			if(m_storage[*it]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
-				rightDataPos.push_back(*it);
+		for(const auto& pos : actDataPos){
+			if(m_storage[pos]->coeff(randDim) >= m_splitValues[iActNode]){ // TODO check >= like below  or only >
+				rightDataPos.push_back(pos);
 			}else{
-				leftDataPos.push_back(*it);
+				leftDataPos.push_back(pos);
 			}
 		}
 
@@ -361,12 +361,18 @@ Real DynamicDecisionTree<dimType>::trySplitFor(const Real usedSplitValue, const 
 			}
 		}
 	}
+	if(leftAmount == 0 || rightAmount == 0){
+		return 0;
+	}
 	// Entropy -> TODO maybe Gini
-	Real leftCost = 0, rightCost = 0;
+	Real leftCost = 0;
+#ifndef USE_GINI
+	Real rightCost = 0;
+#endif
 	for(dimType i = 0; i < m_amountOfClasses; ++i){
-		const Real normalizer = leftHisto[i] + rightHisto[i];
-		if(normalizer > 0._r){
-			const Real leftClassProb = leftHisto[i] / normalizer;
+		const unsigned int normalizer = leftHisto[i] + rightHisto[i];
+		if(normalizer != 0){
+			const Real leftClassProb = leftHisto[i] / (Real) normalizer;
 #ifndef USE_GINI // first entropy -> if not defined
 //			if(leftClassProb > 0._r){
 //				leftCost -= leftClassProb * logReal(leftClassProb);
@@ -377,13 +383,16 @@ Real DynamicDecisionTree<dimType>::trySplitFor(const Real usedSplitValue, const 
 #else
 			const Real val = leftClassProb * (1.0_r - leftClassProb);
 			leftCost += val;
-			rightCost += val;
 #endif
 		}
 		leftHisto[i] = 0;
 		rightHisto[i] = 0;
 	}
+#ifndef USE_GINI
 	return rightAmount * rightCost + leftAmount * leftCost;
+#else
+	return (rightAmount + leftAmount) * leftCost;
+#endif
 }
 
 template<typename dimType>

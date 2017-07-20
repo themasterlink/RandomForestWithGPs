@@ -17,7 +17,8 @@ CommandSettings::CommandSettings():
 		DEFINE_PARAM(Real, samplingAndTraining),
 		DEFINE_PARAM(bool, plotHistos),
 		DEFINE_PARAM(std::string, settingsFile),
-		DEFINE_PARAM(std::string, convertFile){};
+		DEFINE_PARAM(std::string, convertFile),
+		DEFINE_PARAM(std::string, test){};
 
 Param::Param(std::string name, CommandSettings::FctPtrForName type, void* ref){
 	this->name = name;
@@ -34,6 +35,7 @@ void CommandSettings::init(){
 	INIT_PARAM(bool, plotHistos);
 	INIT_PARAM(std::string, settingsFile);
 	INIT_PARAM(std::string, convertFile);
+	INIT_PARAM(std::string, test);
 }
 
 void CommandSettings::setValues(boost::program_options::variables_map& vm){
