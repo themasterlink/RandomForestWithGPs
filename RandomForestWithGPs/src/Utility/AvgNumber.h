@@ -19,17 +19,17 @@ public:
 
 	void addNew(Real val){
 		++m_counter;
-		const Real fac = (Real) 1.0 / m_counter;
+		const Real fac = (Real) 1.0 / (Real) m_counter;
 		m_mean = fac * val + ((Real) 1.0 - fac) * m_mean;
 	}
 
 	Real mean() const { return m_mean; };
 
-	unsigned long counter() const { return (unsigned long) m_counter; };
+	unsigned long counter() const { return m_counter; };
 
 private:
 	Real m_mean;
-	Real m_counter; // no convert needed
+	unsigned long m_counter; // no convert needed
 };
 
 
