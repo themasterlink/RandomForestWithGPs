@@ -225,7 +225,7 @@ void OnlineStorage<T>::appendInternal(const std::vector<T>& data, const bool sho
 					if(existingPoint == p){
 						found = true;
 						break;
-				}
+					}
 				}
 			}
 			if(!found){
@@ -246,7 +246,6 @@ void OnlineStorage<T>::appendInternal(const std::vector<T>& data, const bool sho
 				m_poolInfo.removePointsFromClass(next, diff);
 				amountOfRemovedPoints += diff;
 			}else{
-				m_poolInfo.getDifferenceForClass(next);
 				printError("The diff is negativ!");
 			}
 			next = m_poolInfo.getClassWherePointShouldBeRemoved();

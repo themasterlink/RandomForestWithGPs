@@ -40,7 +40,11 @@ void RandomNumberGeneratorForDT::update(Subject* caller, unsigned int event){
 		OnlineRandomForest* forest = dynamic_cast<OnlineRandomForest*>(caller);
 		OnlineStorage<LabeledVectorX*>& storage = forest->getStorageRef();
 		const unsigned int dim = storage.dim();
+		if(storage.isInPoolMode() && !m_useRealOnlineUpdate){
+			printError("The pool mode can not be active when the real online update is out!");
+		}
 		if(!useWholeDataSet()){
+			// if in pool mode -> use storage size
 			const auto size = !storage.isInPoolMode() && m_useRealOnlineUpdate ? storage.getAmountOfNew() : storage.size();
 			m_currentStepSize = m_baggingInformation.m_stepSizeOverData;
 			if(m_baggingInformation.useStepSize()){
@@ -82,10 +86,8 @@ RandomNumberGeneratorForDT::BaggingInformation::BaggingMode
 RandomNumberGeneratorForDT::BaggingInformation::getMode(const std::string& settingsField){
 	try{
 		std::regex stepSize("(\\s)*(use|Use)?(\\s)*(step|Step)(\\s)*(size|Size)(\\s)*"); // step size| stepsize
-		std::regex totalUseOfData(
-				"(\\s)*(use|Use)?(\\s)*(total|Total)(\\s)*(use|Use|amount|Amount)(\\s)*((of|Of)(\\s)*(data|Data)(\\s)*)?");
-		std::regex useWholeDataSet(
-				"(\\s)*(use|Use)?(\\s)*(all|All|whole|Whole)(\\s)*(data|Data)(\\s)*((set|Set|point|Point)(s)?)?(\\s)*");
+		std::regex totalUseOfData("(\\s)*(use|Use)?(\\s)*(total|Total)(\\s)*(use|Use|amount|Amount)(\\s)*((of|Of)(\\s)*(data|Data)(\\s)*)?");
+		std::regex useWholeDataSet("(\\s)*(use|Use)?(\\s)*(all|All|whole|Whole)(\\s)*(data|Data)(\\s)*((set|Set|point|Point)(s)?)?(\\s)*");
 		if(std::regex_match(settingsField, stepSize)){
 			return BaggingMode::STEPSIZE;
 		}else if(std::regex_match(settingsField,totalUseOfData)){

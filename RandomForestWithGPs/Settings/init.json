@@ -44,15 +44,15 @@
 	},
 	"OnlineRandomForest": {
 		"Tree": {
-			"height": 35,
-			"performRealOnlineUpdate": "true",
+			"height": 36,
+			"performRealOnlineUpdate": "false",
 			"Bagging": {
 				"mode": "use total amount",
 				"totalAmountOfDataUsedPerTree": 5000,
 				"stepSizeOverData": 3
 			}
 		},
-		"activatePoolBased": "true",
+		"activatePoolBased": "false",
 		"maxAmountOfPointsSavedInPool": 30000,
 		"amountOfTrainedTrees": 0,
 		"ownSamplingTime": 0,
@@ -126,10 +126,10 @@
 	},
 	"MinMaxUsedSplits": {
 		"useFixedValuesForMinMaxUsedSplits": "true",
-		"minValue": 200,
-		"maxValue": 600,
-		"minValueFractionDependsOnDataSize": 0.7,
-		"maxValueFractionDependsOnDataSize": 0.9
+		"minValue": 1000,
+		"maxValue": 1500,
+		"minValueFractionDependsOnDataSize": 0.1,
+		"maxValueFractionDependsOnDataSize": 0.35
 	},
 	"VisuParams": {
 		"visuHyperParamSampling2D": "false",
@@ -137,6 +137,7 @@
 		"visuFinalIvm": "false"
 	},
 	"main": {
-		"type": "ORF"
+		"type": "ORF",
+		"seed": 0
 	}
 }

@@ -27,7 +27,7 @@ public:
 						   const unsigned int amountOfLayers, const unsigned int amountForFast,
 						   const unsigned int amountForSmall);
 
-	virtual ~BigDynamicDecisionTree();
+	virtual ~BigDynamicDecisionTree() = default;
 
 	void train(const unsigned int amountOfUsedDims, RandomNumberGeneratorForDT& generator) override;
 

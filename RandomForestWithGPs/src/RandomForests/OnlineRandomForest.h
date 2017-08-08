@@ -25,7 +25,7 @@ public:
 	OnlineRandomForest(OnlineStorage<LabeledVectorX *> &storage,
 					   const unsigned int maxDepth, const int amountOfUsedClasses);
 
-	virtual ~OnlineRandomForest();
+	virtual ~OnlineRandomForest() = default;
 
 	void train();
 
