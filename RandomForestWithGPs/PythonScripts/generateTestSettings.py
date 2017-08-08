@@ -6,10 +6,27 @@ coffeemug = "53,...,60"
 stapler = "266,...,273"
 flashlight = "72,...,76"
 #keyboard = "152,...,156"
-sets = [("apple", apple), ("banana", banana), ("coffeemug", coffeemug), ("stapler", stapler),
-		("flashlight", flashlight)]
 
-def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
+sets = [("banana", banana), ("coffeemug", coffeemug), ("stapler", stapler),
+		("flashlight", flashlight), ("apple", apple)]
+
+
+
+startPhase = 3
+endPhase = 3
+widthOfUpdate = 3
+amountOfSplits = (widthOfUpdate * len(sets)) + startPhase + endPhase
+amountOfOrgTrees = 2000
+amountOfUpdatedTrees = 800
+mode = "tree" # tree, time
+startTime = "2 min"
+timeUpdate = "42 sec"
+
+
+
+
+
+def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate,startPhase, endPhase, widthOfUpdate):
 	text = "# in python generated test settings file \n"
 	text += "load all \n" # load all the information
 	e = [e[1] for e in sets]
@@ -24,7 +41,6 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
 		text += "define testSetExclude from TEST_SETTING \n"  # redefine for shorted name
 	text += "define testSet from TEST_SETTING \n"  # redefine for shorted name
 
-	widthOfUpdate = 10
 	for set1 in sets:
 		text += "define " + set1[0] + "Set as classes {" + set1[1] + "} from TRAIN_SETTING \n"
 		text += "define " + set1[0] + "TestSet as classes {" + set1[1] + "} from TEST_SETTING \n"
@@ -42,15 +58,14 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
 	text += "endfor\n"
 	"""
 	tempSetNr = 0
-	startPhase = 15
 	for i in range(1, amountOfSplits):
-		if i >= startPhase:
+		if i >= startPhase and i < (amountOfSplits - endPhase):
 			nr = min(len(sets) - 1, int((i - startPhase) / widthOfUpdate))
 			tempSetNr += 1
 			text += "combine " + sets[nr][0] + "SplitSet[" + str(i % widthOfUpdate) + "] with splitTrainSet[" + str(i) \
 					+ "] in tempSet" + str(tempSetNr) + "\n"
-			if nr > 0:
-				for t in range(0, nr):
+			if nr > 0 and False:
+				for t in range(nr - 1, nr):
 					tempSetNr += 1
 					text += "combine " + sets[t][0] + "SplitSet[" + str(i % widthOfUpdate) + "] with tempSet" + str(tempSetNr - 1) \
 							+ " in tempSet" + str(tempSetNr) + "\n"
@@ -72,7 +87,15 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate):
 	f.close()
 
 
-amountOfSplits = 80
-generateTestSettings(amountOfSplits, "until 1500 trees", "until 500 trees")
+startCondition = ""
+updateCondition = ""
+if "tree" in mode:
+	startCondition = "until " + amountOfOrgTrees + " trees"
+	upateCondition = "until " + amountOfUpdatedTrees + " trees"
+elif "time" in mode:
+	startCondition = "for " + startTime
+	updateCondition = "for " + timeUpdate
+print(amountOfSplits)
+generateTestSettings(amountOfSplits, startCondition, updateCondition, startPhase, endPhase, widthOfUpdate)
 #generateTestSettings(amountOfSplits, "until 64 trees", "until 8 trees")
 #generateTestSettings(amountOfSplits, "for 2 m", "for 42 s")
