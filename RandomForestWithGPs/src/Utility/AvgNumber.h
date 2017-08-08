@@ -13,9 +13,9 @@
 class AvgNumber {
 public:
 
-	AvgNumber(): m_mean(0), m_counter(0){};
+	AvgNumber() = default;
 
-	AvgNumber(Real startVal): m_mean(startVal), m_counter(0){};
+	explicit AvgNumber(Real startVal): m_mean(startVal){};
 
 	void addNew(Real val){
 		++m_counter;
@@ -27,9 +27,11 @@ public:
 
 	unsigned long counter() const { return m_counter; };
 
+	void reset() { m_counter = 0; }
+
 private:
-	Real m_mean;
-	unsigned long m_counter; // no convert needed
+	Real m_mean{0};
+	unsigned long m_counter{0}; // no convert needed
 };
 
 

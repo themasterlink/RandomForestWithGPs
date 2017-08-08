@@ -90,12 +90,12 @@ def generateTestSettings(amountOfSplits, startCondition, timeFrameUpdate,startPh
 startCondition = ""
 updateCondition = ""
 if "tree" in mode:
-	startCondition = "until " + amountOfOrgTrees + " trees"
-	upateCondition = "until " + amountOfUpdatedTrees + " trees"
+	startCondition = "until " + str(amountOfOrgTrees) + " trees"
+	updateCondition = "until " + str(amountOfUpdatedTrees) + " trees"
 elif "time" in mode:
-	startCondition = "for " + startTime
-	updateCondition = "for " + timeUpdate
-print(amountOfSplits)
+	startCondition = "for " + str(startTime)
+	updateCondition = "for " + str(timeUpdate)
+print(startCondition, updateCondition)
 generateTestSettings(amountOfSplits, startCondition, updateCondition, startPhase, endPhase, widthOfUpdate)
 #generateTestSettings(amountOfSplits, "until 64 trees", "until 8 trees")
 #generateTestSettings(amountOfSplits, "for 2 m", "for 42 s")

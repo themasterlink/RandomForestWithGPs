@@ -49,7 +49,7 @@ public:
 
 	unsigned int operator()();
 
-	const bool isUsed() const { return m_diff == 1; }
+	const bool isUsed() const { return m_diff > 0; }
 
 private:
 

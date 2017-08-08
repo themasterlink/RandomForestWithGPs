@@ -153,6 +153,8 @@ void TestManager::run(){
 												  << GlobalStopWatch<BigDecisionTreeTrain>::instance().elapsedAvgAsTimeFrame()
 												  << ", amount trained trees: "
 												  << GlobalStopWatch<BigDecisionTreeTrain>::instance().getAvgCounter());
+							printOnScreen("Avg amount of starting size for DDT: "
+												  << GlobalCounter<DDDTAvgSizeOfUsedStorage>::instance().mean());
 						}else if(testInfo.m_mode == TestMode::TEST){
 							auto data = getAllPointsFor(testInfo.m_varName, testInfo.m_scope);
 							printOnScreen("Perform test for: " << testInfo.m_varName);

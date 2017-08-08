@@ -654,7 +654,7 @@ void OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeL
 		}
 		const auto treeAmount = (unsigned int) trees->size();
 		readMutex->unlock();
-		if(!ownList.empty()){
+		if(ownList.empty()){
 			break;
 		}
 		printInPackageOnScreen(package, "Predict new tree, rest amount is: " << treeAmount);

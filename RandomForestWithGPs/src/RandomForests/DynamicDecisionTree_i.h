@@ -183,6 +183,7 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 			dataPos.resize(size);
 			std::iota(dataPos.begin(), dataPos.end(), startPos);
 		}
+		GlobalCounter<DDDTAvgSizeOfUsedStorage>::instance().addNew(dataPos.size());
 	}
 //	else{ // no need take ref to
 //		dataPosition[1].insert(dataPosition[1].end(), m_useOnlyThisDataPositions->begin(), m_useOnlyThisDataPositions->end());

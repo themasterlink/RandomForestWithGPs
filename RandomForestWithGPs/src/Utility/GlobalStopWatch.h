@@ -8,11 +8,45 @@
 #include "StopWatch.h"
 #include "../Base/Singleton.h"
 
-struct DynamicDecisionTreeTrain {
-};
-struct BigDecisionTreeTrain {
-};
+struct DynamicDecisionTreeTrain;
+struct BigDecisionTreeTrain;
+struct DDDTAvgSizeOfUsedStorage;
 
+
+template<typename currentCounter>
+class GlobalCounter : public Singleton<GlobalCounter<currentCounter> > {
+
+	friend Singleton<GlobalCounter< currentCounter> >;
+
+public:
+
+	void addNew(Real val){
+		lockStatementWith(m_nr.addNew(val), m_mutex);
+	}
+
+	Real mean(){
+		lockStatementWithSave(m_nr.mean(), const auto val, m_mutex);
+		return val;
+	}
+
+	unsigned long counter(){
+		lockStatementWithSave(m_nr.counter(), const auto val, m_mutex);
+		return val;
+	}
+
+	void reset(){
+		lockStatementWith(m_nr.reset(), m_mutex);
+	}
+
+private:
+	GlobalCounter() = default;
+	~GlobalCounter() = default;
+
+	AvgNumber m_nr;
+
+	Mutex m_mutex;
+
+};
 
 template<typename currentWatch>
 class GlobalStopWatch  : public Singleton<GlobalStopWatch<currentWatch> > {

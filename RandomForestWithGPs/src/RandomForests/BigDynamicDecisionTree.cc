@@ -92,7 +92,7 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 	m_usedMemory = sizeof(unsigned int) * 4 + sizeof(MemoryType) + sizeof(FastTreeStructure) * 2
 				   + m_fastInnerTrees.size() * sizeof(FastTreeInnerStructure)
 				   + m_smallInnerTrees.size() * sizeof(SmallTreeInnerStructure);
-	if(!m_fastInnerTrees.empty() && m_fastInnerTrees[0][0]){
+	if(!m_fastInnerTrees.empty() && m_fastInnerTrees[0][0].get() != nullptr){
 		// in the case of a retraining that all trees are removed
 		for(auto& fastLayer : m_fastInnerTrees){
 			fastLayer.erase(fastLayer.begin(), fastLayer.end()); // clear map

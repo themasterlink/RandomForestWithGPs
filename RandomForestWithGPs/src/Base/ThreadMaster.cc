@@ -207,9 +207,9 @@ void ThreadMaster::abortAllThreads(){
 
 void ThreadMaster::setMaxCounter(){
 	if(Settings::instance().getDirectBoolValue("ThreadMaster.useMultiThread")){
-		m_maxCounter = std::thread::hardware_concurrency();
+		m_maxCounter = std::min(14u, std::thread::hardware_concurrency());
 	}else{
-		m_maxCounter = 1;
+		m_maxCounter = 1u;
 	}
 }
 
