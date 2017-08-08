@@ -38,10 +38,11 @@ void ScreenOutput::start(){
 }
 
 void ScreenOutput::run(){
-	std::vector<WINDOW*> windows(8, nullptr);
+	const unsigned int maxAmountOfWindows = ThreadMaster::instance().getAmountOfThreads();
+	std::vector<WINDOW*> windows(maxAmountOfWindows, nullptr);
 	std::pair<WINDOW*, PANEL*> generalInfo(nullptr, nullptr);
 	std::pair<WINDOW*, PANEL*> errorLog(nullptr, nullptr);
-	std::vector<PANEL*> panels(8, nullptr);
+	std::vector<PANEL*> panels(maxAmountOfWindows, nullptr);
 	std::string mode;
 	Settings::instance().getValue("main.type", mode);
 	const std::string firstLine = "Online Random Forest with IVMs, mode: " + mode;
@@ -134,14 +135,14 @@ void ScreenOutput::run(){
 											 windows, panels);
 					}
 				}
-				for(int i = 0; i < 8; ++i){
+				for(int i = 0; i < panels.size(); ++i){
 					if(panels[i] != nullptr && i != modeNr){
 						hide_panel(panels[i]);
 					}
 				}
 			}
 		}else{ // hide everything
-			for(int i = 0; i < 8; ++i){
+			for(int i = 0; i < panels.size(); ++i){
 				if(panels[i] != nullptr && i != modeNr){
 					hide_panel(panels[i]);
 				}
