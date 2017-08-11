@@ -1,20 +1,21 @@
 #!/usr/bin/python
 
-apple = "0,...,4"
-banana = "12,...,15"
-coffeemug = "53,...,60"
-stapler = "266,...,273"
-flashlight = "72,...,76"
+apple = "0,...,4" # 5
+banana = "12,...,15" # 4
+coffeemug = "53,...,60" # 8
+flashlight = "72,...,76" # 5
+stapler = "266,...,273" # 8
 #keyboard = "152,...,156"
+
 
 sets = [("banana", banana), ("coffeemug", coffeemug), ("stapler", stapler),
 		("flashlight", flashlight), ("apple", apple)]
 
 
 
-startPhase = 3
-endPhase = 3
-widthOfUpdate = 3
+startPhase = 15
+endPhase = 15
+widthOfUpdate = 10
 amountOfSplits = (widthOfUpdate * len(sets)) + startPhase + endPhase
 amountOfOrgTrees = 2000
 amountOfUpdatedTrees = 800

@@ -115,8 +115,18 @@ def printArray(array, name, folder):
 	plt.title(str(ele[1] + "/" + ele[0] + " " + ele[2] + ":" + ele[3] + ":" + ele[4] + " " + name))
 	x = [e for e in range(len(array[0]))]
 	savedNr = []
+	if folder == "":
+		avgResult = []
+		lenVal = len(array[0])
+		avgResult.append("index")
+		for e in range(lenVal):
+			avgResult.append(str(e))
 	for nr in xrange(0, len(array)):
 		nr2 = len(array) - nr - 1
+		if folder == "":
+			avgResult[0] += "," + str(nr2)
+			for e in range(len(array[nr2])):
+				avgResult[e+1] += "," + str(array[nr2][e])
 		if getColorFor(nr2)[0] == grey and getColorFor(nr2)[1] == grey and getColorFor(nr2)[2] == grey:
 			fig.plot(x, array[nr2], color = getColorFor(nr2))
 		else:
@@ -125,6 +135,11 @@ def printArray(array, name, folder):
 		fig.plot(x, array[nr2], color = getColorFor(nr2))
 	figure.savefig(folder + name + ".eps")
 	plt.close()
+	if folder == "":
+		file = open(name + ".tex","w")
+		allText = "\n".join(avgResult)
+		file.write(allText)
+		file.close
 
 def printSimpleArray(array, folderName, name):
 	figure = plt.figure()
@@ -139,7 +154,7 @@ logFiles = []
 for month in os.listdir(path):
 	if "8" in month:
 		for day in os.listdir(path + month):
-			if "7" in day:
+			if "2" in day or "3" in day:
 				newPath = path + month + "/" + day
 				for hour in os.listdir(newPath):
 					if os.path.isfile(newPath + "/" + hour + "/" + "log.txt"):
@@ -157,14 +172,19 @@ counterFig = 0
 
 files = []
 
+buildAvg = True
 for fileN in logFiles:
 	counter2 = 0
 	lines = open(fileN[0]).read().split("\n")
 	if len(lines) > 50:
 		for line in lines:
-			#if "Quit Application" in line:
-			files.append(fileN)
-			break
+			if buildAvg:
+				if "Quit Application" in line:
+					files.append(fileN)
+					break
+			else:
+				files.append(fileN)
+				break
 	if len(files) > amount + 1:
 		break
 
@@ -174,7 +194,6 @@ minA = min(amount, len(files))
 avgeragePoints = {}
 avgeragePoints2 = {}
 averageCounter = {}
-buildAvg = False
 for fileN in files[:minA]:
 	sets = ["banana","coffeemug","stapler","flashlight","apple","keyboard"]
 	print(fileN[0])
@@ -193,6 +212,12 @@ for fileN in files[:minA]:
 	avgDeepTime = []
 	deepAmount = []
 	bigAmount = []
+	updatedTrees = []
+	counterOfTotalSplits = 0
+	offsetForSplits = 0
+	betterCounter = 0
+	worseCounter = 0
+	counterForSetsSplits = {}
 	for line in open(fileN[0]).read().split("\n"):
 		if "fakeData" in line:
 			fakeData = True
@@ -249,6 +274,25 @@ for fileN in files[:minA]:
 			avgBigTime.append(minu + sec + milisec / 1000.0)
 			amount = int(restLine[restLine.find("trees: ") + len("trees: "):])
 			bigAmount.append(amount)
+		if "Performed new step with better correctness of" in line:
+			betterCounter += 1
+		if "Performed new step with worse correctness of" in line:
+			worseCounter += 1
+		if "Get all points for: " in line:
+			nameOfSet = line[line.find("Get all points for: ") + len("Get all points for: "):]
+			if "actualSet" in nameOfSet:
+				counterOfTotalSplits += 1
+				if len(counterForSetsSplits) == 0:
+					offsetForSplits = counterOfTotalSplits
+			for name in sets:
+				if name + "Set" in nameOfSet:
+					if not name in counterForSetsSplits:
+						counterForSetsSplits[name] = 1
+					else:
+						counterForSetsSplits[name] += 1
+		if "Calculated " in line and "updated: " in line:
+			rest = line[line.find("updated: ") + len("updated: "):]
+			updatedTrees.append(int(rest))
 		if "Result:" in line:
 			#if fakeData:
 				#print("For fake data r" + line[1:])
@@ -304,7 +348,8 @@ for fileN in files[:minA]:
 		printSimpleArray(avgBigTime, folderName, "avgBigTime")
 		printSimpleArray(bigAmount, folderName, "avgBigAmount")
 		printSimpleArray(deepAmount, folderName, "avgDeepAmount")
-
+		if len(updatedTrees) > 0:
+			printSimpleArray(updatedTrees, folderName, "amountOfUpdatedTrees")
 		figure = plt.figure()
 		fig = figure.add_subplot(1, 1, 1)
 		plt.title(str(ele[1] + "/" + ele[0] + " " + ele[2] + ":" + ele[3] + ":" + ele[4]))
@@ -325,7 +370,7 @@ for fileN in files[:minA]:
 			name = name.replace("TestSet", "")
 			usedIndex = 0
 			if name in sets:
-				usedIndex = 15 + sets.index(name) * 10
+				usedIndex = offsetForSplits + sets.index(name) * counterForSetsSplits[name]
 			else:
 				#print(name)
 				continue
@@ -342,26 +387,41 @@ for fileN in files[:minA]:
 	# 	print("------------")
 
 if buildAvg:
-
+	avgResult = []
 	figure = plt.figure()
 	fig = figure.add_subplot(1, 1, 1)
+	lenVal = len(avgeragePoints["testSet"])
+	avgResult.append("index")
+	for e in range(lenVal):
+		avgResult.append(str(e))
 	for key, point in avgeragePoints.iteritems():
 		print(key, averageCounter[key])
 		plt.title("Average over last")
 		name = key
 		name = name.replace("TestSet", "")
+		avgResult[0] += "," + name
 		usedIndex = 0
 		if name in sets:
-			usedIndex = 15 + sets.index(name) * 10
+			usedIndex = offsetForSplits + sets.index(name) * counterForSetsSplits[name]
 		else:
 			usedIndex = 0
 		x = [e for e in range(usedIndex, usedIndex + len(point))]
 		point /= averageCounter[key]
+		for e in range(lenVal):
+			if e < usedIndex:
+				avgResult[e+1] += ","
+			else:
+				avgResult[e+1] += "," + str(point[e-usedIndex])
 		fig.plot(x, point, color = getColorFor(setColorStarts[name]))
+	textAvg = "\n".join(avgResult)
+	file = open("avgResult.txt", "w")
+	file.write(textAvg)
+	file.close()
 	figure.savefig("avgPerformance.eps")
 	writeResFile(avgeragePoints, "")
 
 	for key, point in avgeragePoints2.iteritems():
+		point /= averageCounter[key]
 		list = point.tolist()
 		printArray(list, "avg" + key, "")
 

@@ -147,7 +147,7 @@ private:
 
 	void updateInParallel(SharedPtr<SortedDecisionTreeList> list, const unsigned int amountOfSteps,
 						  SharedPtr<Mutex> mutex, unsigned int threadNr, SharedPtr<InformationPackage> package,
-						  SharedPtr<unsigned int> counter, const Real standartDeviation);
+						  SharedPtr<std::pair<unsigned int, unsigned int> > counter, const Real standartDeviation);
 
 	void updateMinMaxValues(unsigned int event);
 

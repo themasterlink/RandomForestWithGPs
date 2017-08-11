@@ -94,7 +94,7 @@ void PoolInfo<T>::updateAccordingToPerformance(){
 			const auto val = m_performance[i].mean();
 			if(val >= min){ // exclude NEG_REAL_MAX
 				const auto fac = (1._r - val) / addedError;
-				m_desiredSizes[i] = (unsigned int) (amountOfFixedPoints + amountOfSharedPoints * fac);
+				m_desiredSizes[i] = (unsigned int) (amountOfFixedPoints + (Real) amountOfSharedPoints * fac);
 				printOnScreen("Class: " << i << ", performance: " << val
 										<< ", new size: " << m_desiredSizes[i]
 										<< ", current size: " << m_currentSizes[i]);
