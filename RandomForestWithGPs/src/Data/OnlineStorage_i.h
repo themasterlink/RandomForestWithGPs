@@ -81,7 +81,7 @@ void PoolInfo<T>::updateAccordingToPerformance(){
 	const auto ignoreRealNegMax = true; // avoids the classes which have no size at the moment
 	DataConverter::getMinMax(m_performance, min, max, &AvgNumber::mean, ignoreRealNegMax);
 	if(min < max){
-		const auto amountOfFixedPoints = m_amountOfPointsPerClass / 2;
+		const auto amountOfFixedPoints = (unsigned int) (0.8 * m_amountOfPointsPerClass);
 		auto addedError = 0._r;
 		for(unsigned int i = 0, end = (unsigned int) m_desiredSizes.size(); i < end; ++i){
 			const auto val = m_performance[i].mean();
@@ -89,12 +89,12 @@ void PoolInfo<T>::updateAccordingToPerformance(){
 				addedError += 1._r - val;
 			}
 		}
-		const auto amountOfSharedPoints = (m_amountOfPointsPerClass - amountOfFixedPoints) * m_performance.size();
+		const auto amountOfTotalSharedPoints = (m_amountOfPointsPerClass - amountOfFixedPoints) * m_performance.size();
 		for(unsigned int i = 0, end = (unsigned int) m_desiredSizes.size(); i < end; ++i){
 			const auto val = m_performance[i].mean();
 			if(val >= min){ // exclude NEG_REAL_MAX
 				const auto fac = (1._r - val) / addedError;
-				m_desiredSizes[i] = (unsigned int) (amountOfFixedPoints + (Real) amountOfSharedPoints * fac);
+				m_desiredSizes[i] = (unsigned int) (amountOfFixedPoints + (Real) amountOfTotalSharedPoints * fac);
 				printOnScreen("Class: " << i << ", performance: " << val
 										<< ", new size: " << m_desiredSizes[i]
 										<< ", current size: " << m_currentSizes[i]);

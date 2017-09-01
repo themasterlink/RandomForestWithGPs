@@ -6,9 +6,8 @@
  */
 
 #include "OnlineRandomForest.h"
-#include "../Base/Settings.h"
 #include "../Data/DataWriterForVisu.h"
-#include "../Base/Thread.h"
+#include "GlobalLifeTimeMeasurement.h"
 
 OnlineRandomForest::OnlineRandomForest(OnlineStorage<LabeledVectorX*>& storage,
 									   const unsigned int maxDepth,
@@ -291,7 +290,7 @@ void OnlineRandomForest::train(){
 				}
 			}
 			m_mutexForCounter->unlock();
-			points.emplace_back(correct / (Real) m_storage.size() * 100._r);
+			points.emplace_back(correct / (Real) m_storage.size() * 100.0);
 		}
 		sleepFor(0.05);
 	}
@@ -507,6 +506,14 @@ bool OnlineRandomForest::update(){
 					"The sorting process failed, list size is: " << list->size() << ", should be: " << m_trees.size());
 			return false;
 		}
+		for(auto& ele : *list){
+			const auto id = ((BigDynamicDecisionTree*) ele.first.get())->m_personalId;
+			if(id >= 0){
+				GlobalLifeTimeMeasurement::instance().setPerformance(id, ele.second);
+			}
+		}
+		const auto minAccuracy = list->begin()->second;
+		const auto maxAccuracy = list->rbegin()->second;
 		if(m_useOnlinePool){
 			Labels labels;
 			const auto& valRef = *m_validationSet;
@@ -532,10 +539,24 @@ bool OnlineRandomForest::update(){
 		AvgNumber avg, var;
 		for(auto& val : *list){ avg.addNew(val.second); }
 		for(auto& val : *list){ var.addNew((val.second - avg.mean()) * (val.second - avg.mean())); }
-		const auto standartDeviation = sqrtReal(var.mean());
-		printOnScreen("Finished sorting, worst tree has: " << list->begin()->second << ", best tree has: "
-														   << list->rbegin()->second << ", median: " << it->second
-														   << ", avg: " << avg.mean() << ", sd: " << standartDeviation);
+		const auto standardDeviation = sqrtReal(var.mean());
+		printOnScreen("Finished sorting, worst tree has: " << minAccuracy << ", best tree has: "
+														   << maxAccuracy << ", median: " << it->second
+														   << ", avg: " << avg.mean() << ", sd: " << standardDeviation);
+
+		const auto seed = Settings::instance().getDirectValue<long>("main.seed");
+		const std::string settingsInput = Settings::instance().getDirectValue<std::string>("OnlineRandomForest.acceptanceMode");
+		AcceptanceCalculator::AcceptanceMode mode = AcceptanceCalculator::getModeForInput(settingsInput);
+		if(!AcceptanceCalculator::stillUsePercent(mode)){ // if a non percent mode is used the values have to be recalculated
+			AcceptanceCalculator acceptanceCalculator(mode, (seed + 90) * 2);
+			acceptanceCalculator.setParams(standardDeviation, minAccuracy, maxAccuracy);
+			// convert all accuracy values to acceptance
+			for(auto& ele : *list){
+				ele.second = acceptanceCalculator.calcAcceptance(ele.second / 100.0_r);
+			}
+			// sort after acceptance, should not take to long
+			list->sort([](const auto& a, const auto& b){ return a.second < b.second; });
+		}
 		if(VerboseMode::instance().isVerboseLevelHigher()){
 			printLine();
 		}
@@ -547,6 +568,7 @@ bool OnlineRandomForest::update(){
 		const auto amountOfTotalElements = m_trainingsConfig.isTreeAmountMode() ? m_trainingsConfig.m_amountOfTrees
 																				: (unsigned int) m_trees.size();
 		const auto amountOfThreadElements = amountOfTotalElements / (Real) nrOfParallel;
+		const auto amountOfForcedUpdates = (unsigned int) m_trees.size() / (Real) nrOfParallel * 0.05_r; // 5 % should be enough
 		Real counterForElements = 0;
 		unsigned int lastUsedCounter = 0;
 		std::vector<SharedPtr<InformationPackage> > packages(nrOfParallel);
@@ -556,16 +578,19 @@ bool OnlineRandomForest::update(){
 		if(VerboseMode::instance().isVerboseLevelHigher()){
 			printLine();
 		}
+		std::vector<SharedPtr<AcceptanceCalculator> > acceptanceCalcs(nrOfParallel);
 		for(unsigned int i = 0; i < packages.size(); ++i){
-			packages[i] = std::make_shared<InformationPackage>(infoType, 0,
+			packages[i] = std::make_shared<InformationPackage>(infoType, 0.0_r,
 															   (int) (m_trees.size() / (Real) nrOfParallel));
 			packages[i]->setStandartInformation("Train trees, thread nr: " + StringHelper::number2String(i));
 			packages[i]->setTrainingsTime(trainingsTimeForPackages);
+			acceptanceCalcs[i] = std::make_shared<AcceptanceCalculator>(mode, (seed+4+i)*12*i);
+			acceptanceCalcs[i]->setParams(standardDeviation, minAccuracy, maxAccuracy);
 			counterForElements += amountOfThreadElements;
 			const auto actAmountEle = (unsigned int) (counterForElements - lastUsedCounter);
-			group.addThread(
-					makeThread(&OnlineRandomForest::updateInParallel, this, list, actAmountEle, m_mutexForCounter, i,
-							   packages[i], counter, standartDeviation));
+			group.addThread(makeThread(&OnlineRandomForest::updateInParallel, this, list,
+									   actAmountEle, m_mutexForCounter, i, packages[i],
+									   counter, acceptanceCalcs[i], amountOfForcedUpdates));
 			lastUsedCounter += actAmountEle;
 		}
 		int stillOneRunning = 1;
@@ -656,26 +681,8 @@ OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeList* 
 														SharedPtr<InformationPackage> package){
 	package->setStandartInformation("Sort trees after performance");
 	if(m_trees.size() == 1){
-		auto correct = 0u;
-		unsigned int size = 0;
-		if(m_validationSet != nullptr){
-			for(auto& point : *m_validationSet){
-				if(point->getLabel() == (*m_trees.begin())->predict(*point)){
-					++correct;
-				}
-			}
-			size = (unsigned int) m_validationSet->size();
-		}else{
-			const auto startPos =
-					m_useRealOnlineUpdate && !m_storage.isInPoolMode() ? m_storage.getLastUpdateIndex() : 0;
-			for(int i = startPos; i < m_storage.size(); ++i){
-				if(m_storage[i]->getLabel() == (*m_trees.begin())->predict(*m_storage[i])){
-					++correct;
-				}
-			}
-			size = m_storage.size() - startPos;
-		}
-		list->emplace_back(*m_trees.begin(), correct / (Real) size * 100.0_r);
+		const auto accuracy = calcAccuracyForOneTree(*m_trees.begin()->get()) * 100.0_r;
+		list->emplace_back(*m_trees.begin(), accuracy);
 		return;
 	}
 	ThreadMaster::instance().appendThreadToList(package.get());
@@ -686,6 +693,8 @@ OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeList* 
 	auto treeSize = trees->size();
 	auto usedTrees = (unsigned int) (treeSize / 16);
 	readMutex->unlock();
+	RandomDistributionReal randomRealNr(0,1);
+	GeneratorType gen(51);
 	while(treeSize > 0){
 		ownList.clear();
 		readMutex->lock();
@@ -702,27 +711,7 @@ OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeList* 
 		}
 		printInPackageOnScreen(package, "Predict new tree, rest amount is: " << treeAmount);
 		for(auto& pair : ownList){
-			int correct = 0;
-			DecisionTreePointer tree = pair.first;
-			unsigned int size = 0;
-			if(m_validationSet != nullptr){
-				for(auto& point : *m_validationSet){
-					if(point->getLabel() == tree->predict(*point)){
-						++correct;
-					}
-				}
-				size = (unsigned int) m_validationSet->size();
-			}else{
-				const auto startPos =
-						m_useRealOnlineUpdate && !m_storage.isInPoolMode() ? m_storage.getLastUpdateIndex() : 0;
-				for(int i = startPos; i < m_storage.size(); ++i){
-					if(m_storage[i]->getLabel() == tree->predict(*m_storage[i])){
-						++correct;
-					}
-				}
-				size = m_storage.size() - startPos;
-			}
-			pair.second = correct / (Real) size * 100._r;
+			pair.second = calcAccuracyForOneTree(*pair.first.get()) * 100.0_r;
 		}
 		SortedDecisionTreeList sortedList;
 		for(const auto& pair : ownList){
@@ -760,7 +749,8 @@ void OnlineRandomForest::updateInParallel(SharedPtr<SortedDecisionTreeList> list
 										  SharedPtr<Mutex> mutex, unsigned int threadNr,
 										  SharedPtr<InformationPackage> package,
 										  SharedPtr<std::pair<unsigned int, unsigned int> > counter,
-										  const Real standartDeviation){
+										  SharedPtr<AcceptanceCalculator> acceptanceCalculator,
+										  const unsigned int amountOfForcedRetrain){
 	if(!package){
 		printError("This thread has no valid information package: " + StringHelper::number2String(threadNr));
 		return;
@@ -768,6 +758,36 @@ void OnlineRandomForest::updateInParallel(SharedPtr<SortedDecisionTreeList> list
 	package->setStandartInformation("Orf updating thread Nr: " + StringHelper::number2String(threadNr));
 	ThreadMaster::instance().appendThreadToList(package.get());
 	package->wait();
+	{
+		SortedDecisionTreeList retrainList;
+		mutex->lock();
+		RandomUniformUnsignedNr nr((unsigned int) list->size(), (threadNr + 13) * 12317);
+		for(unsigned int i = 0; i < amountOfForcedRetrain; ++i){
+			// get the best of the random forest amountOfForcedRetrain
+			const auto nextEle = std::min((unsigned int) list->size(), nr());
+			auto it = list->begin();
+			for(unsigned int j = 0; j < nextEle; ++j, ++it){};
+			retrainList.emplace_back(std::move(*it));
+			list->erase(it);
+		}
+		mutex->unlock();
+		for(auto& pair : retrainList){
+			pair.first->train((unsigned int) m_amountOfUsedDims, *m_generators[threadNr]);
+			const auto accuracy = calcAccuracyForOneTree(*pair.first.get());
+			const auto acceptance = acceptanceCalculator->calcAcceptance(accuracy);
+			const auto id = ((BigDynamicDecisionTree*) pair.first.get())->m_personalId;
+			if(id >= 0){
+				GlobalLifeTimeMeasurement::instance().setPerformance(id, accuracy);
+			}
+			printInPackageOnScreen(package, "Retrained one of the top trees, has now acceptance: "
+					<< StringHelper::number2String(acceptance, 2)
+					<< " %%, was before: " << StringHelper::number2String(pair.second, 2) << " %%");
+			mutex->lock();
+			++counter->second;
+			internalAppendToSortedList(list.get(), std::move(pair.first), acceptance);
+			mutex->unlock();
+		}
+	}
 	SortedDecisionTreePair pair;
 	DecisionTreePointer switcher;
 	if(m_useBigDynamicDecisionTrees){
@@ -778,8 +798,7 @@ void OnlineRandomForest::updateInParallel(SharedPtr<SortedDecisionTreeList> list
 		switcher = std::make_shared<DynamicDecisionTree<unsigned int> >(m_storage, m_maxDepth, m_amountOfClasses,
 																		m_amountOfPointsCheckedPerSplit);
 	}
-//	Real correctValOfSwitcher = pair.second;
-	RandomGaussianNr randomNr(0, standartDeviation, (threadNr + 13) * 12337);
+
 	for(unsigned int i = 0; i < amountOfSteps - 1; ++i){
 		if(VerboseMode::instance().isVerboseLevelHigher()){
 			printLine();
@@ -788,58 +807,42 @@ void OnlineRandomForest::updateInParallel(SharedPtr<SortedDecisionTreeList> list
 		if(VerboseMode::instance().isVerboseLevelHigher()){
 			printLine();
 		}
-		int correct = 0;
-		unsigned int size = 0;
-		if(m_validationSet != nullptr){
-			for(auto& point : *m_validationSet){
-				if(point->getLabel() == switcher->predict(*point)){
-					++correct;
-				}
-			}
-			size = (unsigned int) m_validationSet->size();
-		}else{
-			const auto startPos =
-					m_useRealOnlineUpdate && !m_storage.isInPoolMode() ? m_storage.getLastUpdateIndex() : 0;
-			for(unsigned int j = startPos; j < m_storage.size(); ++j){
-				if(m_storage[j]->getLabel() == switcher->predict(*m_storage[j])){
-					++correct;
-				}
-			}
-			size = m_storage.size() - startPos;
+		const auto accuracy = calcAccuracyForOneTree(*switcher.get());
+		const auto acceptance = acceptanceCalculator->calcAcceptance(accuracy);
+		const auto id = ((BigDynamicDecisionTree*) switcher.get())->m_personalId;
+		if(id >= 0){
+			GlobalLifeTimeMeasurement::instance().setPerformance(id, accuracy);
 		}
-		const auto correctVal = std::min(100.0_r, correct / (Real) size * 100._r) +
-								absReal(randomNr()); // adding some noise to the change
+
 		mutex->lock();
 		pair = std::move(*list->begin()); // get new element
 		list->pop_front(); // remove it
 		mutex->unlock();
 		DecisionTreePointer addToList;
 		bool useNewTree = false;
-		Real usedCorrectVal;
-		if(correctVal > pair.second){
+		Real usedAcceptance;
+		if(acceptance > pair.second){
 			// if the switcher performs better than the original tree, change both so
 			// that the switcher (with the better result is placed in the list), and the original element gets the new switcher
 			addToList = std::move(switcher); // avoids copy
 			switcher = std::move(pair.first); // avoids copy
-			usedCorrectVal = correctVal;
+			usedAcceptance = acceptance;
 			useNewTree = true;
-//			correctValOfSwitcher = pair.second; // value of the switcher
 			// add to list again!
-			printInPackageOnScreen(package, "Performed new step with better correctness of: "
-					<< StringHelper::number2String(correctVal, 2) << " %%, worst had: " << pair.second);
+			printInPackageOnScreen(package, "Performed new step with better acceptance of: "
+					<< StringHelper::number2String(acceptance, 2) << " %%, worst had: " << pair.second);
 		}else{
 			addToList = std::move(pair.first); // avoids copy
-			usedCorrectVal = pair.second;
-//			correctValOfSwitcher = correctVal;
+			usedAcceptance = pair.second;
 			// no switch -> the switcher is trys to improve itself
-			printInPackageOnScreen(package, "Performed new step with worse correctness of "
-					<< StringHelper::number2String(correctVal, 2) << " %% not used, worst had: " << pair.second);
+			printInPackageOnScreen(package, "Performed new step with worse acceptance of "
+					<< StringHelper::number2String(acceptance, 2) << " %% not used, worst had: " << pair.second);
 		}
 		mutex->lock();
 		counter->first += 1; // is already protected in mutex lock
 		counter->second += (unsigned int) useNewTree;
-		internalAppendToSortedList(list.get(), std::move(addToList),
-								   usedCorrectVal); // insert decision tree again in the list
+		// insert decision tree again in the list
+		internalAppendToSortedList(list.get(), std::move(addToList), usedAcceptance);
 		mutex->unlock();
 		if(package->shouldThreadBePaused()){
 			package->wait();
@@ -851,24 +854,24 @@ void OnlineRandomForest::updateInParallel(SharedPtr<SortedDecisionTreeList> list
 }
 
 void OnlineRandomForest::internalAppendToSortedList(SortedDecisionTreeList* list, DecisionTreePointer&& pTree,
-													Real correctVal){
+													Real acceptance){
 	if(m_savedAnyTreesToDisk){
 		printError("Not all trees used!");
 		return;
 	}
 	if(list->empty()){
-		list->emplace_back(pTree, correctVal);
+		list->emplace_back(pTree, acceptance);
 	}else{
 		bool added = false;
 		for(auto it = list->begin(); it != list->end(); ++it){
-			if(it->second > correctVal){
-				list->emplace(it, pTree, correctVal);
+			if(it->second > acceptance){
+				list->emplace(it, pTree, acceptance);
 				added = true;
 				break;
 			}
 		}
 		if(!added){
-			list->emplace_back(pTree, correctVal);
+			list->emplace_back(pTree, acceptance);
 		}
 	}
 }
@@ -1537,4 +1540,26 @@ void OnlineRandomForest::setValidationSet(LabeledData* pValidation){
 			m_classCounterForValidationSet[point->getLabel()] += 1.0_r;
 		}
 	}
+}
+
+Real OnlineRandomForest::calcAccuracyForOneTree(const DynamicDecisionTreeInterface& tree){
+	int correct = 0;
+	unsigned int size = 0;
+	if(m_validationSet != nullptr){
+		for(auto& point : *m_validationSet){
+			if(point->getLabel() == tree.predict(*point)){
+				++correct;
+			}
+		}
+		size = (unsigned int) m_validationSet->size();
+	}else{
+		const auto startPos = m_useRealOnlineUpdate && !m_storage.isInPoolMode() ? m_storage.getLastUpdateIndex() : 0;
+		for(int i = startPos; i < m_storage.size(); ++i){
+			if(m_storage[i]->getLabel() == tree.predict(*m_storage[i])){
+				++correct;
+			}
+		}
+		size = m_storage.size() - startPos;
+	}
+	return correct / (Real) size; //  * 100.0_r
 }

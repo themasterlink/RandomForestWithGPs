@@ -13,12 +13,14 @@ sets = [("banana", banana), ("coffeemug", coffeemug), ("stapler", stapler),
 
 
 
+
 startPhase = 15
-endPhase = 15
+endPhase = startPhase
 widthOfUpdate = 10
 amountOfSplits = (widthOfUpdate * len(sets)) + startPhase + endPhase
-amountOfOrgTrees = 2000
-amountOfUpdatedTrees = 800
+fac = 1
+amountOfOrgTrees = 2000 / fac
+amountOfUpdatedTrees = 800 / fac
 mode = "tree" # tree, time
 startTime = "2 min"
 timeUpdate = "42 sec"

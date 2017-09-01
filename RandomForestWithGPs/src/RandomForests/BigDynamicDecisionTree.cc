@@ -7,6 +7,7 @@
 
 #include "BigDynamicDecisionTree.h"
 #include "../Base/Settings.h"
+#include "GlobalLifeTimeMeasurement.h"
 
 BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage, const unsigned int maxDepth,
 											   const unsigned int amountOfClasses, const int layerAmount,
@@ -17,6 +18,7 @@ BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<LabeledVectorX*>& s
 		m_amountOfClasses(amountOfClasses),
 		m_amountOfPointsCheckedPerSplit(amountOfPointsCheckedPerSplit),
 		m_depthPerLayer(0),
+		m_personalId(-1),
 		m_usedMemory(0){ // 16 for ints, 24 for the pointer
 	auto amountOfLayers = layerAmount;
 	if(layerAmount < 1){ // 0 and -1, ...
@@ -34,7 +36,7 @@ BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<LabeledVectorX*>& s
 
 BigDynamicDecisionTree::BigDynamicDecisionTree(OnlineStorage<LabeledVectorX*>& storage) :
 		m_storage(storage), m_maxDepth(0), m_amountOfClasses(0), m_amountOfPointsCheckedPerSplit(100),
-		m_depthPerLayer(0), m_usedMemory(0){
+		m_depthPerLayer(0), m_personalId(-1), m_usedMemory(0){
 }
 
 
@@ -86,6 +88,14 @@ void BigDynamicDecisionTree::train(const unsigned int amountOfUsedDims,
 								   RandomNumberGeneratorForDT& generator){
 	if(VerboseMode::instance().isVerboseLevelHigher()){
 		printLine();
+	}
+	if(GlobalLifeTimeMeasurement::instance().isUsed()){
+		if(m_personalId == -1){
+			m_personalId = GlobalLifeTimeMeasurement::instance().addNewTreeId();
+		}else{
+			GlobalLifeTimeMeasurement::instance().dieTreeId(m_personalId);
+			m_personalId = GlobalLifeTimeMeasurement::instance().addNewTreeId();
+		}
 	}
 	StopWatch bigDTTrain;
 	// unsigned ints, the Memory Type and the two vectors and the size for the layers

@@ -54,6 +54,8 @@ public:
 
 	MemoryType getMemSize() const override { return m_usedMemory; };
 
+	int m_personalId;
+
 private:
 	using UsedDecisionTree = DynamicDecisionTree<dimTypeForDDT>;
 	using PtrDynamicDecisionTree = UniquePtr<UsedDecisionTree>;

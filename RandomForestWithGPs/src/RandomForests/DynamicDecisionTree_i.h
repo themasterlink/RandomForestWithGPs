@@ -160,7 +160,7 @@ bool DynamicDecisionTree<dimType>::train(dimType amountOfUsedDims, RandomNumberG
 			}else if(baggingInfo.useTotalAmountOfPoints()){
 				if(size > baggingInfo.m_totalUseOfData){
 					if(generator.isRandStepOverStorageUsed()){ // the step value is bigger than 1
-						const auto steps = (size / baggingInfo.m_totalUseOfData) * 2;
+//						const auto steps = (size / baggingInfo.m_totalUseOfData) * 2;
 						dataPos.reserve(baggingInfo.m_totalUseOfData * 2);
 					}else{ // is just 1
 						useWholeDataSet = true; // is faster that way

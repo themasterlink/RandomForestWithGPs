@@ -13,6 +13,7 @@
 #include "../Data/LabeledVectorX.h"
 #include "../RandomNumberGenerator/RandomUniformNr.h"
 #include "TreeCounter.h"
+#include "AcceptanceCalculator.h"
 
 class OnlineRandomForest : public Observer, public PredictorMultiClass, public Subject {
 public:
@@ -104,6 +105,8 @@ public:
 
 	void setValidationSet(LabeledData* pValidation);
 
+	bool isTrained(){ return m_firstTrainingDone; }
+
 private:
 
 	using SortedDecisionTreePair = std::pair<DecisionTreePointer, Real>;
@@ -137,7 +140,7 @@ private:
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
 	void internalAppendToSortedList(SortedDecisionTreeList* list,
-									DecisionTreePointer&& pTree, Real correctVal);
+									DecisionTreePointer&& pTree, Real acceptance);
 
 	void mergeSortedLists(SortedDecisionTreeList* aimList, SortedDecisionTreeList* other);
 
@@ -147,7 +150,9 @@ private:
 
 	void updateInParallel(SharedPtr<SortedDecisionTreeList> list, const unsigned int amountOfSteps,
 						  SharedPtr<Mutex> mutex, unsigned int threadNr, SharedPtr<InformationPackage> package,
-						  SharedPtr<std::pair<unsigned int, unsigned int> > counter, const Real standartDeviation);
+						  SharedPtr<std::pair<unsigned int, unsigned int> > counter,
+						  SharedPtr<AcceptanceCalculator> acceptanceCalculator,
+						  const unsigned int amountOfForcedRetrain);
 
 	void updateMinMaxValues(unsigned int event);
 
@@ -162,6 +167,8 @@ private:
 
 	void packageUpdateForPrediction(SharedPtr<InformationPackage>& package, const unsigned int i, const unsigned int start,
 									const unsigned int end) const;
+
+	Real calcAccuracyForOneTree(const DynamicDecisionTreeInterface& tree);
 
 	const unsigned int m_maxDepth;
 

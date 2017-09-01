@@ -53,6 +53,7 @@
 			}
 		},
 		"activatePoolBased": "true",
+		"acceptanceMode": "use exponential without min and max",
 		"maxAmountOfPointsSavedInPool": 30000,
 		"amountOfTrainedTrees": 0,
 		"ownSamplingTime": 0,
@@ -126,8 +127,8 @@
 	},
 	"MinMaxUsedSplits": {
 		"useFixedValuesForMinMaxUsedSplits": "true",
-		"minValue": 1000,
-		"maxValue": 1500,
+		"minValue": 2000,
+		"maxValue": 2500,
 		"minValueFractionDependsOnDataSize": 0.1,
 		"maxValueFractionDependsOnDataSize": 0.35
 	},

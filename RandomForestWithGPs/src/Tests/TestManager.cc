@@ -7,6 +7,7 @@
 #include "../Data/TotalStorage.h"
 #include "../Utility/ConfusionMatrixPrinter.h"
 #include "../Data/DataWriterForVisu.h"
+#include "../RandomForests/GlobalLifeTimeMeasurement.h"
 
 // have to be defined before the test Information is defined
 const std::string TestInformation::trainSettingName("TRAIN_SETTING");
@@ -141,8 +142,11 @@ void TestManager::run(){
 										"Memory constraint: " << StringHelper::convertMemorySpace(testInfo.m_memory));
 								config.m_memory = testInfo.m_memory;
 							}
-							orf->setTrainingsMode(config);
 							if(orf){
+								orf->setTrainingsMode(config);
+								if(orf->isTrained()){
+									GlobalLifeTimeMeasurement::instance().setRoundCounter(GlobalLifeTimeMeasurement::instance().getRoundCounter() + 1);
+								}
 								train.appendUnique(data);
 							}
 							printOnScreen("Avg Time for Dynamic Decision Tree train: "
@@ -170,6 +174,9 @@ void TestManager::run(){
 		++i;
 	}
 	printOnScreen("Run through all instructions!");
+	GlobalLifeTimeMeasurement::instance().setRoundCounter(GlobalLifeTimeMeasurement::instance().getRoundCounter() + 1);
+	GlobalLifeTimeMeasurement::instance().endAllTrees();
+	GlobalLifeTimeMeasurement::instance().writeToFile("lifeTime.tex");
 	if(CommandSettings::instance().get_useFakeData() &&
 	   (CommandSettings::instance().get_visuRes() > 0 || CommandSettings::instance().get_visuResSimple() > 0)){
 		StopWatch sw;

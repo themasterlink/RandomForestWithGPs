@@ -27,9 +27,15 @@ def doRFGP(data):
 os.chdir("../cmake-build-release/")
 #data["TotalStorage"]["folderLocReal"] = "../mnistOrg/"
 
-rands = [random.randint(11, 738938) for e in range(10)]
+rands = [random.randint(11, 738938) for e in range(15)]
 print("Random nrs: " + str(rands))
+
+modes = ["use exponential without min and max", "use exponential with min and max", "use performance", "use gaussian"]
+nr = random.randint(11, 738938) % len(modes)
 for seed in rands:
+	data["OnlineRandomForest"]["acceptanceMode"] = modes[nr % len(modes)]
+	print("Do: " + modes[nr % len(modes)])
+	nr += 1
 	data["main"]["seed"] = seed
 	doRFGP(data)
 

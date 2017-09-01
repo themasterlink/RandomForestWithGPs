@@ -4,6 +4,8 @@ import matplotlib
 matplotlib.use('TKAgg', force=True)
 from matplotlib import pyplot as plt
 import numpy as np
+import json
+import subprocess
 
 def hourConvert(hour):
 	eles = hour.split(":")
@@ -82,7 +84,7 @@ def getTimeFrom(line):
 		return 0,0.0,0.0
 
 
-def writeResFile(points, folder):
+def writeResFile(points, folder, fileName = "result"):
 	newLines = []
 	newLines.append("index")
 	sets = ["banana","coffeemug","stapler","flashlight","apple","keyboard"]
@@ -104,7 +106,7 @@ def writeResFile(points, folder):
 				newLines[i+1] += "," + str(point[i - usedIndex])
 			else:
 				newLines[i+1] += ","
-	file = open(folder + "result.txt", "w")
+	file = open(folder + fileName + ".txt", "w")
 	file.write("\n".join(newLines))
 	file.close()
 
@@ -149,30 +151,62 @@ def printSimpleArray(array, folderName, name):
 	figure.savefig(folderName + name + ".eps")
 	plt.close()
 
+def extractAndAddLine(line, array, triggerWord, currentSet):
+	if triggerWord in line:
+		newLine = line[:len(line) - 2]  # remove  % at the end
+		removeTrigger = newLine[newLine.find(triggerWord) + len(triggerWord):]
+		if currentSet in array:
+			array[currentSet].append(float(removeTrigger))
+		else:
+			array[currentSet] = [float(removeTrigger)]
+
 path = "../cmake-build-release/2017/"
 logFiles = []
 for month in os.listdir(path):
 	if "8" in month:
 		for day in os.listdir(path + month):
-			if "2" in day or "3" in day:
+			if int(day) == 28:
 				newPath = path + month + "/" + day
 				for hour in os.listdir(newPath):
 					if os.path.isfile(newPath + "/" + hour + "/" + "log.txt"):
 						hourC = hourConvert(hour)
-						if not os.path.isfile(newPath + "/" + hour + "/" + "classPerformance.eps"):
-							t = (newPath + "/" + hour + "/" + "log.txt", convert(month, day, hour), (month, day, str(hourC[0]), str(hourC[1]), str(hourC[2])))
-							logFiles.append(t)
+						#if not os.path.isfile(newPath + "/" + hour + "/" + "classPerformance.eps"):
+						t = (newPath + "/" + hour + "/log.txt" , convert(month, day, hour), (month, day, str(hourC[0]), str(hourC[1]), str(hourC[2])))
+						logFiles.append(t)
 
 logFiles.sort(key=lambda tup: tup[1])
 logFiles.reverse()
-amount = 100000 # int(raw_input("Nr of last log files: "))
+amount = 100000  # int(raw_input("Nr of last log files: "))
 counterFig = 0
 
 #logFiles = [("/home/denn_ma/workspaceORF/RandomForestWithGPs/RandomForestWithGPs/cmake-build-release/2017/6/12/8:59:53.5/" + "log.txt", convert(month, day, hour), (month, day, str(hourC[0]), str(hourC[1]), str(hourC[2])))]
 
 files = []
 
+
 buildAvg = True
+
+# initFile = "../cmake-build-release/2017/8/12/16:23:0.6/usedInit.json" # logFiles[0][0] + "usedInit.json"
+# print("Compare to: " + initFile)
+# with open(initFile) as data_file:
+# 	cmp = json.load(data_file)
+# for fileN in logFiles[1:]:
+# 	log = fileN[0] + "log.txt"
+# 	initFile = fileN[0] + "usedInit.json"
+# 	with open(initFile) as data_file:
+# 		data = json.load(data_file)
+# 		isTheSame = True
+# 		for first in ["OnlineRandomForest", "MinMaxUsedSplits", "TotalStorage"]:
+# 			for ele in data[first]:
+# 				if cmp[first][ele] != data[first][ele]:
+# 					isTheSame = False
+# 		if isTheSame:
+# 			print("Is the same log: " + log)
+# 			newT = (fileN[0] + "log.txt", fileN[1], fileN[2])
+# 			files.append(newT)
+# 		else:
+# 			print("Is not the same log: " + log)
+
 for fileN in logFiles:
 	counter2 = 0
 	lines = open(fileN[0]).read().split("\n")
@@ -192,16 +226,20 @@ minA = min(amount, len(files))
 # minA = 1
 # files.append(logFiles[0])
 avgeragePoints = {}
+averagePointsCollect = {}
 avgeragePoints2 = {}
 averageCounter = {}
 for fileN in files[:minA]:
 	sets = ["banana","coffeemug","stapler","flashlight","apple","keyboard"]
 	print(fileN[0])
 	points = {}
+	oc = {}
+	uc = {}
+	ocBVS = {}
+	ucBVS = {}
 	found = False
 	fakeData = False
 	isTest = False
-	counter = 0
 	currentTestSet = ""
 	poolPerformance = [[] for ele in range(300)]
 	newSizePool = [[] for ele in range(300)]
@@ -213,6 +251,7 @@ for fileN in files[:minA]:
 	deepAmount = []
 	bigAmount = []
 	updatedTrees = []
+	sds = []
 	counterOfTotalSplits = 0
 	offsetForSplits = 0
 	betterCounter = 0
@@ -293,22 +332,15 @@ for fileN in files[:minA]:
 		if "Calculated " in line and "updated: " in line:
 			rest = line[line.find("updated: ") + len("updated: "):]
 			updatedTrees.append(int(rest))
-		if "Result:" in line:
-			#if fakeData:
-				#print("For fake data r" + line[1:])
-			#else:
-			if not fakeData:
-				found = True
-				ele = fileN[2]
-				color = ""
-				if isTest:
-					color = "\033[35m"
-				counter += 1
-				# print(str(counter) + ": " + str(ele[1] + "/" + ele[0] + " " + ele[2] + ":" + ele[3] + ":" + ele[4] + " " + color + line + "\033[0m"))
-			if currentTestSet in points:
-				points[currentTestSet].append(float(line.split(" ")[-2]))
-			else:
-				points[currentTestSet] = [float(line.split(" ")[-2])]
+		if "Finished sorting," in line:
+			sdStr = line[line.find("sd: ") + len("sd: "):]
+			sds.append(float(sdStr))
+		extractAndAddLine(line, points, "Result:", currentTestSet)
+		extractAndAddLine(line, oc, "Overconf:", currentTestSet)
+		extractAndAddLine(line, uc, "Underconf:", currentTestSet)
+		extractAndAddLine(line, ocBVS, "Overconf BVS:", currentTestSet)
+		extractAndAddLine(line, ucBVS, "Underconf BVS:", currentTestSet)
+
 	maxEle = 0
 	for classEles in poolPerformance:
 		maxEle = max(maxEle, len(classEles))
@@ -343,6 +375,7 @@ for fileN in files[:minA]:
 			printArray(newSizePool, "new size", folderName)
 			printArray(currentSizePool, "current size", folderName)
 		printSimpleArray(predictionTime, folderName, "prediction")
+		printSimpleArray(sds, folderName, "standartDeviations")
 		printSimpleArray(updatingTime, folderName, "updatingTime")
 		printSimpleArray(avgDeepTime, folderName, "avgDeepTime")
 		printSimpleArray(avgBigTime, folderName, "avgBigTime")
@@ -350,38 +383,44 @@ for fileN in files[:minA]:
 		printSimpleArray(deepAmount, folderName, "avgDeepAmount")
 		if len(updatedTrees) > 0:
 			printSimpleArray(updatedTrees, folderName, "amountOfUpdatedTrees")
-		figure = plt.figure()
-		fig = figure.add_subplot(1, 1, 1)
-		plt.title(str(ele[1] + "/" + ele[0] + " " + ele[2] + ":" + ele[3] + ":" + ele[4]))
-		x = [e for e in range(0, len(points["testSet"]))]	
-		x2 = [e for e in range(0, len(points["testSetExclude"]))]		
-		fig.plot(x, points["testSet"], color = getColorFor(setColorStarts["testSet"]))
-		fig.plot(x2, points["testSetExclude"], color = getColorFor(setColorStarts["testSetExclude"]))
 
-		for key, point in points.iteritems():
-			name = key
-			if buildAvg:
-				if key in avgeragePoints:
-					avgeragePoints[key] += np.array(point)
-					averageCounter[key] += 1
+		usedFileNames = ["classPerformance", "oc", "uc", "ocBVS", "ucBVS"]
+		for i, usedPoints in enumerate([points, oc, uc, ocBVS, ucBVS]):
+			figure = plt.figure()
+			fig = figure.add_subplot(1, 1, 1)
+			plt.title(str(ele[1] + "/" + ele[0] + " " + ele[2] + ":" + ele[3] + ":" + ele[4]))
+
+			x = [e for e in range(0, len(usedPoints["testSet"]))]
+			x2 = [e for e in range(0, len(usedPoints["testSetExclude"]))]
+			fig.plot(x, usedPoints["testSet"], color = getColorFor(setColorStarts["testSet"]))
+			fig.plot(x2, usedPoints["testSetExclude"], color = getColorFor(setColorStarts["testSetExclude"]))
+
+			for key, point in usedPoints.iteritems():
+				name = key
+				if buildAvg and usedPoints == points:
+					if key in avgeragePoints:
+						avgeragePoints[key] += np.array(point)
+						averageCounter[key] += 1
+						averagePointsCollect[key].append(np.array(point))
+					else:
+						avgeragePoints[key] = np.array(point)
+						averageCounter[key] = 1
+						averagePointsCollect[key] = []
+						averagePointsCollect[key].append(np.array(point))
+
+				name = name.replace("TestSet", "")
+				usedIndex = 0
+				if name in sets:
+					usedIndex = offsetForSplits + sets.index(name) * counterForSetsSplits[name]
 				else:
-					avgeragePoints[key] = np.array(point)
-					averageCounter[key] = 1
-			name = name.replace("TestSet", "")
-			usedIndex = 0
-			if name in sets:
-				usedIndex = offsetForSplits + sets.index(name) * counterForSetsSplits[name]
-			else:
-				#print(name)
-				continue
-			x3 = [e for e in range(usedIndex, usedIndex + len(point))]
-			fig.plot(x3, point, color = getColorFor(setColorStarts[name]))
+					#print(name)
+					continue
+				x3 = [e for e in range(usedIndex, usedIndex + len(point))]
+				fig.plot(x3, point, color = getColorFor(setColorStarts[name]))
 
-		figure.savefig(folderName + "classPerformance.eps")
-		plt.close()
-		# allpoints = {"current size":currentSizePool,"new size":newSizePool, "singlePerformance":poolPerformance}
-		allpoints = points
-		writeResFile(points, folderName)
+			figure.savefig(folderName + usedFileNames[i] + ".eps")
+			plt.close()
+			writeResFile(usedPoints, folderName, usedFileNames[i])
 
 	# if found:
 	# 	print("------------")
@@ -418,6 +457,18 @@ if buildAvg:
 	file.write(textAvg)
 	file.close()
 	figure.savefig("avgPerformance.eps")
+	stdAvg = {}
+	for key, points in averagePointsCollect.iteritems():
+		sum = np.zeros(len(points[0]))
+		print("For " + key + ":")
+		for point in points:
+			sum += np.square(avgeragePoints[key] - point)
+			print("\t" + str(point[-1]))
+		sum /= averageCounter[key]
+		np.sqrt(sum)
+		stdAvg[key] = sum
+
+	writeResFile(stdAvg, "", "stdResult")
 	writeResFile(avgeragePoints, "")
 
 	for key, point in avgeragePoints2.iteritems():
