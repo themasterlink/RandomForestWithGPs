@@ -514,29 +514,35 @@ bool OnlineRandomForest::update(){
 		}
 		const auto minAccuracy = list->begin()->second;
 		const auto maxAccuracy = list->rbegin()->second;
-		if(m_useOnlinePool){
+		if(m_useOnlinePool){ // if a pool is used
 			Labels labels;
 			LabeledData* usedRef = nullptr;
+			unsigned int startPos;
 			if(m_validationSet != nullptr){
-				usedRef = m_validationSet;
+				usedRef = m_validationSet;  // use a validation set if one is set
+				startPos = 0;
 			}else{
 				usedRef = &m_storage.storage();
+				// get correct start position in storage (could be that the storage, is in an online mode)
+				startPos = m_useRealOnlineUpdate && !m_storage.isInPoolMode() ? m_storage.getLastUpdateIndex() : 0;
 			}
 			const auto& valRef = *usedRef;
-			const auto startPos = m_useRealOnlineUpdate && !m_storage.isInPoolMode() ? m_storage.getLastUpdateIndex() : 0;
+			// predict for all points the storage
 			predictData(valRef, labels, startPos);
 			auto& performanceRef = m_storage.getPoolInfoRef().getPerformancesRef();
 			std::vector<Real> performanceCounter(performanceRef.size(), 0._r);
-			std::vector<Real> classCounter(ClassKnowledge::instance().amountOfClasses(), 0.0_r);
+			// class counter on the current set
+			// (for the validation case it does not change, but for the other cases it does)
+			std::vector<unsigned int> classCounter(ClassKnowledge::instance().amountOfClasses(), 0.0u);
 			for(unsigned int i = startPos, end = (unsigned int) labels.size(); i < end; ++i){
-				if(labels[i] == valRef[i]->getLabel()){
-					++performanceCounter[labels[i]];
+				if(labels[i - startPos] == valRef[i]->getLabel()){
+					++performanceCounter[labels[i - startPos]];
 				}
 				++classCounter[valRef[i]->getLabel()];
 			}
 			for(unsigned int i = 0, end = (unsigned int) performanceRef.size(); i < end; ++i){
 				if(performanceCounter[i] > 0.5){
-					performanceRef[i].addNew(performanceCounter[i] / classCounter[i]);
+					performanceRef[i].addNew(performanceCounter[i] / (Real) classCounter[i]);
 				}
 			}
 			// updates the pool info
@@ -701,8 +707,6 @@ OnlineRandomForest::sortTreesAfterPerformanceInParallel(SortedDecisionTreeList* 
 	auto treeSize = trees->size();
 	auto usedTrees = (unsigned int) (treeSize / 16);
 	readMutex->unlock();
-	RandomDistributionReal randomRealNr(0,1);
-	GeneratorType gen(51);
 	while(treeSize > 0){
 		ownList.clear();
 		readMutex->lock();
@@ -1038,7 +1042,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, 
 		predictData(points, labels, probs);
 	}else{
 		StopWatch sw;
-		const unsigned int size = static_cast<const unsigned int>(points.size() - start);
+		const auto size = static_cast<const unsigned int>(points.size() - start);
 		labels.resize(size);
 		ThreadGroup group;
 		const unsigned int nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
@@ -1049,7 +1053,7 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, 
 			packages[i] = std::make_unique<InformationPackage>(InformationPackage::ORF_PREDICT, 0, endPoint - startPoint);
 			packages[i]->setStandartInformation("Thread for orf prediction: " + StringHelper::number2String(i + 1));
 			group.addThread(makeThread(&OnlineRandomForest::predictClassDataInParallel, this,
-									   points, &labels, packages[i], startPoint, endPoint));
+									   points, &labels, packages[i], startPoint, endPoint, start));
 		}
 		bool stillOneRunning = true;
 		InLinePercentageFiller::instance().setActMax(size);
@@ -1387,23 +1391,15 @@ OnlineRandomForest::predictDataInParallel(const Data& points, Labels* labels, Sh
 
 void OnlineRandomForest::predictClassDataInParallel(const LabeledData& points, Labels* labels,
 													SharedPtr<InformationPackage> package, const unsigned int start,
-													const unsigned int end) const{
+													const unsigned int end, const unsigned int offset) const{
 	ThreadMaster::instance().appendThreadToList(package.get());
 	package->wait();
 	printInPackageOnScreen(package, "Done: " << 0 << " %%");
 	for(unsigned int i = start; i < end; ++i){
-		(*labels)[i] = predict(*points[i]);
+		(*labels)[i - offset] = predict(*points[i]);
 		packageUpdateForPrediction(package, i, start, end);
 	}
 	package->finishedTask();
-}
-
-void OnlineRandomForest::getLeafNrFor(std::vector<int>& leafNrs){
-	leafNrs = std::vector<int>(m_amountOfClasses, 0);
-	for(unsigned int i = 0; i < m_storage.size(); ++i){
-//	for(OnlineStorage<LabeledVectorX*>::ConstIterator it = m_storage.begin(); it != m_storage.end(); ++it){
-		leafNrs[predict(*m_storage[i])] += 1;
-	}
 }
 
 OnlineStorage<LabeledVectorX*>& OnlineRandomForest::getStorageRef(){
