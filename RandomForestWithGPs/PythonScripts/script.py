@@ -30,7 +30,7 @@ os.chdir("../cmake-build-release/")
 rands = [random.randint(11, 738938) for e in range(15)]
 print("Random nrs: " + str(rands))
 
-modes = ["use exponential without min and max", "use exponential with min and max", "use performance", "use gaussian"]
+modes = ["use gaussian"]  #"use exponential without min and max"]#, "use exponential with min and max"]#, "use performance", "use gaussian"]
 nr = random.randint(11, 738938) % len(modes)
 for seed in rands:
 	data["OnlineRandomForest"]["acceptanceMode"] = modes[nr % len(modes)]

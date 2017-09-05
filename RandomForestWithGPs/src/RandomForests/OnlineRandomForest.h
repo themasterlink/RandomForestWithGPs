@@ -42,7 +42,7 @@ public:
 	void predictData(const Data& points, Labels& labels,
 					 std::vector< std::vector<Real> >& probabilities) const override;
 
-	void predictData(const LabeledData& points, Labels& labels) const;
+	void predictData(const LabeledData& points, Labels& labels, const unsigned int start = 0) const;
 
 	void predictData(const LabeledData& points, Labels& labels, std::vector< std::vector<Real> >& probabilities) const;
 
@@ -224,8 +224,6 @@ private:
 	const bool m_useRealOnlineUpdate;
 
 	bool m_useOnlinePool;
-
-	std::vector<Real> m_classCounterForValidationSet;
 
 	// are copied to the threads (automatic reference counting for them)
 	mutable SharedPtr<Mutex> m_read;

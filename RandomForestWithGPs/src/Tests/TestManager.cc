@@ -119,7 +119,9 @@ void TestManager::run(){
 							readAll(); // TODO read TRAIN or TEST not both
 							orf = std::make_unique<OnlineRandomForest>(train, height,
 																	   (int) TotalStorage::instance().getAmountOfClass());
-							orf->setValidationSet(TotalStorage::instance().getValidationSet());
+							if(TotalStorage::instance().getValidationSet() != nullptr){
+								orf->setValidationSet(TotalStorage::instance().getValidationSet());
+							}
 //							if(TotalStorage::instance().getValidationSet()){
 //								OnlineStorage<LabeledVectorX*> test;
 //								test.appendUnique(*TotalStorage::instance().getValidationSet());

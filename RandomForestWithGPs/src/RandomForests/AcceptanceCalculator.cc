@@ -6,7 +6,7 @@
 #include "AcceptanceCalculator.h"
 
 AcceptanceCalculator::AcceptanceCalculator(const AcceptanceMode mode, const long seed):
-		m_mode(mode), m_gaussianNr(0, 1, seed), m_realUniform(0, 1), m_gen((seed+1) * 3){
+		m_mode(mode), m_gaussianNr(0, 1, seed), m_exponentialNr(0,(seed+1) * 3){
 	if(m_mode == AcceptanceMode::UNDEFINED){
 		printError("This type is not supported!");
 	}
@@ -29,7 +29,8 @@ void AcceptanceCalculator::setParams(const Real sd, const Real min, const Real m
 			break;
 		}
 		case AcceptanceMode::EXPONENTIAL_MIN_MAX: case AcceptanceMode::EXPONENTIAL_WHOLE: {
-			m_realUniform.setMinAndMax(0, 1);
+			const auto lambda = 4. / (m_sdOfForest * sqrtReal(2._r * (Real)M_PI));
+			m_exponentialNr.reset(lambda);
 			break;
 		}
 		case AcceptanceMode::UNDEFINED:{
@@ -46,19 +47,18 @@ Real AcceptanceCalculator::calcAcceptance(const Real accuracy){
 		case AcceptanceMode::GAUSSIAN:{
 			return std::min(100.0_r, accuracy * 100.0_r + absReal(m_gaussianNr())); // convert in %
 		}
-		case AcceptanceMode::EXPONENTIAL_MIN_MAX:{
+		case AcceptanceMode::EXPONENTIAL_MIN_MAX:/*{
 			if(m_minOfForest >= 0 && m_maxOfForest >= 0){
 				const auto minMaxAccuracy = (accuracy - m_minOfForest) / (m_maxOfForest - m_minOfForest);
 				// min and max are required -> accuracy could be worse or better than any existing tree
-				const auto lambda = 1.0_r - std::min(std::max(0.0_r, minMaxAccuracy), 1.0_r);
+				const auto lambda =  // 1.0_r - std::min(std::max(0.0_r, minMaxAccuracy), 1.0_r);
 				return lambda * expReal(-lambda * m_realUniform(m_gen));
 			}else{
 				printError("The min and max values are not set!");
 			}
-		}
+		}*/
 		case AcceptanceMode::EXPONENTIAL_WHOLE:{
-			const auto lambda = 1.0_r - accuracy;
-			return lambda * expReal(-lambda * m_realUniform(m_gen));
+			return std::min(100.0_r, accuracy * 100.0_r + m_exponentialNr()); // convert in %
 		}
 		case AcceptanceMode::UNDEFINED:{
 			printError("This type is undefined");

@@ -5,7 +5,8 @@ matplotlib.use('TKAgg', force=True)
 from matplotlib import pyplot as plt
 import numpy as np
 import json
-import subprocess
+from subprocess import call
+
 
 def hourConvert(hour):
 	eles = hour.split(":")
@@ -163,15 +164,15 @@ def extractAndAddLine(line, array, triggerWord, currentSet):
 path = "../cmake-build-release/2017/"
 logFiles = []
 for month in os.listdir(path):
-	if "8" in month:
+	if "9" in month:
 		for day in os.listdir(path + month):
-			if int(day) == 28:
+			if int(day) > 0:
 				newPath = path + month + "/" + day
 				for hour in os.listdir(newPath):
 					if os.path.isfile(newPath + "/" + hour + "/" + "log.txt"):
 						hourC = hourConvert(hour)
 						#if not os.path.isfile(newPath + "/" + hour + "/" + "classPerformance.eps"):
-						t = (newPath + "/" + hour + "/log.txt" , convert(month, day, hour), (month, day, str(hourC[0]), str(hourC[1]), str(hourC[2])))
+						t = (newPath + "/" + hour + "/" , convert(month, day, hour), (month, day, str(hourC[0]), str(hourC[1]), str(hourC[2])))
 						logFiles.append(t)
 
 logFiles.sort(key=lambda tup: tup[1])
@@ -186,41 +187,41 @@ files = []
 
 buildAvg = True
 
-# initFile = "../cmake-build-release/2017/8/12/16:23:0.6/usedInit.json" # logFiles[0][0] + "usedInit.json"
-# print("Compare to: " + initFile)
-# with open(initFile) as data_file:
-# 	cmp = json.load(data_file)
-# for fileN in logFiles[1:]:
-# 	log = fileN[0] + "log.txt"
-# 	initFile = fileN[0] + "usedInit.json"
-# 	with open(initFile) as data_file:
-# 		data = json.load(data_file)
-# 		isTheSame = True
-# 		for first in ["OnlineRandomForest", "MinMaxUsedSplits", "TotalStorage"]:
-# 			for ele in data[first]:
-# 				if cmp[first][ele] != data[first][ele]:
-# 					isTheSame = False
-# 		if isTheSame:
-# 			print("Is the same log: " + log)
-# 			newT = (fileN[0] + "log.txt", fileN[1], fileN[2])
-# 			files.append(newT)
-# 		else:
-# 			print("Is not the same log: " + log)
+initFile = "../cmake-build-release/2017/9/1/15:56:40.1/usedInit.json" # logFiles[0][0] + "usedInit.json"
+print("Compare to: " + initFile)
+with open(initFile) as data_file:
+	cmp = json.load(data_file)
+for fileN in logFiles[1:]:
+	log = fileN[0] + "log.txt"
+	initFile = fileN[0] + "usedInit.json"
+	with open(initFile) as data_file:
+		data = json.load(data_file)
+		isTheSame = True
+		for first in ["OnlineRandomForest", "MinMaxUsedSplits", "TotalStorage"]:
+			for ele in data[first]:
+				if cmp[first][ele] != data[first][ele]:
+					isTheSame = False
+		if isTheSame:
+			print("Is the same log: " + log)
+			newT = (fileN[0] + "log.txt", fileN[1], fileN[2])
+			files.append(newT)
+		else:
+			print("Is not the same log: " + log)
 
-for fileN in logFiles:
-	counter2 = 0
-	lines = open(fileN[0]).read().split("\n")
-	if len(lines) > 50:
-		for line in lines:
-			if buildAvg:
-				if "Quit Application" in line:
-					files.append(fileN)
-					break
-			else:
-				files.append(fileN)
-				break
-	if len(files) > amount + 1:
-		break
+# for fileN in logFiles:
+# 	counter2 = 0
+# 	lines = open(fileN[0]).read().split("\n")
+# 	if len(lines) > 50:
+# 		for line in lines:
+# 			if buildAvg:
+# 				if "Quit Application" in line:
+# 					files.append(fileN)
+# 					break
+# 			else:
+# 				files.append(fileN)
+# 				break
+# 	if len(files) > amount + 1:
+# 		break
 
 minA = min(amount, len(files))
 # minA = 1
@@ -230,6 +231,9 @@ averagePointsCollect = {}
 avgeragePoints2 = {}
 averageCounter = {}
 for fileN in files[:minA]:
+	# print("evince " + fileN[0] + "classPerformance.eps &")
+	# os.system("evince " + fileN[0] + "classPerformance.eps &")
+	# continue
 	sets = ["banana","coffeemug","stapler","flashlight","apple","keyboard"]
 	print(fileN[0])
 	points = {}

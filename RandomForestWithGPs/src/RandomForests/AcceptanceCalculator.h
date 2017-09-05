@@ -7,6 +7,7 @@
 
 #include "../RandomNumberGenerator/RandomUniformNr.h"
 #include "../RandomNumberGenerator/RandomGaussianNr.h"
+#include "../RandomNumberGenerator/RandomExponentialNr.h"
 
 
 class AcceptanceCalculator {
@@ -37,9 +38,7 @@ private:
 
 	RandomGaussianNr m_gaussianNr;
 
-	RandomDistributionReal m_realUniform;
-
-	GeneratorType m_gen;
+	RandomExponentialNr m_exponentialNr;
 
 	Real m_sdOfForest;
 	Real m_minOfForest;

@@ -6,7 +6,6 @@
  */
 
 #include "RandomGaussianNr.h"
-#include "../Utility/Util.h"
 int RandomGaussianNr::counter = 0;
 
 RandomGaussianNr::RandomGaussianNr(const Real mean, const Real sd, const int seed):

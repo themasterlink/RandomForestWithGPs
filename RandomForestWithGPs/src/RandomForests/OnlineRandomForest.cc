@@ -516,19 +516,27 @@ bool OnlineRandomForest::update(){
 		const auto maxAccuracy = list->rbegin()->second;
 		if(m_useOnlinePool){
 			Labels labels;
-			const auto& valRef = *m_validationSet;
-			predictData(valRef, labels);
-//			std::fill(performanceRef.begin(), performanceRef.end(), 0._r);
+			LabeledData* usedRef = nullptr;
+			if(m_validationSet != nullptr){
+				usedRef = m_validationSet;
+			}else{
+				usedRef = &m_storage.storage();
+			}
+			const auto& valRef = *usedRef;
+			const auto startPos = m_useRealOnlineUpdate && !m_storage.isInPoolMode() ? m_storage.getLastUpdateIndex() : 0;
+			predictData(valRef, labels, startPos);
 			auto& performanceRef = m_storage.getPoolInfoRef().getPerformancesRef();
 			std::vector<Real> performanceCounter(performanceRef.size(), 0._r);
-			for(unsigned int i = 0, end = (unsigned int) labels.size(); i < end; ++i){
+			std::vector<Real> classCounter(ClassKnowledge::instance().amountOfClasses(), 0.0_r);
+			for(unsigned int i = startPos, end = (unsigned int) labels.size(); i < end; ++i){
 				if(labels[i] == valRef[i]->getLabel()){
 					++performanceCounter[labels[i]];
 				}
+				++classCounter[valRef[i]->getLabel()];
 			}
 			for(unsigned int i = 0, end = (unsigned int) performanceRef.size(); i < end; ++i){
 				if(performanceCounter[i] > 0.5){
-					performanceRef[i].addNew(performanceCounter[i] / m_classCounterForValidationSet[i]);
+					performanceRef[i].addNew(performanceCounter[i] / classCounter[i]);
 				}
 			}
 			// updates the pool info
@@ -1024,27 +1032,27 @@ void OnlineRandomForest::predictData(const Data& points, Labels& labels) const{
 	}
 }
 
-void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels) const{
+void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels, const unsigned int start) const{
 	if(m_savedAnyTreesToDisk){
 		std::vector<std::vector<Real> > probs;
 		predictData(points, labels, probs);
 	}else{
 		StopWatch sw;
-		labels.resize(points.size());
+		const unsigned int size = static_cast<const unsigned int>(points.size() - start);
+		labels.resize(size);
 		ThreadGroup group;
 		const unsigned int nrOfParallel = ThreadMaster::instance().getAmountOfThreads();
 		std::vector<SharedPtr<InformationPackage> > packages(nrOfParallel);
 		for(unsigned int i = 0; i < nrOfParallel; ++i){
-			auto start = (const int) (i / (Real) nrOfParallel * points.size());
-			auto end = (const int) ((i + 1) / (Real) nrOfParallel * points.size());
-			packages[i] = std::make_unique<InformationPackage>(InformationPackage::ORF_PREDICT, 0, end - start);
+			auto startPoint = (const int) (i / (Real) nrOfParallel * size) + start;
+			auto endPoint = (const int) ((i + 1) / (Real) nrOfParallel * size) + start;
+			packages[i] = std::make_unique<InformationPackage>(InformationPackage::ORF_PREDICT, 0, endPoint - startPoint);
 			packages[i]->setStandartInformation("Thread for orf prediction: " + StringHelper::number2String(i + 1));
-			group.addThread(
-					makeThread(&OnlineRandomForest::predictClassDataInParallel, this, points, &labels, packages[i],
-							   start, end));
+			group.addThread(makeThread(&OnlineRandomForest::predictClassDataInParallel, this,
+									   points, &labels, packages[i], startPoint, endPoint));
 		}
 		bool stillOneRunning = true;
-		InLinePercentageFiller::instance().setActMax(points.size());
+		InLinePercentageFiller::instance().setActMax(size);
 		while(stillOneRunning){
 			stillOneRunning = false;
 			long counter = 0;
@@ -1058,9 +1066,8 @@ void OnlineRandomForest::predictData(const LabeledData& points, Labels& labels) 
 			sleepFor(0.1);
 		}
 		group.joinAll();
-		printOnScreen(
-				"Prediction was done in: " << sw.elapsedAsTimeFrame() << ", for: " << points.size() << ", in per: "
-										   << sw.elapsedAsTimeFrame() / (Real) points.size());
+		printOnScreen("Prediction was done in: " << sw.elapsedAsTimeFrame() << ", for: " << points.size()
+												 << ", in per: " << sw.elapsedAsTimeFrame() / (Real) points.size());
 	}
 }
 
@@ -1534,11 +1541,6 @@ void OnlineRandomForest::packageUpdateForPrediction(SharedPtr<InformationPackage
 void OnlineRandomForest::setValidationSet(LabeledData* pValidation){
 	if(pValidation != nullptr){
 		m_validationSet = pValidation;
-		m_classCounterForValidationSet.resize(ClassKnowledge::instance().amountOfClasses());
-		std::fill(m_classCounterForValidationSet.begin(), m_classCounterForValidationSet.end(), 0.0);
-		for(const auto& point : *m_validationSet){
-			m_classCounterForValidationSet[point->getLabel()] += 1.0_r;
-		}
 	}
 }
 

@@ -39,7 +39,7 @@
 		"normalizeData": "false",
 		"removeUselessDimensions": "false",
 		"readFromFolder": "true",
-		"useValidationForTraining": "false",
+		"useValidationForTraining": "true",
 		"stepOverTrainingData": 0
 	},
 	"OnlineRandomForest": {

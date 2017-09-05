@@ -178,7 +178,7 @@ set(SOURCE_FILES
         src/Tests/TestManager.h src/Utility/StringHelper.h
         src/Tests/TestInformation.cc src/Tests/TestInformation.h
         src/Utility/StringHelper.cc src/Utility/GlobalStopWatch.h
-        src/Base/Singleton.h src/Base/Thread.h src/Tests/SpeedTests/ArgMaxAndMin.h src/Tests/SpeedTests/EigenVectorX.h src/Tests/SpeedTests/RandomNumbers.h src/Tests/SpeedTests/TestHeader.h src/RandomForests/GlobalLifeTimeMeasurement.cc src/RandomForests/GlobalLifeTimeMeasurement.h src/RandomForests/AcceptanceCalculator.cc src/RandomForests/AcceptanceCalculator.h)
+        src/Base/Singleton.h src/Base/Thread.h src/Tests/SpeedTests/ArgMaxAndMin.h src/Tests/SpeedTests/EigenVectorX.h src/Tests/SpeedTests/RandomNumbers.h src/Tests/SpeedTests/TestHeader.h src/RandomForests/GlobalLifeTimeMeasurement.cc src/RandomForests/GlobalLifeTimeMeasurement.h src/RandomForests/AcceptanceCalculator.cc src/RandomForests/AcceptanceCalculator.h src/RandomNumberGenerator/RandomExponentialNr.cc src/RandomNumberGenerator/RandomExponentialNr.h)
 
 
 add_executable(RandomForestWithGPs ${SOURCE_FILES})
