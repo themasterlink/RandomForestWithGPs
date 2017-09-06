@@ -25,13 +25,13 @@ void Subject::attach(Observer* obj){
 	}
 }
 
-void Subject::deattach(Observer* obj){
-	if(obj != nullptr){
-		m_observers.remove(obj);
+void Subject::detach(Observer* observer){
+	if(observer != nullptr){
+		m_observers.remove(observer);
 	}
 }
 
-void Subject::deattachAll(){
+void Subject::detachAll(){
 	m_observers.clear();
 }
 

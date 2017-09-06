@@ -113,7 +113,7 @@ template<typename T>
 void PoolInfo<T>::update(Subject* caller, unsigned int event){
 	if(caller){
 		if(caller->classType() == ClassTypeSubject::ONLINERANDOMFOREST){
-			if(event == OnlineStorage<T>::UPDATE_VALIDATION_SET){
+			if(event == OnlineStorage<T>::UPDATE_POOL_ACCORDING_TO_PERFORMANCE){
 				updateAccordingToPerformance();
 			}
 			// other event types are not direct at the pool info

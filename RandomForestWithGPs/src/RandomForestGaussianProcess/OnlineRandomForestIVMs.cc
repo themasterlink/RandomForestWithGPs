@@ -16,7 +16,7 @@ OnlineRandomForestIVMs::OnlineRandomForestIVMs(OnlineStorage<LabeledVectorX*>& s
 	m_amountOfUsedClasses(amountOfUsedClasses),
 	m_firstTrainedDone(false){
 	// removes orf to avoid that the update is called directly to the orf
-	m_orf.getStorageRef().deattach(&m_orf);
+	m_orf.getStorageRef().detach(&m_orf);
 	// instead call the update on the
 	m_storage.attach(this);
 }

@@ -430,9 +430,9 @@ unsigned int DynamicDecisionTree<dimType>::predict(const VectorX& point, int& iA
 }
 
 template<typename dimType>
-bool DynamicDecisionTree<dimType>::predictIfPointsShareSameLeaveWithHeight(const VectorX& point1,
-																  const VectorX& point2,
-																  const int usedHeight) const {
+bool DynamicDecisionTree<dimType>::predictIfPointsShareSameLeafWithHeight(const VectorX& point1,
+																		  const VectorX& point2,
+																		  const int usedHeight) const {
 	int iActNode = 1; // start in root
 	int actLevel = 1;
 	if(m_splitDim[1] != NodeType::NODE_IS_NOT_USED && m_splitDim[1] != NodeType::NODE_CAN_BE_USED){
@@ -470,9 +470,7 @@ void DynamicDecisionTree<dimType>::adjustToNewData(){
 	std::fill(m_labelsOfWinningClassesInLeaves.begin(), m_labelsOfWinningClassesInLeaves.end(), 0);
 	const unsigned int leafAmount = pow2(m_maxDepth);
 	std::vector< std::vector<int> > histo(leafAmount, std::vector<int>(m_amountOfClasses, 0));
-	auto startPos = 0; // TODO
-	for(unsigned int i = startPos; i < m_storage.size(); ++i){
-		const auto point = m_storage[i];
+	for(const auto& point : m_storage){
 		int iActNode = 1; // start in root
 		while(iActNode <= (int) m_maxInternalNodeNr){
 			if(m_splitDim[iActNode] >= NodeType::NODE_CAN_BE_USED){

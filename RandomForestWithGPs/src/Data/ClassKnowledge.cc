@@ -78,5 +78,5 @@ void ClassKnowledge::attach(Observer* obj){
 }
 
 void ClassKnowledge::deattach(Observer* obj){
-	lockStatementWith(m_caller.deattach(obj), m_mutex);
+	lockStatementWith(m_caller.detach(obj), m_mutex);
 }

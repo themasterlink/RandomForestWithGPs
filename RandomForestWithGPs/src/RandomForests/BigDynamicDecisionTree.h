@@ -33,8 +33,8 @@ public:
 
 	unsigned int predict(const VectorX& point) const override;
 
-	bool predictIfPointsShareSameLeaveWithHeight(const VectorX& point1, const VectorX& point2,
-												 const int usedHeight) const override {
+	bool predictIfPointsShareSameLeafWithHeight(const VectorX& point1, const VectorX& point2,
+												const int usedHeight) const override {
 		UNUSED(point1); UNUSED(point2); UNUSED(usedHeight);
 		printErrorAndQuit("This function is not implemented!");
 		return false;

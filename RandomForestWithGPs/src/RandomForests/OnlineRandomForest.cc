@@ -546,7 +546,7 @@ bool OnlineRandomForest::update(){
 				}
 			}
 			// updates the pool info
-			notify(static_cast<const unsigned int>(OnlineStorage<LabeledVectorX*>::Event::UPDATE_VALIDATION_SET));
+			notify(static_cast<const unsigned int>(OnlineStorage<LabeledVectorX*>::Event::UPDATE_POOL_ACCORDING_TO_PERFORMANCE));
 		}
 		auto it = list->begin();
 		for(unsigned int i = 0; i < list->size() / 2; ++i){ ++it; }
@@ -986,7 +986,7 @@ OnlineRandomForest::predictPartitionEquality(const VectorX& point1, const Vector
 		auto counter = 0u;
 		for(auto it = m_trees.cbegin(); it != m_trees.cend() && counter < amountOfSamples; ++it){
 			const auto height = (unsigned int) uniformNr();
-			if((*it)->predictIfPointsShareSameLeaveWithHeight(point1, point2, height)){
+			if((*it)->predictIfPointsShareSameLeafWithHeight(point1, point2, height)){
 				++sameLeaveCounter;
 			}
 			++counter;
