@@ -533,7 +533,7 @@ bool OnlineRandomForest::update(){
 			std::vector<Real> performanceCounter(performanceRef.size(), 0._r);
 			// class counter on the current set
 			// (for the validation case it does not change, but for the other cases it does)
-			std::vector<unsigned int> classCounter(ClassKnowledge::instance().amountOfClasses(), 0.0u);
+			std::vector<unsigned int> classCounter(ClassKnowledge::instance().amountOfClasses(), 0u);
 			for(unsigned int i = startPos, end = (unsigned int) labels.size(); i < end; ++i){
 				if(labels[i - startPos] == valRef[i]->getLabel()){
 					++performanceCounter[labels[i - startPos]];
@@ -1415,6 +1415,7 @@ ClassTypeSubject OnlineRandomForest::classType() const{
 }
 
 void OnlineRandomForest::updateMinMaxValues(unsigned int event){
+	// TODO check the influence of the pool on this function
 	if(m_storage.size() == 0){
 		return;
 	}
@@ -1440,7 +1441,7 @@ void OnlineRandomForest::updateMinMaxValues(unsigned int event){
 			break;
 		}
 		case OnlineStorage<LabeledVectorX*>::APPENDBLOCK:{
-			const unsigned int start = m_storage.getLastUpdateIndex();
+			const unsigned int start = m_storage.getLastUpdateIndex(); // <- especially in this line
 			for(unsigned int t = start; t < m_storage.size(); ++t){
 				LabeledVectorX& point = *m_storage[t];
 				for(unsigned int k = 0; k < dim; ++k){

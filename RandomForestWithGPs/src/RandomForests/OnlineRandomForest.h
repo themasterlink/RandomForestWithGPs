@@ -199,6 +199,8 @@ public:
 
 private:
 
+	/* For sorting all trees after their performance/acceptance this is calculated in the Acceptance Calculator
+	 */
 	using SortedDecisionTreePair = std::pair<DecisionTreePointer, Real>;
 	using SortedDecisionTreeList = std::list<SortedDecisionTreePair>;
 
@@ -229,9 +231,14 @@ private:
 
 	void sortTreesAfterPerformance(SortedDecisionTreeList& list);
 
+	/* This functions implements an insertion sort where a new with an acceptance is added to the given list
+	 */
 	void internalAppendToSortedList(SortedDecisionTreeList* list,
 									DecisionTreePointer&& pTree, Real acceptance);
 
+	/* Sort the other list per merge sort into the aimList, this means we walk over both sorted listes and always add
+	 * a value if it is bigger than the last existing value, until we added all values to the aimList
+	 */
 	void mergeSortedLists(SortedDecisionTreeList* aimList, SortedDecisionTreeList* other);
 
 	void sortTreesAfterPerformanceInParallel(SortedDecisionTreeList* list, DecisionTreesContainer* trees,
@@ -244,6 +251,9 @@ private:
 						  SharedPtr<AcceptanceCalculator> acceptanceCalculator,
 						  const unsigned int amountOfForcedRetrain);
 
+	/* When new points are added to the storage, this method calculates for each dimension the min and max value on the
+	 * current storage.
+	 */
 	void updateMinMaxValues(unsigned int event);
 
 	void tryAmountForLayers(SharedPtr<RandomNumberGeneratorForDT> generator, const Real secondsPerSplit,
@@ -258,6 +268,15 @@ private:
 	void packageUpdateForPrediction(SharedPtr<InformationPackage>& package, const unsigned int i, const unsigned int start,
 									const unsigned int end) const;
 
+	/* Calculate the accuracy for one tree, the accuarcy is measured between 0.0 and 1.0.
+	 * 		0.0 = None of the points could be classified correctly
+	 * 		1.0 = All points are correctly classified
+	 * Be aware that the storage on which this tree is tested depends on the used settings:
+	 * 		If a validation set is available, it is used to calculate the accuracy
+	 * 		Else the training set is used, how the training set is defined depends on the current training mode
+	 * 			(Pure Online (only the last points), Incremental Adaptive (all points since the start), Pool
+	 * 			(online the points in the pool)
+	 */
 	Real calcAccuracyForOneTree(const DynamicDecisionTreeInterface& tree);
 
 	const unsigned int m_maxDepth;
@@ -265,12 +284,25 @@ private:
 	// TODO get rid of this parameter -> replace it with look up in ClassKnowledge or make it adaptable to change
 	const unsigned int m_amountOfClasses;
 
+	/* This counter defines at which point a new update iteration should be started. This means after how many added
+	 * points a new update step is performed
+	 */
 	int m_amountOfPointsUntilRetrain;
 
+	/* The counter for the amount of points until retrain, for each new point which is added this counter is increased
+	 */
 	int m_counterForRetrain;
 
+	/* Amount of available dimension, must fit the length of the vector of the input points
+	 */
 	int m_amountOfUsedDims;
 
+	/* How many of the available dims are used in each tree:
+	 * 		1.0 = all dimensions are used
+	 * 		0.0 = none are used (does not work)
+	 * 		0.0 < x < 1.0 = the amount of dimension used relative to the total amount of dimensions
+	 * 		anything else can not be used
+	 */
 	Real m_factorForUsedDims;
 
 	Vector2 m_minMaxUsedDataFactor;
@@ -278,42 +310,90 @@ private:
 	// used in all decision trees -> no copies needed!
 	std::vector<Vector2 > m_minMaxValues;
 
+	/* Reference to the used storage, any change to it will call the update function of the this class
+	 */
 	OnlineStorage<LabeledVectorX*>& m_storage;
 
+	/* The validation set can be set and if it is set it is used during the training for the validation of the trees
+	 */
 	LabeledData* m_validationSet;
 
+	/* Container which contains all used trees, is not valid during an update step, because of the multi-thread
+	 * architecture, trees are removed and updated during it
+	 */
 	mutable DecisionTreesContainer m_trees;
 
 	mutable std::vector<std::pair<std::string, std::string> > m_savedToDiskTreesFilePaths;
 
 	DecisionTreeIterator findWorstPerformingTree(Real& correctAmount);
 
+	/* Random Numbers generators for the training and each update iteration, there are only generated during the first
+	 * training and after that only reused, there is more than one because of the multi-thread capabilities of this
+	 * approach.
+	 * A Shared Pointer is used, because a thread gets a copy of the shared pointer, which increases the counter during
+	 * the execution of the function and decreases it at the end. This guarentees that the object is not destroyed
+	 * before every execution path is done with it.
+	 */
 	std::vector<SharedPtr<RandomNumberGeneratorForDT> > m_generators;
 
 	UniquePtr<RandomNumberGeneratorForDT::BaggingInformation> m_baggingInformation;
 
 	mutable Mutex m_treesMutex;
 
+	/* Is the first training done (true = done)
+	 */
 	bool m_firstTrainingDone;
 
+	/* Defines if the Big Dynamic Decision Trees are used or not (true = use them)
+	 */
 	bool m_useBigDynamicDecisionTrees;
 
+	/* Specifies the configuration for Big Dynamic Decision Trees, the first param specifies the amount of fast layers
+	 * and the second the amount of small layers
+	 */
 	std::pair<unsigned int, unsigned int> m_amountOfUsedLayer;
 
+	/* Correspond to the variable m_savedAnyTreesToDisk, determines the location where the trees are stored
+	 */
 	std::string m_folderForSavedTrees;
 
+	/* If this mode is activated a portion of the trees is written to the disk, however this increases the training
+	 * and predicition time in a big way, not all functions support this mode yet
+	 */
 	bool m_savedAnyTreesToDisk;
 
+	/* Contains the amount of trained trees, this value is updated during the initial training
+	 */
 	unsigned int m_amountOfTrainedTrees;
 
+	/* Amount of used Memory of this forest, contains the memory demand for each tree
+	 */
 	mutable MemoryType m_usedMemory;
 
+	/* Amount of points checked in each split of a generated Decision tree
+	 */
 	unsigned int m_amountOfPointsCheckedPerSplit;
 
+	/* Contains the breaking mode for the next training step, can be changed during the training,
+	 * after each full update step, ideally for the initial training a different goal is set then for
+	 * the following update steps
+	 */
 	TrainingsConfig m_trainingsConfig;
 
+
+	/* If a real update step is used, that means not all old points are available, see bool m_useOnlinePool
+	 * for more information
+	 */
 	const bool m_useRealOnlineUpdate;
 
+	/* If the pool is used:
+	 * 	 Be aware there are only three different modes here:
+	 * 	 		1. Pure online, (m_useRealOnlineUpdate = true, m_useOnlinePool = false)
+	 * 	 		2. Adaptive incremental, (m_useRealOnlineUpdate = false, m_useOnlinePool = false)
+	 * 			3. Pool learning, (m_useRealOnlineUpdate = true, m_useOnlinePool = true)
+	 *			4. Not valid!, (m_useRealOnlineUpdate = false, m_useOnlinePool = true), the pool can not be used if
+	 *				the online update method is false
+	 */
 	bool m_useOnlinePool;
 
 	// are copied to the threads (automatic reference counting for them)
