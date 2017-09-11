@@ -14,29 +14,82 @@
 #include "../Utility/AvgNumber.h"
 #include <vector>
 
+/**
+ * \brief The pool information of an online storage, saves the current amount of points for each class and the desired
+ * 		size, according to the performance
+ * \tparam T the element type, which is stored in the online storage
+ */
 template<typename T>
 class PoolInfo : public Observer {
 public:
+	/**
+	 * \brief Init it with the amount of class from the ClassKnowledge
+	 */
 	PoolInfo();
 
+	/**
+	 * \brief Get a reference to the performance array, which consist out of AvgNumbers
+	 * \return
+	 */
 	std::vector<AvgNumber>& getPerformancesRef(){ return m_performance; };
 
+	/**
+	 * \brief Change the amount of used classes to the given value
+	 * \param amountOfClasses the value for the amount of desired classes
+	 */
 	void changeAmountOfClasses(const unsigned int amountOfClasses);
 
+	/**
+	 * \brief Set the maximum number of saved points, set the maximum size of the pool
+	 * \param maxNr maximum value for the size of the pool
+	 */
 	void setMaxNumberOfSavedPoints(const unsigned int maxNr);
 
+	/**
+	 * \brief Add a point of a given class to the current occupation of the storage.
+	 * 		A check should be performed before.
+	 * \param classNr given class
+	 */
 	void addPointToClass(const unsigned int classNr);
 
+	/**
+	 * \brief Update the desired sizes accordingly to the performance and the maximum set pool size,
+	 * 			this function is called by the update method.
+	 */
 	void updateAccordingToPerformance();
 
+	/**
+	 * \brief Check if the point should be added to the storage (only check no adding is performed)
+	 * \param data the point which should be checked
+	 * \return true if there is enough space for the given points class
+	 */
 	bool checkIfPointShouldBeAdded(const T& data);
 
+	/**
+	 * \brief Get the class where points should be removed, returns UNDEF_CLASS_LABEL if no class should be removed
+	 * \return The class which has too many points at the moment
+	 */
 	unsigned int getClassWherePointShouldBeRemoved();
 
+	/**
+	 * \brief Remove a certain amount of points from the occupied counter of a class
+	 * \param classNr the class nr of where the points should be removed
+	 * \param amount of points to be removed
+	 */
 	void removePointsFromClass(unsigned int classNr, unsigned int amount);
 
+	/**
+	 * \brief Get the difference between the occupation and the desired size for the given class
+	 * \param classNr where the difference should be calculated
+	 * \return the difference between the occupation and the desired size for the given class
+	 */
 	unsigned int getDifferenceForClass(const unsigned int classNr);
 
+	/**
+	 * \brief Update the desired sizes accordingly to the the performance, calls: updateAccordingToPerformance()
+	 * \param caller which called this function
+	 * \param event which started the update
+	 */
 	void update(Subject* caller, unsigned int event) override;
 
 private:

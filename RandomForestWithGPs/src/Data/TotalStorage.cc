@@ -25,7 +25,7 @@ void TotalStorage::readData(const int amountOfData){
 	bool didNormalizeStep = false;
 	if(Settings::instance().getDirectBoolValue("TotalStorage.readFromFolder")){
 		if(folderLocation == "../washington/"){
-			m_dataSetMode = DataSetMode::SEPERATE; // seperate train und test set
+			m_dataSetMode = DataSetMode::SEPARATE; // seperate train und test set
 			int testNr = 2;
 			Settings::instance().getValue("TotalStorage.folderTestNr", testNr);
 			boost::filesystem::path targetDir(folderLocation);
@@ -78,7 +78,7 @@ void TotalStorage::readData(const int amountOfData){
 //				}
 //			}
 		}else if(folderLocation == "../mnistOrg/" || folderLocation == "../uspsOrg/"){
-			m_dataSetMode = DataSetMode::SEPERATE; // seperate train und test set
+			m_dataSetMode = DataSetMode::SEPARATE; // seperate train und test set
 			DataSets train, test;
 			DataReader::readFromFiles(train, folderLocation + "training/", (unsigned int) amountOfData, readTxt, didNormalizeStep);
 			unsigned int totalSize = 0;
@@ -103,7 +103,7 @@ void TotalStorage::readData(const int amountOfData){
 				}
 			}
 		}else if(StringHelper::endsWith(folderLocation, "/washingtonData") || StringHelper::endsWith(folderLocation, "/washingtonMax")){
-			m_dataSetMode = DataSetMode::SEPERATE; // seperate train und test set
+			m_dataSetMode = DataSetMode::SEPARATE; // seperate train und test set
 			boost::filesystem::path targetDir(folderLocation);
 			boost::filesystem::directory_iterator end_itr;
 			LabeledData wholeTrainingSet;
@@ -207,7 +207,7 @@ void TotalStorage::readData(const int amountOfData){
 //				printOnScreen("Is the same!");
 //			}
 			ClassKnowledge::instance().instance().setAmountOfDims(newAmountOfDims);
-		}else if(m_dataSetMode == DataSetMode::SEPERATE){
+		}else if(m_dataSetMode == DataSetMode::SEPARATE){
 			std::vector<bool> isUsed(ClassKnowledge::instance().instance().amountOfDims(), false);
 			printOnScreen("Amount of dims: " << ClassKnowledge::instance().instance().amountOfDims());
 			for(unsigned int dim = 0; dim < ClassKnowledge::instance().instance().amountOfDims(); ++dim){

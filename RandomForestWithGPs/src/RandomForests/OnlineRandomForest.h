@@ -16,7 +16,8 @@
 #include "AcceptanceCalculator.h"
 
 /**
- * \brief
+ * \brief The online random forest, the initial training and the updates are activated over the updates of the connected
+ * 		Online Storage. In the settings file a lot of things about the forest can be specified.
  */
 class OnlineRandomForest : public Observer, public PredictorMultiClass, public Subject {
 public:
