@@ -115,77 +115,209 @@ public:
 	 */
 	void setStorageModeToPoolBase();
 
+	/**
+	 * \brief Update of the Online Storage is only called if the class amount is changed (only relevant if pool is used)
+	 * \param caller which evoced the call
+	 * \param event which was called
+	 */
 	void update(Subject* caller, unsigned int event) override;
 
+	/**
+	 * \brief Append a new data point to the online storage (will cause an update of all observers)
+	 * \param data a new data point
+	 */
 	void append(const T& data);
 
+	/**
+	 * \brief Append a new vector of data points to the online storage (will cause an update of all observers)
+	 * \param data a new data vector
+	 */
 	void append(const std::vector<T>& data);
 
+	/**
+	 * \brief Append a new vector of data points to the online storage (will cause an update of all observers).
+	 * 		Checks for every data point if this point is already in the storage.
+	 * \param data a new data vector
+	 */
 	void appendUnique(const std::vector<T>& data);
 
+	/**
+	 * \brief Append the storage to the data points of the online storage (will cause an update of all observers)
+	 * \param storage a new online storage
+	 */
 	void append(const OnlineStorage& storage);
 
+	/**
+	 * \brief Remove iterator of the storage, should not be done in an update step (RF)
+	 * 		Implementation is not done for all Learners
+	 * \param it a iterator
+	 */
 	void remove(const Iterator& it);
 
-	T& operator[](int element);
+	/**
+	 * \brief Access the element with the index, no boundary check!
+	 * \param index of the element
+	 * \return the element at index
+	 */
+	T& operator[](int index);
 
+	/**
+	 * \brief Access the const element with the index, no boundary check!
+	 * \param index of the element
+	 * \return the const element at index
+	 */
 	const T& operator[](int element) const;
 
+	/**
+	 * \brief Get a reference to the storage
+	 * \return A reference to the storage
+	 */
 	InternalStorage& storage();
 
+	/**
+	 * \brief Get a reference to the const storage
+	 * \return A const reference to the storage
+	 */
 	const InternalStorage& storage() const;
 
+	/**
+	 * \brief Return a iterator the begin of the storage
+	 * \return Return a iterator
+	 */
 	Iterator begin();
 
+	/**
+	 * \brief Return a const iterator the end of the storage
+	 * \return Return a const iterator
+	 */
 	Iterator end();
 
+	/**
+	 * \brief Return a const iterator the begin of the storage
+	 * \return Return a const iterator
+	 */
 	ConstIterator begin() const;
 
+	/**
+	 * \brief Return a const iterator the end of the storage
+	 * \return Return a const iterator
+	 */
 	ConstIterator end() const;
 
+	/**
+	 * \brief Return a const iterator the begin of the storage
+	 * \return Return a const iterator
+	 */
 	ConstIterator cbegin() const;
 
+	/**
+	 * \brief Return a const iterator the end of the storage
+	 * \return Return a const iterator
+	 */
 	ConstIterator cend() const;
 
+	/**
+	 * \brief Return a reference to the first element, check before if storage is empty or not!
+	 * \return A reference to the first element
+	 */
 	T& first();
 
+	/**
+	 * \brief Return a reference to the last element, check before if storage is empty or not!
+	 * \return A reference to the last element
+	 */
 	T& last();
 
+	/**
+	 * \brief Return the size of the current storage (is also the size of the pool)
+	 * \return Size of the storage
+	 */
 	unsigned int size() const{ return (unsigned int) m_internal.size(); };
 
+	/**
+	 * \brief Return the dimension of the vectors stored in this storage
+	 * \return The dimension of the vector
+	 */
 	unsigned int dim() const;
 
+	/**
+	 * \brief Get the start index of the last update step
+	 * \return The index of the last update step
+	 */
 	unsigned int getLastUpdateIndex() const;
 
+	/**
+	 * \brief Get the amount of new points in the storage
+	 * \return Get a amount of new points in the storage
+	 */
 	unsigned int getAmountOfNew() const;
 
+	/**
+	 * \brief Get the class type for the subject and observer
+	 * \return The ClassTypeSubject::OnlineStorage
+	 */
 	ClassTypeSubject classType() const override;
 
+	/**
+	 * \brief Get a reference to the pool
+	 * \return A reference to the pool
+	 */
 	PoolInfo<T>& getPoolInfoRef(){ return m_poolInfo; };
 
+	/**
+	 * \brief Return true if the pool mode is used
+	 * \return true if the pool mode is used
+	 */
 	const bool isInPoolMode() const { return m_storageMode == StorageMode::POOL; };
 
 	virtual ~OnlineStorage();
 
 private:
 
+	/**
+	 * \brief Append the data vector to the storage, parameter determines if a check should be performed if the point
+	 * 		is already in the storage
+	 * \param data to be added to the storage
+	 * \param shouldBeAddedUnique if the points should be checked before they get added
+	 */
 	void appendInternal(const std::vector<T>& data, const bool shouldBeAddedUnique);
 
+	/**
+	 * \brief The internal storage of the online storage
+	 */
 	InternalStorage m_internal;
 
+	/**
+	 * \brief The multi internal storage only used in the pool mode, is always convert to a internal storage after an append call
+	 */
 	MultiClassInternalStorage m_multiInternal;
 
+	/**
+	 * \brief The storage mode of the online storage (Pool or Normal Mode)
+	 */
 	StorageMode m_storageMode;
 
-	// always contains the index to last element before the last
-	// append call was executed, in the beginning it is zero
+	/**
+	 * \brief always contains the index to last element before the last append call was executed,
+	 * 		in the beginning it is zero
+	 */
 	unsigned int m_lastUpdateIndex;
 
+	/**
+	 * \brief The pool, which is safes the performance for the classes and caluculates the current sizes
+	 */
 	PoolInfo<T> m_poolInfo;
 
-	// copies the different pools in the internal storage to get fast access times during training
+	/**
+	 * \brief copies the different pools in the internal storage to get fast access times during training
+	 */
 	void copyMultiInternalInInternal();
 
+	/**
+	 * \brief Check if the point should be added, only used for the pool mode (if there is enough space for its class)
+	 * \param data the point which should be checked
+	 * \return true if the point can be added
+	 */
 	bool checkIfPointShouldBeAdded(const T& data);
 };
 

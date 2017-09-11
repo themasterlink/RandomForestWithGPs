@@ -375,15 +375,18 @@ void OnlineStorage<T>::copyMultiInternalInInternal(){
 template<typename T>
 void OnlineStorage<T>::update(Subject* caller, unsigned int event){
 	if(event == ClassKnowledge::Caller::NEW_CLASS){
-		const auto newAmountOfClasses = ClassKnowledge::instance().amountOfClasses();
-		const auto oldAmount = m_multiInternal.size();
-		if(newAmountOfClasses < oldAmount){
-			printError("The amount of classes was reduced, something went wrong!");
+		if(m_storageMode == StorageMode::POOL){
+			const auto newAmountOfClasses = ClassKnowledge::instance().amountOfClasses();
+			const auto oldAmount = m_multiInternal.size();
+			if(newAmountOfClasses < oldAmount){
+				printError("The amount of classes was reduced, something went wrong!");
+			}
+			m_poolInfo.changeAmountOfClasses(newAmountOfClasses);
+			m_multiInternal.resize(newAmountOfClasses);
+			const auto nr = Settings::instance().getDirectValue<unsigned int>(
+					"OnlineRandomForest.maxAmountOfPointsSavedInPool");
+			m_poolInfo.setMaxNumberOfSavedPoints(nr);
 		}
-		m_poolInfo.changeAmountOfClasses(newAmountOfClasses);
-		m_multiInternal.resize(newAmountOfClasses);
-		const auto nr = Settings::instance().getDirectValue<unsigned int>("OnlineRandomForest.maxAmountOfPointsSavedInPool");
-		m_poolInfo.setMaxNumberOfSavedPoints(nr);
 	}else{
 		printError("This update is not possible on an OnlineStorage!");
 	}
